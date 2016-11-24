@@ -744,6 +744,56 @@ class ConvertTests
       Yunit.assert(converted = expected)
    }
 
+   StringUpper()
+   {
+      input_script := "
+         (LTrim Join`r`n %
+                                 var = Chris Mallet
+                                 StringUpper, newvar, var
+         )"
+
+      expected := "
+         (LTrim Join`r`n %
+                                 var := "Chris Mallet"
+                                 StrUpper, newvar, %var%
+         )"
+
+      ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
+      ;result := ExecScript(expected)
+      ;MsgBox, End of running script with AHK v2
+      ;msgbox, expected:`n`n%expected%
+      converted := Convert(input_script)
+      ;msgbox, converted:`n`n%converted%
+      Yunit.assert(converted = expected)
+   }
+
+   StringLower()
+   {
+      input_script := "
+         (LTrim Join`r`n %
+                                 var = chris mallet
+                                 StringLower, newvar, var, T
+                                 if (newvar == "Chris Mallet")
+                                    MsgBox, it worked
+         )"
+
+      expected := "
+         (LTrim Join`r`n %
+                                 var := "chris mallet"
+                                 StrLower, newvar, %var%, T
+                                 if (newvar == "Chris Mallet")
+                                    MsgBox, it worked
+         )"
+
+      ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
+      ;result := ExecScript(expected)
+      ;MsgBox, End of running script with AHK v2
+      ;msgbox, expected:`n`n%expected%
+      converted := Convert(input_script)
+      ;msgbox, converted:`n`n%converted%
+      Yunit.assert(converted = expected)
+   }
+
    End()
    {
    }

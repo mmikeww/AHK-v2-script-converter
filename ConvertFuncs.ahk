@@ -40,6 +40,8 @@ Convert(ScriptString)
       StringRight,OutputVar,InputVar,Count | {1} := SubStr({2}, -{3}+1, {3})
       StringTrimLeft,OutputVar,InputVar,Count | {1} := SubStr({2}, 1, -{3})
       StringTrimRight,OutputVar,InputVar,Count | {1} := SubStr({2}, {3}+1)
+      StringUpper,OutputVar,InputVar,Tvar | StrUpper, {1}, `%{2}`%[, {3}]
+      StringLower,OutputVar,InputVar,Tvar | StrLower, {1}, `%{2}`%[, {3}]
       WinGetActiveStats,TitleVar,WidthVar,HeightVar,XVar,YVar | *ActiveStats
       WinGetActiveTitle,OutputVar | WinGetTitle, {1}, A
       DriveSpaceFree,OutputVar,PathVar | DriveGet, {1}, SpaceFree, {2}

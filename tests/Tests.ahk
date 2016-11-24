@@ -619,6 +619,62 @@ class ConvertTests
       Yunit.assert(converted = expected)
    }
 
+   FunctionDefaultParamValues()
+   {
+      input_script := "
+         (LTrim Join`r`n %
+                                 five := MyFunc()
+                                 MyFunc(var=5)
+                                 {
+                                    return var
+                                 }
+         )"
+
+      expected := "
+         (LTrim Join`r`n %
+                                 five := MyFunc()
+                                 MyFunc(var:=5)
+                                 {
+                                    return var
+                                 }
+         )"
+
+      ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
+      ;result := ExecScript(expected)
+      ;MsgBox, End of running script with AHK v2
+      ;msgbox, expected:`n`n%expected%
+      converted := Convert(input_script)
+      ;msgbox, converted:`n`n%converted%
+      Yunit.assert(converted = expected)
+   }
+
+   FunctionDefaultParamValues_OTB()
+   {
+      input_script := "
+         (LTrim Join`r`n %
+                                 five := MyFunc()
+                                 MyFunc(var=5) {
+                                    return var
+                                 }
+         )"
+
+      expected := "
+         (LTrim Join`r`n %
+                                 five := MyFunc()
+                                 MyFunc(var:=5) {
+                                    return var
+                                 }
+         )"
+
+      ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
+      ;result := ExecScript(expected)
+      ;MsgBox, End of running script with AHK v2
+      ;msgbox, expected:`n`n%expected%
+      converted := Convert(input_script)
+      ;msgbox, converted:`n`n%converted%
+      Yunit.assert(converted = expected)
+   }
+
    NoEnv_Remove()
    {
       input_script := "

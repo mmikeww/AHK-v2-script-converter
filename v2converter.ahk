@@ -1,11 +1,14 @@
 ﻿; =============================================================================
 ; Script Converter
 ;    for converting scripts from v1 AutoHotkey to v2
+;
+;    Requires AHK v2 to run this script
+;
 ; Use:
 ;    Run the script
 ;    Chose the file you want to convert in the file select dialog
 ;    A msgbox will popup telling you the script finished converting
-;   If you gave the file MyScript.ahk, the output file will be MyScript_new.ahk
+;   If you gave the file MyScript.ahk, the output file will be MyScript_v2new.ahk
 ;   Thats it, feel free to add to it and post changes here: http://www.autohotkey.com/forum/viewtopic.php?t=70266
 ; Uses format.ahk
 ; =============================================================================
@@ -17,15 +20,16 @@
 ; =============================================================================
 if (A_Args.Length() = 0)
 {
-   FileSelect, FN,, %A_MyDocuments%
+   FileSelect, FN,, %A_MyDocuments%, Choose an AHK v1 file to convert to v2
    If !FN
       ExitApp
-   FNOut := SubStr(FN, 1, StrLen(FN)-4) . "_new.ahk"
+   FNOut := SubStr(FN, 1, StrLen(FN)-4) . "_v2new.ahk"
+   ;msgbox, %FN%`n%FNOut%
 }
 else If A_Args.Length() = 1 ; Allow a command line param for the file name ex. Run Convert.ahk "MyInputFile.ahk"
 {
    FN := Trim(A_Args[1])
-   FNOut := SubStr(FN, 1, StrLen(FN)-4) . "_new.ahk"
+   FNOut := SubStr(FN, 1, StrLen(FN)-4) . "_v2new.ahk"
 }
 else if Mod(A_Args.Length(), 2) = 0 ; Parse arguments with linux like syntax, ex. Run Convert.ahk --input "Inputfile.ahk" -o "OutputFile.ahk"
 {
@@ -57,7 +61,7 @@ If !FN
    ExitApp
 }
 If !FNOut
-   FNOut := SubStr(FN, 1, StrLen(FN)-4) . "_new.ahk"
+   FNOut := SubStr(FN, 1, StrLen(FN)-4) . "v2_new.ahk"
 
 FileRead, script, %FN%
 ;msgbox %script%
@@ -71,8 +75,11 @@ outfile.Write(outscript)
 outfile.Close()
 
 If !A_Args.Length()
-   MsgBox, Done!`nNew file saved:`n`n%FNOut%
-
+{
+   MsgBox, 4,, Conversion complete. New file saved:`n`n%FNOut%`n`nWould you like to see the changes made?
+   if (A_MsgBoxResult = "Yes")
+      Run, diff\VisualDiff.exe diff\VisualDiff.ahk "%FN%" "%FNOut%"
+}
 ExitApp
 
 

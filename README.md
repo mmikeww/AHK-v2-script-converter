@@ -11,13 +11,15 @@ However, this project is way more ambitious that I originally thought, and there
 ## Convert v1 script to v2
 - Run the included `v2converter.exe` file
 - Choose your input `scriptfile.ahk` written for AHK v1
-- The converted script will be named `scriptfile_New.ahk` in the same directory
+- The converted script will be named `scriptfile_v2new.ahk` in the same directory
 
 ## Run unit tests
 - Run the `tests\Tests.exe` file
 
 ## Note
-The `v2converter.exe` file (as well as the `tests\Tests.exe` file) is simply a renamed copy of the `AutoHotkeyU32.exe` file that is included in the v2-a076 zip download. The reason for this is because most people will still have AHK v1 installed and associated with `*.ahk` files. So it would be inconvenient to run the converter without some workarounds. This way, we take advantage of the [default scriptfile feature](https://lexikos.github.io/v2/docs/Scripts.htm#defaultfile) where the v2converter.exe file will look for a file named v2converter.ahk and run it. You can make changes to the .ahk file and then just run the .exe
+The `v2converter.exe` file (as well as the `tests\Tests.exe` file) is simply a renamed copy of the `AutoHotkeyU32-v2-a076.exe` file that is included in the v2-a076 zip download. The reason for this is because most people will still have AHK v1 installed and associated with `*.ahk` files. So it would be inconvenient to run the converter without some workarounds. This way, we take advantage of the [default scriptfile feature](https://lexikos.github.io/v2/docs/Scripts.htm#defaultfile) where the v2converter.exe file will look for a file named v2converter.ahk and run it. You can make changes to the .ahk file and then just run the .exe  
+
+Similarly, the `diff\VisualDiff.exe` file is just a renamed `AutoHotkeyU32-v1.1.24.02.exe`
 
 # Contributing
 There are many edge cases when trying to parse script code and convert it. Here are a few ways you can help:
@@ -31,7 +33,9 @@ There are many edge cases when trying to parse script code and convert it. Here 
 
 And of course, create a Pull Request with your changed code
 
-# History / Credits
-- Frankie who created the [original converter](https://autohotkey.com/board/topic/65333-v2-script-converter/)
-- Uberi for his [updates to the original](//autohotkey.com/board/topic/65333-v2-script-converter/?p=419671)
+# Credits
+- Frankie who created the [original v2 converter](https://autohotkey.com/board/topic/65333-v2-script-converter/)
+- Uberi for his [updates to the original](https://autohotkey.com/board/topic/65333-v2-script-converter/?p=419671)
+- [Mergely](https://github.com/wickedest/Mergely) for the javascript diff library
+- [Exo](https://autohotkey.com/boards/viewtopic.php?t=5714) for the interface to run the javascript in an AHK gui
 - I'm sure many others

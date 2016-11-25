@@ -11,7 +11,7 @@ class ConvertTests
    {
    }
 
-   VarAssignment()
+   AssignmentString()
    {
       input_script := "
          (LTrim Join`r`n %
@@ -42,6 +42,56 @@ class ConvertTests
          ;msgbox, % A_LoopField "`n" StrLen(A_LoopField)
       ;FileAppend, % expected, expected.txt
       ;FileAppend, % converted, converted.txt 
+   }
+
+   AssignmentStringWithQuotes()
+   {
+      input_script := "
+         (LTrim Join`r`n %
+                                 msg = the man said, "hello"
+                                 MsgBox, %msg%
+         )"
+
+      expected := "
+         (LTrim Join`r`n %
+                                 msg := "the man said, ``"hello``""
+                                 MsgBox, %msg%
+         )"
+
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
+      ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
+      ;ExecScript2(expected)
+      ;msgbox, expected:`n`n%expected%
+      converted := Convert(input_script)
+      ;msgbox, converted:`n`n%converted%
+      Yunit.assert(converted = expected)
+   }
+
+   AssignmentNumber()
+   {
+      input_script := "
+         (LTrim Join`r`n %
+                                 var = 2
+                                 if (var = 2)
+                                    MsgBox, true
+         )"
+
+      expected := "
+         (LTrim Join`r`n %
+                                 var := 2
+                                 if (var = 2)
+                                    MsgBox, true
+         )"
+
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
+      ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
+      ;ExecScript2(expected)
+      ;msgbox, expected:`n`n%expected%
+      converted := Convert(input_script)
+      ;msgbox, converted:`n`n%converted%
+      Yunit.assert(converted = expected)
    }
 
    CommentBlock()
@@ -853,6 +903,15 @@ class ToExpTests
       Yunit.assert(ToExp("") = "`"`"")
       Yunit.assert(ToExp("hello") = "`"hello`"")
       Yunit.assert(ToExp("hello world") = "`"hello world`"")
+   }
+
+   QuotesInsideString()
+   {
+      orig := "the man said, `"hello`""
+      expected := "`"the man said, ```"hello```"`""
+      converted := ToExp(orig)
+      ;Msgbox, expected: %expected%`nconverted: %converted%
+      Yunit.assert(converted = expected)
    }
 
    RemovePercents()

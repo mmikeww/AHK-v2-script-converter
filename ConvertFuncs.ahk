@@ -274,8 +274,9 @@ Convert(ScriptString)
 ToExp(Text)
 {
    static qu := "`"" ; Constant for double quotes
+   static bt := "``" ; Constant for backtick to escape
    Text := Trim(Text, " `t")
-   If Text = ""
+   If (Text = "")       ; If text is empty
       TOut := (qu . qu) ; Two double quotes
    else if InStr(Text, "`%")
    {
@@ -307,7 +308,7 @@ ToExp(Text)
    }
    else
    {
-      StrReplace, TOut, %Text%, % qu, % qu . qu, All
+      StrReplace, TOut, %Text%, % qu, % bt . qu, All
       ;msgbox text=%text%`ntout=%tout%
       TOut := qu . TOut . qu
    }

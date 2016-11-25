@@ -17,18 +17,21 @@ class ConvertTests
          (LTrim Join`r`n %
                                  var = hello
                                  msg = %var% world
+                                 MsgBox, %msg%
          )"
 
       expected := "
          (LTrim Join`r`n %
                                  var := "hello"
                                  msg := var . " world"
+                                 MsgBox, %msg%
          )"
       ; that could alternatively be:    msg := "%var% world"
 
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
-      ;result := ExecScript(expected)
-      ;MsgBox, End of running script with AHK v2
+      ;ExecScript2(expected)
       ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
       ;msgbox, converted:`n`n%converted%
@@ -49,6 +52,7 @@ class ConvertTests
                                  var = hello
                                  *`/
                                  var2 = hello2
+                                 MsgBox, var=%var%``nvar2=%var2%
          )"
 
       expected := "
@@ -57,11 +61,13 @@ class ConvertTests
                                  var = hello
                                  *`/
                                  var2 := "hello2"
+                                 MsgBox, var=%var%``nvar2=%var2%
          )"
 
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
-      ;result := ExecScript(expected)
-      ;MsgBox, End of running script with AHK v2
+      ;ExecScript2(expected)
       ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
       ;msgbox, converted:`n`n%converted%
@@ -92,9 +98,10 @@ class ConvertTests
                                  var2 := "hello2"
          )"
 
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
-      ;result := ExecScript(expected)
-      ;MsgBox, End of running script with AHK v2
+      ;ExecScript2(expected)
       ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
       ;msgbox, converted:`n`n%converted%
@@ -111,6 +118,7 @@ class ConvertTests
                                  line1
                                  line2
                                  `)
+                                 MsgBox, %var%
          )"
 
       expected := "
@@ -121,11 +129,13 @@ class ConvertTests
                                  line1
                                  line2
                                  `)"
+                                 MsgBox, %var%
          )"
 
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
-      ;result := ExecScript(expected)
-      ;MsgBox, End of running script with AHK v2
+      ;ExecScript2(expected)
       ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
       ;msgbox, converted:`n`n%converted%
@@ -154,9 +164,10 @@ class ConvertTests
                                  `)
          )"
 
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
-      ;result := ExecScript(expected)
-      ;MsgBox, End of running script with AHK v2
+      ;ExecScript2(expected)
       ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
       ;msgbox, converted:`n`n%converted%
@@ -179,9 +190,10 @@ class ConvertTests
                                  var2 := "value2"
          )"
 
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
-      ;result := ExecScript(expected)
-      ;MsgBox, End of running script with AHK v2
+      ;ExecScript2(expected)
       ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
       ;msgbox, converted:`n`n%converted%
@@ -192,19 +204,22 @@ class ConvertTests
    {
       input_script := "
          (LTrim Join`r`n %
+                                 var := "helloworld"
                                  if var = helloworld
-                                    MsgBox, %var%
+                                    MsgBox, equal
             )"
 
       expected := "
          (LTrim Join`r`n %
+                                 var := "helloworld"
                                  if (var = "helloworld")
-                                    MsgBox, %var%
+                                    MsgBox, equal
          )"
 
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
-      ;result := ExecScript(expected)
-      ;MsgBox, End of running script with AHK v2
+      ;ExecScript2(expected)
       ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
       ;msgbox, converted:`n`n%converted%
@@ -215,19 +230,22 @@ class ConvertTests
    {
       input_script := "
          (LTrim Join`r`n %
+                                 var = 3
                                  if var != 
                                     MsgBox, %var%
             )"
 
       expected := "
          (LTrim Join`r`n %
+                                 var := 3
                                  if (var != "")
                                     MsgBox, %var%
          )"
 
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
-      ;result := ExecScript(expected)
-      ;MsgBox, End of running script with AHK v2
+      ;ExecScript2(expected)
       ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
       ;msgbox, converted:`n`n%converted%
@@ -248,9 +266,10 @@ class ConvertTests
                                     MsgBox, %var%
          )"
 
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
-      ;result := ExecScript(expected)
-      ;MsgBox, End of running script with AHK v2
+      ;ExecScript2(expected)
       ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
       ;msgbox, converted:`n`n%converted%
@@ -271,9 +290,10 @@ class ConvertTests
                                     MsgBox, %var%
          )"
 
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
-      ;result := ExecScript(expected)
-      ;MsgBox, End of running script with AHK v2
+      ;ExecScript2(expected)
       ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
       ;msgbox, converted:`n`n%converted%
@@ -294,9 +314,10 @@ class ConvertTests
                                      MsgBox The contents of MyVar and MyVar2 are identical.
          )"
 
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
-      ;result := ExecScript(expected)
-      ;MsgBox, End of running script with AHK v2
+      ;ExecScript2(expected)
       ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
       ;msgbox, converted:`n`n%converted%
@@ -321,9 +342,10 @@ class ConvertTests
                                      MsgBox, MyVar is empty/blank
          )"
 
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
-      ;result := ExecScript(expected)
-      ;MsgBox, End of running script with AHK v2
+      ;ExecScript2(expected)
       ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
       ;msgbox, converted:`n`n%converted%
@@ -348,9 +370,10 @@ class ConvertTests
                                      MsgBox, MyVar is not empty/blank
          )"
 
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
-      ;result := ExecScript(expected)
-      ;MsgBox, End of running script with AHK v2
+      ;ExecScript2(expected)
       ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
       ;msgbox, converted:`n`n%converted%
@@ -371,9 +394,10 @@ class ConvertTests
                                     MsgBox, %var%
          )"
 
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
-      ;result := ExecScript(expected)
-      ;MsgBox, End of running script with AHK v2
+      ;ExecScript2(expected)
       ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
       ;msgbox, converted:`n`n%converted%
@@ -400,9 +424,10 @@ class ConvertTests
                                     MsgBox, var is empty
          )"
 
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
-      ;result := ExecScript(expected)
-      ;MsgBox, End of running script with AHK v2
+      ;ExecScript2(expected)
       ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
       ;msgbox, converted:`n`n%converted%
@@ -423,9 +448,10 @@ class ConvertTests
                                     MsgBox, %var%
          )"
 
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
-      ;result := ExecScript(expected)
-      ;MsgBox, End of running script with AHK v2
+      ;ExecScript2(expected)
       converted := Convert(input_script)
       Yunit.assert(converted = expected)
    }
@@ -444,9 +470,10 @@ class ConvertTests
                                     MsgBox, %var%
          )"
 
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
-      ;result := ExecScript(expected)
-      ;MsgBox, End of running script with AHK v2
+      ;ExecScript2(expected)
       converted := Convert(input_script)
       Yunit.assert(converted = expected)
    }
@@ -465,9 +492,10 @@ class ConvertTests
                                     MsgBox, %var%
          )"
 
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
-      ;result := ExecScript(expected)
-      ;MsgBox, End of running script with AHK v2
+      ;ExecScript2(expected)
       converted := Convert(input_script)
       Yunit.assert(converted = expected)
    }
@@ -486,9 +514,10 @@ class ConvertTests
                                     MsgBox, %var%
          )"
 
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
-      ;result := ExecScript(expected)
-      ;MsgBox, End of running script with AHK v2
+      ;ExecScript2(expected)
       converted := Convert(input_script)
       Yunit.assert(converted = expected)
    }
@@ -505,9 +534,10 @@ class ConvertTests
                                  var *= 5
          )"
 
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
-      ;result := ExecScript(expected)
-      ;MsgBox, End of running script with AHK v2
+      ;ExecScript2(expected)
       converted := Convert(input_script)
       Yunit.assert(converted = expected)
    }
@@ -526,9 +556,10 @@ class ConvertTests
                                  var *= var2
          )"
 
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
-      ;result := ExecScript(expected)
-      ;MsgBox, End of running script with AHK v2
+      ;ExecScript2(expected)
       ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
       ;msgbox, converted:`n`n%converted%
@@ -547,9 +578,10 @@ class ConvertTests
                                  var += 2
          )"
 
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
-      ;result := ExecScript(expected)
-      ;MsgBox, End of running script with AHK v2
+      ;ExecScript2(expected)
       ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
       ;msgbox, converted:`n`n%converted%
@@ -568,9 +600,10 @@ class ConvertTests
                                  var += 2
          )"
 
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
-      ;result := ExecScript(expected)
-      ;MsgBox, End of running script with AHK v2
+      ;ExecScript2(expected)
       ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
       ;msgbox, converted:`n`n%converted%
@@ -589,9 +622,10 @@ class ConvertTests
                                  var -= 2
          )"
 
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
-      ;result := ExecScript(expected)
-      ;MsgBox, End of running script with AHK v2
+      ;ExecScript2(expected)
       ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
       ;msgbox, converted:`n`n%converted%
@@ -610,9 +644,10 @@ class ConvertTests
                                  var -= value
          )"
 
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
-      ;result := ExecScript(expected)
-      ;MsgBox, End of running script with AHK v2
+      ;ExecScript2(expected)
       ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
       ;msgbox, converted:`n`n%converted%
@@ -639,9 +674,10 @@ class ConvertTests
                                  }
          )"
 
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
-      ;result := ExecScript(expected)
-      ;MsgBox, End of running script with AHK v2
+      ;ExecScript2(expected)
       ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
       ;msgbox, converted:`n`n%converted%
@@ -666,9 +702,10 @@ class ConvertTests
                                  }
          )"
 
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
-      ;result := ExecScript(expected)
-      ;MsgBox, End of running script with AHK v2
+      ;ExecScript2(expected)
       ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
       ;msgbox, converted:`n`n%converted%
@@ -689,9 +726,10 @@ class ConvertTests
                                  msgbox, hi
          )"
 
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
-      ;result := ExecScript(expected)
-      ;MsgBox, End of running script with AHK v2
+      ;ExecScript2(expected)
       ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
       ;msgbox, converted:`n`n%converted%
@@ -712,9 +750,10 @@ class ConvertTests
                                  msgbox, hi
          )"
 
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
-      ;result := ExecScript(expected)
-      ;MsgBox, End of running script with AHK v2
+      ;ExecScript2(expected)
       ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
       ;msgbox, converted:`n`n%converted%
@@ -735,9 +774,10 @@ class ConvertTests
                                  MsgBox, %FreeSpace%
          )"
 
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
-      ;result := ExecScript(expected)
-      ;MsgBox, End of running script with AHK v2
+      ;ExecScript2(expected)
       ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
       ;msgbox, converted:`n`n%converted%
@@ -758,9 +798,10 @@ class ConvertTests
                                  StrUpper, newvar, %var%
          )"
 
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
-      ;result := ExecScript(expected)
-      ;MsgBox, End of running script with AHK v2
+      ;ExecScript2(expected)
       ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
       ;msgbox, converted:`n`n%converted%
@@ -785,9 +826,10 @@ class ConvertTests
                                     MsgBox, it worked
          )"
 
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
-      ;result := ExecScript(expected)
-      ;MsgBox, End of running script with AHK v2
+      ;ExecScript2(expected)
       ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
       ;msgbox, converted:`n`n%converted%
@@ -853,7 +895,17 @@ class ToExpTests
 
 ; from the 'Run' help docs:
 ; ExecScript: Executes the given code as a new AutoHotkey process.
-ExecScript(Script, Wait:=true)
+ExecScript1(Script, Wait:=true)
+{
+    shell := ComObjCreate("WScript.Shell")
+    exec := shell.Exec("..\diff\VisualDiff.exe /ErrorStdOut *")  ;// the VisualDiff.exe file is just a renamed AHK v1.1.24.01 exe
+    exec.StdIn.Write(script)
+    exec.StdIn.Close()
+    if Wait
+        return exec.StdOut.ReadAll()
+}
+
+ExecScript2(Script, Wait:=true)
 {
     shell := ComObjCreate("WScript.Shell")
     exec := shell.Exec("Tests.exe /ErrorStdOut *")  ;// the Tests.exe file is just a renamed AHK v2-a076 exe

@@ -563,7 +563,7 @@ class ConvertTests
 
       expected := "
          (LTrim Join`r`n %
-                                 if var = "value"
+                                 if (var = "value")
                                     MsgBox, %var%
          )"
 
@@ -587,7 +587,7 @@ class ConvertTests
 
       expected := "
          (LTrim Join`r`n %
-                                 if var = "value"
+                                 if (var = "value")
                                     MsgBox, %var%
          )"
 
@@ -611,7 +611,7 @@ class ConvertTests
 
       expected := "
          (LTrim Join`r`n %
-                                 if var = "value"
+                                 if (var = "value")
                                     MsgBox, %var%
          )"
 
@@ -635,7 +635,7 @@ class ConvertTests
 
       expected := "
          (LTrim Join`r`n %
-                                 if var = "value"
+                                 if (var = "value")
                                     MsgBox, %var%
          )"
 
@@ -661,7 +661,7 @@ class ConvertTests
       expected := "
          (LTrim Join`r`n %
                                  var := ","
-                                 if var = ","
+                                 if (var = ",")
                                     MsgBox, var is a comma
          )"
 
@@ -687,7 +687,7 @@ class ConvertTests
       expected := "
          (LTrim Join`r`n %
                                  var := "hello,world"
-                                 if var = "hello,world"
+                                 if (var = "hello,world")
                                     MsgBox, var matches
          )"
 
@@ -718,7 +718,7 @@ class ConvertTests
       expected := "
          (LTrim Join`r`n %
                                  var := ","
-                                 if var = ","
+                                 if (var = ",")
                                     MsgBox, var is a comma
          )"
 
@@ -749,8 +749,128 @@ class ConvertTests
       expected := "
          (LTrim Join`r`n %
                                  var := "hello,world"
-                                 if var = "hello,world"
+                                 if (var = "hello,world")
                                     MsgBox, var matches
+         )"
+
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
+      ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
+      ;ExecScript2(expected)
+      ;msgbox, expected:`n`n%expected%
+      converted := Convert(input_script)
+      ;msgbox, converted:`n`n%converted%
+      Yunit.assert(converted = expected)
+   }
+
+   IfNotEqual()
+   {
+      input_script := "
+         (LTrim Join`r`n %
+                                 IfNotEqual, var, value
+                                    MsgBox, %var%
+         )"
+
+      expected := "
+         (LTrim Join`r`n %
+                                 if (var != "value")
+                                    MsgBox, %var%
+         )"
+
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
+      ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
+      ;ExecScript2(expected)
+      ;msgbox, expected:`n`n%expected%
+      converted := Convert(input_script)
+      ;msgbox, converted:`n`n%converted%
+      Yunit.assert(converted = expected)
+   }
+
+   IfGreaterOrEqual()
+   {
+      input_script := "
+         (LTrim Join`r`n %
+                                 IfGreaterOrEqual, var, value
+                                    MsgBox, %var%
+         )"
+
+      expected := "
+         (LTrim Join`r`n %
+                                 if (var >= "value")
+                                    MsgBox, %var%
+         )"
+
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
+      ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
+      ;ExecScript2(expected)
+      ;msgbox, expected:`n`n%expected%
+      converted := Convert(input_script)
+      ;msgbox, converted:`n`n%converted%
+      Yunit.assert(converted = expected)
+   }
+
+   IfGreater()
+   {
+      input_script := "
+         (LTrim Join`r`n %
+                                 IfGreater, var, value
+                                    MsgBox, %var%
+         )"
+
+      expected := "
+         (LTrim Join`r`n %
+                                 if (var > "value")
+                                    MsgBox, %var%
+         )"
+
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
+      ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
+      ;ExecScript2(expected)
+      ;msgbox, expected:`n`n%expected%
+      converted := Convert(input_script)
+      ;msgbox, converted:`n`n%converted%
+      Yunit.assert(converted = expected)
+   }
+
+   IfLess()
+   {
+      input_script := "
+         (LTrim Join`r`n %
+                                 IfLess, var, value
+                                    MsgBox, %var%
+         )"
+
+      expected := "
+         (LTrim Join`r`n %
+                                 if (var < "value")
+                                    MsgBox, %var%
+         )"
+
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
+      ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
+      ;ExecScript2(expected)
+      ;msgbox, expected:`n`n%expected%
+      converted := Convert(input_script)
+      ;msgbox, converted:`n`n%converted%
+      Yunit.assert(converted = expected)
+   }
+
+   IfLessOrEqual()
+   {
+      input_script := "
+         (LTrim Join`r`n %
+                                 IfLessOrEqual, var, value
+                                    MsgBox, %var%
+         )"
+
+      expected := "
+         (LTrim Join`r`n %
+                                 if (var <= "value")
+                                    MsgBox, %var%
          )"
 
       ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%

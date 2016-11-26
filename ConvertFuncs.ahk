@@ -32,12 +32,12 @@ Convert(ScriptString)
       EnvDiv,InputVar,ExprVar | {1} /= {2}
       EnvMult,InputVar,ExprVar | {1} *= {2}
       EnvSub,InputVar,ExprVar,TimeUnits | {1} -= {2}[, {3}]
-      IfEqual,InputVar,value | if {1} = {2}
-      IfNotEqual,InputVar,value | if {1} != {2}
-      IfGreater,InputVar,value | if {1} > {2}
-      IfGreaterOrEqual,InputVar,value | if {1} >= {2}
-      IfLess,InputVar,value | if {1} < {2}
-      IfLessOrEqual,InputVar,value | if {1} <= {2}
+      IfEqual,InputVar,value | if ({1} = {2})
+      IfNotEqual,InputVar,value | if ({1} != {2})
+      IfGreater,InputVar,value | if ({1} > {2})
+      IfGreaterOrEqual,InputVar,value | if ({1} >= {2})
+      IfLess,InputVar,value | if ({1} < {2})
+      IfLessOrEqual,InputVar,value | if ({1} <= {2})
       StringLen,OutputVar,InputVar | {1} := StrLen({2})
       StringGetPos,OutputVar,InputVar,SearchText,Side,Offset | *_StringGetPos
       StringMid,OutputVar,InputVar,StartChar,Count,L | {1} := SubStr({2}, {3}[, {4}][])

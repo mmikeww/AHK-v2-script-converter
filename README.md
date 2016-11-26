@@ -5,7 +5,7 @@ It is useful to quickly convert some of the bigger syntax changes. Afterwards yo
 I took Frankie's original converter linked below, and updated it to work with the latest AHK v2 alpha build.  
 I've also added essential unit tests using the [Yunit framework](https://github.com/Uberi/Yunit) to encourage contributions from others.
 
-However, this project is way more ambitious that I originally thought, and there is still loads more work to be done. See below for how you can [contribute](#contributing).
+However, this project is way more ambitious that I originally thought, and __it needs a lot of work__. See below for how you can [contribute](#contributing).
 
 # Usage
 ## Convert v1 script to v2
@@ -23,11 +23,15 @@ Similarly, the `diff\VisualDiff.exe` file is just a renamed `AutoHotkeyU32-v1.1.
 
 # Contributing
 There are many edge cases when trying to parse script code and convert it. Here are a few ways you can help:
+- Use it to convert your v1 scripts  
+  When you find errors or mistakes in the conversion, [open an issue here on github]()
 - Write unit tests  
-  You don't even need to write implementation code. Simply write some tests. There are existing commands that the original converter supported that have not been tested with my changes, such as `StringTrimRight` and other String functions. Follow the existing format in the `tests\Tests.ahk` file. See [this commit](https://github.com/mmikeww/AHK-v2-script-converter/commit/1e32043455abbd2f1e42c51c126d7c4f20a6be88) for an example.
+  You don't even need to write implementation code. Simply write some tests. There are existing commands that the original converter supported that have not been tested with my changes, such as `StringTrimRight`. Follow the existing format in the `tests\Tests.ahk` file. See [this commit](https://github.com/mmikeww/AHK-v2-script-converter/commit/1e32043455abbd2f1e42c51c126d7c4f20a6be88) for an example.
 - Fix existing failing tests  
   I have written tests already for the conversion of default function params from to use `:=` instead of `=`.  
   These tests currently fail and need implementation.  
+- Refactor the code  
+  The code isn't in very good condition. And you can lean on the unit testing suite as you try to make it better.
 - Add support for other changes. You can find the definitive list here: [v2-changes](https://autohotkey.com/v2/v2-changes.htm)  
   This would include adding support for new commands or other syntax changes. Follow the example in [this commit](https://github.com/mmikeww/AHK-v2-script-converter/commit/6f9fce882a846b15776431a4b27cac9a2aba30d3).
 

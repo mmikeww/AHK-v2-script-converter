@@ -16,14 +16,19 @@ Convert(ScriptString)
 
 
    ;// Commands and How to convert them
-   ;// our format:
-   ;//          CommandName,Param1,Param2,etc | format replacement string using {1} which corresponds to Param1 etc
-   ;// param format:
-   ;//          params containing "var" such as "InputVar,OutputVar,TitleVar" will not be converted
+   ;// Specification format:
+   ;//          CommandName,Param1,Param2,etc | Replacement string format (see below)
+   ;// Param format:
+   ;//          params names containing "var" (such as "InputVar,OutputVar,TitleVar") will not be converted
    ;//          any other param name will be converted from literal text to expression using the ToExp() func
-   Convert := "
+   ;// Replacement format:
+   ;//          use asterisk * and a function name to call
+   ;//          or
+   ;//          use {1} which corresponds to Param1, etc
+   ;//          use [] for optional params. no idea why StringMid has an empty [] below
+   CommandsToConvert := "
    (
-      EnvAdd,InputVar,ExprVar,TimeUnits | *EnvAdd
+      EnvAdd,InputVar,ExprVar,TimeUnits | *_EnvAdd
       EnvDiv,InputVar,ExprVar | {1} /= {2}
       EnvMult,InputVar,ExprVar | {1} *= {2}
       EnvSub,InputVar,ExprVar,TimeUnits | {1} -= {2}[, {3}]
@@ -34,7 +39,7 @@ Convert(ScriptString)
       IfLess,InputVar,value | if {1} < {2}
       IfLessOrEqual,InputVar,value | if {1} <= {2}
       StringLen,OutputVar,InputVar | {1} := StrLen({2})
-      StringGetPos,OutputVar,InputVar,SearchText,Side, Offset | {1} := InStr({2}, {3}[][, false, {5}])
+      StringGetPos,OutputVar,InputVar,SearchText,Side,Offset | *_StringGetPos
       StringMid,OutputVar,InputVar,StartChar,Count,L | {1} := SubStr({2}, {3}[, {4}][])
       StringLeft,OutputVar,InputVar,Count | {1} := SubStr({2}, 1, {3})
       StringRight,OutputVar,InputVar,Count | {1} := SubStr({2}, -{3}+1, {3})
@@ -153,7 +158,7 @@ Convert(ScriptString)
          Line := RTrim(Equation[1]) . " := " . ToExp(Equation[2])
       }
       
-      else If RegExMatch(Line, "i)^\s*(else\s+)?if\s+(not\s+)?([a-z_][a-z_0-9]*[\s]*)(!=|=|<>|<|>)([^{;]*)(\s*{?)", Equation)
+      else If RegExMatch(Line, "i)^\s*(else\s+)?if\s+(not\s+)?([a-z_][a-z_0-9]*[\s]*)(!=|=|<>|>=|<=|<|>)([^{;]*)(\s*{?)", Equation)
       {
          ;msgbox if regex`nLine: %Line%`n1: %Equation[1]%`n2: %Equation[2]%`n3: %Equation[3]%`n4: %Equation[4]%`n5: %Equation[5]%`n6: %Equation[6]%
          Line := format_v("{else}if {not}({variable} {op} {equation}){otb}"
@@ -171,7 +176,7 @@ Convert(ScriptString)
          Params := SubStr(TmpLine, FirstDelim+2)
          ;msgbox, TmpLine=%TmpLine%`nFirstDelim=%FirstDelim%`nCommand=%Command%`nParams=%Params%
          ; Now we format the parameters into their v2 equivilents
-         LoopParse, %Convert%, `n
+         LoopParse, %CommandsToConvert%, `n
          {
             StrSplit, Part, %A_LoopField%, |
             ;msgbox % A_LoopField "`n[" part[1] "]`n[" part[2] "]"
@@ -204,13 +209,23 @@ Convert(ScriptString)
                }
                else
                {
+                  ;if (Command = "StringGetPos")
+                     ;msgbox, % "in else`nLine: " Line "`nPart[2]: " Part[2] "`nParam[1]: " Param[1]
                   If ParamDif := (ListParam.Length() - Param.Length() )
+                  {
                      ; Remove all unused optional parameters
+                     ;msgbox, %ParamDif%
                      Part[2] := RegExReplace(Part[2], "\[[^\]]*\]", "", Count, ParamDif, 1)
-                  Part[2] := StrReplace(Part[2], "[")
-                  Part[2] := StrReplace(Part[2], "]")
-                  ;msgbox, % "Line=" Line "`nPart[2]=" Part[2] "`nParam[1]=" Param[1]
+                     ;msgbox, % "after regexreplace`nPart[2]: " Part[2]
+                  }
+                  else    ; else if the optional params are included, then remove the []s before formatting
+                  {
+                     Part[2] := StrReplace(Part[2], "[")
+                     Part[2] := StrReplace(Part[2], "]")
+                  }
+                  ;msgbox, % "after replacing []`nPart[2]: " Part[2]
                   Line := format_v(Part[2], Param)
+                  ;msgbox, % "after replacing []`nLine: " Line
                }
             }
          }
@@ -332,12 +347,58 @@ ActiveStats(p) {
    return Out   
 }
 
-EnvAdd(p) {
+_EnvAdd(p) {
    If p[3]
       return format_v("{1} := DateAdd({1}, {2}, {3})", p)
    else
       return format_v("{1} += {2}", p)
 }
+
+_StringGetPos(p)
+{
+   if p.Length() = 3
+      return format_v("{1} := InStr({2}, {3}) - 1", p)
+
+   ; modelled off of:   https://github.com/Lexikos/AutoHotkey_L/blob/master/source/script.cpp#L14181
+   else if p.Length() >= 4
+   {
+      p4FirstChar := SubStr(p[4], 1, 1)
+      p4LastChar := SubStr(p[4], -1)
+      ;msgbox, % p[4] "`np4FirstChar=" p4FirstChar "`np4LastChar=" p4LastChar
+      if (p4FirstChar = "`"") && (p4LastChar = "`"")   ; remove start/end quotes, would be nice if a non-expr was passed in
+      {
+         p4noquotes := SubStr(p[4], 2, -1)
+         p4char1 := SubStr(p4noquotes, 1, 1)
+         occurences := SubStr(p4noquotes, 2)
+         ;msgbox, % p[4]
+         p[4] := occurences ? occurences : 1
+         p[5] := p[5] ? p[5] : 0              ; 5th param is 'Offset' aka starting position
+
+         ;msgbox, % p[5]
+         ; if the 5th param is a quoted string, then it was used as expression and not a number
+         if (SubStr(p[5], 1, 1) = "`"") && (SubStr(p[5], -1) = "`"")
+            p[5] := SubStr(p[5], 2, -1)  ; remove quotes
+        
+         if (StrUpper(p4char1) = "R") || (p4noquotes = "1")
+            out := format_v("{1} := InStr({2}, {3}, false, -1*(({5})+1), {4}) - 1", p)
+         else
+            out := format_v("{1} := InStr({2}, {3}, false, ({5})+1, {4}) - 1", p)
+         ;msgbox, %out%
+      }
+      else
+      {
+         ; else then a variable was passed (containing the "L#|R#" string),
+         ;      or literal text converted to expr, something like:   "L" . A_Index
+         ; should issue warning?
+      }
+   }
+
+   ; still need warning because StringCaseSense can mess things up
+   out .= "`r`n`; WARNING: if you use StringCaseSense in your script you may need to inspect the 3rd param 'false' above"
+
+   return out
+}
+
 
 format_v(f, v)
 {
@@ -360,6 +421,8 @@ format_v(f, v)
         }
         if m.3 = "" {
             out .= v[key]  ; No format specifier, so just output the value.
+            ;if InStr(out, "var")
+            ;   msgbox, %out%
             continue
         }
         if (type := m.4) = "s"
@@ -384,3 +447,4 @@ format_v(f, v)
     out .= SubStr(f, j)  ; Append remainder of format string.
     return out
 }
+

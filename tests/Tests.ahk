@@ -955,6 +955,412 @@ class ConvertTests
       Yunit.assert(converted = expected)
    }
 
+   StringLen()
+   {
+      input_script := "
+         (LTrim Join`r`n %
+                                 InputVar := "The Quick Brown Fox Jumps Over the Lazy Dog"
+                                 StringLen, length, InputVar
+                                 MsgBox, The length of InputVar is %length%.
+         )"
+
+      expected := "
+         (LTrim Join`r`n %
+                                 InputVar := "The Quick Brown Fox Jumps Over the Lazy Dog"
+                                 length := StrLen(InputVar)
+                                 MsgBox, The length of InputVar is %length%.
+         )"
+
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
+      ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
+      ;ExecScript2(expected)
+      ;msgbox, expected:`n`n%expected%
+      converted := Convert(input_script)
+      ;msgbox, converted:`n`n%converted%
+      Yunit.assert(converted = expected)
+   }
+
+   StringGetPos()
+   {
+      input_script := "
+         (LTrim Join`r`n %
+                                 Haystack = abcdefghijklmnopqrs
+                                 Needle = def
+                                 StringGetPos, pos, Haystack, %Needle%
+                                 if pos >= 0
+                                     MsgBox, The string was found at position %pos%.
+         )"
+
+      expected := "
+         (LTrim Join`r`n %
+                                 Haystack := "abcdefghijklmnopqrs"
+                                 Needle := "def"
+                                 pos := InStr(Haystack, Needle) - 1
+                                 if (pos >= 0)
+                                     MsgBox, The string was found at position %pos%.
+         )"
+
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
+      ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
+      ;ExecScript2(expected)
+      ;msgbox, expected:`n`n%expected%
+      converted := Convert(input_script)
+      ;msgbox, converted:`n`n%converted%
+      Yunit.assert(converted = expected)
+   }
+
+   StringGetPos_SearchLeftOccurance()
+   {
+      input_script := "
+         (LTrim Join`r`n %
+                                 Haystack = abcdefabcdef
+                                 Needle = def
+                                 StringGetPos, pos, Haystack, %Needle%, L2
+                                 if pos >= 0
+                                     MsgBox, The string was found at position %pos%.
+         )"
+
+      expected := "
+         (LTrim Join`r`n %
+                                 Haystack := "abcdefabcdef"
+                                 Needle := "def"
+                                 pos := InStr(Haystack, Needle, false, (0)+1, 2) - 1
+                                 ; WARNING: if you use StringCaseSense in your script you may need to inspect the 3rd param 'false' above
+                                 if (pos >= 0)
+                                     MsgBox, The string was found at position %pos%.
+         )"
+
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
+      ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
+      ;ExecScript2(expected)
+      ;msgbox, expected:`n`n%expected%
+      converted := Convert(input_script)
+      ;msgbox, converted:`n`n%converted%
+      Yunit.assert(converted = expected)
+      ;FileAppend, % expected, expected.txt
+      ;FileAppend, % converted, converted.txt 
+      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+   }
+
+   StringGetPos_SearchRight()
+   {
+      input_script := "
+         (LTrim Join`r`n %
+                                 Haystack = abcdefabcdef
+                                 Needle = bcd
+                                 StringGetPos, pos, Haystack, %Needle%, R
+                                 if pos >= 0
+                                     MsgBox, The string was found at position %pos%.
+         )"
+
+      expected := "
+         (LTrim Join`r`n %
+                                 Haystack := "abcdefabcdef"
+                                 Needle := "bcd"
+                                 pos := InStr(Haystack, Needle, false, -1*((0)+1), 1) - 1
+                                 ; WARNING: if you use StringCaseSense in your script you may need to inspect the 3rd param 'false' above
+                                 if (pos >= 0)
+                                     MsgBox, The string was found at position %pos%.
+         )"
+
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
+      ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
+      ;ExecScript2(expected)
+      ;msgbox, expected:`n`n%expected%
+      converted := Convert(input_script)
+      ;msgbox, converted:`n`n%converted%
+      Yunit.assert(converted = expected)
+   }
+
+   StringGetPos_SearchRightOccurance()
+   {
+      input_script := "
+         (LTrim Join`r`n %
+                                 Haystack = abcdefabcdef
+                                 Needle = cde
+                                 StringGetPos, pos, Haystack, %Needle%, R2
+                                 if pos >= 0
+                                     MsgBox, The string was found at position %pos%.
+         )"
+
+      expected := "
+         (LTrim Join`r`n %
+                                 Haystack := "abcdefabcdef"
+                                 Needle := "cde"
+                                 pos := InStr(Haystack, Needle, false, -1*((0)+1), 2) - 1
+                                 ; WARNING: if you use StringCaseSense in your script you may need to inspect the 3rd param 'false' above
+                                 if (pos >= 0)
+                                     MsgBox, The string was found at position %pos%.
+         )"
+
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
+      ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
+      ;ExecScript2(expected)
+      ;msgbox, expected:`n`n%expected%
+      converted := Convert(input_script)
+      ;msgbox, converted:`n`n%converted%
+      Yunit.assert(converted = expected)
+   }
+
+   StringGetPos_OffsetLeft()
+   {
+      input_script := "
+         (LTrim Join`r`n %
+                                 Haystack = abcdefabcdef
+                                 Needle = cde
+                                 StringGetPos, pos, Haystack, %Needle%,, 4
+                                 if pos >= 0
+                                     MsgBox, The string was found at position %pos%.
+         )"
+
+      expected := "
+         (LTrim Join`r`n %
+                                 Haystack := "abcdefabcdef"
+                                 Needle := "cde"
+                                 pos := InStr(Haystack, Needle, false, (4)+1, 1) - 1
+                                 ; WARNING: if you use StringCaseSense in your script you may need to inspect the 3rd param 'false' above
+                                 if (pos >= 0)
+                                     MsgBox, The string was found at position %pos%.
+         )"
+
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
+      ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
+      ;ExecScript2(expected)
+      ;msgbox, expected:`n`n%expected%
+      converted := Convert(input_script)
+      ;msgbox, converted:`n`n%converted%
+      Yunit.assert(converted = expected)
+   }
+
+   StringGetPos_OffsetLeftVariable()
+   {
+      input_script := "
+         (LTrim Join`r`n %
+                                 Haystack = abcdefabcdef
+                                 Needle = cde
+                                 var = 2
+                                 StringGetPos, pos, Haystack, %Needle%,, %var%
+                                 if pos >= 0
+                                     MsgBox, The string was found at position %pos%.
+         )"
+
+      expected := "
+         (LTrim Join`r`n %
+                                 Haystack := "abcdefabcdef"
+                                 Needle := "cde"
+                                 var := 2
+                                 pos := InStr(Haystack, Needle, false, (var)+1, 1) - 1
+                                 ; WARNING: if you use StringCaseSense in your script you may need to inspect the 3rd param 'false' above
+                                 if (pos >= 0)
+                                     MsgBox, The string was found at position %pos%.
+         )"
+
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
+      ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
+      ;ExecScript2(expected)
+      ;msgbox, expected:`n`n%expected%
+      converted := Convert(input_script)
+      ;msgbox, converted:`n`n%converted%
+      Yunit.assert(converted = expected)
+   }
+
+   StringGetPos_OffsetLeftExpressionVariable()
+   {
+      input_script := "
+         (LTrim Join`r`n %
+                                 Haystack = abcdefabcdef
+                                 Needle = cde
+                                 var = 1
+                                 StringGetPos, pos, Haystack, %Needle%,, var+2
+                                 if pos >= 0
+                                     MsgBox, The string was found at position %pos%.
+         )"
+
+      expected := "
+         (LTrim Join`r`n %
+                                 Haystack := "abcdefabcdef"
+                                 Needle := "cde"
+                                 var := 1
+                                 pos := InStr(Haystack, Needle, false, (var+2)+1, 1) - 1
+                                 ; WARNING: if you use StringCaseSense in your script you may need to inspect the 3rd param 'false' above
+                                 if (pos >= 0)
+                                     MsgBox, The string was found at position %pos%.
+         )"
+
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
+      ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
+      ;ExecScript2(expected)
+      ;msgbox, expected:`n`n%expected%
+      converted := Convert(input_script)
+      ;msgbox, converted:`n`n%converted%
+      Yunit.assert(converted = expected)
+   }
+
+   StringGetPos_OffsetRightExpressionVariableOccurences()
+   {
+      input_script := "
+         (LTrim Join`r`n %
+                                 Haystack = abcdefabcdefabcdef
+                                 Needle = cde
+                                 var = 0
+                                 StringGetPos, pos, Haystack, %Needle%, R2, var+2
+                                 if pos >= 0
+                                     MsgBox, The string was found at position %pos%.
+         )"
+
+      expected := "
+         (LTrim Join`r`n %
+                                 Haystack := "abcdefabcdefabcdef"
+                                 Needle := "cde"
+                                 var := 0
+                                 pos := InStr(Haystack, Needle, false, -1*((var+2)+1), 2) - 1
+                                 ; WARNING: if you use StringCaseSense in your script you may need to inspect the 3rd param 'false' above
+                                 if (pos >= 0)
+                                     MsgBox, The string was found at position %pos%.
+         )"
+
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
+      ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
+      ;ExecScript2(expected)
+      ;msgbox, expected:`n`n%expected%
+      converted := Convert(input_script)
+      ;msgbox, converted:`n`n%converted%
+      Yunit.assert(converted = expected)
+   }
+
+   StringGetPos_OffsetLeftOccurence()
+   {
+      input_script := "
+         (LTrim Join`r`n %
+                                 Haystack = abcdefabcdefabcdef
+                                 Needle = cde
+                                 StringGetPos, pos, Haystack, %Needle%, L2, 4
+                                 if pos >= 0
+                                     MsgBox, The string was found at position %pos%.
+         )"
+
+      expected := "
+         (LTrim Join`r`n %
+                                 Haystack := "abcdefabcdefabcdef"
+                                 Needle := "cde"
+                                 pos := InStr(Haystack, Needle, false, (4)+1, 2) - 1
+                                 ; WARNING: if you use StringCaseSense in your script you may need to inspect the 3rd param 'false' above
+                                 if (pos >= 0)
+                                     MsgBox, The string was found at position %pos%.
+         )"
+
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
+      ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
+      ;ExecScript2(expected)
+      ;msgbox, expected:`n`n%expected%
+      converted := Convert(input_script)
+      ;msgbox, converted:`n`n%converted%
+      Yunit.assert(converted = expected)
+   }
+
+   StringGetPos_OffsetRight()
+   {
+      input_script := "
+         (LTrim Join`r`n %
+                                 Haystack = abcdefabcdef
+                                 Needle = cde
+                                 StringGetPos, pos, Haystack, %Needle%, R, 4
+                                 if pos >= 0
+                                     MsgBox, The string was found at position %pos%.
+         )"
+
+      expected := "
+         (LTrim Join`r`n %
+                                 Haystack := "abcdefabcdef"
+                                 Needle := "cde"
+                                 pos := InStr(Haystack, Needle, false, -1*((4)+1), 1) - 1
+                                 ; WARNING: if you use StringCaseSense in your script you may need to inspect the 3rd param 'false' above
+                                 if (pos >= 0)
+                                     MsgBox, The string was found at position %pos%.
+         )"
+
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
+      ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
+      ;ExecScript2(expected)
+      ;msgbox, expected:`n`n%expected%
+      converted := Convert(input_script)
+      ;msgbox, converted:`n`n%converted%
+      Yunit.assert(converted = expected)
+   }
+
+   StringGetPos_OffsetRightOccurence()
+   {
+      input_script := "
+         (LTrim Join`r`n %
+                                 Haystack = abcdefabcdefabcdef
+                                 Needle = cde
+                                 StringGetPos, pos, Haystack, %Needle%, r2, 4
+                                 if pos >= 0
+                                     MsgBox, The string was found at position %pos%.
+         )"
+
+      expected := "
+         (LTrim Join`r`n %
+                                 Haystack := "abcdefabcdefabcdef"
+                                 Needle := "cde"
+                                 pos := InStr(Haystack, Needle, false, -1*((4)+1), 2) - 1
+                                 ; WARNING: if you use StringCaseSense in your script you may need to inspect the 3rd param 'false' above
+                                 if (pos >= 0)
+                                     MsgBox, The string was found at position %pos%.
+         )"
+
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
+      ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
+      ;ExecScript2(expected)
+      ;msgbox, expected:`n`n%expected%
+      converted := Convert(input_script)
+      ;msgbox, converted:`n`n%converted%
+      Yunit.assert(converted = expected)
+   }
+
+   StringGetPos_Duplicates()
+   {
+      input_script := "
+         (LTrim Join`r`n %
+                                 Haystack = FFFF
+                                 Needle = FF
+                                 StringGetPos, pos, Haystack, %Needle%, L2
+                                 if pos >= 0
+                                     MsgBox, The string was found at position %pos%.
+         )"
+
+      expected := "
+         (LTrim Join`r`n %
+                                 Haystack := "FFFF"
+                                 Needle := "FF"
+                                 pos := InStr(Haystack, Needle, false, (0)+1, 2) - 1
+                                 ; WARNING: if you use StringCaseSense in your script you may need to inspect the 3rd param 'false' above
+                                 if (pos >= 0)
+                                     MsgBox, The string was found at position %pos%.
+         )"
+
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
+      ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
+      ;ExecScript2(expected)
+      ;msgbox, expected:`n`n%expected%
+      converted := Convert(input_script)
+      ;msgbox, converted:`n`n%converted%
+      Yunit.assert(converted = expected)
+   }
+
    End()
    {
    }
@@ -1020,6 +1426,8 @@ class ToExpTests
    {
    }
 }
+
+
 
 ; from the 'Run' help docs:
 ; ExecScript: Executes the given code as a new AutoHotkey process.

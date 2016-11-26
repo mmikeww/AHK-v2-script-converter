@@ -66,7 +66,9 @@ Convert(ScriptString)
       ;Line := A_LoopReadLine
       Line := A_LoopField
       Orig_Line := Line
-      ;msgbox, Original Line=`n%Line%
+      RegExMatch(Line, "^(\s*)", Indentation)
+      Indentation := Indentation[1]
+      ;msgbox, % "Line:`n" Line "`n`nIndentation=[" Indentation "]`nStrLen(Indentation)=" StrLen(Indentation)
       FirstChar := SubStr(Trim(Line), 1, 1)
       FirstTwo := SubStr(LTrim(Line), 1, 2)
       ;msgbox, FirstChar=%FirstChar%`nFirstTwo=%FirstTwo%
@@ -155,15 +157,16 @@ Convert(ScriptString)
       else If RegExMatch(Line, "i)^([\s]*[a-z_][a-z_0-9]*[\s]*)=([^;]*)", Equation) ; Thanks Lexikos
       {
          ;msgbox assignment regex`nLine: %Line%`n%Equation[1]%`n%Equation[2]%
-         Line := RTrim(Equation[1]) . " := " . ToExp(Equation[2])
+         Line := RTrim(Equation[1]) . " := " . ToExp(Equation[2])   ; this keeps the indentation already
       }
       
+      ; Traditional-if to Expression-if
       else If RegExMatch(Line, "i)^\s*(else\s+)?if\s+(not\s+)?([a-z_][a-z_0-9]*[\s]*)(!=|=|<>|>=|<=|<|>)([^{;]*)(\s*{?)", Equation)
       {
          ;msgbox if regex`nLine: %Line%`n1: %Equation[1]%`n2: %Equation[2]%`n3: %Equation[3]%`n4: %Equation[4]%`n5: %Equation[5]%`n6: %Equation[6]%
-         Line := format_v("{else}if {not}({variable} {op} {equation}){otb}"
-                        , {else: Equation[1], not: Equation[2], variable: RTrim(Equation[3])
-                        , op: Equation[4], equation: ToExp(Equation[5]), otb: Equation[6]} )
+         Line := Indentation . format_v("{else}if {not}({variable} {op} {equation}){otb}"
+                                        , {else: Equation[1], not: Equation[2], variable: RTrim(Equation[3])
+                                           , op: Equation[4], equation: ToExp(Equation[5]), otb: Equation[6]} )
       }
       
       else ; Command replacing
@@ -227,7 +230,7 @@ Convert(ScriptString)
                   FuncName := SubStr(Part[2], 2)
                   ;msgbox FuncName=%FuncName%
                   If IsFunc(FuncName)
-                     Line := %FuncName%(Param)
+                     Line := Indentation . %FuncName%(Param)
                }
                else
                {
@@ -248,7 +251,7 @@ Convert(ScriptString)
                      ;msgbox
                   }
                   ;msgbox, % "after replacing []`nPart[2]: " Part[2]
-                  Line := format_v(Part[2], Param)
+                  Line := Indentation . format_v(Part[2], Param)
                   ;msgbox, % "after replacing []`nLine: " Line
                }
             }

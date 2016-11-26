@@ -14,14 +14,14 @@ class ConvertTests
    AssignmentString()
    {
       input_script := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  var = hello
                                  msg = %var% world
                                  MsgBox, %msg%
          )"
 
       expected := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  var := "hello"
                                  msg := var . " world"
                                  MsgBox, %msg%
@@ -32,28 +32,28 @@ class ConvertTests
       ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
       ;ExecScript2(expected)
-      ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
       ;msgbox, converted:`n`n%converted%
-      Yunit.assert(converted = expected)
       ;Loop, Parse, %expected%, `n
          ;msgbox, % A_LoopField "`n" StrLen(A_LoopField)
       ;Loop, Parse, %converted%, `n
          ;msgbox, % A_LoopField "`n" StrLen(A_LoopField)
       ;FileAppend, % expected, expected.txt
       ;FileAppend, % converted, converted.txt 
+      Yunit.assert(converted = expected)
    }
 
    AssignmentStringWithQuotes()
    {
       input_script := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  msg = the man said, "hello"
                                  MsgBox, %msg%
          )"
 
       expected := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  msg := "the man said, ``"hello``""
                                  MsgBox, %msg%
          )"
@@ -62,8 +62,8 @@ class ConvertTests
       ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
       ;ExecScript2(expected)
-      ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
       ;msgbox, converted:`n`n%converted%
       Yunit.assert(converted = expected)
    }
@@ -71,14 +71,14 @@ class ConvertTests
    AssignmentNumber()
    {
       input_script := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  var = 2
                                  if (var = 2)
                                     MsgBox, true
          )"
 
       expected := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  var := 2
                                  if (var = 2)
                                     MsgBox, true
@@ -88,16 +88,18 @@ class ConvertTests
       ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
       ;ExecScript2(expected)
-      ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
       ;msgbox, converted:`n`n%converted%
+      ;FileAppend, % expected, expected.txt
+      ;FileAppend, % converted, converted.txt 
       Yunit.assert(converted = expected)
    }
 
    CommentBlock()
    {
       input_script := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  /`*
                                  var = hello
                                  *`/
@@ -106,7 +108,7 @@ class ConvertTests
          )"
 
       expected := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  /`*
                                  var = hello
                                  *`/
@@ -118,8 +120,8 @@ class ConvertTests
       ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
       ;ExecScript2(expected)
-      ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
       ;msgbox, converted:`n`n%converted%
       Yunit.assert(converted = expected)
    }
@@ -127,7 +129,7 @@ class ConvertTests
    CommentBlock_ContinuationInside()
    {
       input_script := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  /`*
                                  var = 
                                  `(
@@ -138,7 +140,7 @@ class ConvertTests
          )"
 
       expected := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  /`*
                                  var = 
                                  `(
@@ -152,8 +154,8 @@ class ConvertTests
       ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
       ;ExecScript2(expected)
-      ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
       ;msgbox, converted:`n`n%converted%
       Yunit.assert(converted = expected)
    }
@@ -161,7 +163,7 @@ class ConvertTests
    Continuation_Assignment()
    {
       input_script := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  Sleep, 100
                                  var =
                                  `(
@@ -172,7 +174,7 @@ class ConvertTests
          )"
 
       expected := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  Sleep, 100
                                  var := "
                                  `(
@@ -186,8 +188,8 @@ class ConvertTests
       ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
       ;ExecScript2(expected)
-      ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
       ;msgbox, converted:`n`n%converted%
       Yunit.assert(converted = expected)
    }
@@ -195,7 +197,7 @@ class ConvertTests
    Continuation_Assignment_indented()
    {
       input_script := "
-         (LTrim0 Join`r`n %
+         (Join`r`n %
                                  var =
                                     `(
                                     hello world
@@ -204,7 +206,7 @@ class ConvertTests
          )"
 
       expected := "
-         (LTrim0 Join`r`n %
+         (Join`r`n %
                                  var := "
                                     `(
                                     hello world
@@ -216,10 +218,9 @@ class ConvertTests
       ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
       ;ExecScript2(expected)
-      ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
       ;msgbox, converted:`n`n%converted%
-      Yunit.assert(converted = expected)
       ;Loop, Parse, %expected%, `n
          ;msgbox, % A_LoopField "`n" StrLen(A_LoopField)
       ;Loop, Parse, %converted%, `n
@@ -227,12 +228,13 @@ class ConvertTests
       ;FileAppend, % expected, expected.txt
       ;FileAppend, % converted, converted.txt 
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      Yunit.assert(converted = expected)
    }
 
    Continuation_NewlinePreceding()
    {
       input_script := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  var =
 
                                  `(
@@ -242,7 +244,7 @@ class ConvertTests
          )"
 
       expected := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  var := "
 
                                  `(
@@ -255,8 +257,8 @@ class ConvertTests
       ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
       ;ExecScript2(expected)
-      ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
       ;msgbox, converted:`n`n%converted%
       Yunit.assert(converted = expected)
    }
@@ -264,7 +266,7 @@ class ConvertTests
    Continuation_CommandParam()
    {
       input_script := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  var := 9
                                  MsgBox, 
                                  `(
@@ -274,7 +276,7 @@ class ConvertTests
          )"
 
       expected := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  var := 9
                                  MsgBox, 
                                  `(
@@ -287,8 +289,8 @@ class ConvertTests
       ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
       ;ExecScript2(expected)
-      ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
       ;msgbox, converted:`n`n%converted%
       Yunit.assert(converted = expected)
    }
@@ -296,14 +298,14 @@ class ConvertTests
    Ternary_NotContinuation()
    {
       input_script := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  var := true
                                  ( var ) ? x : y
                                  var2 = value2
          )"
 
       expected := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  var := true
                                  ( var ) ? x : y
                                  var2 := "value2"
@@ -313,8 +315,8 @@ class ConvertTests
       ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
       ;ExecScript2(expected)
-      ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
       ;msgbox, converted:`n`n%converted%
       Yunit.assert(converted = expected)
    }
@@ -322,14 +324,14 @@ class ConvertTests
    Traditional_If_EqualsString()
    {
       input_script := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  var := "helloworld"
                                  if var = helloworld
                                     MsgBox, equal
             )"
 
       expected := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  var := "helloworld"
                                  if (var = "helloworld")
                                     MsgBox, equal
@@ -339,8 +341,8 @@ class ConvertTests
       ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
       ;ExecScript2(expected)
-      ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
       ;msgbox, converted:`n`n%converted%
       Yunit.assert(converted = expected)
    }
@@ -348,14 +350,14 @@ class ConvertTests
    Traditional_If_NotEqualsEmptyString()
    {
       input_script := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  var = 3
                                  if var != 
                                     MsgBox, %var%
             )"
 
       expected := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  var := 3
                                  if (var != "")
                                     MsgBox, %var%
@@ -365,8 +367,8 @@ class ConvertTests
       ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
       ;ExecScript2(expected)
-      ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
       ;msgbox, converted:`n`n%converted%
       Yunit.assert(converted = expected)
    }
@@ -374,13 +376,13 @@ class ConvertTests
    Traditional_If_EqualsInt()
    {
       input_script := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  if var = 8
                                     MsgBox, %var%
             )"
 
       expected := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  if (var = 8)
                                     MsgBox, %var%
          )"
@@ -389,8 +391,8 @@ class ConvertTests
       ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
       ;ExecScript2(expected)
-      ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
       ;msgbox, converted:`n`n%converted%
       Yunit.assert(converted = expected)
    }
@@ -398,13 +400,13 @@ class ConvertTests
    Traditional_If_GreaterThanInt()
    {
       input_script := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  if var > 8
                                     MsgBox, %var%
             )"
 
       expected := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  if (var > 8)
                                     MsgBox, %var%
          )"
@@ -413,8 +415,8 @@ class ConvertTests
       ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
       ;ExecScript2(expected)
-      ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
       ;msgbox, converted:`n`n%converted%
       Yunit.assert(converted = expected)
    }
@@ -422,13 +424,13 @@ class ConvertTests
    Traditional_If_EqualsVariable()
    {
       input_script := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  if MyVar = %MyVar2%
                                      MsgBox The contents of MyVar and MyVar2 are identical.
             )"
 
       expected := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  if (MyVar = MyVar2)
                                      MsgBox The contents of MyVar and MyVar2 are identical.
          )"
@@ -437,8 +439,8 @@ class ConvertTests
       ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
       ;ExecScript2(expected)
-      ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
       ;msgbox, converted:`n`n%converted%
       Yunit.assert(converted = expected)
    }
@@ -446,7 +448,7 @@ class ConvertTests
    Traditional_If_Else()
    {
       input_script := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  if MyVar = %MyVar2%
                                      MsgBox The contents of MyVar and MyVar2 are identical.
                                  else if MyVar =
@@ -454,7 +456,7 @@ class ConvertTests
          )"
 
       expected := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  if (MyVar = MyVar2)
                                      MsgBox The contents of MyVar and MyVar2 are identical.
                                  else if (MyVar = "")
@@ -465,8 +467,8 @@ class ConvertTests
       ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
       ;ExecScript2(expected)
-      ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
       ;msgbox, converted:`n`n%converted%
       Yunit.assert(converted = expected)
    }
@@ -474,7 +476,7 @@ class ConvertTests
    Traditional_If_Else_NotEquals()
    {
       input_script := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  if MyVar = %MyVar2%
                                      MsgBox The contents of MyVar and MyVar2 are identical.
                                  else if MyVar <>
@@ -482,7 +484,7 @@ class ConvertTests
          )"
 
       expected := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  if (MyVar = MyVar2)
                                      MsgBox The contents of MyVar and MyVar2 are identical.
                                  else if (MyVar <> "")
@@ -493,8 +495,8 @@ class ConvertTests
       ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
       ;ExecScript2(expected)
-      ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
       ;msgbox, converted:`n`n%converted%
       Yunit.assert(converted = expected)
    }
@@ -502,13 +504,13 @@ class ConvertTests
    Expression_If_Function()
    {
       input_script := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  if MyFunc()
                                     MsgBox, %var%
             )"
 
       expected := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  if MyFunc()
                                     MsgBox, %var%
          )"
@@ -517,8 +519,8 @@ class ConvertTests
       ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
       ;ExecScript2(expected)
-      ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
       ;msgbox, converted:`n`n%converted%
       Yunit.assert(converted = expected, "Dont mistake func call for a variable")
    }
@@ -526,7 +528,7 @@ class ConvertTests
    Expression_If_Not()
    {
       input_script := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  var := ""
                                  if not var = 
                                     MsgBox, var is not empty
@@ -535,7 +537,7 @@ class ConvertTests
             )"
 
       expected := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  var := ""
                                  if not (var = "")
                                     MsgBox, var is not empty
@@ -547,8 +549,8 @@ class ConvertTests
       ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
       ;ExecScript2(expected)
-      ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
       ;msgbox, converted:`n`n%converted%
       Yunit.assert(converted = expected, "Handle 'if not var = value'")
    }
@@ -556,13 +558,13 @@ class ConvertTests
    IfEqual_CommandThenComma()
    {
       input_script := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  IfEqual, var, value
                                     MsgBox, %var%
          )"
 
       expected := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  if (var = "value")
                                     MsgBox, %var%
          )"
@@ -571,8 +573,8 @@ class ConvertTests
       ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
       ;ExecScript2(expected)
-      ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
       ;msgbox, converted:`n`n%converted%
       Yunit.assert(converted = expected)
    }
@@ -580,13 +582,13 @@ class ConvertTests
    IfEqual_CommandThenSpace()
    {
       input_script := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  IfEqual var, value
                                     MsgBox, %var%
          )"
 
       expected := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  if (var = "value")
                                     MsgBox, %var%
          )"
@@ -595,8 +597,8 @@ class ConvertTests
       ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
       ;ExecScript2(expected)
-      ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
       ;msgbox, converted:`n`n%converted%
       Yunit.assert(converted = expected)
    }
@@ -604,13 +606,13 @@ class ConvertTests
    IfEqual_CommandThenMultipleSpaces()
    {
       input_script := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  IfEqual    var, value
                                     MsgBox, %var%
          )"
 
       expected := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  if (var = "value")
                                     MsgBox, %var%
          )"
@@ -619,8 +621,8 @@ class ConvertTests
       ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
       ;ExecScript2(expected)
-      ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
       ;msgbox, converted:`n`n%converted%
       Yunit.assert(converted = expected)
    }
@@ -628,13 +630,13 @@ class ConvertTests
    IfEqual_LeadingSpacesInParam()
    {
       input_script := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  IfEqual, var,     value
                                     MsgBox, %var%
          )"
 
       expected := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  if (var = "value")
                                     MsgBox, %var%
          )"
@@ -643,8 +645,8 @@ class ConvertTests
       ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
       ;ExecScript2(expected)
-      ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
       ;msgbox, converted:`n`n%converted%
       Yunit.assert(converted = expected)
    }
@@ -652,14 +654,14 @@ class ConvertTests
    IfEqual_EscapedComma()
    {
       input_script := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  var = ,
                                  IfEqual, var, `,
                                     MsgBox, var is a comma
          )"
 
       expected := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  var := ","
                                  if (var = ",")
                                     MsgBox, var is a comma
@@ -669,8 +671,8 @@ class ConvertTests
       ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
       ;ExecScript2(expected)
-      ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
       ;msgbox, converted:`n`n%converted%
       Yunit.assert(converted = expected)
    }
@@ -678,14 +680,14 @@ class ConvertTests
    IfEqual_EscapedCommaMidString()
    {
       input_script := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  var = hello,world
                                  IfEqual, var, hello`,world
                                     MsgBox, var matches
          )"
 
       expected := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  var := "hello,world"
                                  if (var = "hello,world")
                                     MsgBox, var matches
@@ -695,8 +697,8 @@ class ConvertTests
       ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
       ;ExecScript2(expected)
-      ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
       ;msgbox, converted:`n`n%converted%
       Yunit.assert(converted = expected)
    }
@@ -709,14 +711,14 @@ class ConvertTests
       ; from:   https://autohotkey.com/docs/commands/_EscapeChar.htm
 
       input_script := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  var = ,
                                  IfEqual, var, ,
                                     MsgBox, var is a comma
          )"
 
       expected := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  var := ","
                                  if (var = ",")
                                     MsgBox, var is a comma
@@ -726,8 +728,8 @@ class ConvertTests
       ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
       ;ExecScript2(expected)
-      ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
       ;msgbox, converted:`n`n%converted%
       Yunit.assert(converted = expected)
    }
@@ -740,14 +742,14 @@ class ConvertTests
       ; from:   https://autohotkey.com/docs/commands/_EscapeChar.htm
 
       input_script := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  var = hello,world
                                  IfEqual, var, hello,world
                                     MsgBox, var matches
          )"
 
       expected := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  var := "hello,world"
                                  if (var = "hello,world")
                                     MsgBox, var matches
@@ -757,8 +759,8 @@ class ConvertTests
       ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
       ;ExecScript2(expected)
-      ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
       ;msgbox, converted:`n`n%converted%
       Yunit.assert(converted = expected)
    }
@@ -766,13 +768,13 @@ class ConvertTests
    IfNotEqual()
    {
       input_script := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  IfNotEqual, var, value
                                     MsgBox, %var%
          )"
 
       expected := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  if (var != "value")
                                     MsgBox, %var%
          )"
@@ -781,8 +783,8 @@ class ConvertTests
       ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
       ;ExecScript2(expected)
-      ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
       ;msgbox, converted:`n`n%converted%
       Yunit.assert(converted = expected)
    }
@@ -790,13 +792,13 @@ class ConvertTests
    IfGreaterOrEqual()
    {
       input_script := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  IfGreaterOrEqual, var, value
                                     MsgBox, %var%
          )"
 
       expected := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  if (var >= "value")
                                     MsgBox, %var%
          )"
@@ -805,8 +807,8 @@ class ConvertTests
       ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
       ;ExecScript2(expected)
-      ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
       ;msgbox, converted:`n`n%converted%
       Yunit.assert(converted = expected)
    }
@@ -814,13 +816,13 @@ class ConvertTests
    IfGreater()
    {
       input_script := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  IfGreater, var, value
                                     MsgBox, %var%
          )"
 
       expected := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  if (var > "value")
                                     MsgBox, %var%
          )"
@@ -829,8 +831,8 @@ class ConvertTests
       ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
       ;ExecScript2(expected)
-      ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
       ;msgbox, converted:`n`n%converted%
       Yunit.assert(converted = expected)
    }
@@ -838,13 +840,13 @@ class ConvertTests
    IfLess()
    {
       input_script := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  IfLess, var, value
                                     MsgBox, %var%
          )"
 
       expected := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  if (var < "value")
                                     MsgBox, %var%
          )"
@@ -853,8 +855,8 @@ class ConvertTests
       ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
       ;ExecScript2(expected)
-      ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
       ;msgbox, converted:`n`n%converted%
       Yunit.assert(converted = expected)
    }
@@ -862,13 +864,13 @@ class ConvertTests
    IfLessOrEqual()
    {
       input_script := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  IfLessOrEqual, var, value
                                     MsgBox, %var%
          )"
 
       expected := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  if (var <= "value")
                                     MsgBox, %var%
          )"
@@ -877,8 +879,8 @@ class ConvertTests
       ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
       ;ExecScript2(expected)
-      ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
       ;msgbox, converted:`n`n%converted%
       Yunit.assert(converted = expected)
    }
@@ -886,12 +888,12 @@ class ConvertTests
    EnvMult()
    {
       input_script := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  EnvMult, var, 5
          )"
 
       expected := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  var *= 5
          )"
 
@@ -906,13 +908,13 @@ class ConvertTests
    EnvMult_ExpressionParam()
    {
       input_script := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  var2 := 2
                                  EnvMult, var, var2
          )"
 
       expected := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  var2 := 2
                                  var *= var2
          )"
@@ -921,8 +923,8 @@ class ConvertTests
       ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
       ;ExecScript2(expected)
-      ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
       ;msgbox, converted:`n`n%converted%
       Yunit.assert(converted = expected)
    }
@@ -930,12 +932,12 @@ class ConvertTests
    EnvAdd()
    {
       input_script := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  EnvAdd, var, 2
          )"
 
       expected := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  var += 2
          )"
 
@@ -943,8 +945,8 @@ class ConvertTests
       ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
       ;ExecScript2(expected)
-      ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
       ;msgbox, converted:`n`n%converted%
       Yunit.assert(converted = expected)
    }
@@ -952,12 +954,12 @@ class ConvertTests
    EnvAdd_var()
    {
       input_script := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  EnvAdd, var, 2
          )"
 
       expected := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  var += 2
          )"
 
@@ -965,8 +967,8 @@ class ConvertTests
       ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
       ;ExecScript2(expected)
-      ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
       ;msgbox, converted:`n`n%converted%
       Yunit.assert(converted = expected)
    }
@@ -974,12 +976,12 @@ class ConvertTests
    EnvSub()
    {
       input_script := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  EnvSub, var, 2
          )"
 
       expected := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  var -= 2
          )"
 
@@ -987,8 +989,8 @@ class ConvertTests
       ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
       ;ExecScript2(expected)
-      ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
       ;msgbox, converted:`n`n%converted%
       Yunit.assert(converted = expected)
    }
@@ -996,12 +998,12 @@ class ConvertTests
    EnvSub_ExpressionValue()
    {
       input_script := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  EnvSub, var, value
          )"
 
       expected := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  var -= value
          )"
 
@@ -1009,8 +1011,8 @@ class ConvertTests
       ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
       ;ExecScript2(expected)
-      ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
       ;msgbox, converted:`n`n%converted%
       Yunit.assert(converted = expected)
    }
@@ -1018,7 +1020,7 @@ class ConvertTests
    FunctionDefaultParamValues()
    {
       input_script := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  five := MyFunc()
                                  MyFunc(var=5)
                                  {
@@ -1027,7 +1029,7 @@ class ConvertTests
          )"
 
       expected := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  five := MyFunc()
                                  MyFunc(var:=5)
                                  {
@@ -1039,8 +1041,8 @@ class ConvertTests
       ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
       ;ExecScript2(expected)
-      ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
       ;msgbox, converted:`n`n%converted%
       Yunit.assert(converted = expected)
    }
@@ -1048,7 +1050,7 @@ class ConvertTests
    FunctionDefaultParamValues_OTB()
    {
       input_script := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  five := MyFunc()
                                  MyFunc(var=5) {
                                     return var
@@ -1056,7 +1058,7 @@ class ConvertTests
          )"
 
       expected := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  five := MyFunc()
                                  MyFunc(var:=5) {
                                     return var
@@ -1067,8 +1069,8 @@ class ConvertTests
       ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
       ;ExecScript2(expected)
-      ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
       ;msgbox, converted:`n`n%converted%
       Yunit.assert(converted = expected)
    }
@@ -1076,13 +1078,13 @@ class ConvertTests
    NoEnv_Remove()
    {
       input_script := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  #NoEnv
                                  msgbox, hi
          )"
 
       expected := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  ; REMOVED: #NoEnv
                                  msgbox, hi
          )"
@@ -1091,8 +1093,8 @@ class ConvertTests
       ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
       ;ExecScript2(expected)
-      ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
       ;msgbox, converted:`n`n%converted%
       Yunit.assert(converted = expected)
    }
@@ -1100,13 +1102,13 @@ class ConvertTests
    SetFormat_Remove()
    {
       input_script := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  SetFormat, integerfast, H
                                  msgbox, hi
          )"
 
       expected := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  ; REMOVED: SetFormat, integerfast, H
                                  msgbox, hi
          )"
@@ -1115,8 +1117,8 @@ class ConvertTests
       ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
       ;ExecScript2(expected)
-      ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
       ;msgbox, converted:`n`n%converted%
       Yunit.assert(converted = expected)
    }
@@ -1124,13 +1126,13 @@ class ConvertTests
    DriveGetFreeSpace()
    {
       input_script := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  DriveSpaceFree, FreeSpace, c:\
                                  MsgBox, %FreeSpace%
          )"
 
       expected := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  DriveGet, FreeSpace, SpaceFree, c:\
                                  MsgBox, %FreeSpace%
          )"
@@ -1139,8 +1141,8 @@ class ConvertTests
       ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
       ;ExecScript2(expected)
-      ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
       ;msgbox, converted:`n`n%converted%
       Yunit.assert(converted = expected)
    }
@@ -1148,13 +1150,13 @@ class ConvertTests
    StringUpper()
    {
       input_script := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  var = Chris Mallet
                                  StringUpper, newvar, var
          )"
 
       expected := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  var := "Chris Mallet"
                                  StrUpper, newvar, %var%
          )"
@@ -1163,8 +1165,8 @@ class ConvertTests
       ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
       ;ExecScript2(expected)
-      ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
       ;msgbox, converted:`n`n%converted%
       Yunit.assert(converted = expected)
    }
@@ -1172,7 +1174,7 @@ class ConvertTests
    StringLower()
    {
       input_script := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  var = chris mallet
                                  StringLower, newvar, var, T
                                  if (newvar == "Chris Mallet")
@@ -1180,7 +1182,7 @@ class ConvertTests
          )"
 
       expected := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  var := "chris mallet"
                                  StrLower, newvar, %var%, T
                                  if (newvar == "Chris Mallet")
@@ -1191,8 +1193,8 @@ class ConvertTests
       ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
       ;ExecScript2(expected)
-      ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
       ;msgbox, converted:`n`n%converted%
       Yunit.assert(converted = expected)
    }
@@ -1200,14 +1202,14 @@ class ConvertTests
    StringLen()
    {
       input_script := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  InputVar := "The Quick Brown Fox Jumps Over the Lazy Dog"
                                  StringLen, length, InputVar
                                  MsgBox, The length of InputVar is %length%.
          )"
 
       expected := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  InputVar := "The Quick Brown Fox Jumps Over the Lazy Dog"
                                  length := StrLen(InputVar)
                                  MsgBox, The length of InputVar is %length%.
@@ -1217,8 +1219,8 @@ class ConvertTests
       ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
       ;ExecScript2(expected)
-      ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
       ;msgbox, converted:`n`n%converted%
       Yunit.assert(converted = expected)
    }
@@ -1226,7 +1228,7 @@ class ConvertTests
    StringGetPos()
    {
       input_script := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  Haystack = abcdefghijklmnopqrs
                                  Needle = def
                                  StringGetPos, pos, Haystack, %Needle%
@@ -1235,7 +1237,7 @@ class ConvertTests
          )"
 
       expected := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  Haystack := "abcdefghijklmnopqrs"
                                  Needle := "def"
                                  pos := InStr(Haystack, Needle) - 1
@@ -1247,8 +1249,8 @@ class ConvertTests
       ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
       ;ExecScript2(expected)
-      ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
       ;msgbox, converted:`n`n%converted%
       Yunit.assert(converted = expected)
    }
@@ -1256,7 +1258,7 @@ class ConvertTests
    StringGetPos_SearchLeftOccurance()
    {
       input_script := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  Haystack = abcdefabcdef
                                  Needle = def
                                  StringGetPos, pos, Haystack, %Needle%, L2
@@ -1265,7 +1267,7 @@ class ConvertTests
          )"
 
       expected := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  Haystack := "abcdefabcdef"
                                  Needle := "def"
                                  pos := InStr(Haystack, Needle, false, (0)+1, 2) - 1
@@ -1278,19 +1280,19 @@ class ConvertTests
       ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
       ;ExecScript2(expected)
-      ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
       ;msgbox, converted:`n`n%converted%
-      Yunit.assert(converted = expected)
       ;FileAppend, % expected, expected.txt
       ;FileAppend, % converted, converted.txt 
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      Yunit.assert(converted = expected)
    }
 
    StringGetPos_SearchRight()
    {
       input_script := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  Haystack = abcdefabcdef
                                  Needle = bcd
                                  StringGetPos, pos, Haystack, %Needle%, R
@@ -1299,7 +1301,7 @@ class ConvertTests
          )"
 
       expected := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  Haystack := "abcdefabcdef"
                                  Needle := "bcd"
                                  pos := InStr(Haystack, Needle, false, -1*((0)+1), 1) - 1
@@ -1312,8 +1314,8 @@ class ConvertTests
       ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
       ;ExecScript2(expected)
-      ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
       ;msgbox, converted:`n`n%converted%
       Yunit.assert(converted = expected)
    }
@@ -1321,7 +1323,7 @@ class ConvertTests
    StringGetPos_SearchRightOccurance()
    {
       input_script := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  Haystack = abcdefabcdef
                                  Needle = cde
                                  StringGetPos, pos, Haystack, %Needle%, R2
@@ -1330,7 +1332,7 @@ class ConvertTests
          )"
 
       expected := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  Haystack := "abcdefabcdef"
                                  Needle := "cde"
                                  pos := InStr(Haystack, Needle, false, -1*((0)+1), 2) - 1
@@ -1343,8 +1345,8 @@ class ConvertTests
       ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
       ;ExecScript2(expected)
-      ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
       ;msgbox, converted:`n`n%converted%
       Yunit.assert(converted = expected)
    }
@@ -1352,7 +1354,7 @@ class ConvertTests
    StringGetPos_OffsetLeft()
    {
       input_script := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  Haystack = abcdefabcdef
                                  Needle = cde
                                  StringGetPos, pos, Haystack, %Needle%,, 4
@@ -1361,7 +1363,7 @@ class ConvertTests
          )"
 
       expected := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  Haystack := "abcdefabcdef"
                                  Needle := "cde"
                                  pos := InStr(Haystack, Needle, false, (4)+1, 1) - 1
@@ -1374,8 +1376,8 @@ class ConvertTests
       ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
       ;ExecScript2(expected)
-      ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
       ;msgbox, converted:`n`n%converted%
       Yunit.assert(converted = expected)
    }
@@ -1383,7 +1385,7 @@ class ConvertTests
    StringGetPos_OffsetLeftVariable()
    {
       input_script := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  Haystack = abcdefabcdef
                                  Needle = cde
                                  var = 2
@@ -1393,7 +1395,7 @@ class ConvertTests
          )"
 
       expected := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  Haystack := "abcdefabcdef"
                                  Needle := "cde"
                                  var := 2
@@ -1407,8 +1409,8 @@ class ConvertTests
       ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
       ;ExecScript2(expected)
-      ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
       ;msgbox, converted:`n`n%converted%
       Yunit.assert(converted = expected)
    }
@@ -1416,7 +1418,7 @@ class ConvertTests
    StringGetPos_OffsetLeftExpressionVariable()
    {
       input_script := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  Haystack = abcdefabcdef
                                  Needle = cde
                                  var = 1
@@ -1426,7 +1428,7 @@ class ConvertTests
          )"
 
       expected := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  Haystack := "abcdefabcdef"
                                  Needle := "cde"
                                  var := 1
@@ -1440,8 +1442,8 @@ class ConvertTests
       ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
       ;ExecScript2(expected)
-      ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
       ;msgbox, converted:`n`n%converted%
       Yunit.assert(converted = expected)
    }
@@ -1449,7 +1451,7 @@ class ConvertTests
    StringGetPos_OffsetRightExpressionVariableOccurences()
    {
       input_script := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  Haystack = abcdefabcdefabcdef
                                  Needle = cde
                                  var = 0
@@ -1459,7 +1461,7 @@ class ConvertTests
          )"
 
       expected := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  Haystack := "abcdefabcdefabcdef"
                                  Needle := "cde"
                                  var := 0
@@ -1473,8 +1475,8 @@ class ConvertTests
       ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
       ;ExecScript2(expected)
-      ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
       ;msgbox, converted:`n`n%converted%
       Yunit.assert(converted = expected)
    }
@@ -1482,7 +1484,7 @@ class ConvertTests
    StringGetPos_OffsetLeftOccurence()
    {
       input_script := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  Haystack = abcdefabcdefabcdef
                                  Needle = cde
                                  StringGetPos, pos, Haystack, %Needle%, L2, 4
@@ -1491,7 +1493,7 @@ class ConvertTests
          )"
 
       expected := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  Haystack := "abcdefabcdefabcdef"
                                  Needle := "cde"
                                  pos := InStr(Haystack, Needle, false, (4)+1, 2) - 1
@@ -1504,8 +1506,8 @@ class ConvertTests
       ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
       ;ExecScript2(expected)
-      ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
       ;msgbox, converted:`n`n%converted%
       Yunit.assert(converted = expected)
    }
@@ -1513,7 +1515,7 @@ class ConvertTests
    StringGetPos_OffsetRight()
    {
       input_script := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  Haystack = abcdefabcdef
                                  Needle = cde
                                  StringGetPos, pos, Haystack, %Needle%, R, 4
@@ -1522,7 +1524,7 @@ class ConvertTests
          )"
 
       expected := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  Haystack := "abcdefabcdef"
                                  Needle := "cde"
                                  pos := InStr(Haystack, Needle, false, -1*((4)+1), 1) - 1
@@ -1535,8 +1537,8 @@ class ConvertTests
       ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
       ;ExecScript2(expected)
-      ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
       ;msgbox, converted:`n`n%converted%
       Yunit.assert(converted = expected)
    }
@@ -1544,7 +1546,7 @@ class ConvertTests
    StringGetPos_OffsetRightOccurence()
    {
       input_script := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  Haystack = abcdefabcdefabcdef
                                  Needle = cde
                                  StringGetPos, pos, Haystack, %Needle%, r2, 4
@@ -1553,7 +1555,7 @@ class ConvertTests
          )"
 
       expected := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  Haystack := "abcdefabcdefabcdef"
                                  Needle := "cde"
                                  pos := InStr(Haystack, Needle, false, -1*((4)+1), 2) - 1
@@ -1566,8 +1568,8 @@ class ConvertTests
       ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
       ;ExecScript2(expected)
-      ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
       ;msgbox, converted:`n`n%converted%
       Yunit.assert(converted = expected)
    }
@@ -1575,7 +1577,7 @@ class ConvertTests
    StringGetPos_Duplicates()
    {
       input_script := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  Haystack = FFFF
                                  Needle = FF
                                  StringGetPos, pos, Haystack, %Needle%, L2
@@ -1584,7 +1586,7 @@ class ConvertTests
          )"
 
       expected := "
-         (LTrim Join`r`n %
+         (Join`r`n %
                                  Haystack := "FFFF"
                                  Needle := "FF"
                                  pos := InStr(Haystack, Needle, false, (0)+1, 2) - 1
@@ -1597,9 +1599,53 @@ class ConvertTests
       ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
       ;ExecScript2(expected)
-      ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
       ;msgbox, converted:`n`n%converted%
+      Yunit.assert(converted = expected)
+   }
+
+   Preserve_Indentation()
+   {
+      ; dont use LTrim and instead rely on AHK v2 default smart LTrim
+      input_script := "
+         (Join`r`n %
+                                 if (1) {
+                                    var = val
+                                    if var = hello
+                                 		MsgBox, this line starts with 2 tab characters
+                                    else {
+                                       ifequal, var, val
+                                          StringGetPos, pos, var, al
+                                    }
+                                 }
+                                 MsgBox, pos=%pos%
+         )"
+
+      expected := "
+         (Join`r`n %
+                                 if (1) {
+                                    var := "val"
+                                    if (var = "hello")
+                                 		MsgBox, this line starts with 2 tab characters
+                                    else {
+                                       if (var = "val")
+                                          pos := InStr(var, "al") - 1
+                                    }
+                                 }
+                                 MsgBox, pos=%pos%
+         )"
+
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
+      ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
+      ;ExecScript2(expected)
+      converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
+      ;msgbox, converted:`n`n%converted%
+      ;FileAppend, % expected, expected.txt
+      ;FileAppend, % converted, converted.txt 
+      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected)
    }
 

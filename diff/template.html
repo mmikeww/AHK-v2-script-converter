@@ -27,8 +27,8 @@
 	</style>
 	
 	<script type="text/javascript">
-	window.onload=function(){
-		setTimeout(function(){
+	window.onload=function() {
+		setTimeout(function() {
 			$('#compare').mergely({
 				editor_width: 'calc(50% - 25px)',
 				editor_height: 'auto',
@@ -37,7 +37,8 @@
 				wrap_lines: true,
 				cmsettings: { 
 					readOnly: false,
-					lineWrapping: true
+					lineWrapping: true,
+					cursorHeight: 0.95
 				},
 				lhs: function(setValue) {
 					setValue(exo_lhsvalue_placeholder);
@@ -46,23 +47,45 @@
 					setValue(exo_rhsvalue_placeholder);
 				}
 			});
-		$('#scrollup').click(function() {
-			$('#compare').mergely('scrollTo', 'lhs', 1); 
-			$('#compare').mergely('scrollTo', 'rhs', 1); 
-		});
 
-		$('#prev').click(function() {
-			$('#compare').mergely('scrollToDiff', 'prev'); 
-		});
+			$('#scrollup').click(function() {
+				$('#compare').mergely('scrollTo', 'lhs', 1);
+				$('#compare').mergely('scrollTo', 'rhs', 1);
+			});
 
-		$('#next').click(function() {
-			$('#compare').mergely('scrollToDiff', 'next'); 
-		});
+			$('#prev').click(function() {
+				$('#compare').mergely('scrollToDiff', 'prev'); 
+			});
 
-		$('#clear').click(function() {
-			$('#compare').mergely('clear', 'lhs'); 
-			$('#compare').mergely('clear', 'rhs'); 
-		});
+			$('#next').click(function() {
+				$('#compare').mergely('scrollToDiff', 'next'); 
+			});
+
+			$('#clear').click(function() {
+				$('#compare').mergely('scrollTo', 'lhs', 1);
+				$('#compare').mergely('scrollTo', 'rhs', 1);
+				document.getElementById("file1name").innerHTML = "";
+				document.getElementById("file2name").innerHTML = "";
+				setTimeout(function() {
+					$('#compare').mergely('clear', 'lhs'); 
+					$('#compare').mergely('clear', 'rhs'); 
+				}, 200);
+			});
+
+			$('#cleardiff').click(function() {
+				$('#compare').mergely('unmarkup'); 
+			});
+
+			$('#togglewrap').click(function() {
+				changeOptions(function(x) { x.wrap_lines = !x.wrap_lines; }); 
+			});
+
+			function changeOptions(changer) {
+				var options = $('#compare').mergely('options');
+				changer(options);
+				$('#compare').mergely('options', options);
+				//comp.mergely('update');
+			}
 
 		},1000);
 	}
@@ -72,19 +95,21 @@
 	<div class="container">
 		<table style="width: 100%;">
 			<tr>
-				<td style="width: 35%">
-					<button id="scrollup" title="scroll top">Scroll to top</button>
-					<button id="prev" title="Previous diff">Prev diff</button>
+				<td style="width: 55%">
 					<button id="next" title="Next diff">Next diff</button>
-					<button id="clear" title="Clear">Clear</button>
+					<button id="prev" title="Previous diff">Prev diff</button>
+					<button id="cleardiff" title="Clear diffs">Clear diffs</button>
+					<button id="togglewrap" title="Toggle wrap">Toggle wrap</button>
+					<button id="scrollup" title="Scroll top">Scroll to top</button>
+					<button id="clear" title="Clear boxes">Clear boxes</button>
 				</td>
 				<td align>exo_instructions_placeholder</td>
 			</tr>
 		</table>
 		<table style="width: 100%;">
 			<tr>
-				<td style="width: 50%;">exo_file1name_placeholder</td>
-				<td style="width: 50%;">exo_file2name_placeholder</td>
+                           <td style="width: 50%;"><p id="file1name">exo_file1name_placeholder</p></td>
+                           <td style="width: 50%;"><p id="file2name">exo_file2name_placeholder</p></td>
 			</tr>
 		</table>
 		<div id="compare">

@@ -18,8 +18,8 @@ if (params[0] > 0) {     ; if command line args are passed
 } else {
 	lhsvalue := "'the quick red fox jumped\nover the hairy dog\n\nhello world'"
 	rhsvalue := "'the quick brown fox jumped\nover the lazy dog\n\nhello big world'"
-	file1name := "&nbsp;"
-	file2name := "&nbsp;"
+	file1name := ""
+	file2name := ""
 	instructions := "First clear the boxes, then just drop a file in each side"
 }
 ;msgbox, %file1name%`n%file2name%

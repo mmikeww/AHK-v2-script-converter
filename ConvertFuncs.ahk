@@ -64,6 +64,7 @@ Convert(ScriptString)
       ;msgbox, Original Line=`n%Line%
       FirstChar := SubStr(Trim(Line), 1, 1)
       FirstTwo := SubStr(LTrim(Line), 1, 2)
+      ;msgbox, FirstChar=%FirstChar%`nFirstTwo=%FirstTwo%
       CommandMatch := -1
 
       If (Trim(Line) == "") || ( FirstChar == ";" )
@@ -91,14 +92,14 @@ Convert(ScriptString)
       ; no idea what that RegEx does, but it works to prevent detection of ternaries
       ; got that RegEx from Uberi here: https://github.com/cocobelgica/AutoHotkey-Util/blob/master/EnumIncludes.ahk#L65
       else if ( FirstChar == "(" )
-           && RegExMatch(Line, "i)^\((?:\s*(?(?<=\s)(?!;)|(?<=\())(\bJoin\S*|[^\s)]+))*(?<!:)(?:\s+;.*)?$")
+           && RegExMatch(Line, "i)^\s*\((?:\s*(?(?<=\s)(?!;)|(?<=\())(\bJoin\S*|[^\s)]+))*(?<!:)(?:\s+;.*)?$")
       {
          Cont := 1
          ;If RegExMatch(Line, "i)join(.+?)(LTrim|RTrim|Comment|`%|,|``)?", Join)
             ;JoinBy := Join[1]
          ;else
             ;JoinBy := "``n"
-         ;MsgBox, Line:`n%Line%`n`nLastLine:`n%LastLine%`n`nOutput:`n[`n%Output%`n]
+         ;MsgBox, Start of continuation section`nLine:`n%Line%`n`nLastLine:`n%LastLine%`n`nOutput:`n[`n%Output%`n]
          If InStr(LastLine, ":= `"`"")
          {
             ; if LastLine was something like:                                  var := ""

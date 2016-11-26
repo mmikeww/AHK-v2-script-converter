@@ -192,6 +192,75 @@ class ConvertTests
       Yunit.assert(converted = expected)
    }
 
+   Continuation_Assignment_indented()
+   {
+      input_script := "
+         (LTrim0 Join`r`n %
+                                 var =
+                                    `(
+                                    hello world
+                                    `)
+                                 MsgBox, %var%
+         )"
+
+      expected := "
+         (LTrim0 Join`r`n %
+                                 var := "
+                                    `(
+                                    hello world
+                                    `)"
+                                 MsgBox, %var%
+         )"
+
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
+      ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
+      ;ExecScript2(expected)
+      ;msgbox, expected:`n`n%expected%
+      converted := Convert(input_script)
+      ;msgbox, converted:`n`n%converted%
+      Yunit.assert(converted = expected)
+      ;Loop, Parse, %expected%, `n
+         ;msgbox, % A_LoopField "`n" StrLen(A_LoopField)
+      ;Loop, Parse, %converted%, `n
+         ;msgbox, % A_LoopField "`n" StrLen(A_LoopField)
+      ;FileAppend, % expected, expected.txt
+      ;FileAppend, % converted, converted.txt 
+      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+   }
+
+   Continuation_NewlinePreceding()
+   {
+      input_script := "
+         (LTrim Join`r`n %
+                                 var =
+
+                                 `(
+                                 hello
+                                 `)
+                                 MsgBox, %var%
+         )"
+
+      expected := "
+         (LTrim Join`r`n %
+                                 var := "
+
+                                 `(
+                                 hello
+                                 `)"
+                                 MsgBox, %var%
+         )"
+
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
+      ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
+      ;ExecScript2(expected)
+      ;msgbox, expected:`n`n%expected%
+      converted := Convert(input_script)
+      ;msgbox, converted:`n`n%converted%
+      Yunit.assert(converted = expected)
+   }
+
    Continuation_CommandParam()
    {
       input_script := "

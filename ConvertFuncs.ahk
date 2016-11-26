@@ -191,14 +191,36 @@ Convert(ScriptString)
                Param := Array() ; Parameters in expression form
                LoopParse, %ListParams%, `,
                   ListParam[A_Index] := A_LoopField
+               Params := StrReplace(Params, "``,", "MY_COMMª_PLA¢E_HOLDER")     ; ugly hack
                LoopParse, %Params%, `,
                {
                   this_param := LTrim(A_LoopField)      ; trim leading spaces off each param
+                  Param[A_Index] := this_param       ; populate array with the params
+               }
+               ;msgbox, % "Param.Length=" Param.Length()
+
+               ; if we detect one too many params, it could be because of this:
+               if (Param.Length() - ListParam.Length() = 1)
+               {
+                  ; "Commas that appear within the last parameter of a command do not need to be escaped because 
+                  ;  the program knows to treat them literally."
+                  ; from:   https://autohotkey.com/docs/commands/_EscapeChar.htm
+
+                  ;msgbox, % "Param[ParamLen-1]=" Param[Param.Length()-1]
+                  Param[Param.Length()-1] := Param[Param.Length()-1]  "," Param[Param.Length()]
+                  ;msgbox, % "Param[ParamLen-1]=" Param[Param.Length()-1]
+                  Param.Delete(Param.Length())
+               }
+               Loop, % Param.Length()
+               {
+                  this_param := Param[A_Index]
+                  this_param := StrReplace(this_param, "MY_COMMª_PLA¢E_HOLDER", ",")
                   If InStr(ListParam[A_Index], "var")
                      Param[A_Index] := this_param
                   else
                      Param[A_Index] := ToExp(this_param)
                }
+
                Part[2] := Trim(Part[2])
                If ( SubStr(Part[2], 1, 1) == "*" )
                {
@@ -214,14 +236,16 @@ Convert(ScriptString)
                   If ParamDif := (ListParam.Length() - Param.Length() )
                   {
                      ; Remove all unused optional parameters
-                     ;msgbox, %ParamDif%
+                     ;msgbox, ParamDif=%ParamDif%
                      Part[2] := RegExReplace(Part[2], "\[[^\]]*\]", "", Count, ParamDif, 1)
                      ;msgbox, % "after regexreplace`nPart[2]: " Part[2]
                   }
                   else    ; else if the optional params are included, then remove the []s before formatting
                   {
+                     ;msgbox, ParamDif=%ParamDif%
                      Part[2] := StrReplace(Part[2], "[")
                      Part[2] := StrReplace(Part[2], "]")
+                     ;msgbox
                   }
                   ;msgbox, % "after replacing []`nPart[2]: " Part[2]
                   Line := format_v(Part[2], Param)
@@ -365,6 +389,12 @@ _StringGetPos(p)
       p4FirstChar := SubStr(p[4], 1, 1)
       p4LastChar := SubStr(p[4], -1)
       ;msgbox, % p[4] "`np4FirstChar=" p4FirstChar "`np4LastChar=" p4LastChar
+      p[5] := p[5] ? p[5] : 0              ; 5th param is 'Offset' aka starting position
+      ;msgbox, % p[5]
+      ; if the 5th param is a quoted string, then it was used as expression and not a number
+      if (SubStr(p[5], 1, 1) = "`"") && (SubStr(p[5], -1) = "`"")
+         p[5] := SubStr(p[5], 2, -1)  ; remove quotes
+
       if (p4FirstChar = "`"") && (p4LastChar = "`"")   ; remove start/end quotes, would be nice if a non-expr was passed in
       {
          p4noquotes := SubStr(p[4], 2, -1)
@@ -372,12 +402,6 @@ _StringGetPos(p)
          occurences := SubStr(p4noquotes, 2)
          ;msgbox, % p[4]
          p[4] := occurences ? occurences : 1
-         p[5] := p[5] ? p[5] : 0              ; 5th param is 'Offset' aka starting position
-
-         ;msgbox, % p[5]
-         ; if the 5th param is a quoted string, then it was used as expression and not a number
-         if (SubStr(p[5], 1, 1) = "`"") && (SubStr(p[5], -1) = "`"")
-            p[5] := SubStr(p[5], 2, -1)  ; remove quotes
         
          if (StrUpper(p4char1) = "R") || (p4noquotes = "1")
             out := format_v("{1} := InStr({2}, {3}, false, -1*(({5})+1), {4}) - 1", p)
@@ -389,7 +413,8 @@ _StringGetPos(p)
       {
          ; else then a variable was passed (containing the "L#|R#" string),
          ;      or literal text converted to expr, something like:   "L" . A_Index
-         ; should issue warning?
+         ; output something anyway even though it won't work, so that they can see something to fix
+         out := format_v("{1} := InStr({2}, {3}, false, ({5})+1, {4}) - 1", p)
       }
    }
 

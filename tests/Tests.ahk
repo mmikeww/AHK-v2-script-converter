@@ -553,7 +553,7 @@ class ConvertTests
       Yunit.assert(converted = expected, "Handle 'if not var = value'")
    }
 
-   IfEqual_Comma()
+   IfEqual_CommandThenComma()
    {
       input_script := "
          (LTrim Join`r`n %
@@ -571,11 +571,13 @@ class ConvertTests
       ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
       ;ExecScript2(expected)
+      ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
+      ;msgbox, converted:`n`n%converted%
       Yunit.assert(converted = expected)
    }
 
-   IfEqual_Space()
+   IfEqual_CommandThenSpace()
    {
       input_script := "
          (LTrim Join`r`n %
@@ -593,11 +595,13 @@ class ConvertTests
       ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
       ;ExecScript2(expected)
+      ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
+      ;msgbox, converted:`n`n%converted%
       Yunit.assert(converted = expected)
    }
 
-   IfEqual_MultipleSpaces()
+   IfEqual_CommandThenMultipleSpaces()
    {
       input_script := "
          (LTrim Join`r`n %
@@ -615,7 +619,9 @@ class ConvertTests
       ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
       ;ExecScript2(expected)
+      ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
+      ;msgbox, converted:`n`n%converted%
       Yunit.assert(converted = expected)
    }
 
@@ -637,7 +643,123 @@ class ConvertTests
       ;ExecScript1(input_script)
       ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
       ;ExecScript2(expected)
+      ;msgbox, expected:`n`n%expected%
       converted := Convert(input_script)
+      ;msgbox, converted:`n`n%converted%
+      Yunit.assert(converted = expected)
+   }
+
+   IfEqual_EscapedComma()
+   {
+      input_script := "
+         (LTrim Join`r`n %
+                                 var = ,
+                                 IfEqual, var, `,
+                                    MsgBox, var is a comma
+         )"
+
+      expected := "
+         (LTrim Join`r`n %
+                                 var := ","
+                                 if var = ","
+                                    MsgBox, var is a comma
+         )"
+
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
+      ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
+      ;ExecScript2(expected)
+      ;msgbox, expected:`n`n%expected%
+      converted := Convert(input_script)
+      ;msgbox, converted:`n`n%converted%
+      Yunit.assert(converted = expected)
+   }
+
+   IfEqual_EscapedCommaMidString()
+   {
+      input_script := "
+         (LTrim Join`r`n %
+                                 var = hello,world
+                                 IfEqual, var, hello`,world
+                                    MsgBox, var matches
+         )"
+
+      expected := "
+         (LTrim Join`r`n %
+                                 var := "hello,world"
+                                 if var = "hello,world"
+                                    MsgBox, var matches
+         )"
+
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
+      ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
+      ;ExecScript2(expected)
+      ;msgbox, expected:`n`n%expected%
+      converted := Convert(input_script)
+      ;msgbox, converted:`n`n%converted%
+      Yunit.assert(converted = expected)
+   }
+
+   IfEqual_EscapedCommaNotNeededInLastParam()
+   {
+      ; "Commas that appear within the last parameter of a command do not need to be escaped because 
+      ;  the program knows to treat them literally."
+      ;
+      ; from:   https://autohotkey.com/docs/commands/_EscapeChar.htm
+
+      input_script := "
+         (LTrim Join`r`n %
+                                 var = ,
+                                 IfEqual, var, ,
+                                    MsgBox, var is a comma
+         )"
+
+      expected := "
+         (LTrim Join`r`n %
+                                 var := ","
+                                 if var = ","
+                                    MsgBox, var is a comma
+         )"
+
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
+      ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
+      ;ExecScript2(expected)
+      ;msgbox, expected:`n`n%expected%
+      converted := Convert(input_script)
+      ;msgbox, converted:`n`n%converted%
+      Yunit.assert(converted = expected)
+   }
+
+   IfEqual_EscapedCommaNotNeededMidString()
+   {
+      ; "Commas that appear within the last parameter of a command do not need to be escaped because 
+      ;  the program knows to treat them literally."
+      ;
+      ; from:   https://autohotkey.com/docs/commands/_EscapeChar.htm
+
+      input_script := "
+         (LTrim Join`r`n %
+                                 var = hello,world
+                                 IfEqual, var, hello,world
+                                    MsgBox, var matches
+         )"
+
+      expected := "
+         (LTrim Join`r`n %
+                                 var := "hello,world"
+                                 if var = "hello,world"
+                                    MsgBox, var matches
+         )"
+
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
+      ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
+      ;ExecScript2(expected)
+      ;msgbox, expected:`n`n%expected%
+      converted := Convert(input_script)
+      ;msgbox, converted:`n`n%converted%
       Yunit.assert(converted = expected)
    }
 

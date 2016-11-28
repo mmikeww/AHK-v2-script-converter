@@ -1,19 +1,6 @@
 ﻿
 Convert(ScriptString)
 {
-   Remove := "
-   (
-      #AllowSameLineComments
-      #MaxMem
-      SoundGetWaveVolume
-      SoundSetWaveVolume
-      #NoEnv
-      #Delimiter
-      SetFormat
-      A_FormatInteger
-      A_FormatFloat
-   )"
-
 
    ;// Commands and How to convert them
    ;// Specification format:
@@ -47,19 +34,33 @@ Convert(ScriptString)
       StringTrimRight,OutputVar,InputVar,Count | {1} := SubStr({2}, {3}+1)
       StringUpper,OutputVar,InputVar,Tvar | StrUpper, {1}, `%{2}`%[, {3}]
       StringLower,OutputVar,InputVar,Tvar | StrLower, {1}, `%{2}`%[, {3}]
-      WinGetActiveStats,TitleVar,WidthVar,HeightVar,XVar,YVar | *ActiveStats
+      WinGetActiveStats,TitleVar,WidthVar,HeightVar,XVar,YVar | *_ActiveStats
       WinGetActiveTitle,OutputVar | WinGetTitle, {1}, A
       DriveSpaceFree,OutputVar,PathVar | DriveGet, {1}, SpaceFree, {2}
    )"
 
    ;Directives := "#Warn UseUnsetLocal`r`n#Warn UseUnsetGlobal"
 
+   Remove := "
+   (
+      #AllowSameLineComments
+      #MaxMem
+      SoundGetWaveVolume
+      SoundSetWaveVolume
+      #NoEnv
+      #Delimiter
+      SetFormat
+      A_FormatInteger
+      A_FormatFloat
+   )"
+
+
    SubStrFunction := "`r`n`r`n; This function may be removed if StartingPos is always > 0.`r`nCheckStartingPos(p) {`r`n   Return, p - (p <= 0)`r`n}`r`n`r`n"
 
 
-   ;Output := FileOpen(FNOut, "w")
    Output := ""
-   ;LoopRead, %FN%
+
+   ; parse each line of the input script
    Loop, Parse, %ScriptString%, `n, `r
    {
       Skip := false
@@ -74,11 +75,19 @@ Convert(ScriptString)
       ;msgbox, FirstChar=%FirstChar%`nFirstTwo=%FirstTwo%
       CommandMatch := -1
 
+      ; -------------------------------------------------------------------------------
+      ;
+      ; skip empty lines or comment lines
+      ;
       If (Trim(Line) == "") || ( FirstChar == ";" )
       {
          ; Do nothing, but we still want to add the line to the output file
       }
       
+      ; -------------------------------------------------------------------------------
+      ;
+      ; skip comment blocks
+      ;
       else if FirstTwo == "/*"
          InCommentBlock := true
       
@@ -92,16 +101,23 @@ Convert(ScriptString)
          ;msgbox in comment block`nLine=%Line%
       }
       
-      else If InStr(Line, "SendMode") && InStr(Line, "Input")
-         Skip := true
+      ; -------------------------------------------------------------------------------
+      ;
+      ;else If InStr(Line, "SendMode") && InStr(Line, "Input")
+         ;Skip := true
       
+      ; -------------------------------------------------------------------------------
+      ;
       ; check if this starts a continuation section
+      ;
       ; no idea what that RegEx does, but it works to prevent detection of ternaries
-      ; got that RegEx from Uberi here: https://github.com/cocobelgica/AutoHotkey-Util/blob/master/EnumIncludes.ahk#L65
+      ; got that RegEx from Coco here: https://github.com/cocobelgica/AutoHotkey-Util/blob/master/EnumIncludes.ahk#L65
+      ; and modified it slightly
+      ;
       else if ( FirstChar == "(" )
            && RegExMatch(Line, "i)^\s*\((?:\s*(?(?<=\s)(?!;)|(?<=\())(\bJoin\S*|[^\s)]+))*(?<!:)(?:\s+;.*)?$")
       {
-         Cont := 1
+         InCont := 1
          ;If RegExMatch(Line, "i)join(.+?)(LTrim|RTrim|Comment|`%|,|``)?", Join)
             ;JoinBy := Join[1]
          ;else
@@ -130,7 +146,7 @@ Convert(ScriptString)
       else if ( FirstChar == ")" )
       {
          ;MsgBox, End Cont. Section`n`nLine:`n%Line%`n`nLastLine:`n%LastLine%`n`nOutput:`n[`n%Output%`n]
-         Cont := 0
+         InCont := 0
          if (Cont_String = 1)
          {
             Line_With_Quote_After_Paren := RegExReplace(Line, "\)", ")`"", "", 1)
@@ -141,26 +157,32 @@ Convert(ScriptString)
          }
       }
 
-      else if Cont
+      else if InCont
       {
          ;Line := ToExp(Line . JoinBy)
-         ;If Cont > 1
+         ;If InCont > 1
             ;Line := ". " . Line
-         ;Cont++
+         ;InCont++
          ;MsgBox, Inside Cont. Section`n`nLine:`n%Line%`n`nLastLine:`n%LastLine%`n`nOutput:`n[`n%Output%`n]
          Output .= Line . "`r`n"
          LastLine := Line
          continue
       }
       
-      ; Replace = with := expression equivilents
+      ; -------------------------------------------------------------------------------
+      ;
+      ; Replace = with := expression equivilents in "var = value" assignment lines
+      ;
       else If RegExMatch(Line, "i)^([\s]*[a-z_][a-z_0-9]*[\s]*)=([^;]*)", Equation) ; Thanks Lexikos
       {
          ;msgbox assignment regex`nLine: %Line%`n%Equation[1]%`n%Equation[2]%
-         Line := RTrim(Equation[1]) . " := " . ToExp(Equation[2])   ; this keeps the indentation already
+         Line := RTrim(Equation[1]) . " := " . ToExp(Equation[2])   ; regex above keeps the indentation already
       }
       
+      ; -------------------------------------------------------------------------------
+      ;
       ; Traditional-if to Expression-if
+      ;
       else If RegExMatch(Line, "i)^\s*(else\s+)?if\s+(not\s+)?([a-z_][a-z_0-9]*[\s]*)(!=|=|<>|>=|<=|<|>)([^{;]*)(\s*{?)", Equation)
       {
          ;msgbox if regex`nLine: %Line%`n1: %Equation[1]%`n2: %Equation[2]%`n3: %Equation[3]%`n4: %Equation[4]%`n5: %Equation[5]%`n6: %Equation[6]%
@@ -168,8 +190,69 @@ Convert(ScriptString)
                                         , {else: Equation[1], not: Equation[2], variable: RTrim(Equation[3])
                                            , op: Equation[4], equation: ToExp(Equation[5]), otb: Equation[6]} )
       }
+
+      ; -------------------------------------------------------------------------------
+      ;
+      ; Replace = with := in function default params
+      ;
+      else if RegExMatch(Line, "i)^\s*\w+\((.+)\)", MatchFunc)
+      ; this regex matches anything inside the parentheses () for both func definitions, and func calls :(
+      {
+         AllParams := MatchFunc[1]
+         ;msgbox, % "function line`n`nLine:`n" Line "`n`nAllParams:`n" AllParams
+
+         ; first replace all commas and question marks inside quoted strings with placeholders
+         ;  - commas: because we will use comma as delimeter to parse each individual param
+         ;  - question mark: because we will use that to determine if there is a ternary
+         pos := 1, quoted_string_match := ""
+         while (pos := RegExMatch(AllParams, "`".*?`"", MatchObj, pos+StrLen(quoted_string_match)))  ; for each quoted string
+         {
+            quoted_string_match := MatchObj.Value(0)
+            ;msgbox, % "quoted_string_match=" quoted_string_match "`nlen=" StrLen(quoted_string_match) "`npos=" pos
+            string_with_placeholders := StrReplace(quoted_string_match, ",", "MY_COMMª_PLA¢E_HOLDER")
+            string_with_placeholders := StrReplace(string_with_placeholders, "?", "MY_¿¿¿_PLA¢E_HOLDER")
+            ;msgbox, %string_with_placeholders%
+            Line := StrReplace(Line, quoted_string_match, string_with_placeholders, Cnt, 1)
+         }
+         ;msgbox, % "Line:`n" Line
+
+         ; get all the params again, this time from our line with the placeholders
+         if RegExMatch(Line, "i)^\s*\w+\((.+)\)", MatchFunc2)
+         {
+            AllParams2 := MatchFunc2[1]
+            pos := 1, match := ""
+            Loop, Parse, %AllParams2%, `,   ; for each individual param (separate by comma)
+            {
+               thisprm := A_LoopField
+               ;msgbox, % "Line:`n" Line "`n`nthisparam:`n" thisprm
+               if RegExMatch(A_LoopField, "i)([\s]*[a-z_][a-z_0-9]*[\s]*)=([^,\)]*)", ParamWithEquals)
+               {
+                  ;msgbox, % "Line:`n" Line "`n`nParamWithEquals:`n" ParamWithEquals[0] "`n" ParamWithEquals[1] "`n" ParamWithEquals[2]
+                  ; replace the = with :=
+                  ;   question marks were already replaced above if they were within quotes
+                  ;   so if a questionmark still exists then it must be for ternary during a func call
+                  ;   which we will exclude. for example:  MyFunc((var=5) ? 5 : 0)
+                  if !InStr(A_LoopField, "?")
+                  {
+                     TempParam := ParamWithEquals[1] . ":=" . ParamWithEquals[2]
+                     ;msgbox, % "Line:`n" Line "`n`nParamWithEquals:`n" ParamWithEquals[0] "`n" TempParam
+                     Line := StrReplace(Line, ParamWithEquals[0], TempParam, Cnt, 1)
+                     ;msgbox, % "Line after replacing = with :=`n" Line
+                  }
+               }
+            }
+         }
+
+         ; deref the placeholders
+         Line := StrReplace(Line, "MY_COMMª_PLA¢E_HOLDER", ",")
+         Line := StrReplace(Line, "MY_¿¿¿_PLA¢E_HOLDER", "?")
+      }
       
-      else ; Command replacing
+      ; -------------------------------------------------------------------------------
+      ;
+      ; Command replacing
+      ;
+      else
       ; To add commands to be checked for, modify the list at the top of this file
       {
          CommandMatch := 0
@@ -292,7 +375,7 @@ Convert(ScriptString)
          ;msgbox Skipping`n%Line%
          Line := format_v("; REMOVED: {line}", {line: Line})
       }
-      ;Output.Write(Line . "`r`n")
+
       ;msgbox, New Line=`n%Line%
       Output .= Line . "`r`n"
       LastLine := Line
@@ -306,9 +389,9 @@ Convert(ScriptString)
    if (SubStr(Output, -2) = "`r`n")
       Output := SubStr(Output, 1, -2)
 
-   ;Output.Close()
    return Output
 }
+
 
 ; =============================================================================
 ; Convert traditional statements to expressions
@@ -358,12 +441,13 @@ ToExp(Text)
    return (TOut)
 }
 
+
 ; =============================================================================
-; Formatting functions
+; Command formatting functions
 ;    They all accept an array of parameters and return command(s) in text form
 ;    These are only called in one place in the script and are called dynamicly
 ; =============================================================================
-ActiveStats(p) {
+_ActiveStats(p) {
    If p[1]
       Out .= format_v("WinGetTitle, {1}, A", p)
    Count := p.Length()
@@ -426,6 +510,10 @@ _StringGetPos(p)
 
    return out
 }
+
+
+; =============================================================================
+
 
 
 format_v(f, v)

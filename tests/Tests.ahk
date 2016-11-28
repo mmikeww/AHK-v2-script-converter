@@ -1022,8 +1022,7 @@ class ConvertTests
       input_script := "
          (Join`r`n %
                                  five := MyFunc()
-                                 MyFunc(var=5)
-                                 {
+                                 MyFunc(var=5) {
                                     return var
                                  }
          )"
@@ -1031,8 +1030,7 @@ class ConvertTests
       expected := "
          (Join`r`n %
                                  five := MyFunc()
-                                 MyFunc(var:=5)
-                                 {
+                                 MyFunc(var:=5) {
                                     return var
                                  }
          )"
@@ -1072,6 +1070,184 @@ class ConvertTests
       converted := Convert(input_script)
       ;msgbox, expected:`n`n%expected%
       ;msgbox, converted:`n`n%converted%
+      Yunit.assert(converted = expected)
+   }
+
+   FunctionDefaultParamValues_CommasInParamString()
+   {
+      input_script := "
+         (Join`r`n %
+                                 Concat(5)
+
+                                 Concat(one, two="hello,world")
+                                 {
+                                    MsgBox, % one . two
+                                 }
+         )"
+
+      expected := "
+         (Join`r`n %
+                                 Concat(5)
+
+                                 Concat(one, two:="hello,world")
+                                 {
+                                    MsgBox, % one . two
+                                 }
+         )"
+
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
+      ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
+      ;ExecScript2(expected)
+      converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
+      ;msgbox, converted:`n`n%converted%
+      ;FileAppend, % expected, expected.txt
+      ;FileAppend, % converted, converted.txt 
+      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      Yunit.assert(converted = expected)
+   }
+
+   FunctionDefaultParamValues_CommasInCallString()
+   {
+      input_script := "
+         (Join`r`n %
+                                 Concat("joe,says,")
+
+                                 Concat(one, two="hello,world")
+                                 {
+                                    MsgBox, % one . two
+                                 }
+         )"
+
+      expected := "
+         (Join`r`n %
+                                 Concat("joe,says,")
+
+                                 Concat(one, two:="hello,world")
+                                 {
+                                    MsgBox, % one . two
+                                 }
+         )"
+
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
+      ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
+      ;ExecScript2(expected)
+      converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
+      ;msgbox, converted:`n`n%converted%
+      ;FileAppend, % expected, expected.txt
+      ;FileAppend, % converted, converted.txt 
+      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      Yunit.assert(converted = expected)
+   }
+
+   FunctionDefaultParamValues_EqualSignInString()
+   {
+      input_script := "
+         (Join`r`n %
+                                 Concat(5)
+
+                                 Concat(one, two="+5=10")
+                                 {
+                                    MsgBox, % one . two
+                                 }
+         )"
+
+      expected := "
+         (Join`r`n %
+                                 Concat(5)
+
+                                 Concat(one, two:="+5=10")
+                                 {
+                                    MsgBox, % one . two
+                                 }
+         )"
+
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
+      ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
+      ;ExecScript2(expected)
+      converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
+      ;msgbox, converted:`n`n%converted%
+      ;FileAppend, % expected, expected.txt
+      ;FileAppend, % converted, converted.txt 
+      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      Yunit.assert(converted = expected)
+   }
+
+   FunctionDefaultParamValues_TernaryInCall()
+   {
+      ; dont replace the equal sign in the ternary during the function CALL
+      input_script := "
+         (Join`r`n %
+                                 Concat((var=5) ? 5 : 0)
+
+                                 Concat(one, two="2")
+                                 {
+                                    MsgBox, % one + two
+                                 }
+         )"
+
+      expected := "
+         (Join`r`n %
+                                 Concat((var=5) ? 5 : 0)
+
+                                 Concat(one, two:="2")
+                                 {
+                                    MsgBox, % one + two
+                                 }
+         )"
+
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
+      ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
+      ;ExecScript2(expected)
+      converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
+      ;msgbox, converted:`n`n%converted%
+      ;FileAppend, % expected, expected.txt
+      ;FileAppend, % converted, converted.txt 
+      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      Yunit.assert(converted = expected)
+   }
+
+   FunctionDefaultParamValues_WholeShebang()
+   {
+      input_script := "
+         (Join`r`n %
+                                 var = 5
+                                 Concat((var=5) ? 5 : 0)
+
+                                 Concat(one, two="hello,world", three = 3, four = "does 2+2=4?")
+                                 {
+                                    MsgBox, % one . two . three . four
+                                 }
+         )"
+
+      expected := "
+         (Join`r`n %
+                                 var := 5
+                                 Concat((var=5) ? 5 : 0)
+
+                                 Concat(one, two:="hello,world", three := 3, four := "does 2+2=4?")
+                                 {
+                                    MsgBox, % one . two . three . four
+                                 }
+         )"
+
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
+      ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
+      ;ExecScript2(expected)
+      converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
+      ;msgbox, converted:`n`n%converted%
+      ;FileAppend, % expected, expected.txt
+      ;FileAppend, % converted, converted.txt 
+      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected)
    }
 

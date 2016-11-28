@@ -9,28 +9,27 @@ However, this project is way more ambitious that I originally thought, and __it 
 
 # Usage
 ## Convert v1 script to v2
-- Run the included `v2converter.exe` file
-- Choose your input `scriptfile.ahk` written for AHK v1
-- The converted script will be named `scriptfile_v2new.ahk` in the same directory
-- Look over the Visual Diff to manually inspect the changes
-
-## Run unit tests
-- Run the `tests\Tests.exe` file
+1. [Download](https://github.com/mmikeww/AHK-v2-script-converter/archive/master.zip) the full repo. Then run the included `v2converter.exe` file
+2. Choose your input `scriptfile.ahk` written for AHK v1.  
+   The converted script will be named `scriptfile_v2new.ahk` in the same directory
+3. Look over the Visual Diff to manually inspect the changes
 
 ## Note
-The `v2converter.exe` file (as well as the `tests\Tests.exe` file) is simply a renamed copy of the `AutoHotkeyU32-v2-a076.exe` file that is included in the v2-a076 zip download. The reason for this is because most people will still have AHK v1 installed and associated with `*.ahk` files. So it would be inconvenient to run this converter without some workarounds. Instead, we take advantage of the [default scriptfile feature](https://lexikos.github.io/v2/docs/Scripts.htm#defaultfile) where the v2converter.exe file will look for a file named v2converter.ahk and run it. You can make changes to the .ahk file and then just run the .exe  
-
-Similarly, the `diff\VisualDiff.exe` file is just a renamed `AutoHotkeyU32-v1.1.24.02.exe`
+The `v2converter.exe` file (as well as the `tests\Tests.exe` file) is simply a renamed copy of the `AutoHotkeyU32-v2-a076.exe` interpreter file that is included in the v2-a076 zip download. The interpreter alone does nothing without passing a script to it. But here, we take advantage of the [default scriptfile feature](https://lexikos.github.io/v2/docs/Scripts.htm#defaultfile) where the v2converter.exe file will look for a file named v2converter.ahk and automatically run it. You can make changes to the .ahk file and then just run the .exe. The reason for doing this is because most people will still have AHK v1 installed and associated with `*.ahk` files. So it would be inconvenient to run this converter without some workarounds. Likewise, the `diff\VisualDiff.exe` file is just a renamed `AutoHotkeyU32-v1.1.24.02.exe`
 
 # Contributing
-There are many edge cases when trying to parse script code and convert it. Here are a few ways you can help:
+There is a lot of work to do and many commands and functions that still need to be changd. There are also many edge cases when trying to parse script code and convert it. Of course, whenever making changes to the code, you should be constantly running the unit tests to confirm that things are still working. Simply run the `tests\Tests.exe` file and pray for green.  
+
+Here are a few ways you can help:
+
 - Use it to convert your v1 scripts  
-  When you find errors or mistakes in the conversion, [open an issue here on github]()
+  When you find errors or mistakes in the conversion, [open an issue here on github](https://github.com/mmikeww/AHK-v2-script-converter/issues)
 - Write unit tests  
-  You don't even need to write implementation code. Simply write some tests. There are existing commands that the original converter supported that have not been tested with my changes, such as `StringTrimRight`. Follow the existing format in the `tests\Tests.ahk` file. See [this commit](https://github.com/mmikeww/AHK-v2-script-converter/commit/1e32043455abbd2f1e42c51c126d7c4f20a6be88) for an example.
+  You don't even need to write implementation code. Simply write some tests. There are existing commands that the original converter supported that have not been tested with my changes, such as `StringTrimRight`. Follow the existing format in the `tests\Tests.ahk` file.
 - Fix existing failing tests  
-  I have written tests already for the conversion of default function params from to use `:=` instead of `=`.  
-  These tests currently fail and need implementation.  
+  There is currently a failing test named `Continuation_NewlinePreceding()` that is commented out in the Tests.ahk file.
+  This needs implementation.
+- Work on any existing [issues](https://github.com/mmikeww/AHK-v2-script-converter/issues)
 - Refactor the code  
   The code isn't in very good condition. And you can lean on the unit testing suite as you try to make it better.
 - Add support for other changes. You can find the definitive list here: [v2-changes](https://autohotkey.com/v2/v2-changes.htm)  
@@ -42,5 +41,5 @@ And of course, create a Pull Request with your changed code
 - Frankie who created the [original v2 converter](https://autohotkey.com/board/topic/65333-v2-script-converter/)
 - Uberi for his [updates to the original](https://autohotkey.com/board/topic/65333-v2-script-converter/?p=419671)
 - [Mergely](https://github.com/wickedest/Mergely) for the javascript diff library
-- [Exo](https://autohotkey.com/boards/viewtopic.php?t=5714) for the interface to run the javascript in an AHK gui
+- Aurelain's [Exo](https://autohotkey.com/boards/viewtopic.php?t=5714) for the interface to run the javascript in an AHK gui
 - I'm sure many others

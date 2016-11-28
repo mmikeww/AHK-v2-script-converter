@@ -689,13 +689,13 @@ jQuery.extend(Mgly.CodeMirrorDiffView.prototype, {
 
 		// codemirror
 		var cmstyle = '#' + this.id + ' .CodeMirror-gutter-text { padding: 5px 0 0 0; }' +
-			'#' + this.id + ' .CodeMirror-lines pre, ' + '#' + this.id + ' .CodeMirror-gutter-text pre { line-height: 18px; }' +
+			'#' + this.id + ' .CodeMirror-lines pre, ' + '#' + this.id + ' .CodeMirror-gutter-text pre { line-height: 24px; }' +
 			'.CodeMirror-linewidget { overflow: hidden; };';
 		if (this.settings.autoresize) {
 			cmstyle += this.id + ' .CodeMirror-scroll { height: 100%; overflow: auto; }';
 		}
 		// adjust the margin line height
-		cmstyle += '\n.CodeMirror { line-height: 18px; }';
+		cmstyle += '\n.CodeMirror { line-height: 24px; }';
 		jQuery('<style type="text/css">' + cmstyle + '</style>').appendTo('head');
 
 		//bind

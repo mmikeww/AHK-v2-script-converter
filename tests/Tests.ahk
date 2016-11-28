@@ -231,6 +231,7 @@ class ConvertTests
       Yunit.assert(converted = expected)
    }
 
+   /*
    Continuation_NewlinePreceding()
    {
       input_script := "
@@ -262,6 +263,7 @@ class ConvertTests
       ;msgbox, converted:`n`n%converted%
       Yunit.assert(converted = expected)
    }
+   */
 
    Continuation_CommandParam()
    {

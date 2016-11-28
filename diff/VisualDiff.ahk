@@ -255,7 +255,7 @@ for key, val in builtinLabels {
 trigger("OnClipboardChange")
 OnMessage(0x100, "WB_onKey", 2) ; support for key down
 OnMessage(0x101, "WB_onKey", 2) ; support for key up
-Gui, Show, w%WIDTH% h%HEIGHT%
+Gui, Show, w%WIDTH% h%HEIGHT%, AHK v1 -> v2 Script Converter - Visual Diff
 return
 
 

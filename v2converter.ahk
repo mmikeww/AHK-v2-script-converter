@@ -76,7 +76,7 @@ outfile.Close()
 
 If !A_Args.Length()
 {
-   MsgBox, 4,, Conversion complete. New file saved:`n`n%FNOut%`n`nWould you like to see the changes made?
+   MsgBox, 68,, Conversion complete. New file saved:`n`n%FNOut%`n`nWould you like to see the changes made?
    if (A_MsgBoxResult = "Yes")
       Run, diff\VisualDiff.exe diff\VisualDiff.ahk "%FN%" "%FNOut%"
 }

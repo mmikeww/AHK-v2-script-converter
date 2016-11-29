@@ -1783,6 +1783,123 @@ class ConvertTests
       Yunit.assert(converted = expected)
    }
 
+   StringLeft()
+   {
+      input_script := "
+         (Join`r`n %
+                                 String = This is a test.
+                                 StringLeft, OutputVar, String, 4
+                                 MsgBox, %OutputVar%
+         )"
+
+      expected := "
+         (Join`r`n %
+                                 String := "This is a test."
+                                 OutputVar := SubStr(String, 1, 4)
+                                 MsgBox, %OutputVar%
+         )"
+
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
+      ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
+      ;ExecScript2(expected)
+      converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
+      ;msgbox, converted:`n`n%converted%
+      Yunit.assert(converted = expected)
+   }
+
+   StringRight()
+   {
+      input_script := "
+         (Join`r`n %
+                                 String = This is a test.
+                                 StringRight, OutputVar, String, 5
+                                 MsgBox, %OutputVar%
+         )"
+
+      expected := "
+         (Join`r`n %
+                                 String := "This is a test."
+                                 OutputVar := SubStr(String, -5)
+                                 MsgBox, %OutputVar%
+         )"
+
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
+      ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
+      ;ExecScript2(expected)
+      converted := Convert(input_script)
+      ;msgbox, expected:`n`n%expected%
+      ;msgbox, converted:`n`n%converted%
+      ;FileAppend, % expected, expected.txt
+      ;FileAppend, % converted, converted.txt 
+      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      Yunit.assert(converted = expected)
+   }
+
+   StringTrimLeft()
+   {
+      input_script := "
+         (Join`r`n %
+                                 String = This is a test.
+                                 StringTrimLeft, OutputVar, String, 5
+                                 MsgBox, %OutputVar%
+         )"
+
+      expected := "
+         (Join`r`n %
+                                 String := "This is a test."
+                                 OutputVar := SubStr(String, 5+1)
+                                 MsgBox, %OutputVar%
+         )"
+
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
+      ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
+      ;ExecScript2(expected)
+      converted := Convert(input_script)
+      ;MsgBox, Click OK and the converted script will be run with AHK v2:`n`n%converted%
+      ;ExecScript2(converted)
+      ;msgbox, expected:`n`n%expected%
+      ;msgbox, converted:`n`n%converted%
+      ;FileAppend, % expected, expected.txt
+      ;FileAppend, % converted, converted.txt 
+      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      Yunit.assert(converted = expected)
+   }
+
+   StringTrimRight()
+   {
+      input_script := "
+         (Join`r`n %
+                                 String = This is a test.
+                                 StringTrimRight, OutputVar, String, 6
+                                 MsgBox, [%OutputVar%]
+         )"
+
+      expected := "
+         (Join`r`n %
+                                 String := "This is a test."
+                                 OutputVar := SubStr(String, 1, -6)
+                                 MsgBox, [%OutputVar%]
+         )"
+
+      ;MsgBox, Click OK and the following script will be run with AHK v1:`n`n%input_script%
+      ;ExecScript1(input_script)
+      ;MsgBox, Click OK and the following script will be run with AHK v2:`n`n%expected%
+      ;ExecScript2(expected)
+      converted := Convert(input_script)
+      ;MsgBox, Click OK and the converted script will be run with AHK v2:`n`n%converted%
+      ;ExecScript2(converted)
+      ;msgbox, expected:`n`n%expected%
+      ;msgbox, converted:`n`n%converted%
+      ;FileAppend, % expected, expected.txt
+      ;FileAppend, % converted, converted.txt 
+      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      Yunit.assert(converted = expected)
+   }
+
    Preserve_Indentation()
    {
       ; dont use LTrim and instead rely on AHK v2 default smart LTrim

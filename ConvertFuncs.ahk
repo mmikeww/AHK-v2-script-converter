@@ -29,9 +29,9 @@ Convert(ScriptString)
       StringGetPos,OutputVar,InputVar,SearchText,Side,Offset | *_StringGetPos
       StringMid,OutputVar,InputVar,StartChar,Count,L | {1} := SubStr({2}, {3}[, {4}][])
       StringLeft,OutputVar,InputVar,Count | {1} := SubStr({2}, 1, {3})
-      StringRight,OutputVar,InputVar,Count | {1} := SubStr({2}, -{3}+1, {3})
-      StringTrimLeft,OutputVar,InputVar,Count | {1} := SubStr({2}, 1, -{3})
-      StringTrimRight,OutputVar,InputVar,Count | {1} := SubStr({2}, {3}+1)
+      StringRight,OutputVar,InputVar,Count | {1} := SubStr({2}, -{3})
+      StringTrimLeft,OutputVar,InputVar,Count | {1} := SubStr({2}, {3}+1)
+      StringTrimRight,OutputVar,InputVar,Count | {1} := SubStr({2}, 1, -{3})
       StringUpper,OutputVar,InputVar,Tvar | StrUpper, {1}, `%{2}`%[, {3}]
       StringLower,OutputVar,InputVar,Tvar | StrLower, {1}, `%{2}`%[, {3}]
       WinGetActiveStats,TitleVar,WidthVar,HeightVar,XVar,YVar | *_ActiveStats
@@ -55,7 +55,7 @@ Convert(ScriptString)
    )"
 
 
-   SubStrFunction := "`r`n`r`n; This function may be removed if StartingPos is always > 0.`r`nCheckStartingPos(p) {`r`n   Return, p - (p <= 0)`r`n}`r`n`r`n"
+   ;SubStrFunction := "`r`n`r`n; This function may be removed if StartingPos is always > 0.`r`nCheckStartingPos(p) {`r`n   Return, p - (p <= 0)`r`n}`r`n`r`n"
 
 
    Output := ""
@@ -354,11 +354,11 @@ Convert(ScriptString)
 
       
       ; TEMPORARY
-      If !FoundSubStr && !InCommentBlock && InStr(Line, "SubStr") 
-      {
-         FoundSubStr := true
-         Line .= " `; WARNING: SubStr conversion may change in the near future"
-      }
+      ;If !FoundSubStr && !InCommentBlock && InStr(Line, "SubStr") 
+      ;{
+         ;FoundSubStr := true
+         ;Line .= " `; WARNING: SubStr conversion may change in the near future"
+      ;}
       
       ; Put the directives after the first non-comment line
       If !FoundNonComment && !InCommentBlock && A_Index != 1 && FirstChar != ";" && FirstTwo != "*/"

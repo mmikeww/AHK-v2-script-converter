@@ -9,10 +9,10 @@ Convert(ScriptString)
    ;//          params names containing "var" (such as "InputVar,OutputVar,TitleVar") will not be converted
    ;//          any other param name will be converted from literal text to expression using the ToExp() func
    ;// Replacement format:
-   ;//          use asterisk * and a function name to call
-   ;//          or
    ;//          use {1} which corresponds to Param1, etc
-   ;//          use [] for optional params. no idea why StringMid has an empty [] below
+   ;//          use [] for one optional param. don't think it will currently work for multiple
+   ;//          or
+   ;//          use asterisk * and a function name to call, for when the params dont directly match up
    CommandsToConvert := "
    (
       EnvAdd,InputVar,ExprVar,TimeUnits | *_EnvAdd
@@ -27,7 +27,7 @@ Convert(ScriptString)
       IfLessOrEqual,InputVar,value | if ({1} <= {2})
       StringLen,OutputVar,InputVar | {1} := StrLen({2})
       StringGetPos,OutputVar,InputVar,SearchText,Side,Offset | *_StringGetPos
-      StringMid,OutputVar,InputVar,StartChar,Count,L | {1} := SubStr({2}, {3}[, {4}][])
+      StringMid,OutputVar,InputVar,StartChar,Count,L | *_StringMid
       StringLeft,OutputVar,InputVar,Count | {1} := SubStr({2}, 1, {3})
       StringRight,OutputVar,InputVar,Count | {1} := SubStr({2}, -{3})
       StringTrimLeft,OutputVar,InputVar,Count | {1} := SubStr({2}, {3}+1)
@@ -292,11 +292,13 @@ Convert(ScriptString)
                   ;  the program knows to treat them literally."
                   ; from:   https://autohotkey.com/docs/commands/_EscapeChar.htm
 
-                  ;msgbox, % "Param[ParamLen-1]=" Param[Param.Length()-1]
+                  ;msgbox, % "Line:`n" Line "`n`nParam[ParamLen-1]=" Param[Param.Length()-1]
                   Param[Param.Length()-1] := Param[Param.Length()-1]  "," Param[Param.Length()]
                   ;msgbox, % "Param[ParamLen-1]=" Param[Param.Length()-1]
                   Param.Delete(Param.Length())
                }
+
+               ; convert the params to expression or not
                Loop, % Param.Length()
                {
                   this_param := Param[A_Index]
@@ -317,12 +319,13 @@ Convert(ScriptString)
                }
                else
                {
-                  ;if (Command = "StringGetPos")
-                     ;msgbox, % "in else`nLine: " Line "`nPart[2]: " Part[2] "`nParam[1]: " Param[1]
+                  ;if (Command = "StringMid")
+                     ;msgbox, % "in else`nLine: " Line "`nPart[2]: " Part[2] "`n`nListParam.Length: " ListParam.Length() "`nParam.Length: " Param.Length() "`n`nParam[1]: " Param[1] "`nParam[2]: " Param[2] "`nParam[3]: " Param[3] "`nParam[4]: " Param[4]
                   If ParamDif := (ListParam.Length() - Param.Length() )
                   {
                      ; Remove all unused optional parameters
                      ;msgbox, ParamDif=%ParamDif%
+                     ;msgbox, % "before regexreplace`nPart[2]: " Part[2]
                      Part[2] := RegExReplace(Part[2], "\[[^\]]*\]", "", Count, ParamDif, 1)
                      ;msgbox, % "after regexreplace`nPart[2]: " Part[2]
                   }
@@ -404,7 +407,7 @@ ToExp(Text)
    Text := Trim(Text, " `t")
    If (Text = "")       ; If text is empty
       TOut := (qu . qu) ; Two double quotes
-   else if InStr(Text, "`%")
+   else if InStr(Text, "`%")        ; deref   %var% -> var
    {
       TOut := ""
       Loop % StrLen(Text)
@@ -432,13 +435,22 @@ ToExp(Text)
       ;msgbox %text%
       TOut := Text+0
    }
-   else
+   else      ; wrap anything else in quotes
    {
-      StrReplace, TOut, %Text%, % qu, % bt . qu, All
+      TOut := StrReplace(Text, qu, bt . qu)    ; first escape literal quotes
       ;msgbox text=%text%`ntout=%tout%
       TOut := qu . TOut . qu
    }
    return (TOut)
+}
+
+
+; change   "text" -> text
+RemoveSurroundingQuotes(text)
+{
+   if (SubStr(text, 1, 1) = "`"") && (SubStr(text, -1) = "`"")
+      return SubStr(text, 2, -1)
+   return text
 }
 
 
@@ -473,15 +485,15 @@ _StringGetPos(p)
    ; modelled off of:   https://github.com/Lexikos/AutoHotkey_L/blob/master/source/script.cpp#L14181
    else if p.Length() >= 4
    {
+      p[5] := p[5] ? p[5] : 0   ; 5th param is 'Offset' aka starting position. set default value if none specified
+      ;msgbox, % p[5]
+      ; the 5th param "can be an expression". our ToExp() function already converted it earlier.
+      ; if it was a number, it was left alone. otherwise if its a quoted string, it could have been a varname
+      p[5] := RemoveSurroundingQuotes(p[5])
+
       p4FirstChar := SubStr(p[4], 1, 1)
       p4LastChar := SubStr(p[4], -1)
       ;msgbox, % p[4] "`np4FirstChar=" p4FirstChar "`np4LastChar=" p4LastChar
-      p[5] := p[5] ? p[5] : 0              ; 5th param is 'Offset' aka starting position
-      ;msgbox, % p[5]
-      ; if the 5th param is a quoted string, then it was used as expression and not a number
-      if (SubStr(p[5], 1, 1) = "`"") && (SubStr(p[5], -1) = "`"")
-         p[5] := SubStr(p[5], 2, -1)  ; remove quotes
-
       if (p4FirstChar = "`"") && (p4LastChar = "`"")   ; remove start/end quotes, would be nice if a non-expr was passed in
       {
          p4noquotes := SubStr(p[4], 2, -1)
@@ -509,6 +521,37 @@ _StringGetPos(p)
    out .= "`r`n`; WARNING: if you use StringCaseSense in your script you may need to inspect the 3rd param 'false' above"
 
    return out
+}
+
+
+_StringMid(p)
+{
+   ; the 3rd/4th params "can be an expression". our ToExp() function already converted it earlier.
+   ; if it was a number, it was left alone. otherwise if its a quoted string, it could have been a varname
+   if p[3]
+      p[3] := RemoveSurroundingQuotes(p[3])
+   if p[4]
+      p[4] := RemoveSurroundingQuotes(p[4])
+
+   if p.Length() = 3
+      return format_v("{1} := SubStr({2}, {3})", p)
+   else if p.Length() = 4
+      return format_v("{1} := SubStr({2}, {3}, {4})", p)
+   else if p.Length() = 5
+   {
+      ;msgbox, % p[5] "`n" SubStr(p[5], 1, 2)
+      ; any string that starts with 'L' is accepted
+      if (StrUpper(SubStr(p[5], 2, 1) = "L"))
+         return format_v("{1} := SubStr(SubStr({2}, 1, {3}), -{4})", p)
+      else
+      {
+         out := format_v("if (SubStr({5}, 1, 1) = `"L`")", p) . "`r`n"
+         out .= format_v("    {1} := SubStr(SubStr({2}, 1, {3}), -{4})", p) . "`r`n"
+         out .= format_v("else", p) . "`r`n"
+         out .= format_v("    {1} := SubStr({2}, {3}, {4})", p)
+         return out
+      }
+   }
 }
 
 

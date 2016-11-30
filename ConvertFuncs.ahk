@@ -454,7 +454,7 @@ _ActiveStats(p) {
    loop 5
       p[A_Index] := ( p[A_Index] ? " " . p[A_Index] : "" )
    if Count > 1 ; Width and/or Height and/or X and/or Y but not Title
-      Out .= (p[1] ? "`r`n" : "") . format_v("WinGetPos{2},{3},{4},{5}, A", p)
+      Out .= (p[1] ? "`r`n" : "") . format_v("WinGetPos,{4},{5},{2},{3}, A", p)
    return Out   
 }
 

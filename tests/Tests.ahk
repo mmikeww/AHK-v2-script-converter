@@ -283,7 +283,7 @@ class ConvertTests
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt 
+      ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
@@ -320,7 +320,7 @@ class ConvertTests
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt 
+      ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
@@ -350,7 +350,7 @@ class ConvertTests
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt 
+      ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
@@ -380,7 +380,7 @@ class ConvertTests
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt 
+      ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
@@ -410,7 +410,7 @@ class ConvertTests
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt 
+      ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
@@ -440,7 +440,7 @@ class ConvertTests
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt 
+      ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
@@ -470,7 +470,7 @@ class ConvertTests
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt 
+      ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
@@ -502,7 +502,7 @@ class ConvertTests
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt 
+      ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
@@ -538,7 +538,7 @@ class ConvertTests
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt 
+      ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
@@ -574,7 +574,7 @@ class ConvertTests
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt 
+      ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
@@ -612,7 +612,7 @@ class ConvertTests
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt 
+      ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
@@ -646,7 +646,7 @@ class ConvertTests
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt 
+      ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
@@ -676,7 +676,7 @@ class ConvertTests
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt 
+      ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
@@ -706,7 +706,7 @@ class ConvertTests
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt 
+      ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
@@ -736,7 +736,7 @@ class ConvertTests
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt 
+      ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
@@ -766,7 +766,7 @@ class ConvertTests
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt 
+      ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
@@ -796,7 +796,7 @@ class ConvertTests
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt 
+      ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
@@ -826,7 +826,7 @@ class ConvertTests
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt 
+      ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
@@ -861,7 +861,7 @@ class ConvertTests
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt 
+      ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
@@ -896,7 +896,7 @@ class ConvertTests
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt 
+      ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
@@ -926,7 +926,7 @@ class ConvertTests
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt 
+      ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
@@ -956,7 +956,7 @@ class ConvertTests
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt 
+      ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
@@ -986,7 +986,7 @@ class ConvertTests
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt 
+      ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
@@ -1016,7 +1016,7 @@ class ConvertTests
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt 
+      ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
@@ -1046,7 +1046,7 @@ class ConvertTests
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt 
+      ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
@@ -1076,7 +1076,7 @@ class ConvertTests
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt 
+      ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
@@ -1108,7 +1108,7 @@ class ConvertTests
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt 
+      ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
@@ -1138,7 +1138,7 @@ class ConvertTests
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt 
+      ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
@@ -1168,7 +1168,7 @@ class ConvertTests
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt 
+      ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
@@ -1198,7 +1198,7 @@ class ConvertTests
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt 
+      ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
@@ -1230,7 +1230,7 @@ class ConvertTests
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt 
+      ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
@@ -1264,7 +1264,7 @@ class ConvertTests
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt 
+      ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
@@ -1298,7 +1298,7 @@ class ConvertTests
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt 
+      ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
@@ -1334,7 +1334,7 @@ class ConvertTests
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt 
+      ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
@@ -1370,7 +1370,7 @@ class ConvertTests
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt 
+      ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
@@ -1406,7 +1406,7 @@ class ConvertTests
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt 
+      ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
@@ -1443,7 +1443,7 @@ class ConvertTests
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt 
+      ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
@@ -1481,7 +1481,7 @@ class ConvertTests
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt 
+      ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
@@ -1509,7 +1509,7 @@ class ConvertTests
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt 
+      ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
@@ -1537,7 +1537,7 @@ class ConvertTests
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt 
+      ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
@@ -1565,7 +1565,7 @@ class ConvertTests
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt 
+      ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
@@ -1595,7 +1595,7 @@ class ConvertTests
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt 
+      ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
@@ -1627,7 +1627,7 @@ class ConvertTests
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt 
+      ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
@@ -1657,7 +1657,7 @@ class ConvertTests
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt 
+      ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
@@ -1691,7 +1691,7 @@ class ConvertTests
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt 
+      ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
@@ -1726,7 +1726,7 @@ class ConvertTests
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt 
+      ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
@@ -1761,7 +1761,7 @@ class ConvertTests
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt 
+      ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
@@ -1796,7 +1796,7 @@ class ConvertTests
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt 
+      ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
@@ -1831,7 +1831,7 @@ class ConvertTests
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt 
+      ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
@@ -1868,7 +1868,7 @@ class ConvertTests
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt 
+      ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
@@ -1905,7 +1905,7 @@ class ConvertTests
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt 
+      ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
@@ -1942,7 +1942,7 @@ class ConvertTests
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt 
+      ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
@@ -1977,7 +1977,7 @@ class ConvertTests
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt 
+      ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
@@ -2012,7 +2012,7 @@ class ConvertTests
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt 
+      ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
@@ -2047,7 +2047,7 @@ class ConvertTests
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt 
+      ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
@@ -2082,7 +2082,7 @@ class ConvertTests
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt 
+      ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
@@ -2112,7 +2112,7 @@ class ConvertTests
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt 
+      ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
@@ -2142,7 +2142,7 @@ class ConvertTests
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt 
+      ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
@@ -2172,7 +2172,7 @@ class ConvertTests
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt 
+      ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
@@ -2202,7 +2202,7 @@ class ConvertTests
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt 
+      ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
@@ -2247,7 +2247,64 @@ class ConvertTests
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt 
+      ;FileAppend, % converted, converted.txt
+      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      Yunit.assert(converted = expected, "converted output script != expected output script")
+   }
+
+   WinGetActiveTitle()
+   {
+      input_script := "
+         (Join`r`n %
+                                 WinGetActiveTitle, OutputVar
+                                 FileAppend, %OutputVar%, *
+         )"
+
+      expected := "
+         (Join`r`n %
+                                 WinGetTitle, OutputVar, A
+                                 FileAppend, %OutputVar%, *
+         )"
+
+      ; first test that our expected code actually produces the same results in v2
+      result_input    := ExecScript_v1(input_script)
+      result_expected := ExecScript_v2(expected)
+      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
+      Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+
+      ; then test that our converter will correctly covert the input_script to the expected script
+      converted := Convert(input_script)
+      ;FileAppend, % expected, expected.txt
+      ;FileAppend, % converted, converted.txt
+      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      Yunit.assert(converted = expected, "converted output script != expected output script")
+   }
+
+   WinGetActiveStats()
+   {
+      input_script := "
+         (Join`r`n %
+                                 WinGetActiveStats, title, w, h, x, y
+                                 FileAppend, %title%-%w%-%h%-%x%-%y%, *
+         )"
+
+      expected := "
+         (Join`r`n %
+                                 WinGetTitle, title, A
+                                 WinGetPos, x, y, w, h, A
+                                 FileAppend, %title%-%w%-%h%-%x%-%y%, *
+         )"
+
+      ; first test that our expected code actually produces the same results in v2
+      result_input    := ExecScript_v1(input_script)
+      result_expected := ExecScript_v2(expected)
+      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
+      Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+
+      ; then test that our converter will correctly covert the input_script to the expected script
+      converted := Convert(input_script)
+      ;FileAppend, % expected, expected.txt
+      ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }

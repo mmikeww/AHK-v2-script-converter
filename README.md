@@ -7,6 +7,8 @@ I've also added essential unit tests using the [Yunit framework](https://github.
 
 However, this project is way more ambitious that I originally thought, and __it needs a lot of work__. See below for how you can [contribute](#contributing).
 
+![screenshot](https://github.com/mmikeww/AHK-v2-script-converter/blob/master/screenshot.jpg)
+
 # Usage
 ## Convert v1 script to v2
 1. [Download](https://github.com/mmikeww/AHK-v2-script-converter/archive/master.zip) the full repo. Then run the included `v2converter.exe` file

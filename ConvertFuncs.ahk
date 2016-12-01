@@ -173,10 +173,14 @@ Convert(ScriptString)
       ;
       ; Replace = with := expression equivilents in "var = value" assignment lines
       ;
+      ; var = 3      will be replaced with    var := "3"
+      ; lexikos says var=value should always be a string, even numbers
+      ; https://autohotkey.com/boards/viewtopic.php?p=118181#p118181
+      ;
       else If RegExMatch(Line, "i)^([\s]*[a-z_][a-z_0-9]*[\s]*)=([^;]*)", Equation) ; Thanks Lexikos
       {
          ;msgbox assignment regex`nLine: %Line%`n%Equation[1]%`n%Equation[2]%
-         Line := RTrim(Equation[1]) . " := " . ToExp(Equation[2])   ; regex above keeps the indentation already
+         Line := RTrim(Equation[1]) . " := " . ToStringExpr(Equation[2])   ; regex above keeps the indentation already
       }
       
       ; -------------------------------------------------------------------------------
@@ -186,9 +190,13 @@ Convert(ScriptString)
       else If RegExMatch(Line, "i)^\s*(else\s+)?if\s+(not\s+)?([a-z_][a-z_0-9]*[\s]*)(!=|=|<>|>=|<=|<|>)([^{;]*)(\s*{?)", Equation)
       {
          ;msgbox if regex`nLine: %Line%`n1: %Equation[1]%`n2: %Equation[2]%`n3: %Equation[3]%`n4: %Equation[4]%`n5: %Equation[5]%`n6: %Equation[6]%
-         Line := Indentation . format_v("{else}if {not}({variable} {op} {equation}){otb}"
-                                        , {else: Equation[1], not: Equation[2], variable: RTrim(Equation[3])
-                                           , op: Equation[4], equation: ToExp(Equation[5]), otb: Equation[6]} )
+         Line := Indentation . format_v("{else}if {not}({variable} {op} {value}){otb}"
+                                        , { else: Equation[1]
+                                          , not: Equation[2]
+                                          , variable: RTrim(Equation[3])
+                                          , op: Equation[4]
+                                          , value: ToExp(Equation[5])
+                                          , otb: Equation[6] } )
       }
 
       ; -------------------------------------------------------------------------------
@@ -444,6 +452,53 @@ ToExp(Text)
    return (TOut)
 }
 
+
+
+; same as above, except numbers are excluded. 
+; that is, a number will be turned into a quoted number.  3 -> "3"
+ToStringExpr(Text)
+{
+   static qu := "`"" ; Constant for double quotes
+   static bt := "``" ; Constant for backtick to escape
+   Text := Trim(Text, " `t")
+   If (Text = "")       ; If text is empty
+      TOut := (qu . qu) ; Two double quotes
+   else if InStr(Text, "`%")        ; deref   %var% -> var
+   {
+      TOut := ""
+      Loop % StrLen(Text)
+      {
+         Symbol := Chr(NumGet(Text, (A_Index-1)*2, "UChar"))
+         If Symbol == "`%"
+         {
+            If (DeRef := !DeRef) && (A_Index != 1)
+               TOut .= qu . " . "
+            else If (!DeRef) && (A_Index != StrLen(Text))
+               TOut .= " . " . qu
+         }
+         else
+         {
+            If A_Index = 1
+               TOut .= qu
+            TOut .= Symbol
+         }
+      }
+      If Symbol != "`%"
+         TOut .= (qu) ; One double quote
+   }
+   ;else if type(Text+0) != "String"
+   ;{
+      ;msgbox %text%
+      ;TOut := Text+0
+   ;}
+   else      ; wrap anything else in quotes
+   {
+      TOut := StrReplace(Text, qu, bt . qu)    ; first escape literal quotes
+      ;msgbox text=%text%`ntout=%tout%
+      TOut := qu . TOut . qu
+   }
+   return (TOut)
+}
 
 ; change   "text" -> text
 RemoveSurroundingQuotes(text)

@@ -3,7 +3,7 @@
 #Include ..\ConvertFuncs.ahk
 #Include ExecScript.ahk
 
-Yunit.Use(YunitWindow).Test(ConvertTests, ToExpTests, RemoveSurroundingQuotes, ExecScriptTests)
+Yunit.Use(YunitWindow).Test(ConvertTests, ToExpTests, ToStringExprTests, RemoveSurroundingQuotes, ExecScriptTests)
 
 
 class ConvertTests
@@ -86,7 +86,7 @@ class ConvertTests
 
       expected := "
          (Join`r`n %
-                                 var := 2
+                                 var := "2"
                                  if (var = 2)
                                     FileAppend, %var%, *
          )"
@@ -362,7 +362,7 @@ class ConvertTests
                                  var := "helloworld"
                                  if var = helloworld
                                     FileAppend, equal, *
-            )"
+         )"
 
       expected := "
          (Join`r`n %
@@ -392,11 +392,11 @@ class ConvertTests
                                  var = 3
                                  if var != 
                                     FileAppend, %var%, *
-            )"
+         )"
 
       expected := "
          (Join`r`n %
-                                 var := 3
+                                 var := "3"
                                  if (var != "")
                                     FileAppend, %var%, *
          )"
@@ -422,11 +422,11 @@ class ConvertTests
                                  var = 8
                                  if var = 8
                                     FileAppend, %var%, *
-            )"
+         )"
 
       expected := "
          (Join`r`n %
-                                 var := 8
+                                 var := "8"
                                  if (var = 8)
                                     FileAppend, %var%, *
          )"
@@ -452,11 +452,11 @@ class ConvertTests
                                  var = 10
                                  if var > 8
                                     FileAppend, %var%, *
-            )"
+         )"
 
       expected := "
          (Join`r`n %
-                                 var := 10
+                                 var := "10"
                                  if (var > 8)
                                     FileAppend, %var%, *
          )"
@@ -483,7 +483,7 @@ class ConvertTests
                                  MyVar2 = joe
                                  if MyVar = %MyVar2%
                                      FileAppend, The contents of MyVar and MyVar2 are identical., *
-            )"
+         )"
 
       expected := "
          (Join`r`n %
@@ -590,7 +590,7 @@ class ConvertTests
                                     global var := 777
                                     return true
                                  }
-            )"
+         )"
 
       expected := "
          (Join`r`n %
@@ -626,7 +626,7 @@ class ConvertTests
                                     FileAppend, var is not empty, *
                                  else
                                     FileAppend, var is empty, *
-            )"
+         )"
 
       expected := "
          (Join`r`n %
@@ -1062,7 +1062,7 @@ class ConvertTests
 
       expected := "
          (Join`r`n %
-                                 var := 3
+                                 var := "3"
                                  var *= 5
                                  FileAppend, %var%, *
          )"
@@ -1093,8 +1093,8 @@ class ConvertTests
 
       expected := "
          (Join`r`n %
-                                 var := 1
-                                 var2 := 2
+                                 var := "1"
+                                 var2 := "2"
                                  var *= var2
                                  FileAppend, %var%, *
          )"
@@ -1124,7 +1124,7 @@ class ConvertTests
 
       expected := "
          (Join`r`n %
-                                 var := 1
+                                 var := "1"
                                  var += 2
                                  FileAppend, %var%, *
          )"
@@ -1154,7 +1154,7 @@ class ConvertTests
 
       expected := "
          (Join`r`n %
-                                 var := 4
+                                 var := "4"
                                  var += 2
                                  FileAppend, %var%, *
          )"
@@ -1184,7 +1184,7 @@ class ConvertTests
 
       expected := "
          (Join`r`n %
-                                 var := 5
+                                 var := "5"
                                  var -= 2
                                  FileAppend, %var%, *
          )"
@@ -1215,8 +1215,8 @@ class ConvertTests
 
       expected := "
          (Join`r`n %
-                                 var := 9
-                                 value := 6
+                                 var := "9"
+                                 value := "6"
                                  var -= value
                                  FileAppend, %var%, *
          )"
@@ -1463,7 +1463,7 @@ class ConvertTests
 
       expected := "
          (Join`r`n %
-                                 var := 5
+                                 var := "5"
                                  Concat((var=5) ? 5 : 0)
 
                                  Concat(one, two:="hello,world", three := 3, four := "does 2+2=4?")
@@ -1852,7 +1852,7 @@ class ConvertTests
          (Join`r`n %
                                  Haystack := "abcdefabcdef"
                                  Needle := "cde"
-                                 var := 2
+                                 var := "2"
                                  pos := InStr(Haystack, Needle, false, (var)+1, 1) - 1
                                  ; WARNING: if you use StringCaseSense in your script you may need to inspect the 3rd param 'false' above
                                  if (pos >= 0)
@@ -1889,7 +1889,7 @@ class ConvertTests
          (Join`r`n %
                                  Haystack := "abcdefabcdef"
                                  Needle := "cde"
-                                 var := 1
+                                 var := "1"
                                  pos := InStr(Haystack, Needle, false, (var+2)+1, 1) - 1
                                  ; WARNING: if you use StringCaseSense in your script you may need to inspect the 3rd param 'false' above
                                  if (pos >= 0)
@@ -1926,7 +1926,7 @@ class ConvertTests
          (Join`r`n %
                                  Haystack := "abcdefabcdefabcdef"
                                  Needle := "cde"
-                                 var := 0
+                                 var := "0"
                                  pos := InStr(Haystack, Needle, false, -1*((var+2)+1), 2) - 1
                                  ; WARNING: if you use StringCaseSense in your script you may need to inspect the 3rd param 'false' above
                                  if (pos >= 0)
@@ -2159,7 +2159,7 @@ class ConvertTests
 
       expected := "
          (Join`r`n %
-                                 start := 7
+                                 start := "7"
                                  Source := "Hello this is a test." 
                                  out := SubStr(Source, start, 4)
                                  FileAppend, %out%, *
@@ -2192,8 +2192,8 @@ class ConvertTests
 
       expected := "
          (Join`r`n %
-                                 start := 2
-                                 count := 4
+                                 start := "2"
+                                 count := "4"
                                  Source := "Hello this is a test." 
                                  out := SubStr(Source, start+5, count)
                                  FileAppend, %out%, *
@@ -2567,6 +2567,38 @@ class ToExpTests
 
    End()
    {
+   }
+}
+
+
+class ToStringExprTests
+{
+   SurroundQuotes()
+   {
+      Yunit.assert(ToStringExpr("") = "`"`"")
+      Yunit.assert(ToStringExpr("hello") = "`"hello`"")
+      Yunit.assert(ToStringExpr("hello world") = "`"hello world`"")
+   }
+
+   QuotesInsideString()
+   {
+      orig := "the man said, `"hello`""
+      expected := "`"the man said, ```"hello```"`""
+      converted := ToStringExpr(orig)
+      ;Msgbox, expected: %expected%`nconverted: %converted%
+      Yunit.assert(converted = expected)
+   }
+
+   RemovePercents()
+   {
+      Yunit.assert(ToStringExpr("`%hello`%") = "hello")
+      Yunit.assert(ToStringExpr("`%hello`%world") = "hello . `"world`"")
+      Yunit.assert(ToStringExpr("`%hello`% world") = "hello . `" world`"")
+      Yunit.assert(ToStringExpr("one `%two`% three") = "`"one `" . two . `" three`"")
+   }
+   Numbers()
+   {
+      Yunit.assert(ToStringExpr("10") = "`"10`"")
    }
 }
 

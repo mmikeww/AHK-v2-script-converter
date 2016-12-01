@@ -73,6 +73,15 @@ Convert(ScriptString)
       FirstChar := SubStr(Trim(Line), 1, 1)
       FirstTwo := SubStr(LTrim(Line), 1, 2)
       ;msgbox, FirstChar=%FirstChar%`nFirstTwo=%FirstTwo%
+      if RegExMatch(Line, "(\s+`;.*)$", EOLComment)
+      {
+         EOLComment := EOLComment[1]
+         Line := RegExReplace(Line, "(\s+`;.*)$", "")
+         ;msgbox, % "Line:`n" Line "`n`nEOLComment:`n" EOLComment
+      }
+      else
+         EOLComment := ""
+
       CommandMatch := -1
 
       ; -------------------------------------------------------------------------------
@@ -318,14 +327,14 @@ Convert(ScriptString)
                }
 
                Part[2] := Trim(Part[2])
-               If ( SubStr(Part[2], 1, 1) == "*" )
+               If ( SubStr(Part[2], 1, 1) == "*" )   ; if using a special function
                {
                   FuncName := SubStr(Part[2], 2)
                   ;msgbox FuncName=%FuncName%
                   If IsFunc(FuncName)
                      Line := Indentation . %FuncName%(Param)
                }
-               else
+               else                               ; else just using the command replacement defined at the top
                {
                   ;if (Command = "StringMid")
                      ;msgbox, % "in else`nLine: " Line "`nPart[2]: " Part[2] "`n`nListParam.Length: " ListParam.Length() "`nParam.Length: " Param.Length() "`n`nParam[1]: " Param[1] "`nParam[2]: " Param[2] "`nParam[3]: " Param[3] "`nParam[4]: " Param[4]
@@ -388,7 +397,7 @@ Convert(ScriptString)
       }
 
       ;msgbox, New Line=`n%Line%
-      Output .= Line . "`r`n"
+      Output .= Line . EOLComment . "`r`n"
       LastLine := Line
    }
 

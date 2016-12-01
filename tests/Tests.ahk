@@ -2504,6 +2504,212 @@ class ConvertTests
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
+   PreserveComment_Assignment()
+   {
+      input_script := "
+         (Join`r`n %
+                                 var = value     ; comment after 5 spaces
+                                 FileAppend, %var%, *
+         )"
+
+      expected := "
+         (Join`r`n %
+                                 var := "value"     ; comment after 5 spaces
+                                 FileAppend, %var%, *
+         )"
+
+      ; first test that our expected code actually produces the same results in v2
+      result_input    := ExecScript_v1(input_script)
+      result_expected := ExecScript_v2(expected)
+      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
+      Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+
+      ; then test that our converter will correctly covert the input_script to the expected script
+      converted := Convert(input_script)
+      ;FileAppend, % expected, expected.txt
+      ;FileAppend, % converted, converted.txt
+      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      Yunit.assert(converted = expected, "converted output script != expected output script")
+   }
+
+   PreserveComment_TraditionalIf()
+   {
+      input_script := "
+         (Join`r`n %
+                                 var = value
+                                 if var = value     ; comment after 5 spaces
+                                    FileAppend, %var%, *
+         )"
+
+      expected := "
+         (Join`r`n %
+                                 var := "value"
+                                 if (var = "value")     ; comment after 5 spaces
+                                    FileAppend, %var%, *
+         )"
+
+      ; first test that our expected code actually produces the same results in v2
+      result_input    := ExecScript_v1(input_script)
+      result_expected := ExecScript_v2(expected)
+      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
+      Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+
+      ; then test that our converter will correctly covert the input_script to the expected script
+      converted := Convert(input_script)
+      ;FileAppend, % expected, expected.txt
+      ;FileAppend, % converted, converted.txt
+      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      Yunit.assert(converted = expected, "converted output script != expected output script")
+   }
+
+   PreserveComment_EnvAdd()
+   {
+      input_script := "
+         (Join`r`n %
+                                 var = 1
+                                 EnvAdd, var, 2     ; comment after 5 spaces
+                                 FileAppend, %var%, *
+         )"
+
+      expected := "
+         (Join`r`n %
+                                 var := "1"
+                                 var += 2     ; comment after 5 spaces
+                                 FileAppend, %var%, *
+         )"
+
+      ; first test that our expected code actually produces the same results in v2
+      result_input    := ExecScript_v1(input_script)
+      result_expected := ExecScript_v2(expected)
+      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
+      Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+
+      ; then test that our converter will correctly covert the input_script to the expected script
+      converted := Convert(input_script)
+      ;FileAppend, % expected, expected.txt
+      ;FileAppend, % converted, converted.txt
+      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      Yunit.assert(converted = expected, "converted output script != expected output script")
+   }
+
+   PreserveComment_IfEqual()
+   {
+      input_script := "
+         (Join`r`n %
+                                 var = 1
+                                 IfEqual, var, 1     ; comment after 5 spaces
+                                    FileAppend, %var%, *
+         )"
+
+      expected := "
+         (Join`r`n %
+                                 var := "1"
+                                 if (var = 1)     ; comment after 5 spaces
+                                    FileAppend, %var%, *
+         )"
+
+      ; first test that our expected code actually produces the same results in v2
+      result_input    := ExecScript_v1(input_script)
+      result_expected := ExecScript_v2(expected)
+      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
+      Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+
+      ; then test that our converter will correctly covert the input_script to the expected script
+      converted := Convert(input_script)
+      ;FileAppend, % expected, expected.txt
+      ;FileAppend, % converted, converted.txt
+      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      Yunit.assert(converted = expected, "converted output script != expected output script")
+   }
+
+   PreserveComment_SkippedLines()
+   {
+      input_script := "
+         (Join`r`n %
+                                 var = 1
+                                    #NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
+         )"
+
+      expected := "
+         (Join`r`n %
+                                 var := "1"
+                                 ; REMOVED:    #NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
+         )"
+
+      ; first test that our expected code actually produces the same results in v2
+      result_input    := ExecScript_v1(input_script)
+      result_expected := ExecScript_v2(expected)
+      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
+      Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+
+      ; then test that our converter will correctly covert the input_script to the expected script
+      converted := Convert(input_script)
+      ;FileAppend, % expected, expected.txt
+      ;FileAppend, % converted, converted.txt
+      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      Yunit.assert(converted = expected, "converted output script != expected output script")
+   }
+
+   PreserveComment_StringTrimLeft()
+   {
+      input_script := "
+         (Join`r`n %
+                                 x = +plus
+                                 StringTrimLeft x, x, 1           ; leading +x -> x
+                                 IfEqual, x, plus
+                                    FileAppend, %x%, *
+         )"
+
+      expected := "
+         (Join`r`n %
+                                 x := "+plus"
+                                 x := SubStr(x, 1+1)           ; leading +x -> x
+                                 if (x = "plus")
+                                    FileAppend, %x%, *
+         )"
+
+      ; first test that our expected code actually produces the same results in v2
+      result_input    := ExecScript_v1(input_script)
+      result_expected := ExecScript_v2(expected)
+      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
+      Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+
+      ; then test that our converter will correctly covert the input_script to the expected script
+      converted := Convert(input_script)
+      ;FileAppend, % expected, expected.txt
+      ;FileAppend, % converted, converted.txt
+      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      Yunit.assert(converted = expected, "converted output script != expected output script")
+   }
+
+   PreserveComment_UntouchedLines()
+   {
+      input_script := "
+         (Join`r`n %
+                                 var := "value"     ; this line won't be changed by the converter
+                                 FileAppend, %var%, *
+         )"
+
+      expected := "
+         (Join`r`n %
+                                 var := "value"     ; this line won't be changed by the converter
+                                 FileAppend, %var%, *
+         )"
+
+      ; first test that our expected code actually produces the same results in v2
+      result_input    := ExecScript_v1(input_script)
+      result_expected := ExecScript_v2(expected)
+      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
+      Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+
+      ; then test that our converter will correctly covert the input_script to the expected script
+      converted := Convert(input_script)
+      ;FileAppend, % expected, expected.txt
+      ;FileAppend, % converted, converted.txt
+      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      Yunit.assert(converted = expected, "converted output script != expected output script")
+   }
+
    End()
    {
    }

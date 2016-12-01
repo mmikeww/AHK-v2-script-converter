@@ -8,6 +8,7 @@ Convert(ScriptString)
    ;// Param format:
    ;//          params names containing "var" (such as "InputVar,OutputVar,TitleVar") will not be converted
    ;//          any other param name will be converted from literal text to expression using the ToExp() func
+   ;//          such as      word -> "word"      or      %var% -> var
    ;// Replacement format:
    ;//          use {1} which corresponds to Param1, etc
    ;//          use [] for one optional param. don't think it will currently work for multiple
@@ -263,6 +264,21 @@ Convert(ScriptString)
          ; deref the placeholders
          Line := StrReplace(Line, "MY_COMMª_PLA¢E_HOLDER", ",")
          Line := StrReplace(Line, "MY_¿¿¿_PLA¢E_HOLDER", "?")
+      }
+      ; -------------------------------------------------------------------------------
+      ;
+      ; Fix     return %var%        ->       return var
+      ;
+      ; we use the same parsing method as the next else clause below
+      ;
+      else if (Trim(SubStr(TmpLine := RegExReplace(Line, ",\s+", ","), 1, FirstDelim := RegExMatch(TmpLine, "\w[,\s]"))) = "return")
+      {
+         Params := SubStr(TmpLine, FirstDelim+2)
+         if RegExMatch(Params, "^`%\w+`%$")       ; if the var is wrapped in %%, then remove them
+         {
+            Params := SubStr(Params, 2, -1)
+            Line := Indentation . "return " . Params . EOLComment  ; 'return' is the only command that we won't use a comma before the 1st param
+         }
       }
       
       ; -------------------------------------------------------------------------------

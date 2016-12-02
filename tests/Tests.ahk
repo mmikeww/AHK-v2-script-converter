@@ -1711,10 +1711,43 @@ class ConvertTests
          (Join`r`n %
                                  Haystack := "abcdefabcdef"
                                  Needle := "def"
-                                 pos := InStr(Haystack, Needle, false, (0)+1, 2) - 1
-                                 ; WARNING: if you use StringCaseSense in your script you may need to inspect the 3rd param 'false' above
+                                 pos := InStr(Haystack, Needle, (A_StringCaseSense="On") ? true : false, (0)+1, 2) - 1
                                  if (pos >= 0)
                                      FileAppend, The string was found at position %pos%., *
+         )"
+
+      ; first test that our expected code actually produces the same results in v2
+      ;result_input    := ExecScript_v1(input_script)
+      ;result_expected := ExecScript_v2(expected)
+      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
+      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+
+      ; then test that our converter will correctly covert the input_script to the expected script
+      converted := Convert(input_script)
+      ;FileAppend, % expected, expected.txt
+      ;FileAppend, % converted, converted.txt
+      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      Yunit.assert(converted = expected, "converted output script != expected output script")
+   }
+
+   StringGetPos_SearchLeftOccurance_StringCaseSense()
+   {
+      input_script := "
+         (Join`r`n %
+                                 StringCaseSense, on
+                                 Haystack = abcdefabcdef
+                                 Needle = DEF
+                                 StringGetPos, pos, Haystack, %Needle%, L2
+                                 FileAppend, The string was found at position %pos%, *
+         )"
+
+      expected := "
+         (Join`r`n %
+                                 StringCaseSense, on
+                                 Haystack := "abcdefabcdef"
+                                 Needle := "DEF"
+                                 pos := InStr(Haystack, Needle, (A_StringCaseSense="On") ? true : false, (0)+1, 2) - 1
+                                 FileAppend, The string was found at position %pos%, *
          )"
 
       ; first test that our expected code actually produces the same results in v2
@@ -1746,8 +1779,7 @@ class ConvertTests
          (Join`r`n %
                                  Haystack := "abcdefabcdef"
                                  Needle := "bcd"
-                                 pos := InStr(Haystack, Needle, false, -1*((0)+1), 1) - 1
-                                 ; WARNING: if you use StringCaseSense in your script you may need to inspect the 3rd param 'false' above
+                                 pos := InStr(Haystack, Needle, (A_StringCaseSense="On") ? true : false, -1*((0)+1), 1) - 1
                                  if (pos >= 0)
                                      FileAppend, The string was found at position %pos%., *
          )"
@@ -1781,8 +1813,7 @@ class ConvertTests
          (Join`r`n %
                                  Haystack := "abcdefabcdef"
                                  Needle := "cde"
-                                 pos := InStr(Haystack, Needle, false, -1*((0)+1), 2) - 1
-                                 ; WARNING: if you use StringCaseSense in your script you may need to inspect the 3rd param 'false' above
+                                 pos := InStr(Haystack, Needle, (A_StringCaseSense="On") ? true : false, -1*((0)+1), 2) - 1
                                  if (pos >= 0)
                                      FileAppend, The string was found at position %pos%., *
          )"
@@ -1816,8 +1847,7 @@ class ConvertTests
          (Join`r`n %
                                  Haystack := "abcdefabcdef"
                                  Needle := "cde"
-                                 pos := InStr(Haystack, Needle, false, (4)+1, 1) - 1
-                                 ; WARNING: if you use StringCaseSense in your script you may need to inspect the 3rd param 'false' above
+                                 pos := InStr(Haystack, Needle, (A_StringCaseSense="On") ? true : false, (4)+1, 1) - 1
                                  if (pos >= 0)
                                      FileAppend, The string was found at position %pos%., *
          )"
@@ -1853,8 +1883,7 @@ class ConvertTests
                                  Haystack := "abcdefabcdef"
                                  Needle := "cde"
                                  var := "2"
-                                 pos := InStr(Haystack, Needle, false, (var)+1, 1) - 1
-                                 ; WARNING: if you use StringCaseSense in your script you may need to inspect the 3rd param 'false' above
+                                 pos := InStr(Haystack, Needle, (A_StringCaseSense="On") ? true : false, (var)+1, 1) - 1
                                  if (pos >= 0)
                                      FileAppend, The string was found at position %pos%., *
          )"
@@ -1890,8 +1919,7 @@ class ConvertTests
                                  Haystack := "abcdefabcdef"
                                  Needle := "cde"
                                  var := "1"
-                                 pos := InStr(Haystack, Needle, false, (var+2)+1, 1) - 1
-                                 ; WARNING: if you use StringCaseSense in your script you may need to inspect the 3rd param 'false' above
+                                 pos := InStr(Haystack, Needle, (A_StringCaseSense="On") ? true : false, (var+2)+1, 1) - 1
                                  if (pos >= 0)
                                      FileAppend, The string was found at position %pos%., *
          )"
@@ -1927,8 +1955,7 @@ class ConvertTests
                                  Haystack := "abcdefabcdefabcdef"
                                  Needle := "cde"
                                  var := "0"
-                                 pos := InStr(Haystack, Needle, false, -1*((var+2)+1), 2) - 1
-                                 ; WARNING: if you use StringCaseSense in your script you may need to inspect the 3rd param 'false' above
+                                 pos := InStr(Haystack, Needle, (A_StringCaseSense="On") ? true : false, -1*((var+2)+1), 2) - 1
                                  if (pos >= 0)
                                      FileAppend, The string was found at position %pos%., *
          )"
@@ -1962,8 +1989,7 @@ class ConvertTests
          (Join`r`n %
                                  Haystack := "abcdefabcdefabcdef"
                                  Needle := "cde"
-                                 pos := InStr(Haystack, Needle, false, (4)+1, 2) - 1
-                                 ; WARNING: if you use StringCaseSense in your script you may need to inspect the 3rd param 'false' above
+                                 pos := InStr(Haystack, Needle, (A_StringCaseSense="On") ? true : false, (4)+1, 2) - 1
                                  if (pos >= 0)
                                      FileAppend, The string was found at position %pos%., *
          )"
@@ -1997,8 +2023,7 @@ class ConvertTests
          (Join`r`n %
                                  Haystack := "abcdefabcdef"
                                  Needle := "cde"
-                                 pos := InStr(Haystack, Needle, false, -1*((4)+1), 1) - 1
-                                 ; WARNING: if you use StringCaseSense in your script you may need to inspect the 3rd param 'false' above
+                                 pos := InStr(Haystack, Needle, (A_StringCaseSense="On") ? true : false, -1*((4)+1), 1) - 1
                                  if (pos >= 0)
                                      FileAppend, The string was found at position %pos%., *
          )"
@@ -2032,8 +2057,7 @@ class ConvertTests
          (Join`r`n %
                                  Haystack := "abcdefabcdefabcdef"
                                  Needle := "cde"
-                                 pos := InStr(Haystack, Needle, false, -1*((4)+1), 2) - 1
-                                 ; WARNING: if you use StringCaseSense in your script you may need to inspect the 3rd param 'false' above
+                                 pos := InStr(Haystack, Needle, (A_StringCaseSense="On") ? true : false, -1*((4)+1), 2) - 1
                                  if (pos >= 0)
                                      FileAppend, The string was found at position %pos%., *
          )"
@@ -2067,8 +2091,7 @@ class ConvertTests
          (Join`r`n %
                                  Haystack := "FFFF"
                                  Needle := "FF"
-                                 pos := InStr(Haystack, Needle, false, (0)+1, 2) - 1
-                                 ; WARNING: if you use StringCaseSense in your script you may need to inspect the 3rd param 'false' above
+                                 pos := InStr(Haystack, Needle, (A_StringCaseSense="On") ? true : false, (0)+1, 2) - 1
                                  if (pos >= 0)
                                      FileAppend, The string was found at position %pos%., *
          )"

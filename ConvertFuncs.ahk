@@ -583,24 +583,18 @@ _StringGetPos(p)
          p[4] := occurences ? occurences : 1
         
          if (StrUpper(p4char1) = "R") || (p4noquotes = "1")
-            out := format_v("{1} := InStr({2}, {3}, false, -1*(({5})+1), {4}) - 1", p)
+            return format_v("{1} := InStr({2}, {3}, (A_StringCaseSense=`"On`") ? true : false, -1*(({5})+1), {4}) - 1", p)
          else
-            out := format_v("{1} := InStr({2}, {3}, false, ({5})+1, {4}) - 1", p)
-         ;msgbox, %out%
+            return format_v("{1} := InStr({2}, {3}, (A_StringCaseSense=`"On`") ? true : false, ({5})+1, {4}) - 1", p)
       }
       else
       {
          ; else then a variable was passed (containing the "L#|R#" string),
          ;      or literal text converted to expr, something like:   "L" . A_Index
          ; output something anyway even though it won't work, so that they can see something to fix
-         out := format_v("{1} := InStr({2}, {3}, false, ({5})+1, {4}) - 1", p)
+         return format_v("{1} := InStr({2}, {3}, (A_StringCaseSense=`"On`") ? true : false, ({5})+1, {4}) - 1", p)
       }
    }
-
-   ; still need warning because StringCaseSense can mess things up
-   out .= "`r`n`; WARNING: if you use StringCaseSense in your script you may need to inspect the 3rd param 'false' above"
-
-   return out
 }
 
 

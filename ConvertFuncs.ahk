@@ -197,7 +197,7 @@ Convert(ScriptString)
       ;
       ; Traditional-if to Expression-if
       ;
-      else If RegExMatch(Line, "i)^\s*(else\s+)?if\s+(not\s+)?([a-z_][a-z_0-9]*[\s]*)(!=|=|<>|>=|<=|<|>)([^{;]*)(\s*{?)", Equation)
+      else If RegExMatch(Line, "i)^\s*(else\s+)?if\s+(not\s+)?([a-z_][a-z_0-9]*[\s]*)(is|!=|=|<>|>=|<=|<|>)([^{;]*)(\s*{?)", Equation)
       {
          ;msgbox if regex`nLine: %Line%`n1: %Equation[1]%`n2: %Equation[2]%`n3: %Equation[3]%`n4: %Equation[4]%`n5: %Equation[5]%`n6: %Equation[6]%
          Line := Indentation . format_v("{else}if {not}({variable} {op} {value}){otb}"

@@ -2911,6 +2911,100 @@ class ConvertTests
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
+   IfVarIsType_Deref()
+   {
+      input_script := "
+         (Join`r`n %
+                                 var = 3.1415
+                                 type = float
+                                 if var is %type%
+                                    FileAppend, %var% is float, *
+         )"
+
+      expected := "
+         (Join`r`n %
+                                 var := "3.1415"
+                                 type := "float"
+                                 if (var is type)
+                                    FileAppend, %var% is float, *
+         )"
+
+      ; first test that our expected code actually produces the same results in v2
+      ;result_input    := ExecScript_v1(input_script)
+      ;result_expected := ExecScript_v2(expected)
+      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
+      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+
+      ; then test that our converter will correctly covert the input_script to the expected script
+      converted := Convert(input_script)
+      ;FileAppend, % expected, expected.txt
+      ;FileAppend, % converted, converted.txt
+      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      Yunit.assert(converted = expected, "converted output script != expected output script")
+   }
+
+   IfVarIsTypeNot()
+   {
+      input_script := "
+         (Join`r`n %
+                                 var = 3.1415
+                                 if var is not float
+                                    FileAppend, %var% is not float, *
+                                 else if var is not integer
+                                    FileAppend, %var% is not int, *
+         )"
+
+      expected := "
+         (Join`r`n %
+                                 var := "3.1415"
+                                 if !(var is "float")
+                                    FileAppend, %var% is not float, *
+                                 else if !(var is "integer")
+                                    FileAppend, %var% is not int, *
+         )"
+
+      ; first test that our expected code actually produces the same results in v2
+      ;result_input    := ExecScript_v1(input_script)
+      ;result_expected := ExecScript_v2(expected)
+      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
+      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+
+      ; then test that our converter will correctly covert the input_script to the expected script
+      converted := Convert(input_script)
+      ;FileAppend, % expected, expected.txt
+      ;FileAppend, % converted, converted.txt
+      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      Yunit.assert(converted = expected, "converted output script != expected output script")
+   }
+
+   IfVarIsType_AIsUnicode()
+   {
+      input_script := "
+         (Join`r`n %
+                                 if A_IsUnicode
+                                    FileAppend, AHK Unicode %A_IsUnicode%, *
+         )"
+
+      expected := "
+         (Join`r`n %
+                                 if A_IsUnicode
+                                    FileAppend, AHK Unicode %A_IsUnicode%, *
+         )"
+
+      ; first test that our expected code actually produces the same results in v2
+      ;result_input    := ExecScript_v1(input_script)
+      ;result_expected := ExecScript_v2(expected)
+      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
+      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+
+      ; then test that our converter will correctly covert the input_script to the expected script
+      converted := Convert(input_script)
+      ;FileAppend, % expected, expected.txt
+      ;FileAppend, % converted, converted.txt
+      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      Yunit.assert(converted = expected, "converted output script != expected output script")
+   }
+
    StringReplace()
    {
       input_script := "

@@ -6,7 +6,7 @@ Convert(ScriptString)
    ;// Specification format:
    ;//          CommandName,Param1,Param2,etc | Replacement string format (see below)
    ;// Param format:
-   ;//          params names containing "var" (such as "InputVar,OutputVar,TitleVar") will not be converted
+   ;//          params names containing "var" (such as "InputVar,OutputVar,TitleVar") will not be converted to expr
    ;//          any other param name will be converted from literal text to expression using the ToExp() func
    ;//          such as      word -> "word"      or      %var% -> var
    ;// Replacement format:
@@ -35,6 +35,7 @@ Convert(ScriptString)
       StringTrimRight,OutputVar,InputVar,Count | {1} := SubStr({2}, 1, -{3})
       StringUpper,OutputVar,InputVar,Tvar | StrUpper, {1}, `%{2}`%[, {3}]
       StringLower,OutputVar,InputVar,Tvar | StrLower, {1}, `%{2}`%[, {3}]
+      StringReplace,OutputVar,InputVar,SearchVar,ReplVar,ReplAllVar | *_StrReplace
       WinGetActiveStats,TitleVar,WidthVar,HeightVar,XVar,YVar | *_ActiveStats
       WinGetActiveTitle,OutputVar | WinGetTitle, {1}, A
       DriveSpaceFree,OutputVar,PathVar | DriveGet, {1}, SpaceFree, {2}
@@ -625,6 +626,33 @@ _StringMid(p)
          out .= format_v("    {1} := SubStr({2}, {3}, {4})", p)
          return out
       }
+   }
+}
+
+
+_StrReplace(p)
+{
+   ; v1
+   ; StringReplace, OutputVar, InputVar, SearchText [, ReplaceText, ReplaceAll?]
+   ; v2
+   ; StrReplace, OutputVar, Haystack, SearchText [, ReplaceText, OutputVarCount, Limit = -1]
+
+   if p.Length() = 3
+      return format_v("StrReplace, {1}, `%{2}`%, {3},,, 1", p)
+   else if p.Length() = 4
+      return format_v("StrReplace, {1}, `%{2}`%, {3}, {4},, 1", p)
+   else if p.Length() = 5
+   {
+      p5char1 := SubStr(p[5], 1, 1)
+      ;msgbox, % p[5] "`n" p5char1
+
+      if (p[5] = "UseErrorLevel")    ; UseErrorLevel also implies ReplaceAll
+         return format_v("StrReplace, {1}, `%{2}`%, {3}, {4}, ErrorLevel", p)
+      else if (p5char1 = "1") || (StrUpper(p5char1) = "A")
+         ; if the first char of the ReplaceAll param starts with '1' or 'A'
+         ; then all of those imply 'replace all'
+         ; https://github.com/Lexikos/AutoHotkey_L/blob/master/source/script2.cpp#L7033
+         return format_v("StrReplace, {1}, `%{2}`%, {3}, {4}", p)
    }
 }
 

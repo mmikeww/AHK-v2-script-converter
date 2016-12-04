@@ -29,10 +29,10 @@ Convert(ScriptString)
       StringLen,OutputVar,InputVar | {1} := StrLen({2})
       StringGetPos,OutputVar,InputVar,SearchText,Side,Offset | *_StringGetPos
       StringMid,OutputVar,InputVar,StartChar,Count,L | *_StringMid
-      StringLeft,OutputVar,InputVar,Count | {1} := SubStr({2}, 1, {3})
-      StringRight,OutputVar,InputVar,Count | {1} := SubStr({2}, -{3})
-      StringTrimLeft,OutputVar,InputVar,Count | {1} := SubStr({2}, {3}+1)
-      StringTrimRight,OutputVar,InputVar,Count | {1} := SubStr({2}, 1, -{3})
+      StringLeft,OutputVar,InputVar,CountVar | {1} := SubStr({2}, 1, {3})
+      StringRight,OutputVar,InputVar,CountVar | {1} := SubStr({2}, -1*({3}))
+      StringTrimLeft,OutputVar,InputVar,CountVar | {1} := SubStr({2}, ({3})+1)
+      StringTrimRight,OutputVar,InputVar,CountVar | {1} := SubStr({2}, 1, -1*({3}))
       StringUpper,OutputVar,InputVar,Tvar | StrUpper, {1}, `%{2}`%[, {3}]
       StringLower,OutputVar,InputVar,Tvar | StrLower, {1}, `%{2}`%[, {3}]
       StringReplace,OutputVar,InputVar,SearchVar,ReplVar,ReplAllVar | *_StrReplace

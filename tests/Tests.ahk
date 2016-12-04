@@ -2335,6 +2335,38 @@ class ConvertTests
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
+   StringLeft_CountExpr()
+   {
+      input_script := "
+         (Join`r`n %
+                                 String = This is a test.
+                                 count := 3
+                                 StringLeft, OutputVar, String, count+1
+                                 FileAppend, %OutputVar%, *
+         )"
+
+      expected := "
+         (Join`r`n %
+                                 String := "This is a test."
+                                 count := 3
+                                 OutputVar := SubStr(String, 1, count+1)
+                                 FileAppend, %OutputVar%, *
+         )"
+
+      ; first test that our expected code actually produces the same results in v2
+      ;result_input    := ExecScript_v1(input_script)
+      ;result_expected := ExecScript_v2(expected)
+      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
+      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+
+      ; then test that our converter will correctly covert the input_script to the expected script
+      converted := Convert(input_script)
+      ;FileAppend, % expected, expected.txt
+      ;FileAppend, % converted, converted.txt
+      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      Yunit.assert(converted = expected, "converted output script != expected output script")
+   }
+
    StringRight()
    {
       input_script := "
@@ -2347,7 +2379,39 @@ class ConvertTests
       expected := "
          (Join`r`n %
                                  String := "This is a test."
-                                 OutputVar := SubStr(String, -5)
+                                 OutputVar := SubStr(String, -1*(5))
+                                 FileAppend, %OutputVar%, *
+         )"
+
+      ; first test that our expected code actually produces the same results in v2
+      ;result_input    := ExecScript_v1(input_script)
+      ;result_expected := ExecScript_v2(expected)
+      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
+      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+
+      ; then test that our converter will correctly covert the input_script to the expected script
+      converted := Convert(input_script)
+      ;FileAppend, % expected, expected.txt
+      ;FileAppend, % converted, converted.txt
+      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      Yunit.assert(converted = expected, "converted output script != expected output script")
+   }
+
+   StringRight_CountExpr()
+   {
+      input_script := "
+         (Join`r`n %
+                                 String = This is a test.
+                                 count := 6
+                                 StringRight, OutputVar, String, count-1
+                                 FileAppend, %OutputVar%, *
+         )"
+
+      expected := "
+         (Join`r`n %
+                                 String := "This is a test."
+                                 count := 6
+                                 OutputVar := SubStr(String, -1*(count-1))
                                  FileAppend, %OutputVar%, *
          )"
 
@@ -2377,12 +2441,44 @@ class ConvertTests
       expected := "
          (Join`r`n %
                                  String := "This is a test."
-                                 OutputVar := SubStr(String, 5+1)
+                                 OutputVar := SubStr(String, (5)+1)
                                  FileAppend, %OutputVar%, *
          )"
 
       ; first test that our expected code actually produces the same results in v2
       ;result_input    := ExecScript_v1(input_script)
+      ;result_expected := ExecScript_v2(expected)
+      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
+      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+
+      ; then test that our converter will correctly covert the input_script to the expected script
+      converted := Convert(input_script)
+      ;FileAppend, % expected, expected.txt
+      ;FileAppend, % converted, converted.txt
+      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      Yunit.assert(converted = expected, "converted output script != expected output script")
+   }
+
+   StringTrimLeft_CountExpr()
+   {
+      input_script := "
+         (Join`r`n %
+                                 String = This is a test.
+                                 count := 5
+                                 StringTrimLeft, OutputVar, String, count*1
+                                 FileAppend, %OutputVar%, *
+         )"
+
+      expected := "
+         (Join`r`n %
+                                 String := "This is a test."
+                                 count := 5
+                                 OutputVar := SubStr(String, (count*1)+1)
+                                 FileAppend, %OutputVar%, *
+         )"
+
+      ; first test that our expected code actually produces the same results in v2
+      ;result_input    := ExecScript_v0(input_script)
       ;result_expected := ExecScript_v2(expected)
       ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
       ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
@@ -2407,7 +2503,7 @@ class ConvertTests
       expected := "
          (Join`r`n %
                                  String := "This is a test."
-                                 OutputVar := SubStr(String, 1, -6)
+                                 OutputVar := SubStr(String, 1, -1*(6))
                                  FileAppend, [%OutputVar%], *
          )"
 
@@ -2422,6 +2518,38 @@ class ConvertTests
       ;FileAppend, % expected, expected.txt
       ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      Yunit.assert(converted = expected, "converted output script != expected output script")
+   }
+
+   StringTrimRight_CountExpr()
+   {
+      input_script := "
+         (Join`r`n %
+                                 String = This is a test.
+                                 count := 3
+                                 StringTrimRight, OutputVar, String, count+3
+                                 FileAppend, [%OutputVar%], *
+         )"
+
+      expected := "
+         (Join`r`n %
+                                 String := "This is a test."
+                                 count := 3
+                                 OutputVar := SubStr(String, 1, -1*(count+3))
+                                 FileAppend, [%OutputVar%], *
+         )"
+
+      ; first test that our expected code actually produces the same results in v2
+      ;result_input    := ExecScript_v1(input_script)
+      ;result_expected := ExecScript_v2(expected)
+      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
+      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+
+      ; then test that our converter will correctly covert the input_script to the expected script
+      converted := Convert(input_script)
+      FileAppend, % expected, expected.txt
+      FileAppend, % converted, converted.txt
+      Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -2686,7 +2814,7 @@ class ConvertTests
       expected := "
          (Join`r`n %
                                  x := "+plus"
-                                 x := SubStr(x, 1+1)           ; leading +x -> x
+                                 x := SubStr(x, (1)+1)           ; leading +x -> x
                                  if (x = "plus")
                                     FileAppend, %x%, *
          )"

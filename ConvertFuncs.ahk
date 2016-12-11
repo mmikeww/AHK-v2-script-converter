@@ -9,9 +9,13 @@ Convert(ScriptString)
    ;//          params names containing the word "var" (such as "TitleVar,InputVar") will not be converted to expr
    ;//           this means that the literal text of the parameter is preserved
    ;//           this would be used for InputVar/OutputVar params, or whenever you want the literal text preserved
-   ;//          params containing the text "CBE2E" would convert parameters that 'can be an expression TO an expr'
-   ;//           this would only be used if the conversion goes from Command to Func
-   ;//           and we need to strip a preceeding "% " which was used to force an expr when it was unnecessary
+   ;//          params containing the text "CBE2E" would convert parameters that 'Can Be an Expression TO an EXPR' 
+   ;//           this would only be used if the conversion goes from Command to Func 
+   ;//           and we need to strip a preceeding "% " which was used to force an expr when it was unnecessary 
+   ;//          params containing the text "CBE2T" would convert parameters that 'Can Be an Expression TO literal TEXT'
+   ;//           this would be used if the conversion goes from Command to Command
+   ;//           and in v2 the parameter can no longer optionally be an expression.
+   ;//           these will be wrapped in %%s, so   expr+1   is now    %expr+1%
    ;//          any other param name will be converted from literal text to expression using the ToExp() func
    ;//           such as      word -> "word"      or      %var% -> var
    ;//           like those 'values' in those  `IfEqual, var, value`  commands
@@ -45,6 +49,7 @@ Convert(ScriptString)
       WinGetActiveStats,TitleVar,WidthVar,HeightVar,XVar,YVar | *_ActiveStats
       WinGetActiveTitle,OutputVar | WinGetTitle, {1}, A
       DriveSpaceFree,OutputVar,PathVar | DriveGet, {1}, SpaceFree, {2}
+      Sleep,DelayCBE2T | Sleep, {1}
    )"
 
    ;Directives := "#Warn UseUnsetLocal`r`n#Warn UseUnsetGlobal"
@@ -358,12 +363,14 @@ Convert(ScriptString)
                {
                   this_param := Param[A_Index]
                   this_param := StrReplace(this_param, "MY_COMMª_PLA¢E_HOLDER", ",")
-                  If InStr(ListParam[A_Index], "var")
+                  if InStr(ListParam[A_Index], "var")
+                  {
                      Param[A_Index] := this_param
+                  }
                   else if InStr(ListParam[A_Index], "CBE2E")    ; 'Can Be an Expression TO an Expression'
                   {
-                     if (SubStr(this_param, 1, 2) = "`% ")      ; if this param 'can be an expression' but expression was forced
-                        Param[A_Index] := SubStr(this_param, 3) ; remove the forcing
+                     if (SubStr(this_param, 1, 2) = "`% ")            ; if this param expression was forced
+                        Param[A_Index] := SubStr(this_param, 3)       ; remove the forcing
                      else
                         Param[A_Index] := RemoveSurroundingPercents(this_param)
                   }
@@ -376,7 +383,9 @@ Convert(ScriptString)
                         Param[A_Index] := "`%" . this_param . "`%"    ; wrap in percent signs to evaluate the expr
                   }
                   else
+                  {
                      Param[A_Index] := ToExp(this_param)
+                  }
                }
 
                Part[2] := Trim(Part[2])

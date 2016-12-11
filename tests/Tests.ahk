@@ -3516,6 +3516,134 @@ class ConvertTests
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
+   Sleep()
+   {
+      input_script := "
+         (Join`r`n %
+                                 Sleep, 500
+         )"
+
+      expected := "
+         (Join`r`n %
+                                 Sleep, 500
+         )"
+
+      ; first test that our expected code actually produces the same results in v2
+      ;result_input    := ExecScript_v1(input_script)
+      ;result_expected := ExecScript_v2(expected)
+      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
+      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+
+      ; then test that our converter will correctly covert the input_script to the expected script
+      converted := Convert(input_script)
+      ;FileAppend, % expected, expected.txt
+      ;FileAppend, % converted, converted.txt
+      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      Yunit.assert(converted = expected, "converted output script != expected output script")
+   }
+
+   Sleep_CBE2T_var()
+   {
+      input_script := "
+         (Join`r`n %
+                                 half_second := 500
+                                 start := A_TickCount
+                                 Sleep, half_second
+                                 stop := A_TickCount
+                                 FileAppend, % stop - start, *
+         )"
+
+      expected := "
+         (Join`r`n %
+                                 half_second := 500
+                                 start := A_TickCount
+                                 Sleep, %half_second%
+                                 stop := A_TickCount
+                                 FileAppend, % stop - start, *
+         )"
+
+      ; first test that our expected code actually produces the same results in v2
+      ;result_input    := ExecScript_v1(input_script)
+      ;result_expected := ExecScript_v2(expected)
+      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
+      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+
+      ; then test that our converter will correctly covert the input_script to the expected script
+      converted := Convert(input_script)
+      ;FileAppend, % expected, expected.txt
+      ;FileAppend, % converted, converted.txt
+      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      Yunit.assert(converted = expected, "converted output script != expected output script")
+   }
+
+   Sleep_CBE2T_expr()
+   {
+      input_script := "
+         (Join`r`n %
+                                 half_second := 500
+                                 start := A_TickCount
+                                 Sleep, half_second*2
+                                 stop := A_TickCount
+                                 FileAppend, % stop - start, *
+         )"
+
+      expected := "
+         (Join`r`n %
+                                 half_second := 500
+                                 start := A_TickCount
+                                 Sleep, %half_second*2%
+                                 stop := A_TickCount
+                                 FileAppend, % stop - start, *
+         )"
+
+      ; first test that our expected code actually produces the same results in v2
+      ;result_input    := ExecScript_v1(input_script)
+      ;result_expected := ExecScript_v2(expected)
+      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
+      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+
+      ; then test that our converter will correctly covert the input_script to the expected script
+      converted := Convert(input_script)
+      ;FileAppend, % expected, expected.txt
+      ;FileAppend, % converted, converted.txt
+      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      Yunit.assert(converted = expected, "converted output script != expected output script")
+   }
+
+   Sleep_CBE2T_exprforced()
+   {
+      input_script := "
+         (Join`r`n %
+                                 half_second := 500
+                                 start := A_TickCount
+                                 Sleep, % half_second*2
+                                 stop := A_TickCount
+                                 FileAppend, % stop - start, *
+         )"
+
+      expected := "
+         (Join`r`n %
+                                 half_second := 500
+                                 start := A_TickCount
+                                 Sleep, % half_second*2
+                                 stop := A_TickCount
+                                 FileAppend, % stop - start, *
+         )"
+
+      ; first test that our expected code actually produces the same results in v2
+      ;result_input    := ExecScript_v1(input_script)
+      ;result_expected := ExecScript_v2(expected)
+      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
+      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+
+      ; then test that our converter will correctly covert the input_script to the expected script
+      converted := Convert(input_script)
+      ;FileAppend, % expected, expected.txt
+      ;FileAppend, % converted, converted.txt
+      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      Yunit.assert(converted = expected, "converted output script != expected output script")
+   }
+
    End()
    {
    }

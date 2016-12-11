@@ -6,9 +6,15 @@ Convert(ScriptString)
    ;// Specification format:
    ;//          CommandName,Param1,Param2,etc | Replacement string format (see below)
    ;// Param format:
-   ;//          params names containing "var" (such as "InputVar,OutputVar,TitleVar") will not be converted to expr
+   ;//          params names containing the word "var" (such as "TitleVar,InputVar") will not be converted to expr
+   ;//           this means that the literal text of the parameter is preserved
+   ;//           this would be used for InputVar/OutputVar params, or whenever you want the literal text preserved
+   ;//          params containing the text "CBE2E" would convert parameters that 'can be an expression TO an expr'
+   ;//           this would only be used if the conversion goes from Command to Func
+   ;//           and we need to strip a preceeding "% " which was used to force an expr when it was unnecessary
    ;//          any other param name will be converted from literal text to expression using the ToExp() func
-   ;//          such as      word -> "word"      or      %var% -> var
+   ;//           such as      word -> "word"      or      %var% -> var
+   ;//           like those 'values' in those  `IfEqual, var, value`  commands
    ;// Replacement format:
    ;//          use {1} which corresponds to Param1, etc
    ;//          use [] for one optional param. don't think it will currently work for multiple
@@ -27,12 +33,12 @@ Convert(ScriptString)
       IfLess,InputVar,value | if ({1} < {2})
       IfLessOrEqual,InputVar,value | if ({1} <= {2})
       StringLen,OutputVar,InputVar | {1} := StrLen({2})
-      StringGetPos,OutputVar,InputVar,SearchText,Side,Offset | *_StringGetPos
-      StringMid,OutputVar,InputVar,StartChar,Count,L | *_StringMid
-      StringLeft,OutputVar,InputVar,CountVar | {1} := SubStr({2}, 1, {3})
-      StringRight,OutputVar,InputVar,CountVar | {1} := SubStr({2}, -1*({3}))
-      StringTrimLeft,OutputVar,InputVar,CountVar | {1} := SubStr({2}, ({3})+1)
-      StringTrimRight,OutputVar,InputVar,CountVar | {1} := SubStr({2}, 1, -1*({3}))
+      StringGetPos,OutputVar,InputVar,SearchText,Side,OffsetCBE2E | *_StringGetPos
+      StringMid,OutputVar,InputVar,StartCharCBE2E,CountCBE2E,L | *_StringMid
+      StringLeft,OutputVar,InputVar,CountCBE2E | {1} := SubStr({2}, 1, {3})
+      StringRight,OutputVar,InputVar,CountCBE2E | {1} := SubStr({2}, -1*({3}))
+      StringTrimLeft,OutputVar,InputVar,CountCBE2E | {1} := SubStr({2}, ({3})+1)
+      StringTrimRight,OutputVar,InputVar,CountCBE2E | {1} := SubStr({2}, 1, -1*({3}))
       StringUpper,OutputVar,InputVar,Tvar | StrUpper, {1}, `%{2}`%[, {3}]
       StringLower,OutputVar,InputVar,Tvar | StrLower, {1}, `%{2}`%[, {3}]
       StringReplace,OutputVar,InputVar,SearchVar,ReplVar,ReplAllVar | *_StrReplace
@@ -354,6 +360,21 @@ Convert(ScriptString)
                   this_param := StrReplace(this_param, "MY_COMMª_PLA¢E_HOLDER", ",")
                   If InStr(ListParam[A_Index], "var")
                      Param[A_Index] := this_param
+                  else if InStr(ListParam[A_Index], "CBE2E")    ; 'Can Be an Expression TO an Expression'
+                  {
+                     if (SubStr(this_param, 1, 2) = "`% ")      ; if this param 'can be an expression' but expression was forced
+                        Param[A_Index] := SubStr(this_param, 3) ; remove the forcing
+                     else
+                        Param[A_Index] := RemoveSurroundingPercents(this_param)
+                  }
+                  else if InStr(ListParam[A_Index], "CBE2T")    ; 'Can Be an Expression TO literal Text'
+                  {
+                     if (this_param is "integer")                     ; if this param is int
+                     || (SubStr(this_param, 1, 2) = "`% ")            ; or the expression was forced
+                        Param[A_Index] := this_param                  ; dont do any conversion
+                     else
+                        Param[A_Index] := "`%" . this_param . "`%"    ; wrap in percent signs to evaluate the expr
+                  }
                   else
                      Param[A_Index] := ToExp(this_param)
                }
@@ -549,6 +570,13 @@ RemoveSurroundingQuotes(text)
    return text
 }
 
+; change   %text% -> text
+RemoveSurroundingPercents(text)
+{
+   if (SubStr(text, 1, 1) = "`%") && (SubStr(text, -1) = "`%")
+      return SubStr(text, 2, -1)
+   return text
+}
 
 ; =============================================================================
 ; Command formatting functions
@@ -582,10 +610,6 @@ _StringGetPos(p)
    else if p.Length() >= 4
    {
       p[5] := p[5] ? p[5] : 0   ; 5th param is 'Offset' aka starting position. set default value if none specified
-      ;msgbox, % p[5]
-      ; the 5th param "can be an expression". our ToExp() function already converted it earlier.
-      ; if it was a number, it was left alone. otherwise if its a quoted string, it could have been a varname
-      p[5] := RemoveSurroundingQuotes(p[5])
 
       p4FirstChar := SubStr(p[4], 1, 1)
       p4LastChar := SubStr(p[4], -1)
@@ -616,13 +640,6 @@ _StringGetPos(p)
 
 _StringMid(p)
 {
-   ; the 3rd/4th params "can be an expression". our ToExp() function already converted it earlier.
-   ; if it was a number, it was left alone. otherwise if its a quoted string, it could have been a varname
-   if p[3]
-      p[3] := RemoveSurroundingQuotes(p[3])
-   if p[4]
-      p[4] := RemoveSurroundingQuotes(p[4])
-
    if p.Length() = 3
       return format_v("{1} := SubStr({2}, {3})", p)
    else if p.Length() = 4

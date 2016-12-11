@@ -6,49 +6,49 @@ Convert(ScriptString)
    ;// Specification format:
    ;//          CommandName,Param1,Param2,etc | Replacement string format (see below)
    ;// Param format:
-   ;//          params names containing the word "var" (such as "TitleVar,InputVar") will not be converted to expr
-   ;//           this means that the literal text of the parameter is preserved
-   ;//           this would be used for InputVar/OutputVar params, or whenever you want the literal text preserved
-   ;//          params containing the text "CBE2E" would convert parameters that 'Can Be an Expression TO an EXPR' 
-   ;//           this would only be used if the conversion goes from Command to Func 
-   ;//           and we need to strip a preceeding "% " which was used to force an expr when it was unnecessary 
-   ;//          params containing the text "CBE2T" would convert parameters that 'Can Be an Expression TO literal TEXT'
-   ;//           this would be used if the conversion goes from Command to Command
-   ;//           and in v2 the parameter can no longer optionally be an expression.
-   ;//           these will be wrapped in %%s, so   expr+1   is now    %expr+1%
-   ;//          any other param name will be converted from literal text to expression using the ToExp() func
-   ;//           such as      word -> "word"      or      %var% -> var
-   ;//           like those 'values' in those  `IfEqual, var, value`  commands
+   ;//          - param names ending in "T2E" will convert a literal Text param TO an Expression
+   ;//              this would be used when converting a Command to a Func or otherwise needing an expr
+   ;//              such as      word -> "word"      or      %var% -> var
+   ;//              like the 'value' param in those  `IfEqual, var, value`  commands
+   ;//          - param names ending in "CBE2E" would convert parameters that 'Can Be an Expression TO an EXPR' 
+   ;//              this would only be used if the conversion goes from Command to Func 
+   ;//              we'd need to strip a preceeding "% " which was used to force an expr when it was unnecessary 
+   ;//          - param names ending in "CBE2T" would convert parameters that 'Can Be an Expression TO literal TEXT'
+   ;//              this would be used if the conversion goes from Command to Command
+   ;//              because in v2, those command parameters can no longer optionally be an expression.
+   ;//              these will be wrapped in %%s, so   expr+1   is now    %expr+1%
+   ;//          - any other param name will not be converted
+   ;//              this means that the literal text of the parameter is unchanged
+   ;//              this would be used for InputVar/OutputVar params, or whenever you want the literal text preserved
    ;// Replacement format:
-   ;//          use {1} which corresponds to Param1, etc
-   ;//          use [] for one optional param. don't think it will currently work for multiple
-   ;//          or
-   ;//          use asterisk * and a function name to call, for when the params dont directly match up
+   ;//          - use {1} which corresponds to Param1, etc
+   ;//          - use [] for one optional param. don't think it will currently work for multiple
+   ;//          - use asterisk * and a function name to call, for custom processing when the params dont directly match up
    CommandsToConvert := "
    (
-      EnvAdd,InputVar,ExprVar,TimeUnits | *_EnvAdd
-      EnvDiv,InputVar,ExprVar | {1} /= {2}
-      EnvMult,InputVar,ExprVar | {1} *= {2}
-      EnvSub,InputVar,ExprVar,TimeUnits | {1} -= {2}[, {3}]
-      IfEqual,InputVar,value | if ({1} = {2})
-      IfNotEqual,InputVar,value | if ({1} != {2})
-      IfGreater,InputVar,value | if ({1} > {2})
-      IfGreaterOrEqual,InputVar,value | if ({1} >= {2})
-      IfLess,InputVar,value | if ({1} < {2})
-      IfLessOrEqual,InputVar,value | if ({1} <= {2})
+      EnvAdd,var,valueCBE2E,TimeUnitsT2E | *_EnvAdd
+      EnvSub,var,valueCBE2E,TimeUnitsT2E | *_EnvSub
+      EnvDiv,var,valueCBE2E | {1} /= {2}
+      EnvMult,var,valueCBE2E | {1} *= {2}
+      IfEqual,var,valueT2E | if ({1} = {2})
+      IfNotEqual,var,valueT2E | if ({1} != {2})
+      IfGreater,var,valueT2E | if ({1} > {2})
+      IfGreaterOrEqual,var,valueT2E | if ({1} >= {2})
+      IfLess,var,valueT2E | if ({1} < {2})
+      IfLessOrEqual,var,valueT2E | if ({1} <= {2})
       StringLen,OutputVar,InputVar | {1} := StrLen({2})
-      StringGetPos,OutputVar,InputVar,SearchText,Side,OffsetCBE2E | *_StringGetPos
-      StringMid,OutputVar,InputVar,StartCharCBE2E,CountCBE2E,L | *_StringMid
+      StringGetPos,OutputVar,InputVar,SearchTextT2E,SideT2E,OffsetCBE2E | *_StringGetPos
+      StringMid,OutputVar,InputVar,StartCharCBE2E,CountCBE2E,L_T2E | *_StringMid
       StringLeft,OutputVar,InputVar,CountCBE2E | {1} := SubStr({2}, 1, {3})
       StringRight,OutputVar,InputVar,CountCBE2E | {1} := SubStr({2}, -1*({3}))
       StringTrimLeft,OutputVar,InputVar,CountCBE2E | {1} := SubStr({2}, ({3})+1)
       StringTrimRight,OutputVar,InputVar,CountCBE2E | {1} := SubStr({2}, 1, -1*({3}))
-      StringUpper,OutputVar,InputVar,Tvar | StrUpper, {1}, `%{2}`%[, {3}]
-      StringLower,OutputVar,InputVar,Tvar | StrLower, {1}, `%{2}`%[, {3}]
-      StringReplace,OutputVar,InputVar,SearchVar,ReplVar,ReplAllVar | *_StrReplace
+      StringUpper,OutputVar,InputVar,T| StrUpper, {1}, `%{2}`%[, {3}]
+      StringLower,OutputVar,InputVar,T| StrLower, {1}, `%{2}`%[, {3}]
+      StringReplace,OutputVar,InputVar,SearchTxt,ReplTxt,ReplAll | *_StrReplace
       WinGetActiveStats,TitleVar,WidthVar,HeightVar,XVar,YVar | *_ActiveStats
       WinGetActiveTitle,OutputVar | WinGetTitle, {1}, A
-      DriveSpaceFree,OutputVar,PathVar | DriveGet, {1}, SpaceFree, {2}
+      DriveSpaceFree,OutputVar,Path | DriveGet, {1}, SpaceFree, {2}
       Sleep,DelayCBE2T | Sleep, {1}
    )"
 
@@ -363,18 +363,18 @@ Convert(ScriptString)
                {
                   this_param := Param[A_Index]
                   this_param := StrReplace(this_param, "MY_COMMª_PLA¢E_HOLDER", ",")
-                  if InStr(ListParam[A_Index], "var")
+                  if (ListParam[A_Index] ~= "T2E$")           ; 'Text TO Expression'
                   {
-                     Param[A_Index] := this_param
+                     Param[A_Index] := ToExp(this_param)
                   }
-                  else if InStr(ListParam[A_Index], "CBE2E")    ; 'Can Be an Expression TO an Expression'
+                  else if (ListParam[A_Index] ~= "CBE2E$")    ; 'Can Be an Expression TO an Expression'
                   {
                      if (SubStr(this_param, 1, 2) = "`% ")            ; if this param expression was forced
                         Param[A_Index] := SubStr(this_param, 3)       ; remove the forcing
                      else
                         Param[A_Index] := RemoveSurroundingPercents(this_param)
                   }
-                  else if InStr(ListParam[A_Index], "CBE2T")    ; 'Can Be an Expression TO literal Text'
+                  else if (ListParam[A_Index] ~= "CBE2T$")    ; 'Can Be an Expression TO literal Text'
                   {
                      if (this_param is "integer")                     ; if this param is int
                      || (SubStr(this_param, 1, 2) = "`% ")            ; or the expression was forced
@@ -385,7 +385,7 @@ Convert(ScriptString)
                   else
                   {
                      ;msgbox, %this_param%
-                     Param[A_Index] := ToExp(this_param)
+                     Param[A_Index] := this_param
                   }
                }
 
@@ -612,6 +612,13 @@ _EnvAdd(p) {
       return format_v("{1} := DateAdd({1}, {2}, {3})", p)
    else
       return format_v("{1} += {2}", p)
+}
+
+_EnvSub(p) {
+   If p[3]
+      return format_v("{1} := DateDiff({1}, {2}, {3})", p)
+   else
+      return format_v("{1} -= {2}", p)
 }
 
 _StringGetPos(p)

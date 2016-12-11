@@ -1697,6 +1697,38 @@ class ConvertTests
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
+   StringGetPos_LiteralText()
+   {
+      input_script := "
+         (Join`r`n %
+                                 Haystack = abcdefghijklmnopqrs
+                                 StringGetPos, pos, Haystack, def
+                                 if pos >= 0
+                                     FileAppend, The string was found at position %pos%., *
+         )"
+
+      expected := "
+         (Join`r`n %
+                                 Haystack := "abcdefghijklmnopqrs"
+                                 pos := InStr(Haystack, "def") - 1
+                                 if (pos >= 0)
+                                     FileAppend, The string was found at position %pos%., *
+         )"
+
+      ; first test that our expected code actually produces the same results in v2
+      ;result_input    := ExecScript_v1(input_script)
+      ;result_expected := ExecScript_v2(expected)
+      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
+      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+
+      ; then test that our converter will correctly covert the input_script to the expected script
+      converted := Convert(input_script)
+      ;FileAppend, % expected, expected.txt
+      ;FileAppend, % converted, converted.txt
+      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      Yunit.assert(converted = expected, "converted output script != expected output script")
+   }
+
    StringGetPos_SearchLeftOccurance()
    {
       input_script := "
@@ -3370,6 +3402,98 @@ class ConvertTests
                                  pos := InStr(Haystack, Needle, (A_StringCaseSense="On") ? true : false, (var+2)+1, 1) - 1
                                  if (pos >= 0)
                                      FileAppend, The string was found at position %pos%., *
+         )"
+
+      ; first test that our expected code actually produces the same results in v2
+      ;result_input    := ExecScript_v1(input_script)
+      ;result_expected := ExecScript_v2(expected)
+      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
+      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+
+      ; then test that our converter will correctly covert the input_script to the expected script
+      converted := Convert(input_script)
+      ;FileAppend, % expected, expected.txt
+      ;FileAppend, % converted, converted.txt
+      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      Yunit.assert(converted = expected, "converted output script != expected output script")
+   }
+
+   ForcedExpression_StringGetPos_LiteralText()
+   {
+      input_script := "
+         (Join`r`n %
+                                 Haystack = abcdefghijklmnopqrs
+                                 StringGetPos, pos, Haystack, % "def"
+                                 if pos >= 0
+                                     FileAppend, The string was found at position %pos%., *
+         )"
+
+      expected := "
+         (Join`r`n %
+                                 Haystack := "abcdefghijklmnopqrs"
+                                 pos := InStr(Haystack, "def") - 1
+                                 if (pos >= 0)
+                                     FileAppend, The string was found at position %pos%., *
+         )"
+
+      ; first test that our expected code actually produces the same results in v2
+      ;result_input    := ExecScript_v1(input_script)
+      ;result_expected := ExecScript_v2(expected)
+      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
+      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+
+      ; then test that our converter will correctly covert the input_script to the expected script
+      converted := Convert(input_script)
+      ;FileAppend, % expected, expected.txt
+      ;FileAppend, % converted, converted.txt
+      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      Yunit.assert(converted = expected, "converted output script != expected output script")
+   }
+
+   ForcedExpression_IfEqual_CommandThenComma()
+   {
+      input_script := "
+         (Join`r`n %
+                                 var = value
+                                 IfEqual, var, % "value"
+                                    FileAppend, %var%, *
+         )"
+
+      expected := "
+         (Join`r`n %
+                                 var := "value"
+                                 if (var = "value")
+                                    FileAppend, %var%, *
+         )"
+
+      ; first test that our expected code actually produces the same results in v2
+      ;result_input    := ExecScript_v1(input_script)
+      ;result_expected := ExecScript_v2(expected)
+      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
+      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+
+      ; then test that our converter will correctly covert the input_script to the expected script
+      converted := Convert(input_script)
+      ;FileAppend, % expected, expected.txt
+      ;FileAppend, % converted, converted.txt
+      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      Yunit.assert(converted = expected, "converted output script != expected output script")
+   }
+
+   ForcedExpression_Traditional_If_GreaterThanInt()
+   {
+      input_script := "
+         (Join`r`n %
+                                 var = 10
+                                 if var > % 4*2
+                                    FileAppend, %var%, *
+         )"
+
+      expected := "
+         (Join`r`n %
+                                 var := "10"
+                                 if (var > 4*2)
+                                    FileAppend, %var%, *
          )"
 
       ; first test that our expected code actually produces the same results in v2

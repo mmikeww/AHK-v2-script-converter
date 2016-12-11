@@ -232,7 +232,7 @@ Convert(ScriptString)
                                         , { else: Equation[1]
                                           , not: (Equation[3]) ? "!" : ""
                                           , variable: Equation[2]
-                                          , type: ToExp(Equation[4])
+                                          , type: ToStringExpr(Equation[4])
                                           , otb: Equation[5] } )
       }
 
@@ -384,6 +384,7 @@ Convert(ScriptString)
                   }
                   else
                   {
+                     ;msgbox, %this_param%
                      Param[A_Index] := ToExp(this_param)
                   }
                }
@@ -486,8 +487,11 @@ ToExp(Text)
    Text := Trim(Text, " `t")
    If (Text = "")       ; If text is empty
       TOut := (qu . qu) ; Two double quotes
+   else if (SubStr(Text, 1, 2) = "`% ")    ; if this param was a forced expression
+      TOut :=SubStr(Text, 3)               ; then just return it without the %
    else if InStr(Text, "`%")        ; deref   %var% -> var
    {
+      ;msgbox %text%
       TOut := ""
       Loop % StrLen(Text)
       {

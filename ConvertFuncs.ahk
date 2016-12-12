@@ -50,7 +50,7 @@ Convert(ScriptString)
       StringUpper,OutputVar,InputVar,T| StrUpper, {1}, `%{2}`%[, {3}]
       StringLower,OutputVar,InputVar,T| StrLower, {1}, `%{2}`%[, {3}]
       StringReplace,OutputVar,InputVar,SearchTxt,ReplTxt,ReplAll | *_StrReplace
-      WinGetActiveStats,TitleVar,WidthVar,HeightVar,XVar,YVar | *_ActiveStats
+      WinGetActiveStats,TitleVar,WidthVar,HeightVar,XVar,YVar | *_WinGetActiveStats
       WinGetActiveTitle,OutputVar | WinGetTitle, {1}, A
    )"
 
@@ -616,14 +616,9 @@ RemoveSurroundingPercents(text)
 ;    They all accept an array of parameters and return command(s) in text form
 ;    These are only called in one place in the script and are called dynamicly
 ; =============================================================================
-_ActiveStats(p) {
-   If p[1]
-      Out .= format_v("WinGetTitle, {1}, A", p)
-   Count := p.Length()
-   loop 5
-      p[A_Index] := ( p[A_Index] ? " " . p[A_Index] : "" )
-   if Count > 1 ; Width and/or Height and/or X and/or Y but not Title
-      Out .= (p[1] ? "`r`n" : "") . format_v("WinGetPos,{4},{5},{2},{3}, A", p)
+_WinGetActiveStats(p) {
+   Out := format_v("WinGetTitle, {1}, A", p) . "`r`n"
+   Out .= format_v("WinGetPos, {4}, {5}, {2}, {3}, A", p)
    return Out   
 }
 

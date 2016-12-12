@@ -26,16 +26,19 @@ Convert(ScriptString)
    ;//          - use asterisk * and a function name to call, for custom processing when the params dont directly match up
    CommandsToConvert := "
    (
+      DriveSpaceFree,OutputVar,Path | DriveGet, {1}, SpaceFree, {2}
       EnvAdd,var,valueCBE2E,TimeUnitsT2E | *_EnvAdd
       EnvSub,var,valueCBE2E,TimeUnitsT2E | *_EnvSub
       EnvDiv,var,valueCBE2E | {1} /= {2}
       EnvMult,var,valueCBE2E | {1} *= {2}
+      EnvUpdate | SendMessage, `% WM_SETTINGCHANGE := 0x001A, 0, Environment,, `% "ahk_id " . HWND_BROADCAST := "0xFFFF"
       IfEqual,var,valueT2E | if ({1} = {2})
       IfNotEqual,var,valueT2E | if ({1} != {2})
       IfGreater,var,valueT2E | if ({1} > {2})
       IfGreaterOrEqual,var,valueT2E | if ({1} >= {2})
       IfLess,var,valueT2E | if ({1} < {2})
       IfLessOrEqual,var,valueT2E | if ({1} <= {2})
+      Sleep,DelayCBE2T | Sleep, {1}
       StringLen,OutputVar,InputVar | {1} := StrLen({2})
       StringGetPos,OutputVar,InputVar,SearchTextT2E,SideT2E,OffsetCBE2E | *_StringGetPos
       StringMid,OutputVar,InputVar,StartCharCBE2E,CountCBE2E,L_T2E | *_StringMid
@@ -48,8 +51,6 @@ Convert(ScriptString)
       StringReplace,OutputVar,InputVar,SearchTxt,ReplTxt,ReplAll | *_StrReplace
       WinGetActiveStats,TitleVar,WidthVar,HeightVar,XVar,YVar | *_ActiveStats
       WinGetActiveTitle,OutputVar | WinGetTitle, {1}, A
-      DriveSpaceFree,OutputVar,Path | DriveGet, {1}, SpaceFree, {2}
-      Sleep,DelayCBE2T | Sleep, {1}
    )"
 
    ;Directives := "#Warn UseUnsetLocal`r`n#Warn UseUnsetGlobal"
@@ -318,8 +319,16 @@ Convert(ScriptString)
          CommandMatch := 0
          TmpLine := RegExReplace(Line, ",\s+", ",")
          FirstDelim := RegExMatch(TmpLine, "\w[,\s]") 
-         Command := Trim( SubStr(TmpLine, 1, FirstDelim) )
-         Params := SubStr(TmpLine, FirstDelim+2)
+         if (FirstDelim > 0)
+         {
+            Command := Trim( SubStr(TmpLine, 1, FirstDelim) )
+            Params := SubStr(TmpLine, FirstDelim+2)
+         }
+         else
+         {
+            Command := Trim( SubStr(TmpLine, 1) )
+            Params := ""
+         }
          ;msgbox, TmpLine=%TmpLine%`nFirstDelim=%FirstDelim%`nCommand=%Command%`nParams=%Params%
          ; Now we format the parameters into their v2 equivilents
          LoopParse, %CommandsToConvert%, `n
@@ -332,6 +341,7 @@ Convert(ScriptString)
             {
                CommandMatch := 1
                ListParams := RTrim( SubStr(Part[1], ListDelim+1) )
+               ;if (Command = "EnvUpdate")
                ;msgbox, CommandMatch`nListCommand=%ListCommand%`nListParams=%ListParams%
                ListParam := Array()
                Param := Array() ; Parameters in expression form

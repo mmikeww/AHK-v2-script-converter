@@ -38,6 +38,7 @@ Convert(ScriptString)
       IfGreaterOrEqual,var,valueT2E | if ({1} >= {2})
       IfLess,var,valueT2E | if ({1} < {2})
       IfLessOrEqual,var,valueT2E | if ({1} <= {2})
+      SetEnv,var,valueT2E | {1} := {2}
       Sleep,DelayCBE2T | Sleep, {1}
       StringLen,OutputVar,InputVar | {1} := StrLen({2})
       StringGetPos,OutputVar,InputVar,SearchTextT2E,SideT2E,OffsetCBE2E | *_StringGetPos
@@ -58,12 +59,21 @@ Convert(ScriptString)
    Remove := "
    (
       #AllowSameLineComments
+      #CommentFlag
+      #Delimiter
+      #DerefChar
+      #EscapeChar
+      #LTrim
       #MaxMem
+      #NoEnv
+      Progress
+      SetBatchLines
+      SetFormat
       SoundGetWaveVolume
       SoundSetWaveVolume
-      #NoEnv
-      #Delimiter
-      SetFormat
+      SplashImage
+      SplashTextOn
+      SplashTextOff
       A_FormatInteger
       A_FormatFloat
    )"

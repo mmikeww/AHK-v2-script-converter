@@ -396,8 +396,9 @@ Convert(ScriptString)
                   }
                   else if (ListParam[A_Index] ~= "CBE2T$")    ; 'Can Be an Expression TO literal Text'
                   {
-                     if (this_param is "integer")                     ; if this param is int
-                     || (SubStr(this_param, 1, 2) = "`% ")            ; or the expression was forced
+                     if (this_param is "integer")                                               ; if this param is int
+                     || (SubStr(this_param, 1, 2) = "`% ")                                      ; or the expression was forced
+                     || ((SubStr(this_param, 1, 1) = "`%") && (SubStr(this_param, -1) = "`%"))  ; or var already wrapped in %%s
                         Param[A_Index] := this_param                  ; dont do any conversion
                      else
                         Param[A_Index] := "`%" . this_param . "`%"    ; wrap in percent signs to evaluate the expr

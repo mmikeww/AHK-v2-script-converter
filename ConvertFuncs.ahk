@@ -22,7 +22,6 @@ Convert(ScriptString)
    ;//              this would be used for InputVar/OutputVar params, or whenever you want the literal text preserved
    ;// Replacement format:
    ;//          - use {1} which corresponds to Param1, etc
-   ;//          - use [] for one optional param. don't think it will currently work for multiple
    ;//          - use asterisk * and a function name to call, for custom processing when the params dont directly match up
    CommandsToConvert := "
    (
@@ -47,8 +46,8 @@ Convert(ScriptString)
       StringRight,OutputVar,InputVar,CountCBE2E | {1} := SubStr({2}, -1*({3}))
       StringTrimLeft,OutputVar,InputVar,CountCBE2E | {1} := SubStr({2}, ({3})+1)
       StringTrimRight,OutputVar,InputVar,CountCBE2E | {1} := SubStr({2}, 1, -1*({3}))
-      StringUpper,OutputVar,InputVar,T| StrUpper, {1}, `%{2}`%[, {3}]
-      StringLower,OutputVar,InputVar,T| StrLower, {1}, `%{2}`%[, {3}]
+      StringUpper,OutputVar,InputVar,T| StrUpper, {1}, `%{2}`%, {3}
+      StringLower,OutputVar,InputVar,T| StrLower, {1}, `%{2}`%, {3}
       StringReplace,OutputVar,InputVar,SearchTxt,ReplTxt,ReplAll | *_StrReplace
       WinGetActiveStats,TitleVar,WidthVar,HeightVar,XVar,YVar | *_WinGetActiveStats
       WinGetActiveTitle,OutputVar | WinGetTitle, {1}, A
@@ -363,7 +362,7 @@ Convert(ScriptString)
                   this_param := LTrim(A_LoopField)      ; trim leading spaces off each param
                   Param[A_Index] := this_param       ; populate array with the params
                }
-               ;msgbox, % "Param.Length=" Param.Length()
+               ;msgbox, % "Line:`n`n" Line "`n`nParam.Length=" Param.Length() "`nListParam.Length=" ListParam.Length()
 
                ; if we detect one too many params, it could be because of this:
                if (Param.Length() - ListParam.Length() = 1)
@@ -372,10 +371,23 @@ Convert(ScriptString)
                   ;  the program knows to treat them literally."
                   ; from:   https://autohotkey.com/docs/commands/_EscapeChar.htm
 
+                  ; or could be because of same line ifEqual/if/else statements
+
                   ;msgbox, % "Line:`n" Line "`n`nParam[ParamLen-1]=" Param[Param.Length()-1]
                   Param[Param.Length()-1] := Param[Param.Length()-1]  "," Param[Param.Length()]
                   ;msgbox, % "Param[ParamLen-1]=" Param[Param.Length()-1]
                   Param.Delete(Param.Length())
+               }
+
+               ; if we detect too few params such as Issue #5, fill with empty strings
+               if ((param_num_diff := ListParam.Length() - Param.Length()) > 0)
+               {
+                  ;msgbox, % "Line:`n`n" Line "`n`nParam.Length=" Param.Length() "`nListParam.Length=" ListParam.Length() "`ndiff=" param_num_diff
+                  Loop, param_num_diff
+                  {
+                     Param.Push("")
+                     ;msgbox, % "Param.Length=" Param.Length()
+                  }
                }
 
                ; convert the params to expression or not
@@ -422,24 +434,9 @@ Convert(ScriptString)
                {
                   ;if (Command = "StringMid")
                      ;msgbox, % "in else`nLine: " Line "`nPart[2]: " Part[2] "`n`nListParam.Length: " ListParam.Length() "`nParam.Length: " Param.Length() "`n`nParam[1]: " Param[1] "`nParam[2]: " Param[2] "`nParam[3]: " Param[3] "`nParam[4]: " Param[4]
-                  If ParamDif := (ListParam.Length() - Param.Length() )
-                  {
-                     ; Remove all unused optional parameters
-                     ;msgbox, ParamDif=%ParamDif%
-                     ;msgbox, % "before regexreplace`nPart[2]: " Part[2]
-                     Part[2] := RegExReplace(Part[2], "\[[^\]]*\]", "", Count, ParamDif, 1)
-                     ;msgbox, % "after regexreplace`nPart[2]: " Part[2]
-                  }
-                  else    ; else if the optional params are included, then remove the []s before formatting
-                  {
-                     ;msgbox, ParamDif=%ParamDif%
-                     Part[2] := StrReplace(Part[2], "[")
-                     Part[2] := StrReplace(Part[2], "]")
-                     ;msgbox
-                  }
-                  ;msgbox, % "after replacing []`nPart[2]: " Part[2]
                   Line := Indentation . format_v(Part[2], Param)
-                  ;msgbox, % "after replacing []`nLine: " Line
+                  ; if empty params caused the line to end with a comma, remove it
+                  Line := RegExReplace(Line, ",\s*$", "")
                }
             }
          }
@@ -612,6 +609,14 @@ RemoveSurroundingPercents(text)
    return text
 }
 
+; check if a param is empty
+IsEmpty(param)
+{
+   if (param = '') || (param = '""')   ; if its an empty string, or a string containing two double quotes
+      return true
+   return false
+}
+
 ; =============================================================================
 ; Command formatting functions
 ;    They all accept an array of parameters and return command(s) in text form
@@ -624,14 +629,14 @@ _WinGetActiveStats(p) {
 }
 
 _EnvAdd(p) {
-   If p[3]
+   if !IsEmpty(p[3])
       return format_v("{1} := DateAdd({1}, {2}, {3})", p)
    else
       return format_v("{1} += {2}", p)
 }
 
 _EnvSub(p) {
-   If p[3]
+   if !IsEmpty(p[3])
       return format_v("{1} := DateDiff({1}, {2}, {3})", p)
    else
       return format_v("{1} -= {2}", p)
@@ -639,11 +644,12 @@ _EnvSub(p) {
 
 _StringGetPos(p)
 {
-   if p.Length() = 3
+   ;msgbox, % p.Length() "`n" p[1] "`n" p[2] "`n" p[3] "`n" p[4] "`n" p[5]
+   if IsEmpty(p[4]) && IsEmpty(p[5])
       return format_v("{1} := InStr({2}, {3}) - 1", p)
 
    ; modelled off of:   https://github.com/Lexikos/AutoHotkey_L/blob/master/source/script.cpp#L14181
-   else if p.Length() >= 4
+   else
    {
       p[5] := p[5] ? p[5] : 0   ; 5th param is 'Offset' aka starting position. set default value if none specified
 
@@ -676,11 +682,11 @@ _StringGetPos(p)
 
 _StringMid(p)
 {
-   if p.Length() = 3
+   if IsEmpty(p[4]) && IsEmpty(p[5])
       return format_v("{1} := SubStr({2}, {3})", p)
-   else if p.Length() = 4
+   else if IsEmpty(p[5])
       return format_v("{1} := SubStr({2}, {3}, {4})", p)
-   else if p.Length() = 5
+   else
    {
       ;msgbox, % p[5] "`n" SubStr(p[5], 1, 2)
       ; any string that starts with 'L' is accepted
@@ -705,11 +711,11 @@ _StrReplace(p)
    ; v2
    ; StrReplace, OutputVar, Haystack, SearchText [, ReplaceText, OutputVarCount, Limit = -1]
 
-   if p.Length() = 3
+   if IsEmpty(p[4]) && IsEmpty(p[5])
       return format_v("StrReplace, {1}, `%{2}`%, {3},,, 1", p)
-   else if p.Length() = 4
+   else if IsEmpty(p[5])
       return format_v("StrReplace, {1}, `%{2}`%, {3}, {4},, 1", p)
-   else if p.Length() = 5
+   else
    {
       p5char1 := SubStr(p[5], 1, 1)
       ;msgbox, % p[5] "`n" p5char1

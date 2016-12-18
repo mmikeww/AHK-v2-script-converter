@@ -31,6 +31,12 @@ Convert(ScriptString)
       EnvDiv,var,valueCBE2E | {1} /= {2}
       EnvMult,var,valueCBE2E | {1} *= {2}
       EnvUpdate | SendMessage, `% WM_SETTINGCHANGE := 0x001A, 0, Environment,, `% "ahk_id " . HWND_BROADCAST := "0xFFFF"
+      FileCopyDir,source,dest,flag | DirCopy, {1}, {2}, {3}
+      FileCreateDir,dir | DirCreate, {1}
+      FileMoveDir,source,dest,flag | DirMove, {1}, {2}, {3}
+      FileRemoveDir,dir,recurse | DirDelete, {1}, {2}
+      FileSelectFolder,var,startingdir,opts,prompt | DirSelect, {1}, {2}, {3}, {4}
+      FileSelectFile,var,opts,rootdirfile,prompt,filter | FileSelect, {1}, {2}, {3}, {4}, {5}
       IfEqual,var,valueT2E | if ({1} = {2})
       IfNotEqual,var,valueT2E | if ({1} != {2})
       IfGreater,var,valueT2E | if ({1} > {2})
@@ -443,8 +449,8 @@ Convert(ScriptString)
                   ;if (Command = "StringMid")
                      ;msgbox, % "in else`nLine: " Line "`nPart[2]: " Part[2] "`n`nListParam.Length: " ListParam.Length() "`nParam.Length: " Param.Length() "`n`nParam[1]: " Param[1] "`nParam[2]: " Param[2] "`nParam[3]: " Param[3] "`nParam[4]: " Param[4]
                   Line := Indentation . format_v(Part[2], Param)
-                  ; if empty params caused the line to end with a comma, remove it
-                  Line := RegExReplace(Line, ",\s*$", "")
+                  ; if empty params caused the line to end with extra commas, remove them
+                  Line := RegExReplace(Line, "(?:,\s)*$", "")
                }
             }
          }

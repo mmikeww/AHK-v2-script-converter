@@ -67,6 +67,23 @@ Convert(ScriptString)
       WinGetActiveTitle,OutputVar | WinGetTitle, {1}, A
    )"
 
+
+   ;// this is a list of all renamed variables or functions, in this format:
+   ;//          OrigWord | ReplacementWord
+   ;//
+   ;// functions should include the parentheses
+   ;//
+   ;// important: the order matters. the first 2 in the list could cause a mistake if not ordered properly
+   KeywordsToRename := "
+   (
+      A_LoopFileFullPath | A_LoopFilePath
+      A_LoopFileLongPath | A_LoopFileFullPath
+      ComSpec | A_ComSpec
+      Asc() | Ord()
+      ComObjParameter() | ComObject()
+   )"
+
+
    ;Directives := "#Warn UseUnsetLocal`r`n#Warn UseUnsetGlobal"
 
    Remove := "
@@ -120,6 +137,33 @@ Convert(ScriptString)
          EOLComment := ""
 
       CommandMatch := -1
+
+
+      ; -------------------------------------------------------------------------------
+      ;
+      ; first replace any renamed vars/funcs
+      ;
+      Loop, Parse, %KeywordsToRename%, `n
+      {
+         StrSplit, Part, %A_LoopField%, |
+         srchtxt := Trim(Part[1])
+         rplctxt := Trim(Part[2])
+         if SubStr(srchtxt, -2) = "()"
+            srchtxt := SubStr(srchtxt, 1, -1)
+         if SubStr(rplctxt, -2) = "()"
+            rplctxt := SubStr(rplctxt, 1, -1)
+         ;msgbox % A_LoopField "`n[" srchtxt "]`n[" rplctxt "]"
+
+         if InStr(Line, srchtxt)
+         {
+            if SubStr(srchtxt, -1) = "("
+               srchtxt := StrReplace(srchtxt, "(", "\(")
+            ;msgbox, %Line%
+            Line := RegExReplace(Line, "i)([^\w])" . srchtxt . "([^\w])", "$1" . rplctxt . "$2")
+            ;msgbox, %Line%
+         }
+      }
+
 
       ; -------------------------------------------------------------------------------
       ;

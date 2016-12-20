@@ -430,7 +430,7 @@ Convert(ScriptString)
                Param := Array() ; Parameters in expression form
                LoopParse, %ListParams%, `,
                   ListParam[A_Index] := A_LoopField
-               Params := StrReplace(Params, "``,", "MY_COMMª_PLA¢E_HOLDER")     ; ugly hack
+               Params := StrReplace(Params, "``,", "ESCAPED_COMMª_PLA¢E_HOLDER")     ; ugly hack
                LoopParse, %Params%, `,
                {
                   this_param := LTrim(A_LoopField)      ; trim leading spaces off each param
@@ -468,7 +468,7 @@ Convert(ScriptString)
                Loop, % Param.Length()
                {
                   this_param := Param[A_Index]
-                  this_param := StrReplace(this_param, "MY_COMMª_PLA¢E_HOLDER", ",")
+                  this_param := StrReplace(this_param, "ESCAPED_COMMª_PLA¢E_HOLDER", "``,")
                   if (ListParam[A_Index] ~= "T2E$")           ; 'Text TO Expression'
                   {
                      Param[A_Index] := ToExp(this_param)
@@ -613,6 +613,7 @@ ToExp(Text)
    else      ; wrap anything else in quotes
    {
       TOut := StrReplace(Text, qu, bt . qu)    ; first escape literal quotes
+      TOut := StrReplace(TOut, bt . ",", ",")  ; then remove escape char for comma
       ;msgbox text=%text%`ntout=%tout%
       TOut := qu . TOut . qu
    }
@@ -661,6 +662,7 @@ ToStringExpr(Text)
    else      ; wrap anything else in quotes
    {
       TOut := StrReplace(Text, qu, bt . qu)    ; first escape literal quotes
+      TOut := StrReplace(TOut, bt . ",", ",")  ; then remove escape char for comma
       ;msgbox text=%text%`ntout=%tout%
       TOut := qu . TOut . qu
    }

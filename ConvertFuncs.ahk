@@ -247,6 +247,22 @@ Convert(ScriptString)
 
       ; -------------------------------------------------------------------------------
       ;
+      ; if var between
+      ;
+      else If RegExMatch(Line, "i)^\s*(else\s+)?if\s+([a-z_][a-z_0-9]*) (\s*not\s+)?between ([^{;]*) and ([^{;]*)(\s*{?)", Equation)
+      {
+         ;msgbox if regex`nLine: %Line%`n1: %Equation[1]%`n2: %Equation[2]%`n3: %Equation[3]%`n4: %Equation[4]%`n5: %Equation[5]%
+         Line := Indentation . format_v("{else}if {not}({var} >= {val1} && {var} <= {val2}){otb}"
+                                        , { else: Equation[1]
+                                          , var: Equation[2]
+                                          , not: (Equation[3]) ? "!" : ""
+                                          , val1: ToExp(Equation[4])
+                                          , val2: ToExp(Equation[5])
+                                          , otb: Equation[6] } )
+      }
+
+      ; -------------------------------------------------------------------------------
+      ;
       ; if var is type
       ;
       else If RegExMatch(Line, "i)^\s*(else\s+)?if\s+([a-z_][a-z_0-9]*) is (not\s+)?([^{;]*)(\s*{?)", Equation)

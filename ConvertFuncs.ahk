@@ -54,6 +54,7 @@ Convert(ScriptString)
       SetEnv,var,valueT2E | {1} := {2}
       Sleep,DelayCBE2T | Sleep, {1}
       Sort,var,options | Sort, {1}, `%{1}`%, {2}
+      SplitPath,varCBE2T,filename,dir,ext,name_no_ext,drv | SplitPath, {1}, {2}, {3}, {4}, {5}, {6}
       StringLen,OutputVar,InputVar | {1} := StrLen({2})
       StringGetPos,OutputVar,InputVar,SearchTextT2E,SideT2E,OffsetCBE2E | *_StringGetPos
       StringMid,OutputVar,InputVar,StartCharCBE2E,CountCBE2E,L_T2E | *_StringMid

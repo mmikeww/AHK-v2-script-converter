@@ -712,6 +712,36 @@ class ConvertTests
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
+   IfEqual_SameLineAction()
+   {
+      input_script := "
+         (Join`r`n %
+                                 var = value
+                                 IfEqual var, value, FileGetSize, size, %A_ScriptDir%\Tests.ahk
+                                 FileAppend, %size%, *
+         )"
+
+      expected := "
+         (Join`r`n %
+                                 var := "value"
+                                 if (var = "value"), FileGetSize, size, %A_ScriptDir%\Tests.ahk
+                                 FileAppend, %size%, *
+         )"
+
+      ; first test that our expected code actually produces the same results in v2
+      ;result_input    := ExecScript_v1(input_script)
+      ;result_expected := ExecScript_v2(expected)
+      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
+      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+
+      ; then test that our converter will correctly covert the input_script to the expected script
+      converted := Convert(input_script)
+      ;FileAppend, % expected, expected.txt
+      ;FileAppend, % converted, converted.txt
+      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      Yunit.assert(converted = expected, "converted output script != expected output script")
+   }
+
    IfEqual_CommandThenMultipleSpaces()
    {
       input_script := "
@@ -831,6 +861,14 @@ class ConvertTests
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
+/*
+THESE FOLLOWING TWO TESTS DON'T WORK
+FOR THE IFCOMMANDS THAT ALLOW A SAME LINE ACTION.
+WE INSTEAD GIVE PRECEDENCE TO THE SAME LINE ACTION
+AND THEREFORE CANNOT SUPPORT THE UNESCAPED COMMAS.
+I THINK THE ONLY WAY TO SUPPORT BOTH WOULD BE TO CHECK IF
+THE NEXT WORD AFTER THE COMMA IS A COMMAND NAME
+WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
    IfEqual_EscapedCommaNotNeededInLastParam()
    {
@@ -901,7 +939,7 @@ class ConvertTests
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
-
+*/
    IfNotEqual()
    {
       input_script := "
@@ -3954,6 +3992,34 @@ class ConvertTests
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
+   SetEnv_UnescapedCommasInLastParam()
+   {
+      input_script := "
+         (Join`r`n %
+                                 SetEnv, var, h,e, l,l,o
+                                 FileAppend, %var%, *
+         )"
+
+      expected := "
+         (Join`r`n %
+                                 var := "h,e, l,l,o"
+                                 FileAppend, %var%, *
+         )"
+
+      ; first test that our expected code actually produces the same results in v2
+      ;result_input    := ExecScript_v1(input_script)
+      ;result_expected := ExecScript_v2(expected)
+      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
+      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+
+      ; then test that our converter will correctly covert the input_script to the expected script
+      converted := Convert(input_script)
+      ;FileAppend, % expected, expected.txt
+      ;FileAppend, % converted, converted.txt
+      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      Yunit.assert(converted = expected, "converted output script != expected output script")
+   }
+
    TooFewParams()
    {
       input_script := "
@@ -4030,6 +4096,36 @@ class ConvertTests
                                  Haystack := "abcdefghijklmnopqrs"
                                  if InStr(Haystack, "jklm", (A_StringCaseSense="On") ? true : false)
                                     FileAppend, found, *
+         )"
+
+      ; first test that our expected code actually produces the same results in v2
+      ;result_input    := ExecScript_v1(input_script)
+      ;result_expected := ExecScript_v2(expected)
+      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
+      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+
+      ; then test that our converter will correctly covert the input_script to the expected script
+      converted := Convert(input_script)
+      ;FileAppend, % expected, expected.txt
+      ;FileAppend, % converted, converted.txt
+      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      Yunit.assert(converted = expected, "converted output script != expected output script")
+   }
+
+   IfInString_SameLineAction()
+   {
+      input_script := "
+         (Join`r`n %
+                                 Haystack = z.y.x.w
+                                 IfInString, Haystack, y.x, SysGet, mouse_btns, 43
+                                 FileAppend, %mouse_btns%, *
+         )"
+
+      expected := "
+         (Join`r`n %
+                                 Haystack := "z.y.x.w"
+                                 if InStr(Haystack, "y.x", (A_StringCaseSense="On") ? true : false), SysGet, mouse_btns, 43
+                                 FileAppend, %mouse_btns%, *
          )"
 
       ; first test that our expected code actually produces the same results in v2

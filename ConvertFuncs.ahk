@@ -382,9 +382,9 @@ Convert(ScriptString)
       ;
       ; we use the same parsing method as the next else clause below
       ;
-      else if (Trim(SubStr(TmpLine := RegExReplace(Line, ",\s+", ","), 1, FirstDelim := RegExMatch(TmpLine, "\w[,\s]"))) = "return")
+      else if (Trim(SubStr(Line, 1, FirstDelim := RegExMatch(Line, "\w[,\s]"))) = "return")
       {
-         Params := SubStr(TmpLine, FirstDelim+2)
+         Params := SubStr(Line, FirstDelim+2)
          if RegExMatch(Params, "^`%\w+`%$")       ; if the var is wrapped in %%, then remove them
          {
             Params := SubStr(Params, 2, -1)
@@ -400,21 +400,20 @@ Convert(ScriptString)
       ; To add commands to be checked for, modify the list at the top of this file
       {
          CommandMatch := 0
-         TmpLine := RegExReplace(Line, ",\s+", ",")
-         FirstDelim := RegExMatch(TmpLine, "\w[,\s]") 
+         FirstDelim := RegExMatch(Line, "\w[,\s]") 
          if (FirstDelim > 0)
          {
-            Command := Trim( SubStr(TmpLine, 1, FirstDelim) )
-            Params := SubStr(TmpLine, FirstDelim+2)
+            Command := Trim( SubStr(Line, 1, FirstDelim) )
+            Params := SubStr(Line, FirstDelim+2)
          }
          else
          {
-            Command := Trim( SubStr(TmpLine, 1) )
+            Command := Trim( SubStr(Line, 1) )
             Params := ""
          }
-         ;msgbox, TmpLine=%TmpLine%`nFirstDelim=%FirstDelim%`nCommand=%Command%`nParams=%Params%
+         ;msgbox, Line=%Line%`nFirstDelim=%FirstDelim%`nCommand=%Command%`nParams=%Params%
          ; Now we format the parameters into their v2 equivilents
-         LoopParse, %CommandsToConvert%, `n
+         Loop, Parse, %CommandsToConvert%, `n
          {
             StrSplit, Part, %A_LoopField%, |
             ;msgbox % A_LoopField "`n[" part[1] "]`n[" part[2] "]"
@@ -423,45 +422,66 @@ Convert(ScriptString)
             If (ListCommand = Command)
             {
                CommandMatch := 1
+               same_line_action := false
                ListParams := RTrim( SubStr(Part[1], ListDelim+1) )
                ;if (Command = "EnvUpdate")
                ;msgbox, CommandMatch`nListCommand=%ListCommand%`nListParams=%ListParams%
                ListParam := Array()
                Param := Array() ; Parameters in expression form
-               LoopParse, %ListParams%, `,
+               Loop, Parse, %ListParams%, `,
                   ListParam[A_Index] := A_LoopField
                Params := StrReplace(Params, "``,", "ESCAPED_COMMª_PLA¢E_HOLDER")     ; ugly hack
-               LoopParse, %Params%, `,
+               Loop, Parse, %Params%, `,
                {
-                  this_param := LTrim(A_LoopField)      ; trim leading spaces off each param
-                  Param[A_Index] := this_param       ; populate array with the params
+                  ; populate array with the params
+                  ; only trim preceeding spaces off each param if the param index is within the
+                  ; command's number of allowable params. otherwise, dont trim the spaces
+                  ; for ex:  `IfEqual, x, h, e, l, l, o`   should be   `if (x = "h, e, l, l, o")`
+                  ; see ~10 lines below
+                  if (A_Index <= ListParam.Length())
+                     Param[A_Index] := LTrim(A_LoopField)   ; trim leading spaces off each param
+                  else
+                     Param[A_Index] := A_LoopField
                }
                ;msgbox, % "Line:`n`n" Line "`n`nParam.Length=" Param.Length() "`nListParam.Length=" ListParam.Length()
 
-               ; if we detect one too many params, it could be because of this:
-               if (Param.Length() - ListParam.Length() = 1)
+               ; if we detect TOO MANY PARAMS, could be for 2 reasons
+               if ((param_num_diff := Param.Length() - ListParam.Length()) > 0)
                {
-                  ; "Commas that appear within the last parameter of a command do not need to be escaped because 
-                  ;  the program knows to treat them literally."
-                  ; from:   https://autohotkey.com/docs/commands/_EscapeChar.htm
+                  extra_params := ""
+                  Loop, param_num_diff
+                     extra_params .= "," . Param[ListParam.Length() + A_Index]
+                  extra_params := SubStr(extra_params, 2)
+                  extra_params := StrReplace(extra_params, "ESCAPED_COMMª_PLA¢E_HOLDER", "``,")
+                  ;msgbox, % "Line:`n" Line "`n`nCommand=" Command "`nparam_num_diff=" param_num_diff "`nListParam.Length=" ListParam.Length() "`nParam[ListParam.Length]=" Param[ListParam.Length()] "`nextra_params=" extra_params
 
-                  ; or could be because of same line ifEqual/if/else statements
+                  ; 1. could be because of IfCommand with a same-line 'then' action
+                  ;    such as  `IfEqual, x, 1, Sleep, 1`
+                  ;    in which case we need to append these extra params later
+                  if_cmds_allowing_sameline_action := "IfEqual|IfNotEqual|IfGreater|IfGreaterOrEqual|"
+                                                    . "IfLess|IfLessOrEqual|IfInString|IfNotInString"
+                  if RegExMatch(Command, "i)^(?:" if_cmds_allowing_sameline_action ")$")
+                  {
+                     same_line_action := true
+                  }
 
-                  ;msgbox, % "Line:`n" Line "`n`nParam[ParamLen-1]=" Param[Param.Length()-1]
-                  Param[Param.Length()-1] := Param[Param.Length()-1]  "," Param[Param.Length()]
-                  ;msgbox, % "Param[ParamLen-1]=" Param[Param.Length()-1]
-                  Param.Delete(Param.Length())
+                  ; 2. could be this:
+                  ;       "Commas that appear within the last parameter of a command do not need
+                  ;        to be escaped because the program knows to treat them literally."
+                  ;    from:   https://autohotkey.com/docs/commands/_EscapeChar.htm
+                  else
+                  {
+                     Param[ListParam.Length()] .= "," extra_params
+                     ;msgbox, % "Line:`n" Line "`n`nCommand=" Command "`nparam_num_diff=" param_num_diff "`nListParam.Length=" ListParam.Length() "`nParam[ListParam.Length]=" Param[ListParam.Length()] "`nextra_params=" extra_params
+                  }
                }
 
-               ; if we detect too few params such as Issue #5, fill with empty strings
+               ; if we detect TOO FEW PARAMS, fill with empty strings (see Issue #5)
                if ((param_num_diff := ListParam.Length() - Param.Length()) > 0)
                {
                   ;msgbox, % "Line:`n`n" Line "`n`nParam.Length=" Param.Length() "`nListParam.Length=" ListParam.Length() "`ndiff=" param_num_diff
                   Loop, param_num_diff
-                  {
                      Param.Push("")
-                     ;msgbox, % "Param.Length=" Param.Length()
-                  }
                }
 
                ; convert the params to expression or not
@@ -508,7 +528,12 @@ Convert(ScriptString)
                {
                   ;if (Command = "StringMid")
                      ;msgbox, % "in else`nLine: " Line "`nPart[2]: " Part[2] "`n`nListParam.Length: " ListParam.Length() "`nParam.Length: " Param.Length() "`n`nParam[1]: " Param[1] "`nParam[2]: " Param[2] "`nParam[3]: " Param[3] "`nParam[4]: " Param[4]
-                  Line := Indentation . format_v(Part[2], Param)
+
+                  if (same_line_action)
+                     Line := Indentation . format_v(Part[2], Param) . "," extra_params
+                  else
+                     Line := Indentation . format_v(Part[2], Param)
+
                   ; if empty params caused the line to end with extra commas, remove them
                   Line := RegExReplace(Line, "(?:,\s)*$", "")
                }
@@ -518,7 +543,7 @@ Convert(ScriptString)
       
       ; Remove lines we can't use
       If CommandMatch = 0 && !InCommentBlock
-         LoopParse, %Remove%, `n, `r
+         Loop, Parse, %Remove%, `n, `r
          {
             If InStr(Orig_Line, A_LoopField)
             {

@@ -19,6 +19,10 @@ However, this project is way more ambitious that I originally thought, and __it 
 ## Note
 The `v2converter.exe` file (as well as the `tests\Tests.exe` file) is simply a renamed copy of the `AutoHotkeyU32-v2-a076.exe` interpreter file that is included in the v2-a076 zip download. The interpreter alone does nothing without passing a script to it. But here, we take advantage of the [default scriptfile feature](https://lexikos.github.io/v2/docs/Scripts.htm#defaultfile) where the v2converter.exe file will look for a file named v2converter.ahk and automatically run it. You can make changes to the .ahk file and then just run the .exe. The reason for doing this is because most people will still have AHK v1 installed and associated with `*.ahk` files. So it would be inconvenient to run this converter without some workarounds. Likewise, the `diff\VisualDiff.exe` file is just a renamed `AutoHotkeyU32-v1.1.24.02.exe`
 
+# Known Issues
+The converter is not complete. That is, it does not detect all things that need to be changed to make sure the script works in v2. However, for the things that it DOES change, everything should hopefully work, except for the following. Here are the instances that are known to fail:
+1. There is a [little known feature](https://autohotkey.com/docs/commands/_EscapeChar.htm) where commas don't need to be escaped if they are in the last parameter of a command. This converter can detect those, except when the command is an IfCommand. This is because the converter needs to check for a same-line action, such as in `IfEqual, var, value, Sleep, 500`. The unit tests for those unescaped commas are commented out.
+
 # Contributing
 There is a lot of work to do and many commands and functions that still need to be changd. There are also many edge cases when trying to parse script code and convert it. Of course, whenever making changes to the code, you should be constantly running the unit tests to confirm that things are still working. Simply run the `tests\Tests.exe` file and pray for green.  
 

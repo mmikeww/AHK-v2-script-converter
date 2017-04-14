@@ -343,6 +343,7 @@ Convert(ScriptString)
             ;msgbox, % "quoted_string_match=" quoted_string_match "`nlen=" StrLen(quoted_string_match) "`npos=" pos
             string_with_placeholders := StrReplace(quoted_string_match, ",", "MY_COMMª_PLA¢E_HOLDER")
             string_with_placeholders := StrReplace(string_with_placeholders, "?", "MY_¿¿¿_PLA¢E_HOLDER")
+            string_with_placeholders := StrReplace(string_with_placeholders, "=", "MY_ÈQÜAL§_PLA¢E_HOLDER")
             ;msgbox, %string_with_placeholders%
             Line := StrReplace(Line, quoted_string_match, string_with_placeholders, Cnt, 1)
          }
@@ -378,6 +379,7 @@ Convert(ScriptString)
          ; deref the placeholders
          Line := StrReplace(Line, "MY_COMMª_PLA¢E_HOLDER", ",")
          Line := StrReplace(Line, "MY_¿¿¿_PLA¢E_HOLDER", "?")
+         Line := StrReplace(Line, "MY_ÈQÜAL§_PLA¢E_HOLDER", "=")
       }
       ; -------------------------------------------------------------------------------
       ;

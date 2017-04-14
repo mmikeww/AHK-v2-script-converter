@@ -33,7 +33,7 @@ StringReplace, htmlcontents, htmlcontents, exo_file2name_placeholder, %file2name
 StringReplace, htmlcontents, htmlcontents, exo_instructions_placeholder, %instructions%
 ;msgbox, %htmlcontents%
 FileDelete, temp.html
-FileAppend, %htmlcontents%, temp.html
+FileAppend, %htmlcontents%, temp.html, UTF-16
 
 
 ; __________________________________________________________________________________________________

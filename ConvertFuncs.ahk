@@ -326,10 +326,11 @@ Convert(ScriptString)
       ;
       ; Replace = with := in function default params
       ;
-      else if RegExMatch(Line, "i)^\s*\w+\((.+)\)", MatchFunc)
+      else if RegExMatch(Line, "i)^\s*(\w+)\((.+)\)", MatchFunc)
+           && !(MatchFunc[1] ~= "i)(if|while)")         ; skip if(expr) and while(expr) when no space before paren
       ; this regex matches anything inside the parentheses () for both func definitions, and func calls :(
       {
-         AllParams := MatchFunc[1]
+         AllParams := MatchFunc[2]
          ;msgbox, % "function line`n`nLine:`n" Line "`n`nAllParams:`n" AllParams
 
          ; first replace all commas and question marks inside quoted strings with placeholders

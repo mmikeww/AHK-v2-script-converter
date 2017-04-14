@@ -607,11 +607,17 @@ ToExp(Text)
    static qu := "`"" ; Constant for double quotes
    static bt := "``" ; Constant for backtick to escape
    Text := Trim(Text, " `t")
+
    If (Text = "")       ; If text is empty
-      TOut := (qu . qu) ; Two double quotes
+      return (qu . qu)  ; Two double quotes
    else if (SubStr(Text, 1, 2) = "`% ")    ; if this param was a forced expression
-      TOut :=SubStr(Text, 3)               ; then just return it without the %
-   else if InStr(Text, "`%")        ; deref   %var% -> var
+      return SubStr(Text, 3)               ; then just return it without the %
+
+   Text := StrReplace(Text, qu, bt . qu)    ; first escape literal quotes
+   Text := StrReplace(Text, bt . ",", ",")  ; then remove escape char for comma
+   ;msgbox text=%text%
+
+   if InStr(Text, "`%")        ; deref   %var% -> var
    {
       ;msgbox %text%
       TOut := ""
@@ -644,10 +650,8 @@ ToExp(Text)
    }
    else      ; wrap anything else in quotes
    {
-      TOut := StrReplace(Text, qu, bt . qu)    ; first escape literal quotes
-      TOut := StrReplace(TOut, bt . ",", ",")  ; then remove escape char for comma
       ;msgbox text=%text%`ntout=%tout%
-      TOut := qu . TOut . qu
+      TOut := qu . Text . qu
    }
    return (TOut)
 }
@@ -661,9 +665,17 @@ ToStringExpr(Text)
    static qu := "`"" ; Constant for double quotes
    static bt := "``" ; Constant for backtick to escape
    Text := Trim(Text, " `t")
+
    If (Text = "")       ; If text is empty
-      TOut := (qu . qu) ; Two double quotes
-   else if InStr(Text, "`%")        ; deref   %var% -> var
+      return (qu . qu)  ; Two double quotes
+   else if (SubStr(Text, 1, 2) = "`% ")    ; if this param was a forced expression
+      return SubStr(Text, 3)               ; then just return it without the %
+
+   Text := StrReplace(Text, qu, bt . qu)    ; first escape literal quotes
+   Text := StrReplace(Text, bt . ",", ",")  ; then remove escape char for comma
+   ;msgbox text=%text%
+
+   if InStr(Text, "`%")        ; deref   %var% -> var
    {
       TOut := ""
       ;Loop % StrLen(Text)
@@ -696,10 +708,8 @@ ToStringExpr(Text)
    ;}
    else      ; wrap anything else in quotes
    {
-      TOut := StrReplace(Text, qu, bt . qu)    ; first escape literal quotes
-      TOut := StrReplace(TOut, bt . ",", ",")  ; then remove escape char for comma
       ;msgbox text=%text%`ntout=%tout%
-      TOut := qu . TOut . qu
+      TOut := qu . Text . qu
    }
    return (TOut)
 }

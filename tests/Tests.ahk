@@ -76,6 +76,34 @@ class ConvertTests
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
+   AssignmentStringWithQuotesAndVar()
+   {
+      input_script := "
+         (Join`r`n %
+                                 msg = the man said, "hello" %A_Index%
+                                 FileAppend, %msg%, *
+         )"
+
+      expected := "
+         (Join`r`n %
+                                 msg := "the man said, ``"hello``" " . A_Index
+                                 FileAppend, %msg%, *
+         )"
+
+      ; first test that our expected code actually produces the same results in v2
+      ;result_input    := ExecScript_v1(input_script)
+      ;result_expected := ExecScript_v2(expected)
+      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
+      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+
+      ; then test that our converter will correctly covert the input_script to the expected script
+      converted := Convert(input_script)
+      ;FileAppend, % expected, expected.txt
+      ;FileAppend, % converted, converted.txt
+      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      Yunit.assert(converted = expected, "converted output script != expected output script")
+   }
+
    AssignmentStringWithPreceedingSpaces()
    {
       input_script := "
@@ -533,6 +561,38 @@ class ConvertTests
       ;FileAppend, % expected, expected.txt
       ;FileAppend, % converted, converted.txt
       ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      Yunit.assert(converted = expected, "converted output script != expected output script")
+   }
+
+   Traditional_If_EqualsStringAndVariable()
+   {
+      input_script := "
+         (Join`r`n %
+                                 MyVar = joe
+                                 MyVar2 = "hello" joe
+                                 if MyVar2 = "hello" %MyVar%
+                                     FileAppend, The contents of MyVar and MyVar2 are identical., *
+         )"
+
+      expected := "
+         (Join`r`n %
+                                 MyVar := "joe"
+                                 MyVar2 := "``"hello``" joe"
+                                 if (MyVar2 = "``"hello``" " . MyVar)
+                                     FileAppend, The contents of MyVar and MyVar2 are identical., *
+         )"
+
+      ; first test that our expected code actually produces the same results in v2
+      result_input    := ExecScript_v1(input_script)
+      ;result_expected := ExecScript_v2(expected)
+      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
+      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+
+      ; then test that our converter will correctly covert the input_script to the expected script
+      converted := Convert(input_script)
+      FileAppend, % expected, expected.txt
+      FileAppend, % converted, converted.txt
+      Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -5144,6 +5204,17 @@ class ToExpTests
       Yunit.assert(converted = expected)
    }
 
+   QuotesAndPercents()
+   {
+      ; "hello" %A_Index%
+      ; "`"hello`" " . A_Index
+      orig := "`"hello`" `%A_Index`%"
+      expected := "`"```"hello```" `" . A_Index"
+      converted := ToExp(orig)
+      ;Msgbox, expected: %expected%`nconverted: %converted%
+      Yunit.assert(converted = expected)
+   }
+
    RemovePercents()
    {
       Yunit.assert(ToExp("`%hello`%") = "hello")
@@ -5201,6 +5272,17 @@ class ToStringExprTests
    {
       orig := "the man said, `"hello`""
       expected := "`"the man said, ```"hello```"`""
+      converted := ToStringExpr(orig)
+      ;Msgbox, expected: %expected%`nconverted: %converted%
+      Yunit.assert(converted = expected)
+   }
+
+   QuotesAndPercents()
+   {
+      ; "hello" %A_Index%
+      ; "`"hello`" " . A_Index
+      orig := "`"hello`" `%A_Index`%"
+      expected := "`"```"hello```" `" . A_Index"
       converted := ToStringExpr(orig)
       ;Msgbox, expected: %expected%`nconverted: %converted%
       Yunit.assert(converted = expected)

@@ -615,9 +615,11 @@ ToExp(Text)
    {
       ;msgbox %text%
       TOut := ""
-      Loop % StrLen(Text)
+      ;Loop % StrLen(Text)
+      Loop, Parse, %Text%
       {
-         Symbol := Chr(NumGet(Text, (A_Index-1)*2, "UChar"))
+         ;Symbol := Chr(NumGet(Text, (A_Index-1)*2, "UChar"))
+         Symbol := A_LoopField
          If Symbol == "`%"
          {
             If (DeRef := !DeRef) && (A_Index != 1)
@@ -664,9 +666,11 @@ ToStringExpr(Text)
    else if InStr(Text, "`%")        ; deref   %var% -> var
    {
       TOut := ""
-      Loop % StrLen(Text)
+      ;Loop % StrLen(Text)
+      Loop, Parse, %Text%
       {
-         Symbol := Chr(NumGet(Text, (A_Index-1)*2, "UChar"))
+         ;Symbol := Chr(NumGet(Text, (A_Index-1)*2, "UChar"))
+         Symbol := A_LoopField
          If Symbol == "`%"
          {
             If (DeRef := !DeRef) && (A_Index != 1)
@@ -681,6 +685,7 @@ ToStringExpr(Text)
             TOut .= Symbol
          }
       }
+
       If Symbol != "`%"
          TOut .= (qu) ; One double quote
    }

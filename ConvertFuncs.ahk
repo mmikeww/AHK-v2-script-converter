@@ -117,7 +117,7 @@ Convert(ScriptString)
    Output := ""
 
    ; parse each line of the input script
-   Loop, Parse, %ScriptString%, `n, `r
+   Loop Parse, ScriptString, "`n", "`r"
    {
       Skip := false
       ;Line := A_LoopReadLine
@@ -145,9 +145,9 @@ Convert(ScriptString)
       ;
       ; first replace any renamed vars/funcs
       ;
-      Loop, Parse, %KeywordsToRename%, `n
+      Loop Parse, KeywordsToRename, "`n"
       {
-         StrSplit, Part, %A_LoopField%, |
+         Part := StrSplit(A_LoopField, "|")
          srchtxt := Trim(Part[1])
          rplctxt := Trim(Part[2])
          if SubStr(srchtxt, -2) = "()"
@@ -354,7 +354,7 @@ Convert(ScriptString)
          {
             AllParams2 := MatchFunc2[1]
             pos := 1, match := ""
-            Loop, Parse, %AllParams2%, `,   ; for each individual param (separate by comma)
+            Loop Parse, AllParams2, "`,"   ; for each individual param (separate by comma)
             {
                thisprm := A_LoopField
                ;msgbox, % "Line:`n" Line "`n`nthisparam:`n" thisprm
@@ -418,9 +418,9 @@ Convert(ScriptString)
          }
          ;msgbox, Line=%Line%`nFirstDelim=%FirstDelim%`nCommand=%Command%`nParams=%Params%
          ; Now we format the parameters into their v2 equivilents
-         Loop, Parse, %CommandsToConvert%, `n
+         Loop Parse, CommandsToConvert, "`n"
          {
-            StrSplit, Part, %A_LoopField%, |
+            Part := StrSplit(A_LoopField, "|")
             ;msgbox % A_LoopField "`n[" part[1] "]`n[" part[2] "]"
             ListDelim := RegExMatch(Part[1], "[,\s]")
             ListCommand := Trim( SubStr(Part[1], 1, ListDelim-1) )
@@ -433,10 +433,10 @@ Convert(ScriptString)
                ;msgbox, CommandMatch`nListCommand=%ListCommand%`nListParams=%ListParams%
                ListParam := Array()
                Param := Array() ; Parameters in expression form
-               Loop, Parse, %ListParams%, `,
+               Loop Parse, ListParams, "`,"
                   ListParam[A_Index] := A_LoopField
                Params := StrReplace(Params, "``,", "ESCAPED_COMMª_PLA¢E_HOLDER")     ; ugly hack
-               Loop, Parse, %Params%, `,
+               Loop Parse, Params, "`,"
                {
                   ; populate array with the params
                   ; only trim preceeding spaces off each param if the param index is within the
@@ -454,7 +454,7 @@ Convert(ScriptString)
                if ((param_num_diff := Param.Length() - ListParam.Length()) > 0)
                {
                   extra_params := ""
-                  Loop, param_num_diff
+                  Loop param_num_diff
                      extra_params .= "," . Param[ListParam.Length() + A_Index]
                   extra_params := SubStr(extra_params, 2)
                   extra_params := StrReplace(extra_params, "ESCAPED_COMMª_PLA¢E_HOLDER", "``,")
@@ -485,12 +485,12 @@ Convert(ScriptString)
                if ((param_num_diff := ListParam.Length() - Param.Length()) > 0)
                {
                   ;msgbox, % "Line:`n`n" Line "`n`nParam.Length=" Param.Length() "`nListParam.Length=" ListParam.Length() "`ndiff=" param_num_diff
-                  Loop, param_num_diff
+                  Loop param_num_diff
                      Param.Push("")
                }
 
                ; convert the params to expression or not
-               Loop, % Param.Length()
+               Loop Param.Length()
                {
                   this_param := Param[A_Index]
                   this_param := StrReplace(this_param, "ESCAPED_COMMª_PLA¢E_HOLDER", "``,")
@@ -548,7 +548,7 @@ Convert(ScriptString)
       
       ; Remove lines we can't use
       If CommandMatch = 0 && !InCommentBlock
-         Loop, Parse, %Remove%, `n, `r
+         Loop Parse, Remove, "`n", "`r"
          {
             If InStr(Orig_Line, A_LoopField)
             {
@@ -622,7 +622,7 @@ ToExp(Text)
       ;msgbox %text%
       TOut := ""
       ;Loop % StrLen(Text)
-      Loop, Parse, %Text%
+      Loop Parse, Text
       {
          ;Symbol := Chr(NumGet(Text, (A_Index-1)*2, "UChar"))
          Symbol := A_LoopField
@@ -679,7 +679,7 @@ ToStringExpr(Text)
    {
       TOut := ""
       ;Loop % StrLen(Text)
-      Loop, Parse, %Text%
+      Loop Parse, Text
       {
          ;Symbol := Chr(NumGet(Text, (A_Index-1)*2, "UChar"))
          Symbol := A_LoopField

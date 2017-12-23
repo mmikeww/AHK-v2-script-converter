@@ -31,6 +31,7 @@ Convert(ScriptString)
       EnvDiv,var,valueCBE2E | {1} /= {2}
       EnvMult,var,valueCBE2E | {1} *= {2}
       EnvUpdate | SendMessage, `% WM_SETTINGCHANGE := 0x001A, 0, Environment,, `% "ahk_id " . HWND_BROADCAST := "0xFFFF"
+      FileAppend,textT2E,fileT2E,encT2E | FileAppend({1}, {2}, {3})
       FileCopyDir,source,dest,flag | DirCopy, {1}, {2}, {3}
       FileCreateDir,dir | DirCreate, {1}
       FileMoveDir,source,dest,flag | DirMove, {1}, {2}, {3}
@@ -529,7 +530,7 @@ Convert(ScriptString)
                   If IsFunc(FuncName)
                      Line := Indentation . %FuncName%(Param)
                }
-               else                               ; else just using the command replacement defined at the top
+               else                               ; else just using the replacement defined at the top
                {
                   ;if (Command = "StringMid")
                      ;msgbox, % "in else`nLine: " Line "`nPart[2]: " Part[2] "`n`nListParam.Length: " ListParam.Length() "`nParam.Length: " Param.Length() "`n`nParam[1]: " Param[1] "`nParam[2]: " Param[2] "`nParam[3]: " Param[3] "`nParam[4]: " Param[4]
@@ -539,7 +540,7 @@ Convert(ScriptString)
                   else
                      Line := Indentation . format_v(Part[2], Param)
 
-                  ; if empty params caused the line to end with extra commas, remove them
+                  ; if empty trailing optional params caused the line to end with extra commas, remove them
                   Line := RegExReplace(Line, "(?:,\s)*$", "")
                }
             }
@@ -839,7 +840,7 @@ _StrReplace(p)
    else
    {
       p5char1 := SubStr(p[5], 1, 1)
-      ;msgbox, % p[5] "`n" p5char1
+      ; MsgBox(p[5] "`n" p5char1)
 
       if (p[5] = "UseErrorLevel")    ; UseErrorLevel also implies ReplaceAll
          return format_v("StrReplace, {1}, `%{2}`%, {3}, {4}, ErrorLevel", p)

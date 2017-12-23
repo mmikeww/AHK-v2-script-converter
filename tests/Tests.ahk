@@ -13,6 +13,10 @@ class ConvertTests
    {
    }
 
+   End()
+   {
+   }
+
    AssignmentString()
    {
       ; we pipe the output of FileAppend to StdOutput
@@ -29,22 +33,22 @@ class ConvertTests
          (Join`r`n %
                                  var := "hello"
                                  msg := var . " world"
-                                 FileAppend, %msg%, *
+                                 FileAppend(msg, "*", "")
          )"
-      ; in v2 that could alternatively be:
-      ; msg := "%var% world"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -59,20 +63,22 @@ class ConvertTests
       expected := "
          (Join`r`n %
                                  msg := "the man said, ``"hello``""
-                                 FileAppend, %msg%, *
+                                 FileAppend(msg, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -87,20 +93,22 @@ class ConvertTests
       expected := "
          (Join`r`n %
                                  msg := "the man said, ``"hello``" " . A_Index
-                                 FileAppend, %msg%, *
+                                 FileAppend(msg, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -115,20 +123,22 @@ class ConvertTests
       expected := "
          (Join`r`n %
                                  msg := "hello world"
-                                 FileAppend, %msg%, *
+                                 FileAppend(msg, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -145,20 +155,22 @@ class ConvertTests
          (Join`r`n %
                                  var := "2"
                                  if (var = 2)
-                                    FileAppend, %var%, *
+                                    FileAppend(var, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -179,20 +191,22 @@ class ConvertTests
                                  var = hello
                                  *`/
                                  var2 := "hello2"
-                                 FileAppend, var=%var%``nvar2=%var2%, *
+                                 FileAppend("var=" . var . "``nvar2=" . var2, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -219,20 +233,22 @@ class ConvertTests
                                  `)
                                  *`/
                                  var2 := "hello2"
-                                 FileAppend, var=%var%``nvar2=%var2%, *
+                                 FileAppend("var=" . var . "``nvar2=" . var2, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -257,20 +273,22 @@ class ConvertTests
                                  line1
                                  line2
                                  `)"
-                                 FileAppend, %var%, *
+                                 FileAppend(var, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -291,20 +309,22 @@ class ConvertTests
                                     `(
                                     hello world
                                     `)"
-                                 FileAppend, %var%, *
+                                 FileAppend(var, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -328,20 +348,22 @@ class ConvertTests
                                  `(
                                  hello
                                  `)"
-                                 FileAppend, %var%, *
+                                 FileAppend(var, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
    */
@@ -369,16 +391,18 @@ class ConvertTests
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -399,16 +423,18 @@ class ConvertTests
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -425,20 +451,22 @@ class ConvertTests
          (Join`r`n %
                                  var := "helloworld"
                                  if (var = "helloworld")
-                                    FileAppend, equal, *
+                                    FileAppend("equal", "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -455,20 +483,22 @@ class ConvertTests
          (Join`r`n %
                                  var := "3"
                                  if (var != "")
-                                    FileAppend, %var%, *
+                                    FileAppend(var, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -485,20 +515,22 @@ class ConvertTests
          (Join`r`n %
                                  var := "8"
                                  if (var = 8)
-                                    FileAppend, %var%, *
+                                    FileAppend(var, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -515,20 +547,22 @@ class ConvertTests
          (Join`r`n %
                                  var := "10"
                                  if (var > 8)
-                                    FileAppend, %var%, *
+                                    FileAppend(var, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -547,20 +581,22 @@ class ConvertTests
                                  MyVar := "joe"
                                  MyVar2 := "joe"
                                  if (MyVar = MyVar2)
-                                     FileAppend, The contents of MyVar and MyVar2 are identical., *
+                                     FileAppend("The contents of MyVar and MyVar2 are identical.", "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -579,20 +615,22 @@ class ConvertTests
                                  MyVar := "joe"
                                  MyVar2 := "``"hello``" joe"
                                  if (MyVar2 = "``"hello``" " . MyVar)
-                                     FileAppend, The contents of MyVar and MyVar2 are identical., *
+                                     FileAppend("The contents of MyVar and MyVar2 are identical.", "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      FileAppend, % expected, expected.txt
-      FileAppend, % converted, converted.txt
-      Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -613,22 +651,24 @@ class ConvertTests
                                  MyVar := "joe"
                                  MyVar2 := ""
                                  if (MyVar = MyVar2)
-                                     FileAppend, The contents of MyVar and MyVar2 are identical., *
+                                     FileAppend("The contents of MyVar and MyVar2 are identical.", "*", "")
                                  else if (MyVar = "")
-                                     FileAppend, MyVar is empty/blank, *
+                                     FileAppend("MyVar is empty/blank", "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -649,22 +689,24 @@ class ConvertTests
                                  MyVar := "joe"
                                  MyVar2 := "joe2"
                                  if (MyVar = MyVar2)
-                                     FileAppend, The contents of MyVar and MyVar2 are identical., *
+                                     FileAppend("The contents of MyVar and MyVar2 are identical.", "*", "")
                                  else if (MyVar <> "")
-                                     FileAppend, MyVar is not empty/blank, *
+                                     FileAppend("MyVar is not empty/blank", "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -684,7 +726,7 @@ class ConvertTests
       expected := "
          (Join`r`n %
                                  if MyFunc()
-                                    FileAppend, %var%, *
+                                    FileAppend(var, "*", "")
 
                                  MyFunc() {
                                     global var := 777
@@ -693,16 +735,18 @@ class ConvertTests
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -721,22 +765,24 @@ class ConvertTests
          (Join`r`n %
                                  var := ""
                                  if not (var = "")
-                                    FileAppend, var is not empty, *
+                                    FileAppend("var is not empty", "*", "")
                                  else
-                                    FileAppend, var is empty, *
+                                    FileAppend("var is empty", "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -753,20 +799,22 @@ class ConvertTests
          (Join`r`n %
                                  method := 1
                                  if( method = 1 )
-                                    FileAppend, %method%, *
+                                    FileAppend(method, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -785,20 +833,22 @@ class ConvertTests
                                  method := 0
                                  while( method = 1 )
                                     break
-                                 FileAppend, %method%, *
+                                 FileAppend(method, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -815,20 +865,22 @@ class ConvertTests
          (Join`r`n %
                                  var := "value"
                                  if (var = "value")
-                                    FileAppend, %var%, *
+                                    FileAppend(var, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -845,20 +897,22 @@ class ConvertTests
          (Join`r`n %
                                  var := "value"
                                  if (var = "value")
-                                    FileAppend, %var%, *
+                                    FileAppend(var, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -875,20 +929,22 @@ class ConvertTests
          (Join`r`n %
                                  var := "value"
                                  if (var = "value"), FileGetSize, size, %A_ScriptDir%\Tests.ahk
-                                 FileAppend, %size%, *
+                                 FileAppend(size, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -905,20 +961,22 @@ class ConvertTests
          (Join`r`n %
                                  var := "value"
                                  if (var = "value")
-                                    FileAppend, %var%, *
+                                    FileAppend(var, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -935,20 +993,22 @@ class ConvertTests
          (Join`r`n %
                                  var := "value"
                                  if (var = "value")
-                                    FileAppend, %var%, *
+                                    FileAppend(var, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -965,20 +1025,22 @@ class ConvertTests
          (Join`r`n %
                                  var := ","
                                  if (var = ",")
-                                    FileAppend, var is a comma, *
+                                    FileAppend("var is a comma", "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -995,20 +1057,22 @@ class ConvertTests
          (Join`r`n %
                                  var := "hello,world"
                                  if (var = "hello,world")
-                                    FileAppend, var matches, *
+                                    FileAppend("var matches", "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 /*
@@ -1038,20 +1102,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n %
                                  var := ","
                                  if (var = ",")
-                                    FileAppend, var is a comma, *
+                                    FileAppend("var is a comma", "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -1073,20 +1139,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n %
                                  var := "hello,world"
                                  if (var = "hello,world")
-                                    FileAppend, var matches, *
+                                    FileAppend("var matches", "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 */
@@ -1103,20 +1171,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n %
                                  var := "val"
                                  if (var != "value")
-                                    FileAppend, %var%, *
+                                    FileAppend(var, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -1133,20 +1203,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n %
                                  var := "value"
                                  if (var >= "value")
-                                    FileAppend, %var%, *
+                                    FileAppend(var, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -1163,20 +1235,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n %
                                  var := "zzz"
                                  if (var > "value")
-                                    FileAppend, %var%, *
+                                    FileAppend(var, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -1193,20 +1267,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n %
                                  var := "hhh"
                                  if (var < "value")
-                                    FileAppend, %var%, *
+                                    FileAppend(var, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -1223,20 +1299,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n %
                                  var := "hhh"
                                  if (var <= "value")
-                                    FileAppend, %var%, *
+                                    FileAppend(var, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -1253,20 +1331,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n %
                                  var := "3"
                                  var *= 5
-                                 FileAppend, %var%, *
+                                 FileAppend(var, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -1285,20 +1365,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  var := "1"
                                  var2 := "2"
                                  var *= var2
-                                 FileAppend, %var%, *
+                                 FileAppend(var, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -1315,20 +1397,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n %
                                  var := "1"
                                  var += 2
-                                 FileAppend, %var%, *
+                                 FileAppend(var, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -1347,20 +1431,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  var := A_Now
                                  var := DateAdd(var, 7, "days")
                                  FormatTime, var, %var%, ShortDate
-                                 FileAppend, %var%, *
+                                 FileAppend(var, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -1379,20 +1465,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  var := "4"
                                  two := 2
                                  var += two
-                                 FileAppend, %var%, *
+                                 FileAppend(var, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -1411,20 +1499,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  var := "4"
                                  two := 2
                                  var += two
-                                 FileAppend, %var%, *
+                                 FileAppend(var, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -1441,20 +1531,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n %
                                  var := "5"
                                  var -= 2
-                                 FileAppend, %var%, *
+                                 FileAppend(var, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -1473,20 +1565,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  var1 := "20050126"
                                  var2 := "20040126"
                                  var1 := DateDiff(var1, var2, "days")
-                                 FileAppend, %var1%, *
+                                 FileAppend(var1, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -1505,20 +1599,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  var := "9"
                                  value := "6"
                                  var -= value
-                                 FileAppend, %var%, *
+                                 FileAppend(var, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -1536,23 +1632,25 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       expected := "
          (Join`r`n %
                                  five := MyFunc()
-                                 FileAppend, %five%, *
+                                 FileAppend(five, "*", "")
                                  MyFunc(var:=5) {
                                     return var
                                  }
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -1570,23 +1668,25 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       expected := "
          (Join`r`n %
                                  five := MyFunc()
-                                 FileAppend, %five%, *
+                                 FileAppend(five, "*", "")
                                  MyFunc(var:=5) {
                                     return var
                                  }
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -1608,21 +1708,23 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
                                  Concat(one, two:="hello,world")
                                  {
-                                    FileAppend, % one . two, *
+                                    FileAppend(one . two, "*", "")
                                  }
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -1644,21 +1746,23 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
                                  Concat(one, two:="hello,world")
                                  {
-                                    FileAppend, % one . two, *
+                                    FileAppend(one . two, "*", "")
                                  }
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -1680,21 +1784,23 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
                                  Concat(one, two:="+5=10")
                                  {
-                                    FileAppend, % one . two, *
+                                    FileAppend(one . two, "*", "")
                                  }
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -1716,21 +1822,23 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
                                  msg(var)
                                  {
-                                    FileAppend, % var, *
+                                    FileAppend(var, "*", "")
                                  }
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -1753,21 +1861,23 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
                                  Concat(one, two:="2")
                                  {
-                                    FileAppend, % one + two, *
+                                    FileAppend(one + two, "*", "")
                                  }
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -1791,21 +1901,23 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
                                  Concat(one, two:="hello,world", three := 3, four := "does 2+2=4?")
                                  {
-                                    FileAppend, % one . two . three . four, *
+                                    FileAppend(one . two . three . four, "*", "")
                                  }
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -1820,20 +1932,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       expected := "
          (Join`r`n %
                                  ; REMOVED: #NoEnv
-                                 FileAppend, hi, *
+                                 FileAppend("hi", "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -1848,20 +1962,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       expected := "
          (Join`r`n %
                                  ; REMOVED: SetFormat, integerfast, H
-                                 FileAppend, hi, *
+                                 FileAppend("hi", "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -1876,20 +1992,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       expected := "
          (Join`r`n %
                                  DriveGet, FreeSpace, SpaceFree, c:\
-                                 FileAppend, %FreeSpace%, *
+                                 FileAppend(FreeSpace, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -1906,20 +2024,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n %
                                  var := "Chris Mallet"
                                  StrUpper, newvar, %var%
-                                 FileAppend, %newvar%, *
+                                 FileAppend(newvar, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -1938,20 +2058,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  var := "chris mallet"
                                  StrLower, newvar, %var%, T
                                  if (newvar == "Chris Mallet")
-                                    FileAppend, it worked, *
+                                    FileAppend("it worked", "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -1968,20 +2090,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n %
                                  InputVar := "The Quick Brown Fox Jumps Over the Lazy Dog"
                                  length := StrLen(InputVar)
-                                 FileAppend, The length of InputVar is %length%., *
+                                 FileAppend("The length of InputVar is " . length . ".", "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -2002,20 +2126,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  Needle := "def"
                                  pos := InStr(Haystack, Needle) - 1
                                  if (pos >= 0)
-                                     FileAppend, The string was found at position %pos%., *
+                                     FileAppend("The string was found at position " . pos . ".", "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -2034,20 +2160,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  Haystack := "abcdefghijklmnopqrs"
                                  pos := InStr(Haystack, "def") - 1
                                  if (pos >= 0)
-                                     FileAppend, The string was found at position %pos%., *
+                                     FileAppend("The string was found at position " . pos . ".", "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -2068,20 +2196,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  Needle := "def"
                                  pos := InStr(Haystack, Needle, (A_StringCaseSense="On") ? true : false, (0)+1, 2) - 1
                                  if (pos >= 0)
-                                     FileAppend, The string was found at position %pos%., *
+                                     FileAppend("The string was found at position " . pos . ".", "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -2102,20 +2232,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  Haystack := "abcdefabcdef"
                                  Needle := "DEF"
                                  pos := InStr(Haystack, Needle, (A_StringCaseSense="On") ? true : false, (0)+1, 2) - 1
-                                 FileAppend, The string was found at position %pos%, *
+                                 FileAppend("The string was found at position " . pos, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -2136,20 +2268,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  Needle := "bcd"
                                  pos := InStr(Haystack, Needle, (A_StringCaseSense="On") ? true : false, -1*((0)+1), 1) - 1
                                  if (pos >= 0)
-                                     FileAppend, The string was found at position %pos%., *
+                                     FileAppend("The string was found at position " . pos . ".", "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -2170,20 +2304,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  Needle := "cde"
                                  pos := InStr(Haystack, Needle, (A_StringCaseSense="On") ? true : false, -1*((0)+1), 2) - 1
                                  if (pos >= 0)
-                                     FileAppend, The string was found at position %pos%., *
+                                     FileAppend("The string was found at position " . pos . ".", "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -2204,20 +2340,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  Needle := "cde"
                                  pos := InStr(Haystack, Needle, (A_StringCaseSense="On") ? true : false, (4)+1, 1) - 1
                                  if (pos >= 0)
-                                     FileAppend, The string was found at position %pos%., *
+                                     FileAppend("The string was found at position " . pos . ".", "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -2240,20 +2378,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  var := "2"
                                  pos := InStr(Haystack, Needle, (A_StringCaseSense="On") ? true : false, (var)+1, 1) - 1
                                  if (pos >= 0)
-                                     FileAppend, The string was found at position %pos%., *
+                                     FileAppend("The string was found at position " . pos . ".", "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -2276,20 +2416,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  var := "1"
                                  pos := InStr(Haystack, Needle, (A_StringCaseSense="On") ? true : false, (var+2)+1, 1) - 1
                                  if (pos >= 0)
-                                     FileAppend, The string was found at position %pos%., *
+                                     FileAppend("The string was found at position " . pos . ".", "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -2312,20 +2454,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  var := "0"
                                  pos := InStr(Haystack, Needle, (A_StringCaseSense="On") ? true : false, -1*((var+2)+1), 2) - 1
                                  if (pos >= 0)
-                                     FileAppend, The string was found at position %pos%., *
+                                     FileAppend("The string was found at position " . pos . ".", "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -2346,20 +2490,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  Needle := "cde"
                                  pos := InStr(Haystack, Needle, (A_StringCaseSense="On") ? true : false, (4)+1, 2) - 1
                                  if (pos >= 0)
-                                     FileAppend, The string was found at position %pos%., *
+                                     FileAppend("The string was found at position " . pos . ".", "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -2380,20 +2526,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  Needle := "cde"
                                  pos := InStr(Haystack, Needle, (A_StringCaseSense="On") ? true : false, -1*((4)+1), 1) - 1
                                  if (pos >= 0)
-                                     FileAppend, The string was found at position %pos%., *
+                                     FileAppend("The string was found at position " . pos . ".", "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -2414,20 +2562,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  Needle := "cde"
                                  pos := InStr(Haystack, Needle, (A_StringCaseSense="On") ? true : false, -1*((4)+1), 2) - 1
                                  if (pos >= 0)
-                                     FileAppend, The string was found at position %pos%., *
+                                     FileAppend("The string was found at position " . pos . ".", "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -2448,20 +2598,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  Needle := "FF"
                                  pos := InStr(Haystack, Needle, (A_StringCaseSense="On") ? true : false, (0)+1, 2) - 1
                                  if (pos >= 0)
-                                     FileAppend, The string was found at position %pos%., *
+                                     FileAppend("The string was found at position " . pos . ".", "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -2478,20 +2630,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n %
                                  Source := "Hello this is a test." 
                                  out := SubStr(Source, 7)
-                                 FileAppend, %out%, *
+                                 FileAppend(out, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -2508,20 +2662,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n %
                                  Source := "Hello this is a test." 
                                  out := SubStr(Source, 7, 4)
-                                 FileAppend, %out%, *
+                                 FileAppend(out, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -2540,20 +2696,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  start := "7"
                                  Source := "Hello this is a test." 
                                  out := SubStr(Source, start, 4)
-                                 FileAppend, %out%, *
+                                 FileAppend(out, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -2574,20 +2732,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  count := "4"
                                  Source := "Hello this is a test." 
                                  out := SubStr(Source, start+5, count)
-                                 FileAppend, %out%, *
+                                 FileAppend(out, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -2604,7 +2764,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n %
                                  InputVar := "The Red Fox"
                                  out := SubStr(SubStr(InputVar, 1, 7), -3)
-                                 FileAppend, %out%, *
+                                 FileAppend(out, "*", "")
          )"
 
                                  ; or two lines:
@@ -2612,16 +2772,18 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  ;out := SubStr(out, -3)
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -2643,20 +2805,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                      out := SubStr(SubStr(InputVar, 1, 7), -3)
                                  else
                                      out := SubStr(InputVar, 7, 3)
-                                 FileAppend, %out%, *
+                                 FileAppend(out, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -2673,20 +2837,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n %
                                  String := "This is a test."
                                  OutputVar := SubStr(String, 1, 4)
-                                 FileAppend, %OutputVar%, *
+                                 FileAppend(OutputVar, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -2705,20 +2871,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  String := "This is a test."
                                  count := 3
                                  OutputVar := SubStr(String, 1, count+1)
-                                 FileAppend, %OutputVar%, *
+                                 FileAppend(OutputVar, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -2735,20 +2903,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n %
                                  String := "This is a test."
                                  OutputVar := SubStr(String, -1*(5))
-                                 FileAppend, %OutputVar%, *
+                                 FileAppend(OutputVar, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -2767,20 +2937,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  String := "This is a test."
                                  count := 6
                                  OutputVar := SubStr(String, -1*(count-1))
-                                 FileAppend, %OutputVar%, *
+                                 FileAppend(OutputVar, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -2797,20 +2969,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n %
                                  String := "This is a test."
                                  OutputVar := SubStr(String, (5)+1)
-                                 FileAppend, %OutputVar%, *
+                                 FileAppend(OutputVar, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -2829,20 +3003,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  String := "This is a test."
                                  count := 5
                                  OutputVar := SubStr(String, (count*1)+1)
-                                 FileAppend, %OutputVar%, *
+                                 FileAppend(OutputVar, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v0(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -2859,20 +3035,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n %
                                  String := "This is a test."
                                  OutputVar := SubStr(String, 1, -1*(6))
-                                 FileAppend, [%OutputVar%], *
+                                 FileAppend("[" . OutputVar . "]", "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -2891,20 +3069,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  String := "This is a test."
                                  count := 3
                                  OutputVar := SubStr(String, 1, -1*(count+3))
-                                 FileAppend, [%OutputVar%], *
+                                 FileAppend("[" . OutputVar . "]", "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -2936,20 +3116,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                           pos := InStr(var, "al") - 1
                                     }
                                  }
-                                 FileAppend, pos=%pos%, *
+                                 FileAppend("pos=" . pos, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -2964,20 +3146,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       expected := "
          (Join`r`n %
                                  WinGetTitle, OutputVar, A
-                                 FileAppend, %OutputVar%, *
+                                 FileAppend(OutputVar, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -2993,20 +3177,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n %
                                  WinGetTitle, title, A
                                  WinGetPos, x, y, w, h, A
-                                 FileAppend, %title%-%w%-%h%-%x%-%y%, *
+                                 FileAppend(title . "-" . w . "-" . h . "-" . x . "-" . y, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -3021,20 +3207,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       expected := "
          (Join`r`n %
                                  var := "value"     ; comment after 5 spaces
-                                 FileAppend, %var%, *
+                                 FileAppend(var, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -3051,20 +3239,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n %
                                  var := "value"
                                  if (var = "value")     ; comment after 5 spaces
-                                    FileAppend, %var%, *
+                                    FileAppend(var, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -3081,20 +3271,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n %
                                  var := "1"
                                  var += 2     ; comment after 5 spaces
-                                 FileAppend, %var%, *
+                                 FileAppend(var, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -3111,20 +3303,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n %
                                  var := "1"
                                  if (var = 1)     ; comment after 5 spaces
-                                    FileAppend, %var%, *
+                                    FileAppend(var, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -3143,16 +3337,18 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -3171,20 +3367,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  x := "+plus"
                                  x := SubStr(x, (1)+1)           ; leading +x -> x
                                  if (x = "plus")
-                                    FileAppend, %x%, *
+                                    FileAppend(x, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -3199,20 +3397,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       expected := "
          (Join`r`n %
                                  var := "value"     ; this line won't be changed by the converter
-                                 FileAppend, %var%, *
+                                 FileAppend(var, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -3230,20 +3430,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n %
                                  var := " helloworld "
                                  var2 := Trim(var)
-                                 FileAppend, %var2%, *
+                                 FileAppend(var2, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
    */
@@ -3263,7 +3465,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       expected := "
          (Join`r`n %
-                                 FileAppend, % MyFunc(), *
+                                 FileAppend(MyFunc(), "*", "")
 
                                  MyFunc() {
                                     var := "hi"
@@ -3273,16 +3475,18 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -3301,7 +3505,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       expected := "
          (Join`r`n %
-                                 FileAppend, % MyFunc(), *
+                                 FileAppend(MyFunc(), "*", "")
 
                                  MyFunc() {
                                     var := "hi"
@@ -3311,16 +3515,18 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -3338,7 +3544,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       expected := "
          (Join`r`n %
-                                 FileAppend, % MyFunc(), *
+                                 FileAppend(MyFunc(), "*", "")
 
                                  MyFunc() {
                                     var := "hi"
@@ -3347,16 +3553,18 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -3375,22 +3583,24 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n %
                                  var := "3.1415"
                                  if (var is "float")
-                                    FileAppend, %var% is float, *
+                                    FileAppend(var . " is float", "*", "")
                                  else if (var is "integer")
-                                    FileAppend, %var% is int, *
+                                    FileAppend(var . " is int", "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -3409,20 +3619,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  var := "3.1415"
                                  type := "float"
                                  if (var is type)
-                                    FileAppend, %var% is float, *
+                                    FileAppend(var . " is float", "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -3441,22 +3653,24 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n %
                                  var := "3.1415"
                                  if !(var is "float")
-                                    FileAppend, %var% is not float, *
+                                    FileAppend(var . " is not float", "*", "")
                                  else if !(var is "integer")
-                                    FileAppend, %var% is not int, *
+                                    FileAppend(var . " is not int", "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -3471,20 +3685,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       expected := "
          (Join`r`n %
                                  if A_IsUnicode
-                                    FileAppend, AHK Unicode %A_IsUnicode%, *
+                                    FileAppend("AHK Unicode " . A_IsUnicode, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -3501,20 +3717,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n %
                                  OldStr := "The_quick_brown_fox"
                                  StrReplace, NewStr, %OldStr%, _,,, 1
-                                 FileAppend, %NewStr%, *
+                                 FileAppend(NewStr, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -3531,20 +3749,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n %
                                  OldStr := "The quick brown fox"
                                  StrReplace, NewStr, %OldStr%, %A_Space%, +,, 1
-                                 FileAppend, %NewStr%, *
+                                 FileAppend(NewStr, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -3561,20 +3781,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n %
                                  OldStr := "The quick brown fox"
                                  StrReplace, NewStr, %OldStr%, %A_Space%, +
-                                 FileAppend, %NewStr%, *
+                                 FileAppend(NewStr, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -3591,20 +3813,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n %
                                  OldStr := "The quick brown fox"
                                  StrReplace, NewStr, %OldStr%, %A_Space%, +, ErrorLevel
-                                 FileAppend, number of replacements: %ErrorLevel%, *
+                                 FileAppend("number of replacements: " . ErrorLevel, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -3623,20 +3847,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  String := "This is a test."
                                  count := 3
                                  OutputVar := SubStr(String, 1, count+1)
-                                 FileAppend, %OutputVar%, *
+                                 FileAppend(OutputVar, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -3653,20 +3879,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n %
                                  OldStr := "The quick brown fox"
                                  StrReplace, NewStr, %OldStr%, % " ", % "+"
-                                 FileAppend, %NewStr%, *
+                                 FileAppend(NewStr, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -3687,20 +3915,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  count := "4"
                                  Source := "Hello this is a test." 
                                  out := SubStr(Source, start+5, count)
-                                 FileAppend, %out%, *
+                                 FileAppend(out, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -3723,20 +3953,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  var := "1"
                                  pos := InStr(Haystack, Needle, (A_StringCaseSense="On") ? true : false, (var+2)+1, 1) - 1
                                  if (pos >= 0)
-                                     FileAppend, The string was found at position %pos%., *
+                                     FileAppend("The string was found at position " . pos . ".", "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -3755,20 +3987,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  Haystack := "abcdefghijklmnopqrs"
                                  pos := InStr(Haystack, "def") - 1
                                  if (pos >= 0)
-                                     FileAppend, The string was found at position %pos%., *
+                                     FileAppend("The string was found at position " . pos . ".", "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -3785,20 +4019,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n %
                                  var := "value"
                                  if (var = "value")
-                                    FileAppend, %var%, *
+                                    FileAppend(var, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -3815,20 +4051,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n %
                                  var := "10"
                                  if (var > 4*2)
-                                    FileAppend, %var%, *
+                                    FileAppend(var, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -3847,20 +4085,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  String := "This is a test."
                                  count := 7
                                  OutputVar := SubStr(String, 1, count)
-                                 FileAppend, %OutputVar%, *
+                                 FileAppend(OutputVar, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -3879,20 +4119,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  String := "This is a test."
                                  count := 7
                                  OutputVar := SubStr(String, 1, count)
-                                 FileAppend, %OutputVar%, *
+                                 FileAppend(OutputVar, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -3911,20 +4153,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  String := "This is a test."
                                  count := 7
                                  OutputVar := SubStr(String, 1, count)
-                                 FileAppend, %OutputVar%, *
+                                 FileAppend(OutputVar, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -3945,20 +4189,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  count := 7
                                  two_letters := "nt"
                                  OutputVar := SubStr(String, 1, cou%two_letters%)
-                                 FileAppend, %OutputVar%, *
+                                 FileAppend(OutputVar, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -3975,16 +4221,18 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -4005,20 +4253,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  start := A_TickCount
                                  Sleep, %half_second%
                                  stop := A_TickCount
-                                 FileAppend, % stop - start, *
+                                 FileAppend(stop - start, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -4039,20 +4289,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  start := A_TickCount
                                  Sleep, %half_second%
                                  stop := A_TickCount
-                                 FileAppend, % stop - start, *
+                                 FileAppend(stop - start, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -4073,20 +4325,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  start := A_TickCount
                                  Sleep, %half_second*2%
                                  stop := A_TickCount
-                                 FileAppend, % stop - start, *
+                                 FileAppend(stop - start, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -4107,20 +4361,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  start := A_TickCount
                                  Sleep, % half_second*2
                                  stop := A_TickCount
-                                 FileAppend, % stop - start, *
+                                 FileAppend(stop - start, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -4137,16 +4393,18 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -4161,20 +4419,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       expected := "
          (Join`r`n %
                                  var := "hello"
-                                 FileAppend, %var%, *
+                                 FileAppend(var, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -4189,20 +4449,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       expected := "
          (Join`r`n %
                                  var := "h,e, l,l,o"
-                                 FileAppend, %var%, *
+                                 FileAppend(var, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -4219,20 +4481,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n %
                                  var := "helloooo"
                                  if (var != "")
-                                    FileAppend, %var%, *
+                                    FileAppend(var, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -4251,20 +4515,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  Haystack := "abcdefghijklmnopqrs"
                                  Needle := "abc"
                                  if InStr(Haystack, Needle, (A_StringCaseSense="On") ? true : false)
-                                    FileAppend, found, *
+                                    FileAppend("found", "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -4281,20 +4547,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n %
                                  Haystack := "abcdefghijklmnopqrs"
                                  if InStr(Haystack, "jklm", (A_StringCaseSense="On") ? true : false)
-                                    FileAppend, found, *
+                                    FileAppend("found", "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -4311,20 +4579,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n %
                                  Haystack := "z.y.x.w"
                                  if InStr(Haystack, "y.x", (A_StringCaseSense="On") ? true : false), SysGet, mouse_btns, 43
-                                 FileAppend, %mouse_btns%, *
+                                 FileAppend(mouse_btns, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -4346,21 +4616,23 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  if InStr(Haystack, "jklm", (A_StringCaseSense="On") ? true : false)
                                  {
                                     Sleep, 10
-                                    FileAppend, found, *
+                                    FileAppend("found", "*", "")
                                  }
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -4377,20 +4649,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n %
                                  Haystack := "abcdefghijklmnopqrs"
                                  if !InStr(Haystack, "jklm", (A_StringCaseSense="On") ? true : false)
-                                    FileAppend, found, *
+                                    FileAppend("found", "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -4405,20 +4679,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       expected := "
          (Join`r`n %
                                  if FileExist("C:\")
-                                    FileAppend, the drive exists, *
+                                    FileAppend("the drive exists", "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -4433,20 +4709,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       expected := "
          (Join`r`n %
                                  if !FileExist("W:\")
-                                    FileAppend, the drive doesn't exist, *
+                                    FileAppend("the drive doesn't exist", "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -4463,22 +4741,24 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       expected := "
          (Join`r`n %
                                  if WinExist("ahk_class Notepad", "", "", "")
-                                    FileAppend, notepad is open, *
+                                    FileAppend("notepad is open", "*", "")
                                  else
-                                    FileAppend, notepad is not open, *
+                                    FileAppend("notepad is not open", "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -4495,22 +4775,24 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       expected := "
          (Join`r`n %
                                  if !WinExist("ahk_class Notepad", "", "", "")
-                                    FileAppend, notepad is not open, *
+                                    FileAppend("notepad is not open", "*", "")
                                  else
-                                    FileAppend, notepad is open, *
+                                    FileAppend("notepad is open", "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -4527,22 +4809,24 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       expected := "
          (Join`r`n %
                                  if WinActive("ahk_class Notepad", "", "", "")
-                                    FileAppend, notepad is Active, *
+                                    FileAppend("notepad is Active", "*", "")
                                  else
-                                    FileAppend, notepad is not Active, *
+                                    FileAppend("notepad is not Active", "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -4559,22 +4843,24 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       expected := "
          (Join`r`n %
                                  if WinActive("", "", "", "")
-                                    FileAppend, last found window is Active, *
+                                    FileAppend("last found window is Active", "*", "")
                                  else
-                                    FileAppend, last found window is not Active, *
+                                    FileAppend("last found window is not Active", "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -4591,22 +4877,24 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       expected := "
          (Join`r`n %
                                  if !WinActive("ahk_class Notepad", "", "", "")
-                                    FileAppend, notepad is not Active, *
+                                    FileAppend("notepad is not Active", "*", "")
                                  else
-                                    FileAppend, notepad is Active, *
+                                    FileAppend("notepad is Active", "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -4625,16 +4913,18 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -4651,16 +4941,18 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -4679,16 +4971,18 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -4707,16 +5001,18 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -4737,16 +5033,18 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -4765,16 +5063,18 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -4793,22 +5093,24 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n %
                                  var := "3.1415"
                                  if (var >= 5 && var <= 10)
-                                    FileAppend, %var% between 5 and 10, *
+                                    FileAppend(var . " between 5 and 10", "*", "")
                                  else if (var >= 1 && var <= 4)
-                                    FileAppend, %var% between 1 and 4, *
+                                    FileAppend(var . " between 1 and 4", "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -4827,22 +5129,24 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n %
                                  var := "3.1415"
                                  if !(var >= 0.0 && var <= 1.0)
-                                    FileAppend, %var% not between 0.0 and 1.0, *
+                                    FileAppend(var . " not between 0.0 and 1.0", "*", "")
                                  else if !(var >= 1 && var <= 4)
-                                    FileAppend, %var% not between 1 and 4, *
+                                    FileAppend(var . " not between 1 and 4", "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -4863,20 +5167,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  varLow := "2"
                                  varHigh := "4"
                                  if (var >= varLow && var <= varHigh)
-                                    FileAppend, %var% between %VarLow% and %VarHigh%, *
+                                    FileAppend(var . " between " . VarLow . " and " . VarHigh, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -4893,20 +5199,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n %
                                  var := "boy"
                                  if (var >= "blue" && var <= "red")
-                                    FileAppend, %var% is alphabetically between 'blue' and 'red', *
+                                    FileAppend(var . " is alphabetically between 'blue' and 'red'", "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -4923,16 +5231,18 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -4951,22 +5261,24 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n %
                                  Loop, Files, Yunit\*.*
                                  {
-                                    FileAppend, %A_LoopFilePath%``n%A_LoopFileFullPath%, *
+                                    FileAppend(A_LoopFilePath . "``n" . A_LoopFileFullPath, "*", "")
                                     break
                                  }
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -4979,20 +5291,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       expected := "
          (Join`r`n %
-                                 FileAppend, % Ord("t"), *
+                                 FileAppend(Ord("t"), "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -5005,20 +5319,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       expected := "
          (Join`r`n %
-                                 FileAppend, % (true) ? Ord("t") . A_ComSpec : Ord("w") . A_ComSpec, *
+                                 FileAppend((true) ? Ord("t") . A_ComSpec : Ord("w") . A_ComSpec, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -5035,20 +5351,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n %
                                  list := "one,two,three"
                                  StrReplace, list, %list%, `,, `,, ErrorLevel
-                                 FileAppend, %ErrorLevel%, *
+                                 FileAppend(ErrorLevel, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      FileAppend(expected, "expected.txt")
+      FileAppend(converted, "converted.txt")
+      RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      FileDelete("expected.txt")
+      FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -5065,20 +5383,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n %
                                  MyVar := "5,3,7,9,1,13,999,-4"
                                  Sort, MyVar, %MyVar%, N D,  ; Sort numerically, use comma as delimiter.
-                                 FileAppend, %MyVar%, *
+                                 FileAppend(MyVar, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -5097,20 +5417,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  FullFileName := "C:\My Documents\Address List.txt"
                                  SplitPath, %FullFileName%, name
                                  SplitPath, %FullFileName%, , dir
-                                 FileAppend, %name%``n%dir%, *
+                                 FileAppend(name . "``n" . dir, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -5129,20 +5451,22 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  FullFileName := "C:\My Documents\Address List.txt"
                                  SplitPath, % FullFileName, name
                                  SplitPath, % FullFileName, , dir
-                                 FileAppend, %name%``n%dir%, *
+                                 FileAppend(name . "``n" . dir, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
@@ -5159,35 +5483,29 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n %
                                  SplitPath, % "C:\My Documents\Address List.txt", name
                                  SplitPath, % "C:\My Documents\Address List.txt", , dir
-                                 FileAppend, %name%``n%dir%, *
+                                 FileAppend(name . "``n" . dir, "*", "")
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ;FileAppend, % expected, expected.txt
-      ;FileAppend, % converted, converted.txt
-      ;Run, ..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "%A_ScriptDir%\expected.txt" "%A_ScriptDir%\converted.txt"
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
-   }
-
-   End()
-   {
    }
 }
 
 
 class ToExpTests
 {
-   Begin()
-   {
-   }
-
    SurroundQuotes()
    {
       Yunit.assert(ToExp("") = "`"`"")
@@ -5251,10 +5569,6 @@ class ToExpTests
    Numbers()
    {
       Yunit.assert(ToExp("10") = "10")
-   }
-
-   End()
-   {
    }
 }
 
@@ -5358,7 +5672,7 @@ class ExecScriptTests
       expected := "
          (Join`r`n %
                                  var := "hello world"
-                                 FileAppend, %var%, *
+                                 FileAppend(var, "*", "")
          )"
 
       ;result_input    := ExecScript_v1(input_script)
@@ -5378,7 +5692,7 @@ class ExecScriptTests
       expected := "
          (Join`r`n %
                                  var := "hello world "
-                                 FileAppend, %var%, *
+                                 FileAppend(var, "*", "")
          )"
 
       ;result_input    := ExecScript_v1(input_script)

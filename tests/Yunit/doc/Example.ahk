@@ -1,8 +1,10 @@
 #Include ..\Yunit.ahk
 #Include ..\Window.ahk
 #Include ..\StdOut.ahk
+#Include ..\JUnit.ahk
+#Include ..\OutputDebug.ahk
 
-Yunit.Use(YunitStdOut, YunitWindow).Test(NumberTestSuite, StringTestSuite)
+Yunit.Use(YunitStdOut, YunitWindow, YunitJUnit, YunitOutputDebug).Test(NumberTestSuite, StringTestSuite)
 
 class NumberTestSuite
 {
@@ -30,8 +32,8 @@ class NumberTestSuite
     
     End()
     {
-        this.remove("x")
-        this.remove("y")
+        this.Delete("x")
+        this.Delete("y")
     }
     
     class Negatives
@@ -70,8 +72,8 @@ class NumberTestSuite
 
         End()
         {
-            this.remove("x")
-            this.remove("y")
+            this.Delete("x")
+            this.Delete("y")
         }
     }
 }
@@ -115,7 +117,7 @@ class StringTestSuite
     
     End()
     {
-        this.remove("a")
-        this.remove("b")
+        this.Delete("a")
+        this.Delete("b")
     }
 }

@@ -4,7 +4,7 @@ class YunitStdOut
     {
         if IsObject(Result)
         {
-            Details := " at line " Result.Line " " Result.Message
+            Details := " at line " Result.Line " " Result.Message "(" Result.File ")"
             Status := "FAIL"
         }
         else
@@ -12,6 +12,6 @@ class YunitStdOut
             Details := ""
             Status := "PASS"
         }
-        FileAppend, %Status%: %Category%.%Test% %Details%`n, *
+        FileAppend Status ": " Category "." Test " " Details "`n", "*"
     }
 }

@@ -15,7 +15,7 @@ class ConvertTests
       ; this omits some tests such as EnvUpdate and FileSelectFile
       ; This is useful to use if the v2alpha syntax has changed and you need to check
       ; if the conversion is still accurate.
-      this.test_exec := false
+      this.test_exec := true
    }
 
    End()
@@ -286,7 +286,7 @@ class ConvertTests
 
       expected := "
          (Join`r`n %
-                                 Sleep, 100
+                                 Sleep(100)
                                  var := "
                                  `(
                                  line1
@@ -1517,7 +1517,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n %
                                  var := A_Now
                                  var := DateAdd(var, 7, "days")
-                                 FormatTime, var, %var%, ShortDate
+                                 var := FormatTime(var, "ShortDate")
                                  FileAppend(var, "*", "")
          )"
 
@@ -2110,7 +2110,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       expected := "
          (Join`r`n %
-                                 DriveGet, FreeSpace, SpaceFree, c:\
+                                 FreeSpace := DriveGetSpaceFree("c:\")
                                  FileAppend(FreeSpace, "*", "")
          )"
 
@@ -2144,7 +2144,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       expected := "
          (Join`r`n %
                                  var := "Chris Mallet"
-                                 StrUpper, newvar, %var%
+                                 newvar := StrUpper(var, "")
                                  FileAppend(newvar, "*", "")
          )"
 
@@ -2179,7 +2179,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       expected := "
          (Join`r`n %
                                  var := "chris mallet"
-                                 StrLower, newvar, %var%, T
+                                 newvar := StrLower(var, "T")
                                  if (newvar == "Chris Mallet")
                                     FileAppend("it worked", "*", "")
          )"
@@ -2361,7 +2361,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       expected := "
          (Join`r`n %
-                                 StringCaseSense, on
+                                 StringCaseSense("on")
                                  Haystack := "abcdefabcdef"
                                  Needle := "DEF"
                                  pos := InStr(Haystack, Needle, (A_StringCaseSense="On") ? true : false, (0)+1, 2) - 1
@@ -3279,7 +3279,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  if (1) {
                                     var = val
                                     if var = hello
-                                 		MsgBox, this line starts with 2 tab characters
+                                 		ToolTip, this line starts with 2 tab characters
                                     else {
                                        ifequal, var, val
                                           StringGetPos, pos, var, al
@@ -3293,7 +3293,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  if (1) {
                                     var := "val"
                                     if (var = "hello")
-                                 		MsgBox, this line starts with 2 tab characters
+                                 		ToolTip("this line starts with 2 tab characters", , , )
                                     else {
                                        if (var = "val")
                                           pos := InStr(var, "al") - 1
@@ -3330,7 +3330,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       expected := "
          (Join`r`n %
-                                 WinGetTitle, OutputVar, A
+                                 OutputVar := WinGetTitle("A")
                                  FileAppend(OutputVar, "*", "")
          )"
 
@@ -3362,8 +3362,8 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       expected := "
          (Join`r`n %
-                                 WinGetTitle, title, A
-                                 WinGetPos, x, y, w, h, A
+                                 title := WinGetTitle("A")
+                                 WinGetPos x, y, w, h, "A"
                                  FileAppend(title . "-" . w . "-" . h . "-" . x . "-" . y, "*", "")
          )"
 
@@ -3935,7 +3935,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       expected := "
          (Join`r`n %
                                  OldStr := "The_quick_brown_fox"
-                                 StrReplace, NewStr, %OldStr%, _,,, 1
+                                 NewStr := StrReplace(OldStr, "_",,, 1)
                                  FileAppend(NewStr, "*", "")
          )"
 
@@ -3969,7 +3969,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       expected := "
          (Join`r`n %
                                  OldStr := "The quick brown fox"
-                                 StrReplace, NewStr, %OldStr%, %A_Space%, +,, 1
+                                 NewStr := StrReplace(OldStr, A_Space, "+",, 1)
                                  FileAppend(NewStr, "*", "")
          )"
 
@@ -4003,7 +4003,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       expected := "
          (Join`r`n %
                                  OldStr := "The quick brown fox"
-                                 StrReplace, NewStr, %OldStr%, %A_Space%, +
+                                 NewStr := StrReplace(OldStr, A_Space, "+")
                                  FileAppend(NewStr, "*", "")
          )"
 
@@ -4037,7 +4037,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       expected := "
          (Join`r`n %
                                  OldStr := "The quick brown fox"
-                                 StrReplace, NewStr, %OldStr%, %A_Space%, +, ErrorLevel
+                                 NewStr := StrReplace(OldStr, A_Space, "+", ErrorLevel)
                                  FileAppend("number of replacements: " . ErrorLevel, "*", "")
          )"
 
@@ -4107,7 +4107,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       expected := "
          (Join`r`n %
                                  OldStr := "The quick brown fox"
-                                 StrReplace, NewStr, %OldStr%, % " ", % "+"
+                                 NewStr := StrReplace(OldStr, " ", "+")
                                  FileAppend(NewStr, "*", "")
          )"
 
@@ -4466,7 +4466,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       expected := "
          (Join`r`n %
-                                 Sleep, 500
+                                 Sleep(500)
          )"
 
       ; first test that our expected code actually produces the same results in v2
@@ -4502,7 +4502,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n %
                                  half_second := 500
                                  start := A_TickCount
-                                 Sleep, %half_second%
+                                 Sleep(half_second)
                                  stop := A_TickCount
                                  FileAppend(stop - start, "*", "")
          )"
@@ -4540,7 +4540,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n %
                                  half_second := 500
                                  start := A_TickCount
-                                 Sleep, %half_second%
+                                 Sleep(half_second)
                                  stop := A_TickCount
                                  FileAppend(stop - start, "*", "")
          )"
@@ -4578,7 +4578,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n %
                                  half_second := 500
                                  start := A_TickCount
-                                 Sleep, %half_second*2%
+                                 Sleep(half_second*2)
                                  stop := A_TickCount
                                  FileAppend(stop - start, "*", "")
          )"
@@ -4616,7 +4616,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n %
                                  half_second := 500
                                  start := A_TickCount
-                                 Sleep, % half_second*2
+                                 Sleep(half_second*2)
                                  stop := A_TickCount
                                  FileAppend(stop - start, "*", "")
          )"
@@ -4849,7 +4849,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       expected := "
          (Join`r`n %
                                  Haystack := "z.y.x.w"
-                                 if InStr(Haystack, "y.x", (A_StringCaseSense="On") ? true : false), SysGet, mouse_btns, 43
+                                 if InStr(Haystack, "y.x", (A_StringCaseSense="On") ? true : false), mouse_btns := SysGet(43)
                                  FileAppend(mouse_btns, "*", "")
          )"
 
@@ -4888,7 +4888,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  Haystack := "abcdefghijklmnopqrs"
                                  if InStr(Haystack, "jklm", (A_StringCaseSense="On") ? true : false)
                                  {
-                                    Sleep, 10
+                                    Sleep(10)
                                     FileAppend("found", "*", "")
                                  }
          )"
@@ -5381,6 +5381,39 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 
+   FormatTime()
+   {
+      input_script := "
+         (Join`r`n %
+                                 FormatTime, TimeString,, Time
+                                 FileAppend, the current time is %TimeString%, *
+         )"
+
+      expected := "
+         (Join`r`n %
+                                 TimeString := FormatTime("", "Time")
+                                 FileAppend("the current time is " . TimeString, "*", "")
+         )"
+
+      ; first test that our expected code actually produces the same results in v2
+      ; if (this.test_exec = true) {
+         ; result_input    := ExecScript_v1(input_script)
+         ; result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; }
+
+      ; then test that our converter will correctly covert the input_script to the expected script
+      converted := Convert(input_script)
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
+      Yunit.assert(converted = expected, "converted output script != expected output script")
+   }
+
+
    IfBetween()
    {
       input_script := "
@@ -5669,7 +5702,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       expected := "
          (Join`r`n %
                                  list := "one,two,three"
-                                 StrReplace, list, %list%, ``,, ``,, ErrorLevel
+                                 list := StrReplace(list, ",", ",", ErrorLevel)
                                  FileAppend(ErrorLevel, "*", "")
          )"
 
@@ -5703,7 +5736,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       expected := "
          (Join`r`n %
                                  MyVar := "5,3,7,9,1,13,999,-4"
-                                 Sort, MyVar, %MyVar%, N D,  ; Sort numerically, use comma as delimiter.
+                                 MyVar := Sort(MyVar, "N D,")  ; Sort numerically, use comma as delimiter.
                                  FileAppend(MyVar, "*", "")
          )"
 
@@ -5738,8 +5771,8 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       expected := "
          (Join`r`n %
                                  FullFileName := "C:\My Documents\Address List.txt"
-                                 SplitPath, %FullFileName%, name
-                                 SplitPath, %FullFileName%, , dir
+                                 SplitPath FullFileName, name
+                                 SplitPath FullFileName, , dir
                                  FileAppend(name . "``n" . dir, "*", "")
          )"
 
@@ -5774,8 +5807,8 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       expected := "
          (Join`r`n %
                                  FullFileName := "C:\My Documents\Address List.txt"
-                                 SplitPath, % FullFileName, name
-                                 SplitPath, % FullFileName, , dir
+                                 SplitPath FullFileName, name
+                                 SplitPath FullFileName, , dir
                                  FileAppend(name . "``n" . dir, "*", "")
          )"
 
@@ -5808,8 +5841,8 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       expected := "
          (Join`r`n %
-                                 SplitPath, % "C:\My Documents\Address List.txt", name
-                                 SplitPath, % "C:\My Documents\Address List.txt", , dir
+                                 SplitPath "C:\My Documents\Address List.txt", name
+                                 SplitPath "C:\My Documents\Address List.txt", , dir
                                  FileAppend(name . "``n" . dir, "*", "")
          )"
 

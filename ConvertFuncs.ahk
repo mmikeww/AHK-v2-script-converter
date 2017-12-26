@@ -25,7 +25,7 @@ Convert(ScriptString)
    ;//          - use asterisk * and a function name to call, for custom processing when the params dont directly match up
    CommandsToConvert := "
    (
-      DriveSpaceFree,OutputVar,Path | DriveGet, {1}, SpaceFree, {2}
+      DriveSpaceFree,OutputVar,PathT2E | {1} := DriveGetSpaceFree({2})
       EnvAdd,var,valueCBE2E,TimeUnitsT2E | *_EnvAdd
       EnvSub,var,valueCBE2E,TimeUnitsT2E | *_EnvSub
       EnvDiv,var,valueCBE2E | {1} /= {2}
@@ -38,6 +38,7 @@ Convert(ScriptString)
       FileRemoveDir,dir,recurse | DirDelete, {1}, {2}
       FileSelectFolder,var,startingdir,opts,prompt | DirSelect, {1}, {2}, {3}, {4}
       FileSelectFile,var,opts,rootdirfile,prompt,filter | FileSelect, {1}, {2}, {3}, {4}, {5}
+      FormatTime,outVar,dateT2E,formatT2E | {1} := FormatTime({2}, {3})
       IfEqual,var,valueT2E | if ({1} = {2})
       IfNotEqual,var,valueT2E | if ({1} != {2})
       IfGreater,var,valueT2E | if ({1} > {2})
@@ -53,9 +54,10 @@ Convert(ScriptString)
       IfWinActive,titleT2E,textT2E,excltitleT2E,excltextT2E | if WinActive({1}, {2}, {3}, {4})
       IfWinNotActive,titleT2E,textT2E,excltitleT2E,excltextT2E | if !WinActive({1}, {2}, {3}, {4})
       SetEnv,var,valueT2E | {1} := {2}
-      Sleep,DelayCBE2T | Sleep, {1}
-      Sort,var,options | Sort, {1}, `%{1}`%, {2}
-      SplitPath,varCBE2T,filename,dir,ext,name_no_ext,drv | SplitPath, {1}, {2}, {3}, {4}, {5}, {6}
+      Sleep,delayCBE2E | Sleep({1})
+      Sort,var,optionsT2E | {1} := Sort({1}, {2})
+      SplitPath,varCBE2E,filename,dir,ext,name_no_ext,drv | SplitPath {1}, {2}, {3}, {4}, {5}, {6}
+      StringCaseSense,paramT2E | StringCaseSense({1})
       StringLen,OutputVar,InputVar | {1} := StrLen({2})
       StringGetPos,OutputVar,InputVar,SearchTextT2E,SideT2E,OffsetCBE2E | *_StringGetPos
       StringMid,OutputVar,InputVar,StartCharCBE2E,CountCBE2E,L_T2E | *_StringMid
@@ -63,11 +65,12 @@ Convert(ScriptString)
       StringRight,OutputVar,InputVar,CountCBE2E | {1} := SubStr({2}, -1*({3}))
       StringTrimLeft,OutputVar,InputVar,CountCBE2E | {1} := SubStr({2}, ({3})+1)
       StringTrimRight,OutputVar,InputVar,CountCBE2E | {1} := SubStr({2}, 1, -1*({3}))
-      StringUpper,OutputVar,InputVar,T| StrUpper, {1}, `%{2}`%, {3}
-      StringLower,OutputVar,InputVar,T| StrLower, {1}, `%{2}`%, {3}
-      StringReplace,OutputVar,InputVar,SearchTxt,ReplTxt,ReplAll | *_StrReplace
+      StringUpper,OutputVar,InputVar,TT2E| {1} := StrUpper({2}, {3})
+      StringLower,OutputVar,InputVar,TT2E| {1} := StrLower({2}, {3})
+      StringReplace,OutputVar,InputVar,SearchTxtT2E,ReplTxtT2E,ReplAll | *_StrReplace
+      ToolTip,txtT2E,xCBE2E,yCBE2E,whichCBE2E | ToolTip({1}, {2}, {3}, {4})
       WinGetActiveStats,TitleVar,WidthVar,HeightVar,XVar,YVar | *_WinGetActiveStats
-      WinGetActiveTitle,OutputVar | WinGetTitle, {1}, A
+      WinGetActiveTitle,OutputVar | {1} := WinGetTitle("A")
    )"
 
 
@@ -461,7 +464,7 @@ Convert(ScriptString)
                   extra_params := StrReplace(extra_params, "ESCAPED_COMMª_PLA¢E_HOLDER", "``,")
                   ;msgbox, % "Line:`n" Line "`n`nCommand=" Command "`nparam_num_diff=" param_num_diff "`nListParam.Length=" ListParam.Length() "`nParam[ListParam.Length]=" Param[ListParam.Length()] "`nextra_params=" extra_params
 
-                  ; 1. could be because of IfCommand with a same-line 'then' action
+                  ; 1. could be because of IfCommand with a same line action
                   ;    such as  `IfEqual, x, 1, Sleep, 1`
                   ;    in which case we need to append these extra params later
                   if_cmds_allowing_sameline_action := "IfEqual|IfNotEqual|IfGreater|IfGreaterOrEqual|"
@@ -745,8 +748,8 @@ IsEmpty(param)
 ;    These are only called in one place in the script and are called dynamicly
 ; =============================================================================
 _WinGetActiveStats(p) {
-   Out := format_v("WinGetTitle, {1}, A", p) . "`r`n"
-   Out .= format_v("WinGetPos, {4}, {5}, {2}, {3}, A", p)
+   Out := format_v("{1} := WinGetTitle(`"A`")", p) . "`r`n"
+   Out .= format_v("WinGetPos {4}, {5}, {2}, {3}, `"A`"", p)
    return Out   
 }
 
@@ -830,25 +833,27 @@ _StrReplace(p)
 {
    ; v1
    ; StringReplace, OutputVar, InputVar, SearchText [, ReplaceText, ReplaceAll?]
-   ; v2
+   ; v2 obsolete
    ; StrReplace, OutputVar, Haystack, SearchText [, ReplaceText, OutputVarCount, Limit = -1]
+   ; v2
+   ; OutputVar := StrReplace(Haystack, SearchText , ReplaceText, OutputVarCount, Limit := -1)
 
    if IsEmpty(p[4]) && IsEmpty(p[5])
-      return format_v("StrReplace, {1}, `%{2}`%, {3},,, 1", p)
+      return format_v("{1} := StrReplace({2}, {3},,, 1)", p)
    else if IsEmpty(p[5])
-      return format_v("StrReplace, {1}, `%{2}`%, {3}, {4},, 1", p)
+      return format_v("{1} := StrReplace({2}, {3}, {4},, 1)", p)
    else
    {
       p5char1 := SubStr(p[5], 1, 1)
       ; MsgBox(p[5] "`n" p5char1)
 
       if (p[5] = "UseErrorLevel")    ; UseErrorLevel also implies ReplaceAll
-         return format_v("StrReplace, {1}, `%{2}`%, {3}, {4}, ErrorLevel", p)
+         return format_v("{1} := StrReplace({2}, {3}, {4}, ErrorLevel)", p)
       else if (p5char1 = "1") || (StrUpper(p5char1) = "A")
          ; if the first char of the ReplaceAll param starts with '1' or 'A'
          ; then all of those imply 'replace all'
          ; https://github.com/Lexikos/AutoHotkey_L/blob/master/source/script2.cpp#L7033
-         return format_v("StrReplace, {1}, `%{2}`%, {3}, {4}", p)
+         return format_v("{1} := StrReplace({2}, {3}, {4})", p)
    }
 }
 

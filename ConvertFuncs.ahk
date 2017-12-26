@@ -544,7 +544,10 @@ Convert(ScriptString)
                      Line := Indentation . format_v(Part[2], Param)
 
                   ; if empty trailing optional params caused the line to end with extra commas, remove them
-                  Line := RegExReplace(Line, "(?:,\s)*$", "")
+                  if SubStr(Line, -1) = ")"
+                     Line := RegExReplace(Line, "(?:, `"?`"?)*\)$", "") . ")"
+                  else
+                     Line := RegExReplace(Line, "(?:,\s)*$", "")
                }
             }
          }

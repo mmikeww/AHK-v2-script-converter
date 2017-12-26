@@ -11,6 +11,11 @@ class ConvertTests
 {
    Begin()
    {
+      ; Set this to 'true' to also test that the execution results match for v1 and v2
+      ; this omits some tests such as EnvUpdate and FileSelectFile
+      ; This is useful to use if the v2alpha syntax has changed and you need to check
+      ; if the conversion is still accurate.
+      this.test_exec := false
    }
 
    End()
@@ -37,10 +42,12 @@ class ConvertTests
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -67,10 +74,12 @@ class ConvertTests
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -97,10 +106,12 @@ class ConvertTests
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -127,10 +138,12 @@ class ConvertTests
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -159,10 +172,12 @@ class ConvertTests
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -195,10 +210,12 @@ class ConvertTests
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -237,10 +254,12 @@ class ConvertTests
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -277,10 +296,12 @@ class ConvertTests
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -313,10 +334,12 @@ class ConvertTests
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -352,10 +375,12 @@ class ConvertTests
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -391,10 +416,12 @@ class ConvertTests
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -423,10 +450,12 @@ class ConvertTests
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -455,10 +484,12 @@ class ConvertTests
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -487,10 +518,12 @@ class ConvertTests
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -519,10 +552,12 @@ class ConvertTests
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -551,10 +586,12 @@ class ConvertTests
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -585,10 +622,12 @@ class ConvertTests
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -619,10 +658,12 @@ class ConvertTests
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -657,10 +698,12 @@ class ConvertTests
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -695,10 +738,12 @@ class ConvertTests
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -735,10 +780,12 @@ class ConvertTests
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -771,10 +818,12 @@ class ConvertTests
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -803,10 +852,12 @@ class ConvertTests
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -837,10 +888,12 @@ class ConvertTests
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -869,10 +922,12 @@ class ConvertTests
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -901,10 +956,12 @@ class ConvertTests
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -933,10 +990,12 @@ class ConvertTests
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -965,10 +1024,12 @@ class ConvertTests
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -997,10 +1058,12 @@ class ConvertTests
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -1029,10 +1092,12 @@ class ConvertTests
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -1061,10 +1126,12 @@ class ConvertTests
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -1106,10 +1173,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -1143,10 +1212,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -1175,10 +1246,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -1207,10 +1280,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -1239,10 +1314,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -1271,10 +1348,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -1303,10 +1382,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -1335,10 +1416,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -1369,10 +1452,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -1401,10 +1486,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -1435,10 +1522,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -1469,10 +1558,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -1503,10 +1594,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -1535,10 +1628,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -1569,10 +1664,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -1603,10 +1700,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -1639,10 +1738,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -1675,10 +1776,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -1713,10 +1816,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -1751,10 +1856,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -1789,10 +1896,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -1827,10 +1936,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -1866,10 +1977,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -1906,10 +2019,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -1936,10 +2051,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -1966,10 +2083,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -1996,10 +2115,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -2028,10 +2149,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -2062,10 +2185,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -2094,10 +2219,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -2130,10 +2257,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -2164,10 +2293,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -2200,10 +2331,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -2236,10 +2369,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -2272,10 +2407,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -2308,10 +2445,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -2344,10 +2483,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -2382,10 +2523,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -2420,10 +2563,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -2458,10 +2603,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -2494,10 +2641,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -2530,10 +2679,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -2566,10 +2717,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -2602,10 +2755,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -2634,10 +2789,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -2666,10 +2823,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -2700,10 +2859,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -2736,10 +2897,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -2772,10 +2935,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  ;out := SubStr(out, -3)
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -2809,10 +2974,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -2841,10 +3008,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -2875,10 +3044,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -2907,10 +3078,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -2941,10 +3114,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -2973,10 +3148,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -3007,10 +3184,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -3039,10 +3218,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -3073,10 +3254,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -3120,10 +3303,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -3150,10 +3335,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -3181,10 +3368,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -3211,10 +3400,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -3243,10 +3434,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -3275,10 +3468,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -3307,10 +3502,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -3337,10 +3534,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -3371,10 +3570,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -3401,10 +3602,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -3434,10 +3637,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -3475,10 +3680,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -3515,10 +3722,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -3553,10 +3762,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -3589,10 +3800,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -3623,10 +3836,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -3659,10 +3874,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -3689,10 +3906,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -3721,10 +3940,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -3753,10 +3974,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -3785,10 +4008,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -3817,10 +4042,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -3851,10 +4078,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -3883,10 +4112,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -3919,10 +4150,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -3957,10 +4190,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -3991,10 +4226,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -4023,10 +4260,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -4055,10 +4294,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -4089,10 +4330,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -4123,10 +4366,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -4157,10 +4402,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -4193,10 +4440,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -4221,10 +4470,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -4257,10 +4508,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -4293,10 +4546,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -4329,10 +4584,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -4365,10 +4622,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -4393,10 +4652,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      ; if (this.test_exec = true) {
+         ; result_input    := ExecScript_v1(input_script)
+         ; result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -4423,10 +4684,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -4453,10 +4716,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -4485,10 +4750,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -4519,10 +4786,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -4551,10 +4820,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -4583,10 +4854,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -4621,10 +4894,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -4653,10 +4928,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -4683,10 +4960,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -4713,10 +4992,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -4747,10 +5028,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -4781,10 +5064,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -4815,10 +5100,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -4849,10 +5136,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -4883,10 +5172,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -4913,10 +5204,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -4941,10 +5234,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -4971,10 +5266,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -5001,10 +5298,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -5033,10 +5332,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      ; if (this.test_exec = true) {
+         ; result_input    := ExecScript_v1(input_script)
+         ; result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -5063,10 +5364,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      ; if (this.test_exec = true) {
+         ; result_input    := ExecScript_v1(input_script)
+         ; result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      ; }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -5099,10 +5402,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -5135,10 +5440,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -5171,10 +5478,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -5203,10 +5512,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -5231,10 +5542,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -5267,10 +5580,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -5295,10 +5610,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -5323,10 +5640,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -5355,10 +5674,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -5387,10 +5708,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -5421,10 +5744,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -5455,10 +5780,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -5487,10 +5814,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       ; first test that our expected code actually produces the same results in v2
-      ; result_input    := ExecScript_v1(input_script)
-      ; result_expected := ExecScript_v2(expected)
-      ; Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
-      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "input v1 execution != expected v2 execution")
+      }
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
@@ -5675,10 +6004,12 @@ class ExecScriptTests
                                  FileAppend(var, "*", "")
          )"
 
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input = result_expected)
+      ; if (this.test_exec = true) {
+         ; result_input    := ExecScript_v1(input_script)
+         ; result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         ; Yunit.assert(result_input = result_expected)
+      ; }
    }
 
    NotEquals()
@@ -5695,10 +6026,12 @@ class ExecScriptTests
                                  FileAppend(var, "*", "")
          )"
 
-      ;result_input    := ExecScript_v1(input_script)
-      ;result_expected := ExecScript_v2(expected)
-      ;MsgBox, 'input_script' results (v1):`n[%result_input%]`n`n'expected' results (v2):`n[%result_expected%]
-      ;Yunit.assert(result_input != result_expected)
+      ; if (this.test_exec = true) {
+         ; result_input    := ExecScript_v1(input_script)
+         ; result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         ; Yunit.assert(result_input != result_expected)
+      ; }
    }
 }
 

@@ -1017,7 +1017,7 @@ class ConvertTests
       input_script := "
          (Join`r`n %
                                  var = ,
-                                 IfEqual, var, `,
+                                 IfEqual, var, ``,
                                     FileAppend, var is a comma, *
          )"
 
@@ -1049,7 +1049,7 @@ class ConvertTests
       input_script := "
          (Join`r`n %
                                  var = hello,world
-                                 IfEqual, var, hello`,world
+                                 IfEqual, var, hello``,world
                                     FileAppend, var matches, *
          )"
 
@@ -5343,14 +5343,14 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       input_script := "
          (Join`r`n %
                                  list := "one,two,three"
-                                 StringReplace list, list, `,, `,, UseErrorLevel
+                                 StringReplace list, list, ``,, ``,, UseErrorLevel
                                  FileAppend, %ErrorLevel%, *
          )"
 
       expected := "
          (Join`r`n %
                                  list := "one,two,three"
-                                 StrReplace, list, %list%, `,, `,, ErrorLevel
+                                 StrReplace, list, %list%, ``,, ``,, ErrorLevel
                                  FileAppend(ErrorLevel, "*", "")
          )"
 
@@ -5362,11 +5362,11 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      FileAppend(expected, "expected.txt")
-      FileAppend(converted, "converted.txt")
-      RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      FileDelete("expected.txt")
-      FileDelete("converted.txt")
+      ; FileAppend(expected, "expected.txt")
+      ; FileAppend(converted, "converted.txt")
+      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+      ; FileDelete("expected.txt")
+      ; FileDelete("converted.txt")
       Yunit.assert(converted = expected, "converted output script != expected output script")
    }
 

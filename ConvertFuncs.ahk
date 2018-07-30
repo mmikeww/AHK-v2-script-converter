@@ -650,7 +650,7 @@ ToExp(Text)
       If Symbol != "`%"
          TOut .= (qu) ; One double quote
    }
-   else if type(Text+0) != "String"
+   else if Text is "number"
    {
       ;msgbox %text%
       TOut := Text+0
@@ -879,7 +879,7 @@ format_v(f, v)
             out .= m.2
             continue
         }
-        key := m.2+0="" ? m.2 : m.2+0  ; +0 to convert to pure number.
+        key := (Type(m.2) = "String") ? m.2 : m.2+0  ; +0 to convert to pure number.
         if !v.HasKey(key) {
             out .= m.0  ; Append original {} string to show the error.
             continue

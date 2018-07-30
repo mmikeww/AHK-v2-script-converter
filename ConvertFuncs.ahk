@@ -245,7 +245,7 @@ Convert(ScriptString)
          InCont := 0
          if (Cont_String = 1)
          {
-            Line_With_Quote_After_Paren := RegExReplace(Line, "\)", ")`"", "", 1)
+            Line_With_Quote_After_Paren := RegExReplace(Line, "\)", ")`"",, 1)
             ;MsgBox, Line:`n%Line%`n`nLine_With_Quote_After_Paren:`n%Line_With_Quote_After_Paren%
             Output .= Line_With_Quote_After_Paren . "`r`n"
             LastLine := Line_With_Quote_After_Paren

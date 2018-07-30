@@ -45,12 +45,12 @@ class Yunit
         environment := new cls() ; calls __New
         for k,v in cls
         {
-            if IsObject(v) && IsFunc(v) ;test
+            if Type(v) = "Func" ;test
             {
                 if (k = "Begin") or (k = "End")
                     continue
                 if ObjHasKey(cls,"Begin") 
-                && IsFunc(cls.Begin)
+                && Type(cls.Begin) = "Func"
                     environment.Begin()
                 result := 0
                 try
@@ -69,7 +69,7 @@ class Yunit
                 ObjDelete(environment, "ExpectedException")
                 this.Update(cls.__class, k, results[k])
                 if ObjHasKey(cls,"End")
-                && IsFunc(cls.End)
+                && Type(cls.End) = "Func"
                     environment.End()
             }
             else if IsObject(v)

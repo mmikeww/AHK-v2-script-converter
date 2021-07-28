@@ -127,13 +127,13 @@ Convert(ScriptString)
       ;Line := A_LoopReadLine
       Line := A_LoopField
       Orig_Line := Line
-      RegExMatch(Line, "^(\s*)", Indentation)
+      RegExMatch(Line, "^(\s*)", &Indentation)
       Indentation := Indentation[1]
       ;msgbox, % "Line:`n" Line "`n`nIndentation=[" Indentation "]`nStrLen(Indentation)=" StrLen(Indentation)
       FirstChar := SubStr(Trim(Line), 1, 1)
       FirstTwo := SubStr(LTrim(Line), 1, 2)
       ;msgbox, FirstChar=%FirstChar%`nFirstTwo=%FirstTwo%
-      if RegExMatch(Line, "(\s+`;.*)$", EOLComment)
+      if RegExMatch(Line, "(\s+`;.*)$", &EOLComment)
       {
          EOLComment := EOLComment[1]
          Line := RegExReplace(Line, "(\s+`;.*)$", "")
@@ -214,7 +214,7 @@ Convert(ScriptString)
            && RegExMatch(Line, "i)^\s*\((?:\s*(?(?<=\s)(?!;)|(?<=\())(\bJoin\S*|[^\s)]+))*(?<!:)(?:\s+;.*)?$")
       {
          InCont := 1
-         ;If RegExMatch(Line, "i)join(.+?)(LTrim|RTrim|Comment|`%|,|``)?", Join)
+         ;If RegExMatch(Line, "i)join(.+?)(LTrim|RTrim|Comment|`%|,|``)?", &Join)
             ;JoinBy := Join[1]
          ;else
             ;JoinBy := "``n"
@@ -273,7 +273,7 @@ Convert(ScriptString)
       ; lexikos says var=value should always be a string, even numbers
       ; https://autohotkey.com/boards/viewtopic.php?p=118181#p118181
       ;
-      else If RegExMatch(Line, "i)^([\s]*[a-z_][a-z_0-9]*[\s]*)=([^;]*)", Equation) ; Thanks Lexikos
+      else If RegExMatch(Line, "i)^([\s]*[a-z_][a-z_0-9]*[\s]*)=([^;]*)", &Equation) ; Thanks Lexikos
       {
          ;msgbox assignment regex`nLine: %Line%`n%Equation[1]%`n%Equation[2]%
          Line := RTrim(Equation[1]) . " := " . ToStringExpr(Equation[2])   ; regex above keeps the indentation already
@@ -283,7 +283,7 @@ Convert(ScriptString)
       ;
       ; Traditional-if to Expression-if
       ;
-      else If RegExMatch(Line, "i)^\s*(else\s+)?if\s+(not\s+)?([a-z_][a-z_0-9]*[\s]*)(!=|=|<>|>=|<=|<|>)([^{;]*)(\s*{?)", Equation)
+      else If RegExMatch(Line, "i)^\s*(else\s+)?if\s+(not\s+)?([a-z_][a-z_0-9]*[\s]*)(!=|=|<>|>=|<=|<|>)([^{;]*)(\s*{?)", &Equation)
       {
          ;msgbox if regex`nLine: %Line%`n1: %Equation[1]%`n2: %Equation[2]%`n3: %Equation[3]%`n4: %Equation[4]%`n5: %Equation[5]%`n6: %Equation[6]%
          Line := Indentation . format_v("{else}if {not}({variable} {op} {value}){otb}"
@@ -299,7 +299,7 @@ Convert(ScriptString)
       ;
       ; if var between
       ;
-      else If RegExMatch(Line, "i)^\s*(else\s+)?if\s+([a-z_][a-z_0-9]*) (\s*not\s+)?between ([^{;]*) and ([^{;]*)(\s*{?)", Equation)
+      else If RegExMatch(Line, "i)^\s*(else\s+)?if\s+([a-z_][a-z_0-9]*) (\s*not\s+)?between ([^{;]*) and ([^{;]*)(\s*{?)", &Equation)
       {
          ;msgbox if regex`nLine: %Line%`n1: %Equation[1]%`n2: %Equation[2]%`n3: %Equation[3]%`n4: %Equation[4]%`n5: %Equation[5]%
          Line := Indentation . format_v("{else}if {not}({var} >= {val1} && {var} <= {val2}){otb}"
@@ -315,7 +315,7 @@ Convert(ScriptString)
       ;
       ; if var is type
       ;
-      else If RegExMatch(Line, "i)^\s*(else\s+)?if\s+([a-z_][a-z_0-9]*) is (not\s+)?([^{;]*)(\s*{?)", Equation)
+      else If RegExMatch(Line, "i)^\s*(else\s+)?if\s+([a-z_][a-z_0-9]*) is (not\s+)?([^{;]*)(\s*{?)", &Equation)
       {
          ;msgbox if regex`nLine: %Line%`n1: %Equation[1]%`n2: %Equation[2]%`n3: %Equation[3]%`n4: %Equation[4]%`n5: %Equation[5]%
          Line := Indentation . format_v("{else}if {not}({variable} is {type}){otb}"
@@ -330,7 +330,7 @@ Convert(ScriptString)
       ;
       ; Replace = with := in function default params
       ;
-      else if RegExMatch(Line, "i)^\s*(\w+)\((.+)\)", MatchFunc)
+      else if RegExMatch(Line, "i)^\s*(\w+)\((.+)\)", &MatchFunc)
            && !(MatchFunc[1] ~= "i)(if|while)")         ; skip if(expr) and while(expr) when no space before paren
       ; this regex matches anything inside the parentheses () for both func definitions, and func calls :(
       {
@@ -341,7 +341,7 @@ Convert(ScriptString)
          ;  - commas: because we will use comma as delimeter to parse each individual param
          ;  - question mark: because we will use that to determine if there is a ternary
          pos := 1, quoted_string_match := ""
-         while (pos := RegExMatch(AllParams, "`".*?`"", MatchObj, pos+StrLen(quoted_string_match)))  ; for each quoted string
+         while (pos := RegExMatch(AllParams, "`".*?`"", &MatchObj, pos+StrLen(quoted_string_match)))  ; for each quoted string
          {
             quoted_string_match := MatchObj.Value(0)
             ;msgbox, % "quoted_string_match=" quoted_string_match "`nlen=" StrLen(quoted_string_match) "`npos=" pos
@@ -354,7 +354,7 @@ Convert(ScriptString)
          ;msgbox, % "Line:`n" Line
 
          ; get all the params again, this time from our line with the placeholders
-         if RegExMatch(Line, "i)^\s*\w+\((.+)\)", MatchFunc2)
+         if RegExMatch(Line, "i)^\s*\w+\((.+)\)", &MatchFunc2)
          {
             AllParams2 := MatchFunc2[1]
             pos := 1, match := ""
@@ -362,7 +362,7 @@ Convert(ScriptString)
             {
                thisprm := A_LoopField
                ;msgbox, % "Line:`n" Line "`n`nthisparam:`n" thisprm
-               if RegExMatch(A_LoopField, "i)([\s]*[a-z_][a-z_0-9]*[\s]*)=([^,\)]*)", ParamWithEquals)
+               if RegExMatch(A_LoopField, "i)([\s]*[a-z_][a-z_0-9]*[\s]*)=([^,\)]*)", &ParamWithEquals)
                {
                   ;msgbox, % "Line:`n" Line "`n`nParamWithEquals:`n" ParamWithEquals[0] "`n" ParamWithEquals[1] "`n" ParamWithEquals[2]
                   ; replace the = with :=
@@ -871,7 +871,7 @@ format_v(f, v)
     out := "" ; To make #Warn happy.
     VarSetCapacity(arg, 8), j := 1, VarSetCapacity(s, StrLen(f)*2.4)  ; Arbitrary estimate (120% * size of Unicode char).
     O_ := A_AhkVersion >= "2" ? "" : "O)"  ; Seems useful enough to support v1.
-    while i := RegExMatch(f, O_ "\{((\w+)(?::([^*`%{}]*([scCdiouxXeEfgGaAp])))?|[{}])\}", m, j)  ; For each {placeholder}.
+    while i := RegExMatch(f, O_ "\{((\w+)(?::([^*`%{}]*([scCdiouxXeEfgGaAp])))?|[{}])\}", &m, j)  ; For each {placeholder}.
     {
         out .= SubStr(f, j, i-j)  ; Append the delimiting literal text.
         j := i + m.Len[0]  ; Calculate next search pos.

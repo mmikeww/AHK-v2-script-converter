@@ -1,4 +1,5 @@
-﻿; =============================================================================
+#SingleInstance Force
+; =============================================================================
 ; Script Converter
 ;    for converting scripts from v1 AutoHotkey to v2
 ;
@@ -18,15 +19,15 @@
 ; Main Part of program
 ;   Many changes can be made without altering this
 ; =============================================================================
-if (A_Args.Length() = 0)
+if (A_Args.Length = 0)
 {
-   FN := FileSelect("", A_MyDocuments, "Choose an AHK v1 file to convert to v2")
+   FN := FileSelect("", A_ScriptDir, "Choose an AHK v1 file to convert to v2")
    If !FN
       ExitApp
    FNOut := SubStr(FN, 1, StrLen(FN)-4) . "_v2new.ahk"
    ;msgbox, %FN%`n%FNOut%
 }
-else If A_Args.Length() = 1 ; Allow a command line param for the file name ex. Run Convert.ahk "MyInputFile.ahk"
+else If A_Args.Length = 1 ; Allow a command line param for the file name ex. Run Convert.ahk "MyInputFile.ahk"
 {
    FN := Trim(A_Args[1])
    FNOut := SubStr(FN, 1, StrLen(FN)-4) . "_v2new.ahk"
@@ -74,7 +75,7 @@ outfile := FileOpen(FNOut, "w", "utf-8")
 outfile.Write(outscript)
 outfile.Close()
 
-If !A_Args.Length()
+If !A_Args.Length
 {
    result := MsgBox("Conversion complete. New file saved:`n`n" FNOut "`n`nWould you like to see the changes made?", "", 68)
    if (result = "Yes")

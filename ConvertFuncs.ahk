@@ -349,7 +349,7 @@ Convert(ScriptString)
             string_with_placeholders := StrReplace(string_with_placeholders, "?", "MY_¿¿¿_PLA¢E_HOLDER")
             string_with_placeholders := StrReplace(string_with_placeholders, "=", "MY_ÈQÜAL§_PLA¢E_HOLDER")
             ;msgbox, %string_with_placeholders%
-            Line := StrReplace(Line, quoted_string_match, string_with_placeholders, Cnt, 1)
+            Line := StrReplace(Line, quoted_string_match, string_with_placeholders, "Off", &Cnt, 1)
          }
          ;msgbox, % "Line:`n" Line
 
@@ -373,7 +373,7 @@ Convert(ScriptString)
                   {
                      TempParam := ParamWithEquals[1] . ":=" . ParamWithEquals[2]
                      ;msgbox, % "Line:`n" Line "`n`nParamWithEquals:`n" ParamWithEquals[0] "`n" TempParam
-                     Line := StrReplace(Line, ParamWithEquals[0], TempParam, Cnt, 1)
+                     Line := StrReplace(Line, ParamWithEquals[0], TempParam, "Off", &Cnt, 1)
                      ;msgbox, % "Line after replacing = with :=`n" Line
                   }
                }
@@ -530,8 +530,9 @@ Convert(ScriptString)
                {
                   FuncName := SubStr(Part[2], 2)
                   ;msgbox FuncName=%FuncName%
-                  If IsFunc(FuncName)
-                     Line := Indentation . %FuncName%(Param)
+                  FuncObj := %FuncName%  ;// https://www.autohotkey.com/boards/viewtopic.php?p=382662#p382662
+                  If FuncObj is Func
+                     Line := Indentation . FuncObj(Param)
                }
                else                               ; else just using the replacement defined at the top
                {
@@ -573,13 +574,13 @@ Convert(ScriptString)
       ;}
       
       ; Put the directives after the first non-comment line
-      If !FoundNonComment && !InCommentBlock && A_Index != 1 && FirstChar != ";" && FirstTwo != "*/"
-      {
+      ;If !FoundNonComment && !InCommentBlock && A_Index != 1 && FirstChar != ";" && FirstTwo != "*/"
+      ;{
          ;Output.Write(Directives . "`r`n")
          ;msgbox, directives
          ;Output .= Directives . "`r`n"
          ;FoundNonComment := true
-      }
+      ;}
       
 
       If Skip

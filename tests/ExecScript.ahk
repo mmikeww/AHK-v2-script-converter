@@ -20,7 +20,7 @@ ExecScript_v1(Script, Wait:=true)
 ExecScript_v2(Script, Wait:=true)
 {
     shell := ComObject("WScript.Shell")
-    ;// the Tests.exe file is just a renamed AHK v2-a076 exe
+    ;// the Tests.exe file is just a renamed AHK v2-beta.1 exe
     exec := shell.Exec("Tests.exe /ErrorStdOut *")
     exec.StdIn.Write(Script)
     exec.StdIn.Close()

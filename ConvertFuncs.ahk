@@ -289,13 +289,20 @@ Convert(ScriptString)
       else If RegExMatch(Line, "i)^\s*(else\s+)?if\s+(not\s+)?([a-z_][a-z_0-9]*[\s]*)(!=|=|<>|>=|<=|<|>)([^{;]*)(\s*{?)", &Equation)
       {
          ;msgbox if regex`nLine: %Line%`n1: %Equation[1]%`n2: %Equation[2]%`n3: %Equation[3]%`n4: %Equation[4]%`n5: %Equation[5]%`n6: %Equation[6]%
-         Line := Indentation . format_v("{else}if {not}({variable} {op} {value}){otb}"
-                                        , { else: Equation[1]
-                                          , not: Equation[2]
-                                          , variable: RTrim(Equation[3])
-                                          , op: Equation[4]
-                                          , value: ToExp(Equation[5])
-                                          , otb: Equation[6] } )
+         ; Line := Indentation . format_v("{else}if {not}({variable} {op} {value}){otb}"
+         ;                                , { else: Equation[1]
+         ;                                  , not: Equation[2]
+         ;                                  , variable: RTrim(Equation[3])
+         ;                                  , op: Equation[4]
+         ;                                  , value: ToExp(Equation[5])
+         ;                                  , otb: Equation[6] } )
+         Line := Indentation . format("{1}if {2}({3} {4} {5}){6}"
+                                                                 , Equation[1]          ;else
+                                                                 , Equation[2]          ;not
+                                                                 , RTrim(Equation[3])   ;variable
+                                                                 , Equation[4]          ;op
+                                                                 , ToExp(Equation[5])   ;value
+                                                                 , Equation[6] )        ;otb
       }
 
       ; -------------------------------------------------------------------------------
@@ -305,13 +312,20 @@ Convert(ScriptString)
       else If RegExMatch(Line, "i)^\s*(else\s+)?if\s+([a-z_][a-z_0-9]*) (\s*not\s+)?between ([^{;]*) and ([^{;]*)(\s*{?)", &Equation)
       {
          ;msgbox if regex`nLine: %Line%`n1: %Equation[1]%`n2: %Equation[2]%`n3: %Equation[3]%`n4: %Equation[4]%`n5: %Equation[5]%
-         Line := Indentation . format_v("{else}if {not}({var} >= {val1} && {var} <= {val2}){otb}"
-                                        , { else: Equation[1]
-                                          , var: Equation[2]
-                                          , not: (Equation[3]) ? "!" : ""
-                                          , val1: ToExp(Equation[4])
-                                          , val2: ToExp(Equation[5])
-                                          , otb: Equation[6] } )
+         ; Line := Indentation . format_v("{else}if {not}({var} >= {val1} && {var} <= {val2}){otb}"
+         ;                                , { else: Equation[1]
+         ;                                  , var: Equation[2]
+         ;                                  , not: (Equation[3]) ? "!" : ""
+         ;                                  , val1: ToExp(Equation[4])
+         ;                                  , val2: ToExp(Equation[5])
+         ;                                  , otb: Equation[6] } )
+         Line := Indentation . format("{1}if {3}({2} >= {4} && {2} <= {5}){6}"
+                                                                , Equation[1]                 ;else
+                                                                , Equation[2]                 ;var
+                                                                , (Equation[3]) ? "!" : ""    ;not
+                                                                , ToExp(Equation[4])          ;val1
+                                                                , ToExp(Equation[5])          ;val2
+                                                                , Equation[6] )               ;otb
       }
 
       ; -------------------------------------------------------------------------------
@@ -321,12 +335,18 @@ Convert(ScriptString)
       else If RegExMatch(Line, "i)^\s*(else\s+)?if\s+([a-z_][a-z_0-9]*) is (not\s+)?([^{;]*)(\s*{?)", &Equation)
       {
          ;msgbox if regex`nLine: %Line%`n1: %Equation[1]%`n2: %Equation[2]%`n3: %Equation[3]%`n4: %Equation[4]%`n5: %Equation[5]%
-         Line := Indentation . format_v("{else}if {not}({variable} is {type}){otb}"
-                                        , { else: Equation[1]
-                                          , not: (Equation[3]) ? "!" : ""
-                                          , variable: Equation[2]
-                                          , type: ToStringExpr(Equation[4])
-                                          , otb: Equation[5] } )
+         ; Line := Indentation . format_v("{else}if {not}({variable} is {type}){otb}"
+         ;                                , { else: Equation[1]
+         ;                                  , not: (Equation[3]) ? "!" : ""
+         ;                                  , variable: Equation[2]
+         ;                                  , type: ToStringExpr(Equation[4])
+         ;                                  , otb: Equation[5] } )
+         Line := Indentation . format("{1}if {3}({2} is {4}){5}"
+                                                                , Equation[1]                 ;else
+                                                                , Equation[2]                 ;var
+                                                                , (Equation[3]) ? "!" : ""    ;not
+                                                                , ToStringExpr(Equation[4])   ;type
+                                                                , Equation[5] )               ;otb
       }
 
       ; -------------------------------------------------------------------------------
@@ -552,9 +572,9 @@ Convert(ScriptString)
                   ; }
 
                   if (same_line_action)
-                     Line := Indentation . format_v(Part[2], Param) . "," extra_params
+                     Line := Indentation . format(Part[2], Param*) . "," extra_params
                   else
-                     Line := Indentation . format_v(Part[2], Param)
+                     Line := Indentation . format(Part[2], Param*)
 
                   ; msgbox("Line after format:`n`n" Line)
                   ; if empty trailing optional params caused the line to end with extra commas, remove them
@@ -599,7 +619,7 @@ Convert(ScriptString)
       If Skip
       {
          ;msgbox Skipping`n%Line%
-         Line := format_v("; REMOVED: {line}", {line: Line})
+         Line := format("; REMOVED: {1}", Line)
       }
 
       ;msgbox, New Line=`n%Line%
@@ -767,30 +787,30 @@ IsEmpty(param)
 ;    These are only called in one place in the script and are called dynamicly
 ; =============================================================================
 _WinGetActiveStats(p) {
-   Out := format_v("{1} := WinGetTitle(`"A`")", p) . "`r`n"
-   Out .= format_v("WinGetPos {4}, {5}, {2}, {3}, `"A`"", p)
+   Out := format("{1} := WinGetTitle(`"A`")", p*) . "`r`n"
+   Out .= format("WinGetPos {4}, {5}, {2}, {3}, `"A`"", p*)
    return Out   
 }
 
 _EnvAdd(p) {
    if !IsEmpty(p[3])
-      return format_v("{1} := DateAdd({1}, {2}, {3})", p)
+      return format("{1} := DateAdd({1}, {2}, {3})", p*)
    else
-      return format_v("{1} += {2}", p)
+      return format("{1} += {2}", p*)
 }
 
 _EnvSub(p) {
    if !IsEmpty(p[3])
-      return format_v("{1} := DateDiff({1}, {2}, {3})", p)
+      return format("{1} := DateDiff({1}, {2}, {3})", p*)
    else
-      return format_v("{1} -= {2}", p)
+      return format("{1} -= {2}", p*)
 }
 
 _StringGetPos(p)
 {
    ;msgbox, % p.Length "`n" p[1] "`n" p[2] "`n" p[3] "`n" p[4] "`n" p[5]
    if IsEmpty(p[4]) && IsEmpty(p[5])
-      return format_v("{1} := InStr({2}, {3}) - 1", p)
+      return format("{1} := InStr({2}, {3}) - 1", p*)
 
    ; modelled off of:   https://github.com/Lexikos/AutoHotkey_L/blob/master/source/script.cpp#L14181
    else
@@ -809,16 +829,16 @@ _StringGetPos(p)
          p[4] := occurences ? occurences : 1
         
          if (StrUpper(p4char1) = "R") || (p4noquotes = "1")
-            return format_v("{1} := InStr({2}, {3}, (A_StringCaseSense=`"On`") ? true : false, -1*(({5})+1), {4}) - 1", p)
+            return format("{1} := InStr({2}, {3}, (A_StringCaseSense=`"On`") ? true : false, -1*(({5})+1), {4}) - 1", p*)
          else
-            return format_v("{1} := InStr({2}, {3}, (A_StringCaseSense=`"On`") ? true : false, ({5})+1, {4}) - 1", p)
+            return format("{1} := InStr({2}, {3}, (A_StringCaseSense=`"On`") ? true : false, ({5})+1, {4}) - 1", p*)
       }
       else
       {
          ; else then a variable was passed (containing the "L#|R#" string),
          ;      or literal text converted to expr, something like:   "L" . A_Index
          ; output something anyway even though it won't work, so that they can see something to fix
-         return format_v("{1} := InStr({2}, {3}, (A_StringCaseSense=`"On`") ? true : false, ({5})+1, {4}) - 1", p)
+         return format("{1} := InStr({2}, {3}, (A_StringCaseSense=`"On`") ? true : false, ({5})+1, {4}) - 1", p*)
       }
    }
 }
@@ -827,21 +847,21 @@ _StringGetPos(p)
 _StringMid(p)
 {
    if IsEmpty(p[4]) && IsEmpty(p[5])
-      return format_v("{1} := SubStr({2}, {3})", p)
+      return format("{1} := SubStr({2}, {3})", p*)
    else if IsEmpty(p[5])
-      return format_v("{1} := SubStr({2}, {3}, {4})", p)
+      return format("{1} := SubStr({2}, {3}, {4})", p*)
    else
    {
       ;msgbox, % p[5] "`n" SubStr(p[5], 1, 2)
       ; any string that starts with 'L' is accepted
       if (StrUpper(SubStr(p[5], 2, 1) = "L"))
-         return format_v("{1} := SubStr(SubStr({2}, 1, {3}), -{4})", p)
+         return format("{1} := SubStr(SubStr({2}, 1, {3}), -{4})", p*)
       else
       {
-         out := format_v("if (SubStr({5}, 1, 1) = `"L`")", p) . "`r`n"
-         out .= format_v("    {1} := SubStr(SubStr({2}, 1, {3}), -{4})", p) . "`r`n"
-         out .= format_v("else", p) . "`r`n"
-         out .= format_v("    {1} := SubStr({2}, {3}, {4})", p)
+         out := format("if (SubStr({5}, 1, 1) = `"L`")", p*) . "`r`n"
+         out .= format("    {1} := SubStr(SubStr({2}, 1, {3}), -{4})", p*) . "`r`n"
+         out .= format("else", p) . "`r`n"
+         out .= format("    {1} := SubStr({2}, {3}, {4})", p*)
          return out
       }
    }
@@ -858,74 +878,24 @@ _StrReplace(p)
    ; OutputVar := StrReplace(Haystack, SearchText , ReplaceText, OutputVarCount, Limit := -1)
 
    if IsEmpty(p[4]) && IsEmpty(p[5])
-      return format_v("{1} := StrReplace({2}, {3},,, 1)", p)
+      return format("{1} := StrReplace({2}, {3},,, 1)", p*)
    else if IsEmpty(p[5])
-      return format_v("{1} := StrReplace({2}, {3}, {4},, 1)", p)
+      return format("{1} := StrReplace({2}, {3}, {4},, 1)", p*)
    else
    {
       p5char1 := SubStr(p[5], 1, 1)
       ; MsgBox(p[5] "`n" p5char1)
 
       if (p[5] = "UseErrorLevel")    ; UseErrorLevel also implies ReplaceAll
-         return format_v("{1} := StrReplace({2}, {3}, {4}, ErrorLevel)", p)
+         return format("{1} := StrReplace({2}, {3}, {4}, ErrorLevel)", p*)
       else if (p5char1 = "1") || (StrUpper(p5char1) = "A")
          ; if the first char of the ReplaceAll param starts with '1' or 'A'
          ; then all of those imply 'replace all'
          ; https://github.com/Lexikos/AutoHotkey_L/blob/master/source/script2.cpp#L7033
-         return format_v("{1} := StrReplace({2}, {3}, {4})", p)
+         return format("{1} := StrReplace({2}, {3}, {4})", p*)
    }
 }
 
 
 ; =============================================================================
-
-
-
-format_v(f, v)
-{
-    local out, arg, i, j, s, m, key, buf, c, type, p, O_
-    out := "" ; To make #Warn happy.
-    VarSetCapacity(arg, 8), j := 1, VarSetCapacity(s, StrLen(f)*2.4)  ; Arbitrary estimate (120% * size of Unicode char).
-    O_ := A_AhkVersion >= "2" ? "" : "O)"  ; Seems useful enough to support v1.
-    while i := RegExMatch(f, O_ "\{((\w+)(?::([^*`%{}]*([scCdiouxXeEfgGaAp])))?|[{}])\}", &m, j)  ; For each {placeholder}.
-    {
-        out .= SubStr(f, j, i-j)  ; Append the delimiting literal text.
-        j := i + m.Len[0]  ; Calculate next search pos.
-        if (m.1 = "{" || m.1 = "}") {  ; {{} or {}}.
-            out .= m.2
-            continue
-        }
-        key := (Type(m.2) = "String") ? m.2 : m.2+0  ; +0 to convert to pure number.
-        if !v.HasKey(key) {
-            out .= m.0  ; Append original {} string to show the error.
-            continue
-        }
-        if m.3 = "" {
-            out .= v[key]  ; No format specifier, so just output the value.
-            ;if InStr(out, "var")
-            ;   msgbox, %out%
-            continue
-        }
-        if (type := m.4) = "s"
-            NumPut((p := v.GetAddress(key)) ? p : &(s := v[key] ""), arg)
-        else if InStr("cdioux", type)  ; Integer types.
-            NumPut(v[key], arg, "int64") ; 64-bit in case of something like {1:I64i}.
-        else if InStr("efga", type)  ; Floating-point types.
-            NumPut(v[key], arg, "double")
-        else if (type = "p")  ; Pointer type.
-            NumPut(v[key], arg)
-        else {  ; Note that this doesn't catch errors like "{1:si}".
-            out .= m.0  ; Output m unaltered to show the error.
-            continue
-        }
-        ; MsgBox % "key=" key ",fmt=" m.3 ",typ=" m.4 . (m.4="s" ? ",str=" NumGet(arg) ";" (&s) : "")
-        if (c := DllCall("msvcrt\_vscwprintf", "wstr", "`%" m.3, "ptr", &arg, "cdecl")) >= 0  ; Determine required buffer size.
-          && DllCall("msvcrt\_vsnwprintf", "wstr", buf, "ptr", VarSetCapacity(buf, ++c*2)//2, "wstr", "`%" m.3, "ptr", &arg, "cdecl") >= 0 {  ; Format string into buf.
-            out .= buf  ; Append formatted string.
-            continue
-        }
-    }
-    out .= SubStr(f, j)  ; Append remainder of format string.
-    return out
-}
 

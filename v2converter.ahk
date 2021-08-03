@@ -32,7 +32,7 @@ else If A_Args.Length = 1 ; Allow a command line param for the file name ex. Run
    FN := Trim(A_Args[1])
    FNOut := SubStr(FN, 1, StrLen(FN)-4) . "_v2new.ahk"
 }
-else if Mod(A_Args.Length(), 2) = 0 ; Parse arguments with linux like syntax, ex. Run Convert.ahk --input "Inputfile.ahk" -o "OutputFile.ahk"
+else if Mod(A_Args.Length, 2) = 0 ; Parse arguments with linux like syntax, ex. Run Convert.ahk --input "Inputfile.ahk" -o "OutputFile.ahk"
 {
    for i, P in A_Args
    {

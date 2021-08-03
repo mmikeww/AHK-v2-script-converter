@@ -447,22 +447,22 @@ Convert(ScriptString)
                   ; command's number of allowable params. otherwise, dont trim the spaces
                   ; for ex:  `IfEqual, x, h, e, l, l, o`   should be   `if (x = "h, e, l, l, o")`
                   ; see ~10 lines below
-                  if (A_Index <= ListParam.Length())
+                  if (A_Index <= ListParam.Length)
                      Param[A_Index] := LTrim(A_LoopField)   ; trim leading spaces off each param
                   else
                      Param[A_Index] := A_LoopField
                }
-               ;msgbox, % "Line:`n`n" Line "`n`nParam.Length=" Param.Length() "`nListParam.Length=" ListParam.Length()
+               ;msgbox, % "Line:`n`n" Line "`n`nParam.Length=" Param.Length "`nListParam.Length=" ListParam.Length
 
                ; if we detect TOO MANY PARAMS, could be for 2 reasons
-               if ((param_num_diff := Param.Length() - ListParam.Length()) > 0)
+               if ((param_num_diff := Param.Length - ListParam.Length) > 0)
                {
                   extra_params := ""
                   Loop param_num_diff
-                     extra_params .= "," . Param[ListParam.Length() + A_Index]
+                     extra_params .= "," . Param[ListParam.Length + A_Index]
                   extra_params := SubStr(extra_params, 2)
                   extra_params := StrReplace(extra_params, "ESCAPED_COMMª_PLA¢E_HOLDER", "``,")
-                  ;msgbox, % "Line:`n" Line "`n`nCommand=" Command "`nparam_num_diff=" param_num_diff "`nListParam.Length=" ListParam.Length() "`nParam[ListParam.Length]=" Param[ListParam.Length()] "`nextra_params=" extra_params
+                  ;msgbox, % "Line:`n" Line "`n`nCommand=" Command "`nparam_num_diff=" param_num_diff "`nListParam.Length=" ListParam.Length "`nParam[ListParam.Length]=" Param[ListParam.Length] "`nextra_params=" extra_params
 
                   ; 1. could be because of IfCommand with a same line action
                   ;    such as  `IfEqual, x, 1, Sleep, 1`
@@ -480,21 +480,21 @@ Convert(ScriptString)
                   ;    from:   https://autohotkey.com/docs/commands/_EscapeChar.htm
                   else
                   {
-                     Param[ListParam.Length()] .= "," extra_params
-                     ;msgbox, % "Line:`n" Line "`n`nCommand=" Command "`nparam_num_diff=" param_num_diff "`nListParam.Length=" ListParam.Length() "`nParam[ListParam.Length]=" Param[ListParam.Length()] "`nextra_params=" extra_params
+                     Param[ListParam.Length] .= "," extra_params
+                     ;msgbox, % "Line:`n" Line "`n`nCommand=" Command "`nparam_num_diff=" param_num_diff "`nListParam.Length=" ListParam.Length "`nParam[ListParam.Length]=" Param[ListParam.Length] "`nextra_params=" extra_params
                   }
                }
 
                ; if we detect TOO FEW PARAMS, fill with empty strings (see Issue #5)
-               if ((param_num_diff := ListParam.Length() - Param.Length()) > 0)
+               if ((param_num_diff := ListParam.Length - Param.Length) > 0)
                {
-                  ;msgbox, % "Line:`n`n" Line "`n`nParam.Length=" Param.Length() "`nListParam.Length=" ListParam.Length() "`ndiff=" param_num_diff
+                  ;msgbox, % "Line:`n`n" Line "`n`nParam.Length=" Param.Length "`nListParam.Length=" ListParam.Length "`ndiff=" param_num_diff
                   Loop param_num_diff
                      Param.Push("")
                }
 
                ; convert the params to expression or not
-               Loop Param.Length()
+               Loop Param.Length
                {
                   this_param := Param[A_Index]
                   this_param := StrReplace(this_param, "ESCAPED_COMMª_PLA¢E_HOLDER", "``,")
@@ -537,7 +537,7 @@ Convert(ScriptString)
                else                               ; else just using the replacement defined at the top
                {
                   ;if (Command = "StringMid")
-                     ;msgbox, % "in else`nLine: " Line "`nPart[2]: " Part[2] "`n`nListParam.Length: " ListParam.Length() "`nParam.Length: " Param.Length() "`n`nParam[1]: " Param[1] "`nParam[2]: " Param[2] "`nParam[3]: " Param[3] "`nParam[4]: " Param[4]
+                     ;msgbox, % "in else`nLine: " Line "`nPart[2]: " Part[2] "`n`nListParam.Length: " ListParam.Length "`nParam.Length: " Param.Length "`n`nParam[1]: " Param[1] "`nParam[2]: " Param[2] "`nParam[3]: " Param[3] "`nParam[4]: " Param[4]
 
                   if (same_line_action)
                      Line := Indentation . format_v(Part[2], Param) . "," extra_params
@@ -773,7 +773,7 @@ _EnvSub(p) {
 
 _StringGetPos(p)
 {
-   ;msgbox, % p.Length() "`n" p[1] "`n" p[2] "`n" p[3] "`n" p[4] "`n" p[5]
+   ;msgbox, % p.Length "`n" p[1] "`n" p[2] "`n" p[3] "`n" p[4] "`n" p[5]
    if IsEmpty(p[4]) && IsEmpty(p[5])
       return format_v("{1} := InStr({2}, {3}) - 1", p)
 

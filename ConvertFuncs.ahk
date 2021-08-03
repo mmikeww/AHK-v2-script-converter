@@ -222,7 +222,7 @@ Convert(ScriptString)
          ;else
             ;JoinBy := "``n"
          ;MsgBox, Start of continuation section`nLine:`n%Line%`n`nLastLine:`n%LastLine%`n`nOutput:`n[`n%Output%`n]
-         If InStr(LastLine, ":= `"`"")
+         If InStr(LastLine, ':= ""')
          {
             ; if LastLine was something like:                                  var := ""
             ; that means that the line before conversion was:                  var = 
@@ -344,7 +344,7 @@ Convert(ScriptString)
          ;  - commas: because we will use comma as delimeter to parse each individual param
          ;  - question mark: because we will use that to determine if there is a ternary
          pos := 1, quoted_string_match := ""
-         while (pos := RegExMatch(AllParams, "`".*?`"", &MatchObj, pos+StrLen(quoted_string_match)))  ; for each quoted string
+         while (pos := RegExMatch(AllParams, '".*?"', &MatchObj, pos+StrLen(quoted_string_match)))  ; for each quoted string
          {
             quoted_string_match := MatchObj.Value(0)
             ;msgbox, % "quoted_string_match=" quoted_string_match "`nlen=" StrLen(quoted_string_match) "`npos=" pos
@@ -361,7 +361,7 @@ Convert(ScriptString)
          {
             AllParams2 := MatchFunc2[1]
             pos := 1, match := ""
-            Loop Parse, AllParams2, "`,"   ; for each individual param (separate by comma)
+            Loop Parse, AllParams2, ","   ; for each individual param (separate by comma)
             {
                thisprm := A_LoopField
                ;msgbox, % "Line:`n" Line "`n`nthisparam:`n" thisprm
@@ -397,7 +397,7 @@ Convert(ScriptString)
       else if (Trim(SubStr(Line, 1, FirstDelim := RegExMatch(Line, "\w[,\s]"))) = "return")
       {
          Params := SubStr(Line, FirstDelim+2)
-         if RegExMatch(Params, "^`%\w+`%$")       ; if the var is wrapped in %%, then remove them
+         if RegExMatch(Params, "^%\w+%$")       ; if the var is wrapped in %%, then remove them
          {
             Params := SubStr(Params, 2, -1)
             Line := Indentation . "return " . Params . EOLComment  ; 'return' is the only command that we won't use a comma before the 1st param
@@ -440,10 +440,10 @@ Convert(ScriptString)
                ;    msgbox("CommandMatch`nListCommand=" ListCommand "`nListParams=" ListParams)
                ListParam := Array()
                Param := Array() ; Parameters in expression form
-               Loop Parse, ListParams, "`,"
+               Loop Parse, ListParams, ","
                   ListParam.Push(A_LoopField)
                Params := StrReplace(Params, "``,", "ESCAPED_COMMª_PLA¢E_HOLDER")     ; ugly hack
-               Loop Parse, Params, "`,"
+               Loop Parse, Params, ","
                {
                   ; populate array with the params
                   ; only trim preceeding spaces off each param if the param index is within the
@@ -511,7 +511,7 @@ Convert(ScriptString)
                   }
                   else if (ListParam[A_Index] ~= "CBE2E$")    ; 'Can Be an Expression TO an Expression'
                   {
-                     if (SubStr(this_param, 1, 2) = "`% ")            ; if this param expression was forced
+                     if (SubStr(this_param, 1, 2) = "% ")            ; if this param expression was forced
                         Param[A_Index] := SubStr(this_param, 3)       ; remove the forcing
                      else
                         Param[A_Index] := RemoveSurroundingPercents(this_param)
@@ -519,11 +519,11 @@ Convert(ScriptString)
                   else if (ListParam[A_Index] ~= "CBE2T$")    ; 'Can Be an Expression TO literal Text'
                   {
                      if (this_param is "integer")                                               ; if this param is int
-                     || (SubStr(this_param, 1, 2) = "`% ")                                      ; or the expression was forced
-                     || ((SubStr(this_param, 1, 1) = "`%") && (SubStr(this_param, -1) = "`%"))  ; or var already wrapped in %%s
+                     || (SubStr(this_param, 1, 2) = "% ")                                      ; or the expression was forced
+                     || ((SubStr(this_param, 1, 1) = "%") && (SubStr(this_param, -1) = "%"))  ; or var already wrapped in %%s
                         Param[A_Index] := this_param                  ; dont do any conversion
                      else
-                        Param[A_Index] := "`%" . this_param . "`%"    ; wrap in percent signs to evaluate the expr
+                        Param[A_Index] := "%" . this_param . "%"    ; wrap in percent signs to evaluate the expr
                   }
                   else
                   {
@@ -559,7 +559,7 @@ Convert(ScriptString)
                   ; msgbox("Line after format:`n`n" Line)
                   ; if empty trailing optional params caused the line to end with extra commas, remove them
                   if SubStr(Line, -1) = ")"
-                     Line := RegExReplace(Line, "(?:, `"?`"?)*\)$", "") . ")"
+                     Line := RegExReplace(Line, '(?:, "?"?)*\)$', "") . ")"
                   else
                      Line := RegExReplace(Line, "(?:,\s)*$", "")
                }
@@ -625,7 +625,7 @@ Convert(ScriptString)
 ; =============================================================================
 ToExp(Text)
 {
-   static qu := "`"" ; Constant for double quotes
+   static qu := '"'  ; Constant for double quotes
    static bt := "``" ; Constant for backtick to escape
    Text := Trim(Text, " `t")
 
@@ -638,7 +638,7 @@ ToExp(Text)
    Text := StrReplace(Text, bt . ",", ",")  ; then remove escape char for comma
    ;msgbox text=%text%
 
-   if InStr(Text, "`%")        ; deref   %var% -> var
+   if InStr(Text, "%")        ; deref   %var% -> var
    {
       ;msgbox %text%
       TOut := ""
@@ -648,7 +648,7 @@ ToExp(Text)
       {
          ;Symbol := Chr(NumGet(Text, (A_Index-1)*2, "UChar"))
          Symbol := A_LoopField
-         If Symbol == "`%"
+         If Symbol == "%"
          {
             If (DeRef := !DeRef) && (A_Index != 1)
                TOut .= qu . " . "
@@ -662,7 +662,7 @@ ToExp(Text)
             TOut .= Symbol
          }
       }
-      If Symbol != "`%"
+      If Symbol != "%"
          TOut .= (qu) ; One double quote
    }
    else if Text is "number"
@@ -684,7 +684,7 @@ ToExp(Text)
 ; that is, a number will be turned into a quoted number.  3 -> "3"
 ToStringExpr(Text)
 {
-   static qu := "`"" ; Constant for double quotes
+   static qu := '"'  ; Constant for double quotes
    static bt := "``" ; Constant for backtick to escape
    Text := Trim(Text, " `t")
 
@@ -697,7 +697,7 @@ ToStringExpr(Text)
    Text := StrReplace(Text, bt . ",", ",")  ; then remove escape char for comma
    ;msgbox("text=" text)
 
-   if InStr(Text, "`%")        ; deref   %var% -> var
+   if InStr(Text, "%")        ; deref   %var% -> var
    {
       TOut := ""
       DeRef := 0
@@ -706,7 +706,7 @@ ToStringExpr(Text)
       {
          ;Symbol := Chr(NumGet(Text, (A_Index-1)*2, "UChar"))
          Symbol := A_LoopField
-         If Symbol == "`%"
+         If Symbol == "%"
          {
             If (DeRef := !DeRef) && (A_Index != 1)
                TOut .= qu . " . "
@@ -721,7 +721,7 @@ ToStringExpr(Text)
          }
       }
 
-      If Symbol != "`%"
+      If Symbol != "%"
          TOut .= (qu) ; One double quote
    }
    ;else if type(Text+0) != "String"

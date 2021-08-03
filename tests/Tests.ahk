@@ -4,7 +4,7 @@
 #Include ExecScript.ahk
 
 Yunit.Use(YunitWindow).Test(ConvertTests, ToExpTests, ToStringExprTests
-                          , RemoveSurroundingQuotes, RemoveSurroundingPercents, ExecScriptTests)
+                          , RemoveSurroundingQuotesTests, RemoveSurroundingPercentsTests, ExecScriptTests)
 
 
 class ConvertTests
@@ -28,14 +28,14 @@ class ConvertTests
       ; then ExecScript() executes the script and reads from StdOut
 
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  var = hello
                                  msg = %var% world
                                  FileAppend, %msg%, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  var := "hello"
                                  msg := var . " world"
                                  FileAppend(msg, "*")
@@ -62,13 +62,13 @@ class ConvertTests
    AssignmentStringWithQuotes()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  msg = the man said, "hello"
                                  FileAppend, %msg%, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  msg := "the man said, ``"hello``""
                                  FileAppend(msg, "*")
          )"
@@ -94,13 +94,13 @@ class ConvertTests
    AssignmentStringWithQuotesAndVar()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  msg = the man said, "hello" %A_Index%
                                  FileAppend, %msg%, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  msg := "the man said, ``"hello``" " . A_Index
                                  FileAppend(msg, "*")
          )"
@@ -126,13 +126,13 @@ class ConvertTests
    AssignmentStringWithPreceedingSpaces()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  msg =    hello world   
                                  FileAppend, %msg%, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  msg := "hello world"
                                  FileAppend(msg, "*")
          )"
@@ -158,14 +158,14 @@ class ConvertTests
    AssignmentNumber()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  var = 2
                                  if (var = 2)
                                     FileAppend, %var%, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  var := "2"
                                  if (var = 2)
                                     FileAppend(var, "*")
@@ -192,7 +192,7 @@ class ConvertTests
    CommentBlock()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  /`*
                                  var = hello
                                  *`/
@@ -201,7 +201,7 @@ class ConvertTests
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  /`*
                                  var = hello
                                  *`/
@@ -230,7 +230,7 @@ class ConvertTests
    CommentBlock_ContinuationInside()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  /`*
                                  var = 
                                  `(
@@ -242,7 +242,7 @@ class ConvertTests
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  /`*
                                  var = 
                                  `(
@@ -274,7 +274,7 @@ class ConvertTests
    Continuation_Assignment()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  Sleep, 100
                                  var =
                                  `(
@@ -285,7 +285,7 @@ class ConvertTests
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  Sleep(100)
                                  var := "
                                  `(
@@ -316,7 +316,7 @@ class ConvertTests
    Continuation_Assignment_indented()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  var =
                                     `(
                                     hello world
@@ -325,7 +325,7 @@ class ConvertTests
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  var := "
                                     `(
                                     hello world
@@ -355,7 +355,7 @@ class ConvertTests
    Continuation_NewlinePreceding()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  var =
 
                                  `(
@@ -365,7 +365,7 @@ class ConvertTests
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  var := "
 
                                  `(
@@ -396,7 +396,7 @@ class ConvertTests
    Continuation_CommandParam()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  var := 9
                                  FileAppend, 
                                  `(
@@ -406,7 +406,7 @@ class ConvertTests
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  var := 9
                                  FileAppend, 
                                  `(
@@ -436,14 +436,14 @@ class ConvertTests
    Ternary_NotAContinuation()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  var := true
                                  ( var ) ? x : y
                                  var2 = value2
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  var := true
                                  ( var ) ? x : y
                                  var2 := "value2"
@@ -470,14 +470,14 @@ class ConvertTests
    Traditional_If_EqualsString()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  var := "helloworld"
                                  if var = helloworld
                                     FileAppend, equal, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  var := "helloworld"
                                  if (var = "helloworld")
                                     FileAppend("equal", "*")
@@ -504,14 +504,14 @@ class ConvertTests
    Traditional_If_NotEqualsEmptyString()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  var = 3
                                  if var != 
                                     FileAppend, %var%, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  var := "3"
                                  if (var != "")
                                     FileAppend(var, "*")
@@ -538,14 +538,14 @@ class ConvertTests
    Traditional_If_EqualsInt()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  var = 8
                                  if var = 8
                                     FileAppend, %var%, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  var := "8"
                                  if (var = 8)
                                     FileAppend(var, "*")
@@ -572,14 +572,14 @@ class ConvertTests
    Traditional_If_GreaterThanInt()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  var = 10
                                  if var > 8
                                     FileAppend, %var%, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  var := "10"
                                  if (var > 8)
                                     FileAppend(var, "*")
@@ -606,7 +606,7 @@ class ConvertTests
    Traditional_If_EqualsVariable()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  MyVar = joe
                                  MyVar2 = joe
                                  if MyVar = %MyVar2%
@@ -614,7 +614,7 @@ class ConvertTests
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  MyVar := "joe"
                                  MyVar2 := "joe"
                                  if (MyVar = MyVar2)
@@ -642,7 +642,7 @@ class ConvertTests
    Traditional_If_EqualsStringAndVariable()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  MyVar = joe
                                  MyVar2 = "hello" joe
                                  if MyVar2 = "hello" %MyVar%
@@ -650,7 +650,7 @@ class ConvertTests
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  MyVar := "joe"
                                  MyVar2 := "``"hello``" joe"
                                  if (MyVar2 = "``"hello``" " . MyVar)
@@ -678,7 +678,7 @@ class ConvertTests
    Traditional_If_Else()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  MyVar = joe
                                  MyVar2 = 
                                  if MyVar = %MyVar2%
@@ -688,7 +688,7 @@ class ConvertTests
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  MyVar := "joe"
                                  MyVar2 := ""
                                  if (MyVar = MyVar2)
@@ -718,7 +718,7 @@ class ConvertTests
    Traditional_If_Else_NotEquals()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  MyVar = joe
                                  MyVar2 = joe2
                                  if MyVar = %MyVar2%
@@ -728,7 +728,7 @@ class ConvertTests
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  MyVar := "joe"
                                  MyVar2 := "joe2"
                                  if (MyVar = MyVar2)
@@ -758,7 +758,7 @@ class ConvertTests
    Expression_If_Function()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  if MyFunc()
                                     FileAppend, %var%, *
 
@@ -769,7 +769,7 @@ class ConvertTests
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  if MyFunc()
                                     FileAppend(var, "*")
 
@@ -800,7 +800,7 @@ class ConvertTests
    Expression_If_Not()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  var := ""
                                  if not var = 
                                     FileAppend, var is not empty, *
@@ -809,7 +809,7 @@ class ConvertTests
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  var := ""
                                  if not (var = "")
                                     FileAppend("var is not empty", "*")
@@ -838,14 +838,14 @@ class ConvertTests
    Expression_If_NoSpaceBeforeParen()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  method := 1
                                  if( method = 1 )
                                     FileAppend, %method%, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  method := 1
                                  if( method = 1 )
                                     FileAppend(method, "*")
@@ -872,7 +872,7 @@ class ConvertTests
    While_NoSpaceBeforeParen()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  method := 0
                                  while( method = 1 )
                                     break
@@ -880,7 +880,7 @@ class ConvertTests
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  method := 0
                                  while( method = 1 )
                                     break
@@ -908,14 +908,14 @@ class ConvertTests
    IfEqual_CommandThenComma()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  var = value
                                  IfEqual, var, value
                                     FileAppend, %var%, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  var := "value"
                                  if (var = "value")
                                     FileAppend(var, "*")
@@ -942,14 +942,14 @@ class ConvertTests
    IfEqual_CommandThenSpace()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  var = value
                                  IfEqual var, value
                                     FileAppend, %var%, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  var := "value"
                                  if (var = "value")
                                     FileAppend(var, "*")
@@ -976,14 +976,14 @@ class ConvertTests
    IfEqual_SameLineAction()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  var = value
                                  IfEqual var, value, FileGetSize, size, %A_ScriptDir%\Tests.ahk
                                  FileAppend, %size%, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  var := "value"
                                  if (var = "value"), FileGetSize, size, %A_ScriptDir%\Tests.ahk
                                  FileAppend(size, "*")
@@ -1010,14 +1010,14 @@ class ConvertTests
    IfEqual_CommandThenMultipleSpaces()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  var = value
                                  IfEqual    var, value
                                     FileAppend, %var%, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  var := "value"
                                  if (var = "value")
                                     FileAppend(var, "*")
@@ -1044,14 +1044,14 @@ class ConvertTests
    IfEqual_LeadingSpacesInParam()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  var = value
                                  IfEqual, var,     value
                                     FileAppend, %var%, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  var := "value"
                                  if (var = "value")
                                     FileAppend(var, "*")
@@ -1078,14 +1078,14 @@ class ConvertTests
    IfEqual_EscapedComma()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  var = ,
                                  IfEqual, var, ``,
                                     FileAppend, var is a comma, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  var := ","
                                  if (var = ",")
                                     FileAppend("var is a comma", "*")
@@ -1112,14 +1112,14 @@ class ConvertTests
    IfEqual_EscapedCommaMidString()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  var = hello,world
                                  IfEqual, var, hello``,world
                                     FileAppend, var matches, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  var := "hello,world"
                                  if (var = "hello,world")
                                     FileAppend("var matches", "*")
@@ -1159,14 +1159,14 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       ; from:   https://autohotkey.com/docs/commands/_EscapeChar.htm
 
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  var = ,
                                  IfEqual, var, ,
                                     FileAppend, var is a comma, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  var := ","
                                  if (var = ",")
                                     FileAppend("var is a comma", "*", "")
@@ -1198,14 +1198,14 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       ; from:   https://autohotkey.com/docs/commands/_EscapeChar.htm
 
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  var = hello,world
                                  IfEqual, var, hello,world
                                     FileAppend, var matches, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  var := "hello,world"
                                  if (var = "hello,world")
                                     FileAppend("var matches", "*")
@@ -1232,14 +1232,14 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    IfNotEqual()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  var = val
                                  IfNotEqual, var, value
                                     FileAppend, %var%, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  var := "val"
                                  if (var != "value")
                                     FileAppend(var, "*")
@@ -1266,14 +1266,14 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    IfGreaterOrEqual()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  var = value
                                  IfGreaterOrEqual, var, value
                                     FileAppend, %var%, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  var := "value"
                                  if (var >= "value")
                                     FileAppend(var, "*")
@@ -1300,14 +1300,14 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    IfGreater()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  var = zzz
                                  IfGreater, var, value
                                     FileAppend, %var%, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  var := "zzz"
                                  if (var > "value")
                                     FileAppend(var, "*")
@@ -1334,14 +1334,14 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    IfLess()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  var = hhh
                                  IfLess, var, value
                                     FileAppend, %var%, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  var := "hhh"
                                  if (var < "value")
                                     FileAppend(var, "*")
@@ -1368,14 +1368,14 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    IfLessOrEqual()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  var = hhh
                                  IfLessOrEqual, var, value
                                     FileAppend, %var%, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  var := "hhh"
                                  if (var <= "value")
                                     FileAppend(var, "*")
@@ -1402,14 +1402,14 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    EnvMult()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  var = 3
                                  EnvMult, var, 5
                                  FileAppend, %var%, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  var := "3"
                                  var *= 5
                                  FileAppend(var, "*")
@@ -1436,7 +1436,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    EnvMult_ExpressionParam()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  var = 1
                                  var2 = 2
                                  EnvMult, var, var2
@@ -1444,7 +1444,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  var := "1"
                                  var2 := "2"
                                  var *= var2
@@ -1472,14 +1472,14 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    EnvAdd()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  var = 1
                                  EnvAdd, var, 2
                                  FileAppend, %var%, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  var := "1"
                                  var += 2
                                  FileAppend(var, "*")
@@ -1506,7 +1506,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    EnvAdd_time()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  var = %A_Now%
                                  EnvAdd, var, 7, days
                                  FormatTime, var, %var%, ShortDate
@@ -1514,7 +1514,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  var := A_Now
                                  var := DateAdd(var, 7, "days")
                                  var := FormatTime(var, "ShortDate")
@@ -1542,7 +1542,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    EnvAdd_var()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  var = 4
                                  two := 2
                                  EnvAdd, var, two
@@ -1550,7 +1550,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  var := "4"
                                  two := 2
                                  var += two
@@ -1578,7 +1578,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    EnvAdd_var_forcedexpr()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  var = 4
                                  two := 2
                                  EnvAdd, var, % two
@@ -1586,7 +1586,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  var := "4"
                                  two := 2
                                  var += two
@@ -1614,14 +1614,14 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    EnvSub()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  var = 5
                                  EnvSub, var, 2
                                  FileAppend, %var%, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  var := "5"
                                  var -= 2
                                  FileAppend(var, "*")
@@ -1648,7 +1648,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    EnvSub_time()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  var1 = 20050126
                                  var2 = 20040126
                                  EnvSub, var1, %var2%, days
@@ -1656,7 +1656,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  var1 := "20050126"
                                  var2 := "20040126"
                                  var1 := DateDiff(var1, var2, "days")
@@ -1684,7 +1684,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    EnvSub_ExpressionValue()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  var = 9
                                  value = 6
                                  EnvSub, var, value
@@ -1692,7 +1692,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  var := "9"
                                  value := "6"
                                  var -= value
@@ -1720,7 +1720,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    FunctionDefaultParamValues()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  five := MyFunc()
                                  FileAppend, %five%, *
                                  MyFunc(var=5) {
@@ -1729,7 +1729,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  five := MyFunc()
                                  FileAppend(five, "*")
                                  MyFunc(var:=5) {
@@ -1758,7 +1758,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    FunctionDefaultParamValues_OTB()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  five := MyFunc()
                                  FileAppend, %five%, *
                                  MyFunc(var=5) {
@@ -1767,7 +1767,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  five := MyFunc()
                                  FileAppend(five, "*")
                                  MyFunc(var:=5) {
@@ -1796,7 +1796,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    FunctionDefaultParamValues_CommasInParamString()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  Concat(5)
 
                                  Concat(one, two="hello,world")
@@ -1806,7 +1806,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  Concat(5)
 
                                  Concat(one, two:="hello,world")
@@ -1836,7 +1836,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    FunctionDefaultParamValues_CommasInCallString()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  Concat("joe,says,")
 
                                  Concat(one, two="hello,world")
@@ -1846,7 +1846,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  Concat("joe,says,")
 
                                  Concat(one, two:="hello,world")
@@ -1876,7 +1876,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    FunctionDefaultParamValues_EqualSignInDefinitionString()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  Concat(5)
 
                                  Concat(one, two="+5=10")
@@ -1886,7 +1886,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  Concat(5)
 
                                  Concat(one, two:="+5=10")
@@ -1916,7 +1916,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    FunctionDefaultParamValues_EqualSignInCallerString()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  msg("me=god")
 
                                  msg(var)
@@ -1926,7 +1926,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  msg("me=god")
 
                                  msg(var)
@@ -1957,7 +1957,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    {
       ; dont replace the equal sign in the ternary during the function CALL
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  Concat((var=5) ? 5 : 0)
 
                                  Concat(one, two="2")
@@ -1967,7 +1967,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  Concat((var=5) ? 5 : 0)
 
                                  Concat(one, two:="2")
@@ -1997,7 +1997,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    FunctionDefaultParamValues_WholeShebang()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  var = 5
                                  Concat((var=5) ? 5 : 0)
 
@@ -2008,7 +2008,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  var := "5"
                                  Concat((var=5) ? 5 : 0)
 
@@ -2039,13 +2039,13 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    NoEnv_Remove()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  #NoEnv
                                  FileAppend, hi, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  ; REMOVED: #NoEnv
                                  FileAppend("hi", "*")
          )"
@@ -2071,13 +2071,13 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    SetFormat_Remove()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  SetFormat, integerfast, H
                                  FileAppend, hi, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  ; REMOVED: SetFormat, integerfast, H
                                  FileAppend("hi", "*")
          )"
@@ -2103,13 +2103,13 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    DriveGetFreeSpace()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  DriveSpaceFree, FreeSpace, c:\
                                  FileAppend, %FreeSpace%, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  FreeSpace := DriveGetSpaceFree("c:\")
                                  FileAppend(FreeSpace, "*")
          )"
@@ -2135,14 +2135,14 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    StringUpper()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  var = Chris Mallet
                                  StringUpper, newvar, var
                                  FileAppend, %newvar%, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  var := "Chris Mallet"
                                  newvar := StrUpper(var)
                                  FileAppend(newvar, "*")
@@ -2169,7 +2169,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    StringLower()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  var = chris mallet
                                  StringLower, newvar, var, T
                                  if (newvar == "Chris Mallet")
@@ -2177,7 +2177,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  var := "chris mallet"
                                  newvar := StrLower(var, "T")
                                  if (newvar == "Chris Mallet")
@@ -2205,14 +2205,14 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    StringLen()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  InputVar := "The Quick Brown Fox Jumps Over the Lazy Dog"
                                  StringLen, length, InputVar
                                  FileAppend, The length of InputVar is %length%., *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  InputVar := "The Quick Brown Fox Jumps Over the Lazy Dog"
                                  length := StrLen(InputVar)
                                  FileAppend("The length of InputVar is " . length . ".", "*")
@@ -2239,7 +2239,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    StringGetPos()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  Haystack = abcdefghijklmnopqrs
                                  Needle = def
                                  StringGetPos, pos, Haystack, %Needle%
@@ -2248,7 +2248,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  Haystack := "abcdefghijklmnopqrs"
                                  Needle := "def"
                                  pos := InStr(Haystack, Needle) - 1
@@ -2277,7 +2277,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    StringGetPos_LiteralText()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  Haystack = abcdefghijklmnopqrs
                                  StringGetPos, pos, Haystack, def
                                  if pos >= 0
@@ -2285,7 +2285,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  Haystack := "abcdefghijklmnopqrs"
                                  pos := InStr(Haystack, "def") - 1
                                  if (pos >= 0)
@@ -2313,7 +2313,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    StringGetPos_SearchLeftOccurance()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  Haystack = abcdefabcdef
                                  Needle = def
                                  StringGetPos, pos, Haystack, %Needle%, L2
@@ -2322,7 +2322,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  Haystack := "abcdefabcdef"
                                  Needle := "def"
                                  pos := InStr(Haystack, Needle, (A_StringCaseSense="On") ? true : false, (0)+1, 2) - 1
@@ -2351,7 +2351,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    StringGetPos_SearchLeftOccurance_StringCaseSense()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  StringCaseSense, on
                                  Haystack = abcdefabcdef
                                  Needle = DEF
@@ -2360,7 +2360,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  StringCaseSense("on")
                                  Haystack := "abcdefabcdef"
                                  Needle := "DEF"
@@ -2389,7 +2389,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    StringGetPos_SearchRight()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  Haystack = abcdefabcdef
                                  Needle = bcd
                                  StringGetPos, pos, Haystack, %Needle%, R
@@ -2398,7 +2398,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  Haystack := "abcdefabcdef"
                                  Needle := "bcd"
                                  pos := InStr(Haystack, Needle, (A_StringCaseSense="On") ? true : false, -1*((0)+1), 1) - 1
@@ -2427,7 +2427,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    StringGetPos_SearchRightOccurance()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  Haystack = abcdefabcdef
                                  Needle = cde
                                  StringGetPos, pos, Haystack, %Needle%, R2
@@ -2436,7 +2436,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  Haystack := "abcdefabcdef"
                                  Needle := "cde"
                                  pos := InStr(Haystack, Needle, (A_StringCaseSense="On") ? true : false, -1*((0)+1), 2) - 1
@@ -2465,7 +2465,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    StringGetPos_OffsetLeft()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  Haystack = abcdefabcdef
                                  Needle = cde
                                  StringGetPos, pos, Haystack, %Needle%,, 4
@@ -2474,7 +2474,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  Haystack := "abcdefabcdef"
                                  Needle := "cde"
                                  pos := InStr(Haystack, Needle, (A_StringCaseSense="On") ? true : false, (4)+1, 1) - 1
@@ -2503,7 +2503,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    StringGetPos_OffsetLeftVariable()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  Haystack = abcdefabcdef
                                  Needle = cde
                                  var = 2
@@ -2513,7 +2513,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  Haystack := "abcdefabcdef"
                                  Needle := "cde"
                                  var := "2"
@@ -2543,7 +2543,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    StringGetPos_OffsetLeftExpressionVariable()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  Haystack = abcdefabcdef
                                  Needle = cde
                                  var = 1
@@ -2553,7 +2553,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  Haystack := "abcdefabcdef"
                                  Needle := "cde"
                                  var := "1"
@@ -2583,7 +2583,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    StringGetPos_OffsetRightExpressionVariableOccurences()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  Haystack = abcdefabcdefabcdef
                                  Needle = cde
                                  var = 0
@@ -2593,7 +2593,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  Haystack := "abcdefabcdefabcdef"
                                  Needle := "cde"
                                  var := "0"
@@ -2623,7 +2623,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    StringGetPos_OffsetLeftOccurence()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  Haystack = abcdefabcdefabcdef
                                  Needle = cde
                                  StringGetPos, pos, Haystack, %Needle%, L2, 4
@@ -2632,7 +2632,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  Haystack := "abcdefabcdefabcdef"
                                  Needle := "cde"
                                  pos := InStr(Haystack, Needle, (A_StringCaseSense="On") ? true : false, (4)+1, 2) - 1
@@ -2661,7 +2661,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    StringGetPos_OffsetRight()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  Haystack = abcdefabcdef
                                  Needle = cde
                                  StringGetPos, pos, Haystack, %Needle%, R, 4
@@ -2670,7 +2670,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  Haystack := "abcdefabcdef"
                                  Needle := "cde"
                                  pos := InStr(Haystack, Needle, (A_StringCaseSense="On") ? true : false, -1*((4)+1), 1) - 1
@@ -2699,7 +2699,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    StringGetPos_OffsetRightOccurence()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  Haystack = abcdefabcdefabcdef
                                  Needle = cde
                                  StringGetPos, pos, Haystack, %Needle%, r2, 4
@@ -2708,7 +2708,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  Haystack := "abcdefabcdefabcdef"
                                  Needle := "cde"
                                  pos := InStr(Haystack, Needle, (A_StringCaseSense="On") ? true : false, -1*((4)+1), 2) - 1
@@ -2737,7 +2737,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    StringGetPos_Duplicates()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  Haystack = FFFF
                                  Needle = FF
                                  StringGetPos, pos, Haystack, %Needle%, L2
@@ -2746,7 +2746,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  Haystack := "FFFF"
                                  Needle := "FF"
                                  pos := InStr(Haystack, Needle, (A_StringCaseSense="On") ? true : false, (0)+1, 2) - 1
@@ -2775,14 +2775,14 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    StringMid()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  Source = Hello this is a test. 
                                  StringMid, out, Source, 7
                                  FileAppend, %out%, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  Source := "Hello this is a test." 
                                  out := SubStr(Source, 7)
                                  FileAppend(out, "*")
@@ -2809,14 +2809,14 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    StringMid_Count()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  Source = Hello this is a test. 
                                  StringMid, out, Source, 7, 4
                                  FileAppend, %out%, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  Source := "Hello this is a test." 
                                  out := SubStr(Source, 7, 4)
                                  FileAppend(out, "*")
@@ -2843,7 +2843,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    StringMid_CountStartVar()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  start = 7
                                  Source = Hello this is a test. 
                                  StringMid, out, Source, %start%, 4
@@ -2851,7 +2851,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  start := "7"
                                  Source := "Hello this is a test." 
                                  out := SubStr(Source, start, 4)
@@ -2879,7 +2879,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    StringMid_StartAndCountExpressions()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  start = 2
                                  count = 4
                                  Source = Hello this is a test. 
@@ -2888,7 +2888,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  start := "2"
                                  count := "4"
                                  Source := "Hello this is a test." 
@@ -2917,14 +2917,14 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    StringMid_Count_L()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  InputVar = The Red Fox
                                  StringMid, out, InputVar, 7, 3, L
                                  FileAppend, %out%, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  InputVar := "The Red Fox"
                                  out := SubStr(SubStr(InputVar, 1, 7), -3)
                                  FileAppend(out, "*")
@@ -2955,7 +2955,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    StringMid_Count_L_expression()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  InputVar = The Red Fox
                                  left = LOL
                                  StringMid, out, InputVar, 7, 3, %left%
@@ -2963,7 +2963,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  InputVar := "The Red Fox"
                                  left := "LOL"
                                  if (SubStr(left, 1, 1) = "L")
@@ -2994,14 +2994,14 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    StringLeft()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  String = This is a test.
                                  StringLeft, OutputVar, String, 4
                                  FileAppend, %OutputVar%, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  String := "This is a test."
                                  OutputVar := SubStr(String, 1, 4)
                                  FileAppend(OutputVar, "*")
@@ -3028,7 +3028,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    StringLeft_CountExpr()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  String = This is a test.
                                  count := 3
                                  StringLeft, OutputVar, String, count+1
@@ -3036,7 +3036,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  String := "This is a test."
                                  count := 3
                                  OutputVar := SubStr(String, 1, count+1)
@@ -3064,14 +3064,14 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    StringRight()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  String = This is a test.
                                  StringRight, OutputVar, String, 5
                                  FileAppend, %OutputVar%, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  String := "This is a test."
                                  OutputVar := SubStr(String, -1*(5))
                                  FileAppend(OutputVar, "*")
@@ -3098,7 +3098,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    StringRight_CountExpr()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  String = This is a test.
                                  count := 6
                                  StringRight, OutputVar, String, count-1
@@ -3106,7 +3106,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  String := "This is a test."
                                  count := 6
                                  OutputVar := SubStr(String, -1*(count-1))
@@ -3134,14 +3134,14 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    StringTrimLeft()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  String = This is a test.
                                  StringTrimLeft, OutputVar, String, 5
                                  FileAppend, %OutputVar%, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  String := "This is a test."
                                  OutputVar := SubStr(String, (5)+1)
                                  FileAppend(OutputVar, "*")
@@ -3168,7 +3168,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    StringTrimLeft_CountExpr()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  String = This is a test.
                                  count := 5
                                  StringTrimLeft, OutputVar, String, count*1
@@ -3176,7 +3176,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  String := "This is a test."
                                  count := 5
                                  OutputVar := SubStr(String, (count*1)+1)
@@ -3204,14 +3204,14 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    StringTrimRight()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  String = This is a test.
                                  StringTrimRight, OutputVar, String, 6
                                  FileAppend, [%OutputVar%], *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  String := "This is a test."
                                  OutputVar := SubStr(String, 1, -1*(6))
                                  FileAppend("[" . OutputVar . "]", "*")
@@ -3238,7 +3238,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    StringTrimRight_CountExpr()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  String = This is a test.
                                  count := 3
                                  StringTrimRight, OutputVar, String, count+3
@@ -3246,7 +3246,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  String := "This is a test."
                                  count := 3
                                  OutputVar := SubStr(String, 1, -1*(count+3))
@@ -3274,13 +3274,13 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    RemoveTrailingFuncParams()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  ToolTip, helloworld
                                  FileAppend, hi, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  ToolTip("helloworld")
                                  FileAppend("hi", "*")
          )"
@@ -3308,7 +3308,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    {
       ; dont use LTrim and instead rely on AHK v2 default smart LTrim
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  if (1) {
                                     var = val
                                     if var = hello
@@ -3322,7 +3322,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  if (1) {
                                     var := "val"
                                     if (var = "hello")
@@ -3356,13 +3356,13 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    WinGetActiveTitle()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  WinGetActiveTitle, OutputVar
                                  FileAppend, %OutputVar%, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  OutputVar := WinGetTitle("A")
                                  FileAppend(OutputVar, "*")
          )"
@@ -3388,13 +3388,13 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    WinGetActiveStats()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  WinGetActiveStats, title, w, h, x, y
                                  FileAppend, %title%-%w%-%h%-%x%-%y%, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  title := WinGetTitle("A")
                                  WinGetPos x, y, w, h, "A"
                                  FileAppend(title . "-" . w . "-" . h . "-" . x . "-" . y, "*")
@@ -3421,13 +3421,13 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    PreserveComment_Assignment()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  var = value     ; comment after 5 spaces
                                  FileAppend, %var%, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  var := "value"     ; comment after 5 spaces
                                  FileAppend(var, "*")
          )"
@@ -3453,14 +3453,14 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    PreserveComment_TraditionalIf()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  var = value
                                  if var = value     ; comment after 5 spaces
                                     FileAppend, %var%, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  var := "value"
                                  if (var = "value")     ; comment after 5 spaces
                                     FileAppend(var, "*")
@@ -3487,14 +3487,14 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    PreserveComment_EnvAdd()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  var = 1
                                  EnvAdd, var, 2     ; comment after 5 spaces
                                  FileAppend, %var%, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  var := "1"
                                  var += 2     ; comment after 5 spaces
                                  FileAppend(var, "*")
@@ -3521,14 +3521,14 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    PreserveComment_IfEqual()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  var = 1
                                  IfEqual, var, 1     ; comment after 5 spaces
                                     FileAppend, %var%, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  var := "1"
                                  if (var = 1)     ; comment after 5 spaces
                                     FileAppend(var, "*")
@@ -3555,13 +3555,13 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    PreserveComment_SkippedLines()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  var = 1
                                     #NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  var := "1"
                                  ; REMOVED:    #NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
          )"
@@ -3587,7 +3587,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    PreserveComment_StringTrimLeft()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  x = +plus
                                  StringTrimLeft x, x, 1           ; leading +x -> x
                                  IfEqual, x, plus
@@ -3595,7 +3595,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  x := "+plus"
                                  x := SubStr(x, (1)+1)           ; leading +x -> x
                                  if (x = "plus")
@@ -3623,13 +3623,13 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    PreserveComment_UntouchedLines()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  var := "value"     ; this line won't be changed by the converter
                                  FileAppend, %var%, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  var := "value"     ; this line won't be changed by the converter
                                  FileAppend(var, "*")
          )"
@@ -3656,14 +3656,14 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    AutoTrim()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  var := " helloworld "
                                  var2 = %var%
                                  FileAppend, %var2%, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  var := " helloworld "
                                  var2 := Trim(var)
                                  FileAppend(var2, "*")
@@ -3691,7 +3691,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    ReturnDeref()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  FileAppend, % MyFunc(), *
 
                                  MyFunc() {
@@ -3702,7 +3702,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  FileAppend(MyFunc(), "*")
 
                                  MyFunc() {
@@ -3733,7 +3733,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    ReturnNoDeref()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  FileAppend, % MyFunc(), *
 
                                  MyFunc() {
@@ -3744,7 +3744,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  FileAppend(MyFunc(), "*")
 
                                  MyFunc() {
@@ -3775,7 +3775,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    ReturnNoDerefFuncCall()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  FileAppend, % MyFunc(), *
 
                                  MyFunc() {
@@ -3785,7 +3785,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  FileAppend(MyFunc(), "*")
 
                                  MyFunc() {
@@ -3815,7 +3815,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    IfVarIsType()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  var = 3.1415
                                  if var is float
                                     FileAppend, %var% is float, *
@@ -3824,7 +3824,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  var := "3.1415"
                                  if (var is "float")
                                     FileAppend(var . " is float", "*")
@@ -3853,7 +3853,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    IfVarIsType_Deref()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  var = 3.1415
                                  type = float
                                  if var is %type%
@@ -3861,7 +3861,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  var := "3.1415"
                                  type := "float"
                                  if (var is type)
@@ -3889,7 +3889,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    IfVarIsTypeNot()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  var = 3.1415
                                  if var is not float
                                     FileAppend, %var% is not float, *
@@ -3898,7 +3898,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  var := "3.1415"
                                  if !(var is "float")
                                     FileAppend(var . " is not float", "*")
@@ -3927,13 +3927,13 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    IfVarIsType_AIsUnicode()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  if A_IsUnicode
                                     FileAppend, AHK Unicode %A_IsUnicode%, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  if A_IsUnicode
                                     FileAppend("AHK Unicode " . A_IsUnicode, "*")
          )"
@@ -3959,14 +3959,14 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    StringReplace()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  OldStr := "The_quick_brown_fox"
                                  StringReplace, NewStr, OldStr, _
                                  FileAppend, %NewStr%, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  OldStr := "The_quick_brown_fox"
                                  NewStr := StrReplace(OldStr, "_",,, 1)
                                  FileAppend(NewStr, "*")
@@ -3993,14 +3993,14 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    StringReplace_One()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  OldStr := "The quick brown fox"
                                  StringReplace, NewStr, OldStr, %A_Space%, +
                                  FileAppend, %NewStr%, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  OldStr := "The quick brown fox"
                                  NewStr := StrReplace(OldStr, A_Space, "+",, 1)
                                  FileAppend(NewStr, "*")
@@ -4027,14 +4027,14 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    StringReplace_All()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  OldStr := "The quick brown fox"
                                  StringReplace, NewStr, OldStr, %A_Space%, +, All
                                  FileAppend, %NewStr%, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  OldStr := "The quick brown fox"
                                  NewStr := StrReplace(OldStr, A_Space, "+")
                                  FileAppend(NewStr, "*")
@@ -4061,14 +4061,14 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    StringReplace_UseErrorLevel()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  OldStr := "The quick brown fox"
                                  StringReplace, NewStr, OldStr, %A_Space%, +, UseErrorLevel
                                  FileAppend, number of replacements: %ErrorLevel%, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  OldStr := "The quick brown fox"
                                  NewStr := StrReplace(OldStr, A_Space, "+", ErrorLevel)
                                  FileAppend("number of replacements: " . ErrorLevel, "*")
@@ -4095,7 +4095,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    ForcedExpression_StringLeft_CountExpr()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  String = This is a test.
                                  count := 3
                                  StringLeft, OutputVar, String, % count+1
@@ -4103,7 +4103,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  String := "This is a test."
                                  count := 3
                                  OutputVar := SubStr(String, 1, count+1)
@@ -4131,14 +4131,14 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    ForcedExpression_StringReplace_All()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  OldStr := "The quick brown fox"
                                  StringReplace, NewStr, OldStr, % " ", % "+", All
                                  FileAppend, %NewStr%, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  OldStr := "The quick brown fox"
                                  NewStr := StrReplace(OldStr, " ", "+")
                                  FileAppend(NewStr, "*")
@@ -4165,7 +4165,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    ForcedExpression_StringMid_StartAndCountExpressions()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  start = 2
                                  count = 4
                                  Source = Hello this is a test. 
@@ -4174,7 +4174,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  start := "2"
                                  count := "4"
                                  Source := "Hello this is a test." 
@@ -4203,7 +4203,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    ForcedExpression_StringGetPos_OffsetLeftExpressionVariable()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  Haystack = abcdefabcdef
                                  Needle = cde
                                  var = 1
@@ -4213,7 +4213,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  Haystack := "abcdefabcdef"
                                  Needle := "cde"
                                  var := "1"
@@ -4243,7 +4243,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    ForcedExpression_StringGetPos_LiteralText()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  Haystack = abcdefghijklmnopqrs
                                  StringGetPos, pos, Haystack, % "def"
                                  if pos >= 0
@@ -4251,7 +4251,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  Haystack := "abcdefghijklmnopqrs"
                                  pos := InStr(Haystack, "def") - 1
                                  if (pos >= 0)
@@ -4279,14 +4279,14 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    ForcedExpression_IfEqual_CommandThenComma()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  var = value
                                  IfEqual, var, % "value"
                                     FileAppend, %var%, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  var := "value"
                                  if (var = "value")
                                     FileAppend(var, "*")
@@ -4313,14 +4313,14 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    ForcedExpression_Traditional_If_GreaterThanInt()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  var = 10
                                  if var > % 4*2
                                     FileAppend, %var%, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  var := "10"
                                  if (var > 4*2)
                                     FileAppend(var, "*")
@@ -4347,7 +4347,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    CBE2E_var()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  String = This is a test.
                                  count := 7
                                  StringLeft, OutputVar, String, count
@@ -4355,7 +4355,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  String := "This is a test."
                                  count := 7
                                  OutputVar := SubStr(String, 1, count)
@@ -4383,7 +4383,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    CBE2E_var_deref()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  String = This is a test.
                                  count := 7
                                  StringLeft, OutputVar, String, %count%
@@ -4391,7 +4391,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  String := "This is a test."
                                  count := 7
                                  OutputVar := SubStr(String, 1, count)
@@ -4419,7 +4419,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    CBE2E_var_forcedexpr()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  String = This is a test.
                                  count := 7
                                  StringLeft, OutputVar, String, % count
@@ -4427,7 +4427,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  String := "This is a test."
                                  count := 7
                                  OutputVar := SubStr(String, 1, count)
@@ -4455,7 +4455,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    CBE2E_var_forcedexpr_doublederef()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  String = This is a test.
                                  count := 7
                                  two_letters := "nt"
@@ -4464,7 +4464,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  String := "This is a test."
                                  count := 7
                                  two_letters := "nt"
@@ -4493,12 +4493,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    Sleep()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  Sleep, 500
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  Sleep(500)
          )"
 
@@ -4523,7 +4523,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    Sleep_CBE2T_varexpr()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  half_second := 500
                                  start := A_TickCount
                                  Sleep, half_second
@@ -4532,7 +4532,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  half_second := 500
                                  start := A_TickCount
                                  Sleep(half_second)
@@ -4561,7 +4561,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    Sleep_CBE2T_var()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  half_second := 500
                                  start := A_TickCount
                                  Sleep, %half_second%
@@ -4570,7 +4570,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  half_second := 500
                                  start := A_TickCount
                                  Sleep(half_second)
@@ -4599,7 +4599,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    Sleep_CBE2T_expr()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  half_second := 500
                                  start := A_TickCount
                                  Sleep, half_second*2
@@ -4608,7 +4608,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  half_second := 500
                                  start := A_TickCount
                                  Sleep(half_second*2)
@@ -4637,7 +4637,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    Sleep_CBE2T_exprforced()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  half_second := 500
                                  start := A_TickCount
                                  Sleep, % half_second*2
@@ -4646,7 +4646,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  half_second := 500
                                  start := A_TickCount
                                  Sleep(half_second*2)
@@ -4675,12 +4675,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    EnvUpdate()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                            EnvUpdate
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                            SendMessage, % WM_SETTINGCHANGE := 0x001A, 0, Environment,, % "ahk_id " . HWND_BROADCAST := "0xFFFF"
          )"
 
@@ -4705,13 +4705,13 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    SetEnv()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  SetEnv, var, hello
                                  FileAppend, %var%, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  var := "hello"
                                  FileAppend(var, "*")
          )"
@@ -4737,13 +4737,13 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    SetEnv_UnescapedCommasInLastParam()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  SetEnv, var, h,e, l,l,o
                                  FileAppend, %var%, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  var := "h,e, l,l,o"
                                  FileAppend(var, "*")
          )"
@@ -4769,14 +4769,14 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    TooFewParams()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  var := "helloooo"
                                  IfNotEqual, var
                                     FileAppend, %var%, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  var := "helloooo"
                                  if (var != "")
                                     FileAppend(var, "*")
@@ -4803,7 +4803,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    IfInString_var()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  Haystack = abcdefghijklmnopqrs
                                  Needle = abc
                                  IfInString, Haystack, %Needle%
@@ -4811,7 +4811,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  Haystack := "abcdefghijklmnopqrs"
                                  Needle := "abc"
                                  if InStr(Haystack, Needle, (A_StringCaseSense="On") ? true : false)
@@ -4839,14 +4839,14 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    IfInString_text()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  Haystack = abcdefghijklmnopqrs
                                  IfInString, Haystack, jklm
                                     FileAppend, found, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  Haystack := "abcdefghijklmnopqrs"
                                  if InStr(Haystack, "jklm", (A_StringCaseSense="On") ? true : false)
                                     FileAppend("found", "*")
@@ -4873,14 +4873,14 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    IfInString_SameLineAction()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  Haystack = z.y.x.w
                                  IfInString, Haystack, y.x, SysGet, mouse_btns, 43
                                  FileAppend, %mouse_btns%, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  Haystack := "z.y.x.w"
                                  if InStr(Haystack, "y.x", (A_StringCaseSense="On") ? true : false), mouse_btns := SysGet(43)
                                  FileAppend(mouse_btns, "*")
@@ -4907,7 +4907,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    IfInString_block()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  Haystack = abcdefghijklmnopqrs
                                  IfInString, Haystack, jklm
                                  {
@@ -4917,7 +4917,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  Haystack := "abcdefghijklmnopqrs"
                                  if InStr(Haystack, "jklm", (A_StringCaseSense="On") ? true : false)
                                  {
@@ -4947,14 +4947,14 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    IfNotInString_text()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  Haystack = abcdefghijklmnopqrs
                                  IfNotInString, Haystack, jklm
                                     FileAppend, found, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  Haystack := "abcdefghijklmnopqrs"
                                  if !InStr(Haystack, "jklm", (A_StringCaseSense="On") ? true : false)
                                     FileAppend("found", "*")
@@ -4981,13 +4981,13 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    IfExist()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  IfExist, C:\
                                     FileAppend, the drive exists, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  if FileExist("C:\")
                                     FileAppend("the drive exists", "*")
          )"
@@ -5013,13 +5013,13 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    IfNotExist()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  IfNotExist, W:\
                                     FileAppend, the drive doesn't exist, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  if !FileExist("W:\")
                                     FileAppend("the drive doesn't exist", "*")
          )"
@@ -5045,7 +5045,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    IfWinExist()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  IfWinExist, ahk_class Notepad
                                     FileAppend, notepad is open, *
                                  else
@@ -5053,7 +5053,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  if WinExist("ahk_class Notepad")
                                     FileAppend("notepad is open", "*")
                                  else
@@ -5081,7 +5081,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    IfWinNotExist()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  IfWinNotExist, ahk_class Notepad
                                     FileAppend, notepad is not open, *
                                  else
@@ -5089,7 +5089,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  if !WinExist("ahk_class Notepad")
                                     FileAppend("notepad is not open", "*")
                                  else
@@ -5117,7 +5117,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    IfWinActive()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  IfWinActive, ahk_class Notepad
                                     FileAppend, notepad is Active, *
                                  else
@@ -5125,7 +5125,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  if WinActive("ahk_class Notepad")
                                     FileAppend("notepad is Active", "*")
                                  else
@@ -5153,7 +5153,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    IfWinActive_emptyparams()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  IfWinActive
                                     FileAppend, last found window is Active, *
                                  else
@@ -5161,7 +5161,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  if WinActive("")
                                     FileAppend("last found window is Active", "*")
                                  else
@@ -5189,7 +5189,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    IfWinNotActive()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  IfWinNotActive, ahk_class Notepad
                                     FileAppend, notepad is not Active, *
                                  else
@@ -5197,7 +5197,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  if !WinActive("ahk_class Notepad")
                                     FileAppend("notepad is not Active", "*")
                                  else
@@ -5225,13 +5225,13 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    FileCopyDir()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  FileCopyDir, C:\My Folder, C:\Copy of My Folder
                                  FileCopyDir, C:\My Folder, C:\Copy of My Folder, 0
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  DirCopy, C:\My Folder, C:\Copy of My Folder
                                  DirCopy, C:\My Folder, C:\Copy of My Folder, 0
          )"
@@ -5257,12 +5257,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    FileCreateDir()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  FileCreateDir, C:\My Folder
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  DirCreate, C:\My Folder
          )"
 
@@ -5287,13 +5287,13 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    FileMoveDir()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  FileMoveDir, C:\My Folder, C:\Copy of My Folder
                                  FileMoveDir, C:\My Folder, C:\Copy of My Folder, 0
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  DirMove, C:\My Folder, C:\Copy of My Folder
                                  DirMove, C:\My Folder, C:\Copy of My Folder, 0
          )"
@@ -5319,13 +5319,13 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    FileRemoveDir()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  FileRemoveDir, C:\My Folder
                                  FileRemoveDir, C:\My Folder, 0
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  DirDelete, C:\My Folder
                                  DirDelete, C:\My Folder, 0
          )"
@@ -5351,14 +5351,14 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    FileSelectFolder()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  FileSelectFolder, outputvar
                                  FileSelectFolder, outputvar, C:\
                                  FileSelectFolder, outputvar, , 3
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  DirSelect, outputvar
                                  DirSelect, outputvar, C:\
                                  DirSelect, outputvar, , 3
@@ -5385,13 +5385,13 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    FileSelectFile()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  FileSelectFile, outputvar
                                  FileSelectFile, SelectedFile, 3, , Open a file, Text Documents (*.txt`; *.doc)
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  FileSelect, outputvar
                                  FileSelect, SelectedFile, 3, , Open a file, Text Documents (*.txt`; *.doc)
          )"
@@ -5417,13 +5417,13 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    FormatTime()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  FormatTime, TimeString,, Time
                                  FileAppend, the current time is %TimeString%, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  TimeString := FormatTime("", "Time")
                                  FileAppend("the current time is " . TimeString, "*")
          )"
@@ -5450,7 +5450,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    IfBetween()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  var = 3.1415
                                  if var between 5 and 10
                                     FileAppend, %var% between 5 and 10, *
@@ -5459,7 +5459,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  var := "3.1415"
                                  if (var >= 5 && var <= 10)
                                     FileAppend(var . " between 5 and 10", "*")
@@ -5488,7 +5488,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    IfBetweenNot()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  var = 3.1415
                                  if var not between 0.0 and 1.0
                                     FileAppend, %var% not between 0.0 and 1.0, *
@@ -5497,7 +5497,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  var := "3.1415"
                                  if !(var >= 0.0 && var <= 1.0)
                                     FileAppend(var . " not between 0.0 and 1.0", "*")
@@ -5526,7 +5526,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    IfBetweenVars()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  var = 3.1415
                                  varLow = 2
                                  varHigh = 4
@@ -5535,7 +5535,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  var := "3.1415"
                                  varLow := "2"
                                  varHigh := "4"
@@ -5564,14 +5564,14 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    IfBetweenAlphabetically()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  var = boy
                                  if var between blue and red
                                     FileAppend, %var% is alphabetically between 'blue' and 'red', *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  var := "boy"
                                  if (var >= "blue" && var <= "red")
                                     FileAppend(var . " is alphabetically between 'blue' and 'red'", "*")
@@ -5598,12 +5598,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    RenameVars()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  RunWait, %comspec% /c dir c:\
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  RunWait, %A_ComSpec% /c dir c:\
          )"
 
@@ -5628,7 +5628,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    RenameVarsOrder()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  Loop, Files, Yunit\*.*
                                  {
                                     FileAppend, %A_LoopFileFullPath%``n%A_LoopFileLongPath%, *
@@ -5637,7 +5637,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  Loop, Files, Yunit\*.*
                                  {
                                     FileAppend(A_LoopFilePath . "``n" . A_LoopFileFullPath, "*")
@@ -5666,12 +5666,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    RenameFunc()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  FileAppend, % Asc("t"), *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  FileAppend(Ord("t"), "*")
          )"
 
@@ -5696,12 +5696,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    RenameMultiple()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  FileAppend, % (true) ? Asc("t") . ComSpec : Asc("w") . ComSpec, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  FileAppend((true) ? Ord("t") . A_ComSpec : Ord("w") . A_ComSpec, "*")
          )"
 
@@ -5726,14 +5726,14 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    EscapedCommas()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  list := "one,two,three"
                                  StringReplace list, list, ``,, ``,, UseErrorLevel
                                  FileAppend, %ErrorLevel%, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  list := "one,two,three"
                                  list := StrReplace(list, ",", ",", ErrorLevel)
                                  FileAppend(ErrorLevel, "*")
@@ -5760,14 +5760,14 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    Sort()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  MyVar = 5,3,7,9,1,13,999,-4
                                  Sort, MyVar, N D,  ; Sort numerically, use comma as delimiter.
                                  FileAppend, %MyVar%, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  MyVar := "5,3,7,9,1,13,999,-4"
                                  MyVar := Sort(MyVar, "N D,")  ; Sort numerically, use comma as delimiter.
                                  FileAppend(MyVar, "*")
@@ -5794,7 +5794,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    SplitPath()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  FullFileName = C:\My Documents\Address List.txt
                                  SplitPath, FullFileName, name
                                  SplitPath, FullFileName, , dir
@@ -5802,7 +5802,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  FullFileName := "C:\My Documents\Address List.txt"
                                  SplitPath FullFileName, name
                                  SplitPath FullFileName, , dir
@@ -5830,7 +5830,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    SplitPath_expr_var()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  FullFileName = C:\My Documents\Address List.txt
                                  SplitPath, % FullFileName, name
                                  SplitPath, % FullFileName, , dir
@@ -5838,7 +5838,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  FullFileName := "C:\My Documents\Address List.txt"
                                  SplitPath FullFileName, name
                                  SplitPath FullFileName, , dir
@@ -5866,14 +5866,14 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    SplitPath_expr_str()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  SplitPath, % "C:\My Documents\Address List.txt", name
                                  SplitPath, % "C:\My Documents\Address List.txt", , dir
                                  FileAppend, %name%``n%dir%, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  SplitPath "C:\My Documents\Address List.txt", name
                                  SplitPath "C:\My Documents\Address List.txt", , dir
                                  FileAppend(name . "``n" . dir, "*")
@@ -6018,7 +6018,7 @@ class ToStringExprTests
 
 
 
-class RemoveSurroundingQuotes
+class RemoveSurroundingQuotesTests
 {
    RemoveSurroundingQuotes()
    {
@@ -6034,7 +6034,7 @@ class RemoveSurroundingQuotes
 }
 
 
-class RemoveSurroundingPercents
+class RemoveSurroundingPercentsTests
 {
    RemoveSurroundingPercents()
    {
@@ -6059,13 +6059,13 @@ class ExecScriptTests
    Equals()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  var = hello world
                                  FileAppend, %var%, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  var := "hello world"
                                  FileAppend(var, "*")
          )"
@@ -6081,13 +6081,13 @@ class ExecScriptTests
    NotEquals()
    {
       input_script := "
-         (Join`r`n %
+         (Join`r`n
                                  var = hello world
                                  FileAppend, %var%, *
          )"
 
       expected := "
-         (Join`r`n %
+         (Join`r`n
                                  var := "hello world "
                                  FileAppend(var, "*")
          )"

@@ -278,7 +278,7 @@ Convert(ScriptString)
       ;
       else If RegExMatch(Line, "i)^([\s]*[a-z_][a-z_0-9]*[\s]*)=([^;]*)", &Equation) ; Thanks Lexikos
       {
-         ;msgbox assignment regex`nLine: %Line%`n%Equation[1]%`n%Equation[2]%
+         ; msgbox("assignment regex`norigLine: " Line "`norig_left=" Equation[1] "`norig_right=" Equation[2] "`nconv_right=" ToStringExpr(Equation[2]))
          Line := RTrim(Equation[1]) . " := " . ToStringExpr(Equation[2])   ; regex above keeps the indentation already
       }
       
@@ -423,12 +423,12 @@ Convert(ScriptString)
             Command := Trim( SubStr(Line, 1) )
             Params := ""
          }
-         ;msgbox, Line=%Line%`nFirstDelim=%FirstDelim%`nCommand=%Command%`nParams=%Params%
+         ; msgbox("Line=" Line "`nFirstDelim=" FirstDelim "`nCommand=" Command "`nParams=" Params)
          ; Now we format the parameters into their v2 equivilents
          Loop Parse, CommandsToConvert, "`n"
          {
             Part := StrSplit(A_LoopField, "|")
-            ;msgbox % A_LoopField "`n[" part[1] "]`n[" part[2] "]"
+            ; msgbox(A_LoopField "`n[" part[1] "]`n[" part[2] "]")
             ListDelim := RegExMatch(Part[1], "[,\s]")
             ListCommand := Trim( SubStr(Part[1], 1, ListDelim-1) )
             If (ListCommand = Command)
@@ -436,8 +436,8 @@ Convert(ScriptString)
                CommandMatch := 1
                same_line_action := false
                ListParams := RTrim( SubStr(Part[1], ListDelim+1) )
-               ;if (Command = "EnvUpdate")
-               ;msgbox, CommandMatch`nListCommand=%ListCommand%`nListParams=%ListParams%
+               ; if (Command = "FileAppend")
+               ;    msgbox("CommandMatch`nListCommand=" ListCommand "`nListParams=" ListParams)
                ListParam := Array()
                Param := Array() ; Parameters in expression form
                Loop Parse, ListParams, "`,"
@@ -455,11 +455,12 @@ Convert(ScriptString)
                   else
                      Param.Push(A_LoopField)
                }
-               ;msgbox, % "Line:`n`n" Line "`n`nParam.Length=" Param.Length "`nListParam.Length=" ListParam.Length
+               ; msgbox("Line:`n`n" Line "`n`nParam.Length=" Param.Length "`nListParam.Length=" ListParam.Length)
 
                ; if we detect TOO MANY PARAMS, could be for 2 reasons
                if ((param_num_diff := Param.Length - ListParam.Length) > 0)
                {
+                  ; msgbox("too many params")
                   extra_params := ""
                   Loop param_num_diff
                      extra_params .= "," . Param[ListParam.Length + A_Index]
@@ -501,9 +502,12 @@ Convert(ScriptString)
                {
                   this_param := Param[A_Index]
                   this_param := StrReplace(this_param, "ESCAPED_COMMª_PLA¢E_HOLDER", "``,")
+                  ; if (Command = "IfEqual")
+                  ;    msgbox("Line=" Line "`nIndex=" A_Index)
                   if (ListParam[A_Index] ~= "T2E$")           ; 'Text TO Expression'
                   {
                      Param[A_Index] := ToExp(this_param)
+                     ; msgbox("text2expression`nthis_param=" this_param "`nconverted=" Param[A_Index])
                   }
                   else if (ListParam[A_Index] ~= "CBE2E$")    ; 'Can Be an Expression TO an Expression'
                   {
@@ -532,21 +536,27 @@ Convert(ScriptString)
                If ( SubStr(Part[2], 1, 1) == "*" )   ; if using a special function
                {
                   FuncName := SubStr(Part[2], 2)
-                  ;msgbox FuncName=%FuncName%
+                  ;msgbox("FuncName=" FuncName)
                   FuncObj := %FuncName%  ;// https://www.autohotkey.com/boards/viewtopic.php?p=382662#p382662
                   If FuncObj is Func
                      Line := Indentation . FuncObj(Param)
                }
                else                               ; else just using the replacement defined at the top
                {
-                  ;if (Command = "StringMid")
-                     ;msgbox, % "in else`nLine: " Line "`nPart[2]: " Part[2] "`n`nListParam.Length: " ListParam.Length "`nParam.Length: " Param.Length "`n`nParam[1]: " Param[1] "`nParam[2]: " Param[2] "`nParam[3]: " Param[3] "`nParam[4]: " Param[4]
+                  ; if (Command = "FileAppend")
+                  ; {
+                  ;    paramsstr := ""
+                  ;    Loop Param.Length
+                  ;       paramsstr .= "Param[" A_Index "]: " Param[A_Index] "`n"
+                  ;    msgbox("in else`nLine: " Line "`nPart[2]: " Part[2] "`n`nListParam.Length: " ListParam.Length "`nParam.Length: " Param.Length "`n`n" paramsstr)
+                  ; }
 
                   if (same_line_action)
                      Line := Indentation . format_v(Part[2], Param) . "," extra_params
                   else
                      Line := Indentation . format_v(Part[2], Param)
 
+                  ; msgbox("Line after format:`n`n" Line)
                   ; if empty trailing optional params caused the line to end with extra commas, remove them
                   if SubStr(Line, -1) = ")"
                      Line := RegExReplace(Line, "(?:, `"?`"?)*\)$", "") . ")"
@@ -685,7 +695,7 @@ ToStringExpr(Text)
 
    Text := StrReplace(Text, qu, bt . qu)    ; first escape literal quotes
    Text := StrReplace(Text, bt . ",", ",")  ; then remove escape char for comma
-   ;msgbox text=%text%
+   ;msgbox("text=" text)
 
    if InStr(Text, "`%")        ; deref   %var% -> var
    {

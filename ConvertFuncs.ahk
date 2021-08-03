@@ -518,7 +518,7 @@ Convert(ScriptString)
                   }
                   else if (ListParam[A_Index] ~= "CBE2T$")    ; 'Can Be an Expression TO literal Text'
                   {
-                     if (this_param is "integer")                                               ; if this param is int
+                     if isInteger(this_param)                                               ; if this param is int
                      || (SubStr(this_param, 1, 2) = "% ")                                      ; or the expression was forced
                      || ((SubStr(this_param, 1, 1) = "%") && (SubStr(this_param, -1) = "%"))  ; or var already wrapped in %%s
                         Param[A_Index] := this_param                  ; dont do any conversion
@@ -665,7 +665,7 @@ ToExp(Text)
       If Symbol != "%"
          TOut .= (qu) ; One double quote
    }
-   else if Text is "number"
+   else if isNumber(Text)
    {
       ;msgbox %text%
       TOut := Text+0

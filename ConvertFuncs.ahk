@@ -119,6 +119,9 @@ Convert(ScriptString)
 
 
    Output := ""
+   InCommentBlock := false
+   InCont := 0
+   Cont_String := 0
 
    ; parse each line of the input script
    Loop Parse, ScriptString, "`n", "`r"
@@ -629,6 +632,7 @@ ToExp(Text)
    {
       ;msgbox %text%
       TOut := ""
+      DeRef := 0
       ;Loop % StrLen(Text)
       Loop Parse, Text
       {
@@ -686,6 +690,7 @@ ToStringExpr(Text)
    if InStr(Text, "`%")        ; deref   %var% -> var
    {
       TOut := ""
+      DeRef := 0
       ;Loop % StrLen(Text)
       Loop Parse, Text
       {

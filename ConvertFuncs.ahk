@@ -524,7 +524,12 @@ Convert(ScriptString)
                   this_param := StrReplace(this_param, "ESCAPED_COMMª_PLA¢E_HOLDER", "``,")
                   ; if (Command = "IfEqual")
                   ;    msgbox("Line=" Line "`nIndex=" A_Index)
-                  if (ListParam[A_Index] ~= "T2E$")           ; 'Text TO Expression'
+                  if (A_Index > ListParam.Length)
+                  {
+                     Param[A_Index] := this_param
+                     continue
+                  }
+                  else if (ListParam[A_Index] ~= "T2E$")           ; 'Text TO Expression'
                   {
                      Param[A_Index] := ToExp(this_param)
                      ; msgbox("text2expression`nthis_param=" this_param "`nconverted=" Param[A_Index])

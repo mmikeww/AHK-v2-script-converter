@@ -441,7 +441,7 @@ Convert(ScriptString)
                ListParam := Array()
                Param := Array() ; Parameters in expression form
                Loop Parse, ListParams, "`,"
-                  ListParam[A_Index] := A_LoopField
+                  ListParam.Push(A_LoopField)
                Params := StrReplace(Params, "``,", "ESCAPED_COMMª_PLA¢E_HOLDER")     ; ugly hack
                Loop Parse, Params, "`,"
                {
@@ -451,9 +451,9 @@ Convert(ScriptString)
                   ; for ex:  `IfEqual, x, h, e, l, l, o`   should be   `if (x = "h, e, l, l, o")`
                   ; see ~10 lines below
                   if (A_Index <= ListParam.Length)
-                     Param[A_Index] := LTrim(A_LoopField)   ; trim leading spaces off each param
+                     Param.Push(LTrim(A_LoopField))   ; trim leading spaces off each param
                   else
-                     Param[A_Index] := A_LoopField
+                     Param.Push(A_LoopField)
                }
                ;msgbox, % "Line:`n`n" Line "`n`nParam.Length=" Param.Length "`nListParam.Length=" ListParam.Length
 

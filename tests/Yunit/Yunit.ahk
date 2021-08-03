@@ -1,9 +1,7 @@
-;#NoEnv
+#Requires AutoHotkey v2.0-beta.1
 
 class Yunit
 {
-    static Modules := [Yunit.StdOut]
-    
     class Tester extends Yunit
     {
         __New(Modules)
@@ -12,84 +10,85 @@ class Yunit
         }
     }
     
-    Use(Modules*)
+    static Use(Modules*)
     {
-        return new this.Tester(Modules)
+        return (this.Tester)(Modules)
     }
+    
+    New(p*) => (o := {base: this}, o.__new(p*), o)
     
     Test(classes*) ; static method
     {
-        instance := new this("")
-        instance.results := {}
+        instance := this.new("")
+        instance.results := Map()
         instance.classes := classes
-        instance.Modules := []
-        for k,module in instance.base.Modules
-            instance.Modules[k] := new module(instance)
-        while (A_Index <= classes.Length())
+        instance.Modules := Array()
+        for module in instance.base.Modules
+            instance.Modules.Push(module(instance))
+        for cls in classes
         {
-            cls := classes[A_Index]
             instance.current := A_Index
-            instance.results[cls.__class] := obj := {}
+            instance.results[cls.prototype.__class] := obj := Map()
             instance.TestClass(obj, cls)
         }
     }
     
     Update(Category, Test, Result)
     {
-        for k,module in this.Modules
+        for module in this.Modules
             module.Update(Category, Test, Result)
     }
     
     TestClass(results, cls)
     {
-        environment := new cls() ; calls __New
-        for k,v in cls
+        environment := cls() ; calls __New
+        for k in cls.prototype.OwnProps()
         {
-            if Type(v) = "Func" ;test
+            if !(cls.prototype.%k% is Func)
+                continue
+            if (k = "Begin") or (k = "End") or (k = "__New") or (k == "__Delete")
+                continue
+            if environment.HasMethod("Begin") 
+                environment.Begin()
+            result := 0
+            try
             {
-                if (k = "Begin") or (k = "End")
-                    continue
-                if ObjHasKey(cls,"Begin") 
-                && Type(cls.Begin) = "Func"
-                    environment.Begin()
-                result := 0
-                try
-                {
-                    %v%(environment)
-                    if ObjHasKey(environment, "ExpectedException")
-                        throw Exception("ExpectedException")
-                }
-                catch error
-                {
-                    if !ObjHasKey(environment, "ExpectedException")
-                    || !this.CompareValues(environment.ExpectedException, error)
-                        result := error
-                }
-                results[k] := result
-                ObjDelete(environment, "ExpectedException")
-                this.Update(cls.__class, k, results[k])
-                if ObjHasKey(cls,"End")
-                && Type(cls.End) = "Func"
-                    environment.End()
+                environment.%k%()
+                if ObjHasOwnProp(environment, "ExpectedException")
+                    throw Error("ExpectedException")
             }
-            else if IsObject(v)
-            && ObjHasKey(v, "__class") ;category
-                this.classes.InsertAt(++this.current, v)
+            catch Error as err
+            {
+                if !ObjHasOwnProp(environment, "ExpectedException")
+                || !this.CompareValues(environment.ExpectedException, err)
+                    result := err
+            }
+            results[k] := result
+            environment.DeleteProp("ExpectedException")
+            this.Update(cls.prototype.__class, k, results[k])
+            if environment.HasMethod("End")
+                environment.End()
         }
+        for k,v in cls.OwnProps()
+            if v is Class
+                this.classes.InsertAt(++this.current, v)
     }
     
-    Assert(Value, params*)
+    static Assert(Value, params*)
     {
-        Message := (params[1] = "") ? "FAIL" : params[1]
+        try
+            Message := params[1]
+        catch
+            Message := "FAIL"
         if (!Value)
-            throw Exception(Message, -2)
+            throw Error(Message, -2)
     }
     
     CompareValues(v1, v2)
     {   ; Support for simple exceptions. May need to be extended in the future.
         if !IsObject(v1) || !IsObject(v2)
             return v1 = v2   ; obey StringCaseSense
-        if !ObjHasKey(v1, "Message") || !ObjHasKey(v2, "Message")
+        if !ObjHasOwnProp(v1, "Message") || !ObjHasOwnProp(v2, "Message")
             return False
         return v1.Message = v2.Message
     }

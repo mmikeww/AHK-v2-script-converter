@@ -11,7 +11,7 @@ Yunit is designed to aid in the following tasks:
 
 Example
 -------
-See `doc/Example.ahk` for a working example script that demonstrates Yunit being used for testing.
+See [doc/Example.ahk](Example.ahk) for a working example script that demonstrates Yunit being used for testing.
 
 A basic test setup looks like the following:
 
@@ -64,9 +64,9 @@ Output modules only need to be imported if they are going to be used.
 Usage
 -----
 Yunit is implemented as a class, conveniently named `Yunit`.
-This class is static, which basically means you do not need to make a new instance of it to use it.
+This class is static, which basically means you do not need to make a new instance of `Yunit` it to use it.
 
-To begin, first we need to select the output modules to use (a list of available modules is documented in the *Modules* section).
+To begin, first we need to select the output modules to use (a list of available modules is documented in the *Modules* section below).
 In other words, where the results of the tests should go.
 
 This is done using the `Yunit.Use(Modules*)` method, where `Modules*` represents zero or more modules to use.
@@ -77,7 +77,7 @@ When called, the method returns a `Yunit.Tester` object, which represents the op
 This code creates a `Yunit.Tester` object that uses the `YunitStdout` and `YunitWindow` modules for output.
 
 Now that the `Yunit.Tester` object has been created, we can run a set of tests against it.
-This is done using the `Yunit.Tester.Test(Classes*)` method, where `Classes*` represents zero or more test classes to use (the format is documented in the *Tests* section).
+This is done using the `Yunit.Tester.Test(Classes*)` method, where `Classes*` represents zero or more test classes to use (the format is documented in the *Tests* section below).
 When called, the method starts the tests and manages the results:
 
     Tester.Test(FirstTestSet, SecondTestSet, ThirdTestSet)
@@ -86,6 +86,10 @@ This code runs all tests in all three sets.
 
 This method is synchronous and blocks the current thread until complete.
 Results will be shown while the method is running.
+
+Instead of using the two lines above, it may be preferable to simply chain them together:
+
+    Yunit.Use(YunitStdout, YunitWindow).Test(FirstTestSet, SecondTestSet, ThirdTestSet)
 
 Modules
 -------
@@ -192,9 +196,9 @@ The order in which tests are called is arbitrary.
 Writing Tests
 -------------
 A test is a class method that takes no arguments and has no return value.
-For a test to fail it must throw an exception. 
+For a test to fail it must throw an Error exception. 
 Any test that returns normally is considered a success. 
-The method `Yunit.Assert(Value, Message)` conveniently throws an exception when `Value` evaluates to false, with an optional `Message` which is displayed if it fails. If the Assert() fails however, no subsequent code within the test function will execute. So, it should always be the last line within the function.
+The method `Yunit.Assert(Value, Message)` conveniently throws an Error exception when `Value` evaluates to false, with an optional `Message` which is displayed if it fails. If the Assert() fails however, no subsequent code within the test function will execute. So, it should always be the last line within the function.
 
     This_Is_A_Test()
     {

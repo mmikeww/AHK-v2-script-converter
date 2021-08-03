@@ -13,7 +13,7 @@ class YunitJUnit{
         if FileExist(this.filename) {
             FileDelete this.filename
         }
-				this.out := {}
+				this.out := Array()
 				this.tests := {}
         this.tests.pass := 0
         this.tests.fail := 0
@@ -25,11 +25,11 @@ class YunitJUnit{
     __Delete() {
 				file := FileOpen(this.filename, "w")
 				file.write('<?xml version="1.0" encoding="UTF-8"?>`n')
-				msg := "<testsuites failures=" . this.tests.fail . " tests=" . this.tests.overall . ">"
+				msg := '<testsuites failures="' . this.tests.fail . '" tests="' . this.tests.overall . '">'
 				file.write(msg . "`n")
-				msg := '`t<testsuite failures=' . this.tests.fail . ' tests=' . this.tests.overall . ' name="AHK_YUnit">'
+				msg := '`t<testsuite failures="' . this.tests.fail . '" tests="' . this.tests.overall . '" name="AHK_YUnit">'
 				file.write(msg . "`n")
-				Loop this.out.Length()
+				Loop this.out.Length
 					file.write(this.out[A_Index] . "`n")
         file.write("`t</testsuite>`n")
 				file.write("</testsuites>`n")
@@ -41,7 +41,8 @@ class YunitJUnit{
     {		
 				this.tests.overall := this.tests.overall + 1
 				msg := '`t`t<testcase name="' . TestName . '" classname="' . Category . '"'
-        If IsObject(Result) {
+        if Result is Error
+        {
 					this.out.Push(msg . ">")
 					this.tests.fail := this.tests.fail + 1
           msg := "Line #" result.line ": " result.message

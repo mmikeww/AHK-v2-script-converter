@@ -25,7 +25,8 @@ class YunitOutputDebug{
 
 	Update(Category, TestName, Result)	{
 		this.tests.overall := this.tests.overall + 1
-		if IsObject(Result) {
+		if Result is Error
+		{
 			this.tests.fail := this.tests.fail + 1
 			Details := "at line " Result.Line " (" Result.Message ") - (" result.file ")"
 			Status := "FAIL"

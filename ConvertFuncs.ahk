@@ -366,7 +366,7 @@ Convert(ScriptString)
          pos := 1, quoted_string_match := ""
          while (pos := RegExMatch(AllParams, '".*?"', &MatchObj, pos+StrLen(quoted_string_match)))  ; for each quoted string
          {
-            quoted_string_match := MatchObj.Value(0)
+            quoted_string_match := MatchObj[0]
             ;msgbox, % "quoted_string_match=" quoted_string_match "`nlen=" StrLen(quoted_string_match) "`npos=" pos
             string_with_placeholders := StrReplace(quoted_string_match, ",", "MY_COMMª_PLA¢E_HOLDER")
             string_with_placeholders := StrReplace(string_with_placeholders, "?", "MY_¿¿¿_PLA¢E_HOLDER")

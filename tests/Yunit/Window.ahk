@@ -91,8 +91,8 @@ YUnit_OnClose(Gui) {
 }
 
 YUnit_OnSize(MyGui, EventInfo, Width, Height) {
-  MyGui.Control["YunitWindowTitle"].Move("w" . Width)
-  MyGui.Control["YunitWindowEntries"].Move("w" . (Width - 20) . " h" . (Height - 60))
+  MyGui["YunitWindowTitle"].Move(,, Width, )
+  MyGui["YunitWindowEntries"].Move(,, Width - 20, Height - 60)
   MyGui.Opt("+LastFound")
   DllCall("user32.dll\InvalidateRect", "uInt", WinExist(), "uInt", 0, "uInt", 1)
   Return

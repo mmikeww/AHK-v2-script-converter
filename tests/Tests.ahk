@@ -175,6 +175,7 @@ class ConvertTests
    {
       input_script := "
          (Join`r`n
+                                 var = hi
                                  /`*
                                  var = hello
                                  *`/
@@ -184,6 +185,7 @@ class ConvertTests
 
       expected := "
          (Join`r`n
+                                 var := "hi"
                                  /`*
                                  var = hello
                                  *`/
@@ -209,6 +211,7 @@ class ConvertTests
    {
       input_script := "
          (Join`r`n
+                                 var = hi
                                  /`*
                                  var = 
                                  `(
@@ -221,6 +224,7 @@ class ConvertTests
 
       expected := "
          (Join`r`n
+                                 var := "hi"
                                  /`*
                                  var = 
                                  `(
@@ -395,6 +399,8 @@ class ConvertTests
    {
       input_script := "
          (Join`r`n
+                                 x := 50
+                                 y := 60
                                  var := true
                                  ( var ) ? x : y
                                  var2 = value2
@@ -402,6 +408,8 @@ class ConvertTests
 
       expected := "
          (Join`r`n
+                                 x := 50
+                                 y := 60
                                  var := true
                                  ( var ) ? x : y
                                  var2 := "value2"
@@ -1748,6 +1756,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       ; dont replace the equal sign in the ternary during the function CALL
       input_script := "
          (Join`r`n
+                                 var := 1
                                  Concat((var=5) ? 5 : 0)
 
                                  Concat(one, two="2")
@@ -1758,6 +1767,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       expected := "
          (Join`r`n
+                                 var := 1
                                  Concat((var=5) ? 5 : 0)
 
                                  Concat(one, two:="2")
@@ -3372,6 +3382,10 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                     var := "hi"
                                     return OtherFunc(var, "world", 3)
                                  }
+
+                                 OtherFunc(one, two, three) {
+                                    return one . two
+                                 }
          )"
 
       expected := "
@@ -3381,6 +3395,10 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  MyFunc() {
                                     var := "hi"
                                     return OtherFunc(var, "world", 3)
+                                 }
+
+                                 OtherFunc(one, two, three) {
+                                    return one . two
                                  }
          )"
 
@@ -5206,6 +5224,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    {
       input_script := "
          (Join`r`n
+                                 name := dir := ""
                                  FullFileName = C:\My Documents\Address List.txt
                                  SplitPath, FullFileName, name
                                  SplitPath, FullFileName, , dir
@@ -5214,6 +5233,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       expected := "
          (Join`r`n
+                                 name := dir := ""
                                  FullFileName := "C:\My Documents\Address List.txt"
                                  SplitPath FullFileName, name
                                  SplitPath FullFileName, , dir
@@ -5238,6 +5258,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    {
       input_script := "
          (Join`r`n
+                                 name := dir := ""
                                  FullFileName = C:\My Documents\Address List.txt
                                  SplitPath, % FullFileName, name
                                  SplitPath, % FullFileName, , dir
@@ -5246,6 +5267,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       expected := "
          (Join`r`n
+                                 name := dir := ""
                                  FullFileName := "C:\My Documents\Address List.txt"
                                  SplitPath FullFileName, name
                                  SplitPath FullFileName, , dir
@@ -5270,6 +5292,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    {
       input_script := "
          (Join`r`n
+                                 name := dir := ""
                                  SplitPath, % "C:\My Documents\Address List.txt", name
                                  SplitPath, % "C:\My Documents\Address List.txt", , dir
                                  FileAppend, %name%``n%dir%, *
@@ -5277,6 +5300,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       expected := "
          (Join`r`n
+                                 name := dir := ""
                                  SplitPath "C:\My Documents\Address List.txt", name
                                  SplitPath "C:\My Documents\Address List.txt", , dir
                                  FileAppend(name . "``n" . dir, "*")

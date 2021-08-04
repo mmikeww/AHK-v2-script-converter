@@ -353,7 +353,6 @@ class ConvertTests
       ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
-   */
 
    Continuation_CommandParam()
    {
@@ -390,6 +389,7 @@ class ConvertTests
       ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
+   */
 
    Ternary_NotAContinuation()
    {
@@ -4384,6 +4384,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
+   /*
    IfInString_SameLineAction()
    {
       input_script := "
@@ -4413,6 +4414,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
+   */
 
    IfInString_block()
    {

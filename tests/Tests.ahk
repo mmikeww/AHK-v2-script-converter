@@ -12,6 +12,8 @@ class ConvertTests
    Begin()
    {
       ; Set this to 'true' to also test that the execution results match for v1 and v2
+      ; This works by including a FileAppend line to stdout "*" with some value which
+      ; should match for both versions.
       ; this omits some tests such as EnvUpdate and FileSelectFile
       ; This is useful to use if the v2alpha syntax has changed and you need to check
       ; if the conversion is still accurate.
@@ -51,11 +53,7 @@ class ConvertTests
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -83,11 +81,7 @@ class ConvertTests
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -115,11 +109,7 @@ class ConvertTests
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -147,11 +137,7 @@ class ConvertTests
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -181,11 +167,7 @@ class ConvertTests
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -219,11 +201,7 @@ class ConvertTests
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -263,11 +241,7 @@ class ConvertTests
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -305,11 +279,7 @@ class ConvertTests
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -343,11 +313,7 @@ class ConvertTests
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -384,11 +350,7 @@ class ConvertTests
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
    */
@@ -425,11 +387,7 @@ class ConvertTests
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -459,11 +417,7 @@ class ConvertTests
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -493,11 +447,7 @@ class ConvertTests
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -527,11 +477,7 @@ class ConvertTests
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -561,11 +507,7 @@ class ConvertTests
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -595,11 +537,7 @@ class ConvertTests
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -631,11 +569,7 @@ class ConvertTests
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -667,11 +601,7 @@ class ConvertTests
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -707,11 +637,7 @@ class ConvertTests
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -747,11 +673,7 @@ class ConvertTests
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -789,11 +711,7 @@ class ConvertTests
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -827,11 +745,7 @@ class ConvertTests
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -861,11 +775,7 @@ class ConvertTests
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -897,11 +807,7 @@ class ConvertTests
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -931,11 +837,7 @@ class ConvertTests
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -965,11 +867,7 @@ class ConvertTests
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -999,11 +897,7 @@ class ConvertTests
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -1033,11 +927,7 @@ class ConvertTests
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -1067,11 +957,7 @@ class ConvertTests
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -1101,11 +987,7 @@ class ConvertTests
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -1135,11 +1017,7 @@ class ConvertTests
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 /*
@@ -1182,11 +1060,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -1221,11 +1095,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 */
@@ -1255,11 +1125,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -1289,11 +1155,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -1323,11 +1185,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -1357,11 +1215,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -1391,11 +1245,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -1425,11 +1275,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -1461,11 +1307,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -1495,11 +1337,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -1531,11 +1369,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -1567,11 +1401,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -1603,11 +1433,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -1637,11 +1463,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -1673,11 +1495,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -1709,11 +1527,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -1747,11 +1561,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -1785,11 +1595,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -1825,11 +1631,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -1865,11 +1667,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -1905,11 +1703,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -1945,11 +1739,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -1986,11 +1776,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -2028,11 +1814,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -2060,11 +1842,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -2092,11 +1870,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -2124,11 +1898,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -2158,11 +1928,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -2194,11 +1960,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -2228,11 +1990,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -2266,11 +2024,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -2302,11 +2056,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -2340,11 +2090,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -2378,11 +2124,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -2416,11 +2158,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -2454,11 +2192,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -2492,11 +2226,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -2532,11 +2262,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -2572,11 +2298,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -2612,11 +2334,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -2650,11 +2368,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -2688,11 +2402,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -2726,11 +2436,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -2764,11 +2470,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -2798,11 +2500,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -2832,11 +2530,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -2868,11 +2562,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -2906,11 +2596,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -2944,11 +2630,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -2983,11 +2665,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -3017,11 +2695,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -3053,11 +2727,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -3087,11 +2757,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -3123,11 +2789,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -3157,11 +2819,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -3193,11 +2851,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -3227,11 +2881,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -3263,11 +2913,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -3295,11 +2941,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -3345,11 +2987,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -3377,11 +3015,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -3410,11 +3044,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -3442,11 +3072,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -3476,11 +3102,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -3510,11 +3132,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -3544,11 +3162,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -3576,11 +3190,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -3612,11 +3222,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -3644,11 +3250,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -3679,11 +3281,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
    */
@@ -3722,11 +3320,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -3764,11 +3358,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -3804,11 +3394,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -3842,11 +3428,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -3878,11 +3460,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -3916,11 +3494,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -3948,11 +3522,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -3982,11 +3552,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -4016,11 +3582,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -4050,11 +3612,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -4084,11 +3642,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -4120,11 +3674,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -4154,11 +3704,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -4192,11 +3738,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -4232,11 +3774,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -4268,11 +3806,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -4302,11 +3836,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -4336,11 +3866,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -4372,11 +3898,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -4408,11 +3930,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -4444,11 +3962,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -4482,11 +3996,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -4512,11 +4022,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -4550,11 +4056,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -4588,11 +4090,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -4626,11 +4124,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -4664,11 +4158,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -4694,11 +4184,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -4726,11 +4212,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -4758,11 +4240,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -4792,11 +4270,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -4828,11 +4302,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -4862,11 +4332,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -4896,11 +4362,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -4936,11 +4398,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -4970,11 +4428,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -5002,11 +4456,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -5034,11 +4484,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -5070,11 +4516,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -5106,11 +4548,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -5142,11 +4580,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -5178,11 +4612,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -5214,11 +4644,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -5246,11 +4672,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -5276,11 +4698,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -5308,11 +4726,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -5340,11 +4754,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -5374,11 +4784,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -5406,11 +4812,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -5438,11 +4840,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -5477,11 +4875,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -5515,11 +4909,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -5553,11 +4943,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -5587,11 +4973,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -5617,11 +4999,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -5655,11 +5033,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -5685,11 +5059,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -5715,11 +5085,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -5749,11 +5115,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -5783,11 +5145,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -5819,11 +5177,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -5855,11 +5209,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
@@ -5889,11 +5239,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
-      ; FileAppend(expected, "expected.txt")
-      ; FileAppend(converted, "converted.txt")
-      ; RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
-      ; FileDelete("expected.txt")
-      ; FileDelete("converted.txt")
+      ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 }
@@ -6099,5 +5445,15 @@ class ExecScriptTests
          ; Yunit.assert(result_input != result_expected)
       ; }
    }
+}
+
+
+ViewStringDiff(expected, converted)
+{
+   FileAppend(expected, "expected.txt")
+   FileAppend(converted, "converted.txt")
+   RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+   FileDelete("expected.txt")
+   FileDelete("converted.txt")
 }
 

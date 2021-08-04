@@ -2673,15 +2673,15 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    {
       input_script := "
          (Join`r`n
-                                 String = This is a test.
-                                 StringLeft, OutputVar, String, 4
+                                 Str = This is a test.
+                                 StringLeft, OutputVar, Str, 4
                                  FileAppend, %OutputVar%, *
          )"
 
       expected := "
          (Join`r`n
-                                 String := "This is a test."
-                                 OutputVar := SubStr(String, 1, 4)
+                                 Str := "This is a test."
+                                 OutputVar := SubStr(Str, 1, 4)
                                  FileAppend(OutputVar, "*")
          )"
 
@@ -2703,17 +2703,17 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    {
       input_script := "
          (Join`r`n
-                                 String = This is a test.
+                                 Str = This is a test.
                                  count := 3
-                                 StringLeft, OutputVar, String, count+1
+                                 StringLeft, OutputVar, Str, count+1
                                  FileAppend, %OutputVar%, *
          )"
 
       expected := "
          (Join`r`n
-                                 String := "This is a test."
+                                 Str := "This is a test."
                                  count := 3
-                                 OutputVar := SubStr(String, 1, count+1)
+                                 OutputVar := SubStr(Str, 1, count+1)
                                  FileAppend(OutputVar, "*")
          )"
 
@@ -2735,15 +2735,15 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    {
       input_script := "
          (Join`r`n
-                                 String = This is a test.
-                                 StringRight, OutputVar, String, 5
+                                 Str = This is a test.
+                                 StringRight, OutputVar, Str, 5
                                  FileAppend, %OutputVar%, *
          )"
 
       expected := "
          (Join`r`n
-                                 String := "This is a test."
-                                 OutputVar := SubStr(String, -1*(5))
+                                 Str := "This is a test."
+                                 OutputVar := SubStr(Str, -1*(5))
                                  FileAppend(OutputVar, "*")
          )"
 
@@ -2765,17 +2765,17 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    {
       input_script := "
          (Join`r`n
-                                 String = This is a test.
+                                 Str = This is a test.
                                  count := 6
-                                 StringRight, OutputVar, String, count-1
+                                 StringRight, OutputVar, Str, count-1
                                  FileAppend, %OutputVar%, *
          )"
 
       expected := "
          (Join`r`n
-                                 String := "This is a test."
+                                 Str := "This is a test."
                                  count := 6
-                                 OutputVar := SubStr(String, -1*(count-1))
+                                 OutputVar := SubStr(Str, -1*(count-1))
                                  FileAppend(OutputVar, "*")
          )"
 
@@ -2797,15 +2797,15 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    {
       input_script := "
          (Join`r`n
-                                 String = This is a test.
-                                 StringTrimLeft, OutputVar, String, 5
+                                 Str = This is a test.
+                                 StringTrimLeft, OutputVar, Str, 5
                                  FileAppend, %OutputVar%, *
          )"
 
       expected := "
          (Join`r`n
-                                 String := "This is a test."
-                                 OutputVar := SubStr(String, (5)+1)
+                                 Str := "This is a test."
+                                 OutputVar := SubStr(Str, (5)+1)
                                  FileAppend(OutputVar, "*")
          )"
 
@@ -2827,17 +2827,17 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    {
       input_script := "
          (Join`r`n
-                                 String = This is a test.
+                                 Str = This is a test.
                                  count := 5
-                                 StringTrimLeft, OutputVar, String, count*1
+                                 StringTrimLeft, OutputVar, Str, count*1
                                  FileAppend, %OutputVar%, *
          )"
 
       expected := "
          (Join`r`n
-                                 String := "This is a test."
+                                 Str := "This is a test."
                                  count := 5
-                                 OutputVar := SubStr(String, (count*1)+1)
+                                 OutputVar := SubStr(Str, (count*1)+1)
                                  FileAppend(OutputVar, "*")
          )"
 
@@ -2859,15 +2859,15 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    {
       input_script := "
          (Join`r`n
-                                 String = This is a test.
-                                 StringTrimRight, OutputVar, String, 6
+                                 Str = This is a test.
+                                 StringTrimRight, OutputVar, Str, 6
                                  FileAppend, [%OutputVar%], *
          )"
 
       expected := "
          (Join`r`n
-                                 String := "This is a test."
-                                 OutputVar := SubStr(String, 1, -1*(6))
+                                 Str := "This is a test."
+                                 OutputVar := SubStr(Str, 1, -1*(6))
                                  FileAppend("[" . OutputVar . "]", "*")
          )"
 
@@ -2889,17 +2889,17 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    {
       input_script := "
          (Join`r`n
-                                 String = This is a test.
+                                 Str = This is a test.
                                  count := 3
-                                 StringTrimRight, OutputVar, String, count+3
+                                 StringTrimRight, OutputVar, Str, count+3
                                  FileAppend, [%OutputVar%], *
          )"
 
       expected := "
          (Join`r`n
-                                 String := "This is a test."
+                                 Str := "This is a test."
                                  count := 3
-                                 OutputVar := SubStr(String, 1, -1*(count+3))
+                                 OutputVar := SubStr(Str, 1, -1*(count+3))
                                  FileAppend("[" . OutputVar . "]", "*")
          )"
 
@@ -3695,17 +3695,17 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    {
       input_script := "
          (Join`r`n
-                                 String = This is a test.
+                                 Str = This is a test.
                                  count := 3
-                                 StringLeft, OutputVar, String, % count+1
+                                 StringLeft, OutputVar, Str, % count+1
                                  FileAppend, %OutputVar%, *
          )"
 
       expected := "
          (Join`r`n
-                                 String := "This is a test."
+                                 Str := "This is a test."
                                  count := 3
-                                 OutputVar := SubStr(String, 1, count+1)
+                                 OutputVar := SubStr(Str, 1, count+1)
                                  FileAppend(OutputVar, "*")
          )"
 
@@ -3922,17 +3922,17 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    {
       input_script := "
          (Join`r`n
-                                 String = This is a test.
+                                 Str = This is a test.
                                  count := 7
-                                 StringLeft, OutputVar, String, count
+                                 StringLeft, OutputVar, Str, count
                                  FileAppend, %OutputVar%, *
          )"
 
       expected := "
          (Join`r`n
-                                 String := "This is a test."
+                                 Str := "This is a test."
                                  count := 7
-                                 OutputVar := SubStr(String, 1, count)
+                                 OutputVar := SubStr(Str, 1, count)
                                  FileAppend(OutputVar, "*")
          )"
 
@@ -3954,17 +3954,17 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    {
       input_script := "
          (Join`r`n
-                                 String = This is a test.
+                                 Str = This is a test.
                                  count := 7
-                                 StringLeft, OutputVar, String, %count%
+                                 StringLeft, OutputVar, Str, %count%
                                  FileAppend, %OutputVar%, *
          )"
 
       expected := "
          (Join`r`n
-                                 String := "This is a test."
+                                 Str := "This is a test."
                                  count := 7
-                                 OutputVar := SubStr(String, 1, count)
+                                 OutputVar := SubStr(Str, 1, count)
                                  FileAppend(OutputVar, "*")
          )"
 
@@ -3986,17 +3986,17 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    {
       input_script := "
          (Join`r`n
-                                 String = This is a test.
+                                 Str = This is a test.
                                  count := 7
-                                 StringLeft, OutputVar, String, % count
+                                 StringLeft, OutputVar, Str, % count
                                  FileAppend, %OutputVar%, *
          )"
 
       expected := "
          (Join`r`n
-                                 String := "This is a test."
+                                 Str := "This is a test."
                                  count := 7
-                                 OutputVar := SubStr(String, 1, count)
+                                 OutputVar := SubStr(Str, 1, count)
                                  FileAppend(OutputVar, "*")
          )"
 
@@ -4018,19 +4018,19 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
    {
       input_script := "
          (Join`r`n
-                                 String = This is a test.
+                                 Str = This is a test.
                                  count := 7
                                  two_letters := "nt"
-                                 StringLeft, OutputVar, String, % cou%two_letters%
+                                 StringLeft, OutputVar, Str, % cou%two_letters%
                                  FileAppend, %OutputVar%, *
          )"
 
       expected := "
          (Join`r`n
-                                 String := "This is a test."
+                                 Str := "This is a test."
                                  count := 7
                                  two_letters := "nt"
-                                 OutputVar := SubStr(String, 1, cou%two_letters%)
+                                 OutputVar := SubStr(Str, 1, cou%two_letters%)
                                  FileAppend(OutputVar, "*")
          )"
 

@@ -3538,7 +3538,10 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       expected := "
          (Join`r`n
                                  OldStr := "The_quick_brown_fox"
-                                 NewStr := StrReplace(OldStr, "_",,, 1)
+                                 ; StrReplace() is not case sensitive
+                                 ; check for StringCaseSense in v1 source script
+                                 ; and change the CaseSense param in StrReplace() if necessary
+                                 NewStr := StrReplace(OldStr, "_",,,, 1)
                                  FileAppend(NewStr, "*")
          )"
 
@@ -3568,7 +3571,10 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       expected := "
          (Join`r`n
                                  OldStr := "The quick brown fox"
-                                 NewStr := StrReplace(OldStr, A_Space, "+",, 1)
+                                 ; StrReplace() is not case sensitive
+                                 ; check for StringCaseSense in v1 source script
+                                 ; and change the CaseSense param in StrReplace() if necessary
+                                 NewStr := StrReplace(OldStr, A_Space, "+",,, 1)
                                  FileAppend(NewStr, "*")
          )"
 
@@ -3598,7 +3604,43 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       expected := "
          (Join`r`n
                                  OldStr := "The quick brown fox"
+                                 ; StrReplace() is not case sensitive
+                                 ; check for StringCaseSense in v1 source script
+                                 ; and change the CaseSense param in StrReplace() if necessary
                                  NewStr := StrReplace(OldStr, A_Space, "+")
+                                 FileAppend(NewStr, "*")
+         )"
+
+      ; first test that our expected code actually produces the same results in v2
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "v1 execution != v2 execution")
+      }
+
+      ; then test that our converter will correctly covert the input_script to the expected script
+      converted := Convert(input_script)
+      ; ViewStringDiff(expected, converted)
+      Yunit.assert(converted = expected, "converted script != expected script")
+   }
+
+   StringReplace_All_NoReplaceText()
+   {
+      input_script := "
+         (Join`r`n
+                                 OldStr := "The quick brown fox"
+                                 StringReplace, NewStr, OldStr, %A_Space%,, All
+                                 FileAppend, %NewStr%, *
+         )"
+
+      expected := "
+         (Join`r`n
+                                 OldStr := "The quick brown fox"
+                                 ; StrReplace() is not case sensitive
+                                 ; check for StringCaseSense in v1 source script
+                                 ; and change the CaseSense param in StrReplace() if necessary
+                                 NewStr := StrReplace(OldStr, A_Space, "")
                                  FileAppend(NewStr, "*")
          )"
 
@@ -3628,7 +3670,10 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       expected := "
          (Join`r`n
                                  OldStr := "The quick brown fox"
-                                 NewStr := StrReplace(OldStr, A_Space, "+", ErrorLevel)
+                                 ; StrReplace() is not case sensitive
+                                 ; check for StringCaseSense in v1 source script
+                                 ; and change the CaseSense param in StrReplace() if necessary
+                                 NewStr := StrReplace(OldStr, A_Space, "+",, &ErrorLevel)
                                  FileAppend("number of replacements: " . ErrorLevel, "*")
          )"
 
@@ -3690,6 +3735,9 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       expected := "
          (Join`r`n
                                  OldStr := "The quick brown fox"
+                                 ; StrReplace() is not case sensitive
+                                 ; check for StringCaseSense in v1 source script
+                                 ; and change the CaseSense param in StrReplace() if necessary
                                  NewStr := StrReplace(OldStr, " ", "+")
                                  FileAppend(NewStr, "*")
          )"
@@ -5101,7 +5149,10 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       expected := "
          (Join`r`n
                                  list := "one,two,three"
-                                 list := StrReplace(list, ",", ",", ErrorLevel)
+                                 ; StrReplace() is not case sensitive
+                                 ; check for StringCaseSense in v1 source script
+                                 ; and change the CaseSense param in StrReplace() if necessary
+                                 list := StrReplace(list, ",", ",",, &ErrorLevel)
                                  FileAppend(ErrorLevel, "*")
          )"
 

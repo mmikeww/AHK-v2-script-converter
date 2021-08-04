@@ -67,7 +67,7 @@ Convert(ScriptString)
       StringTrimRight,OutputVar,InputVar,CountCBE2E | {1} := SubStr({2}, 1, -1*({3}))
       StringUpper,OutputVar,InputVar,TT2E| {1} := StrUpper({2}, {3})
       StringLower,OutputVar,InputVar,TT2E| {1} := StrLower({2}, {3})
-      StringReplace,OutputVar,InputVar,SearchTxtT2E,ReplTxtT2E,ReplAll | *_StrReplace
+      StringReplace,OutputVar,InputVar,SearchTxtT2E,ReplTxtT2E,ReplAll | *_StringReplace
       ToolTip,txtT2E,xCBE2E,yCBE2E,whichCBE2E | ToolTip({1}, {2}, {3}, {4})
       WinGetActiveStats,TitleVar,WidthVar,HeightVar,XVar,YVar | *_WinGetActiveStats
       WinGetActiveTitle,OutputVar | {1} := WinGetTitle("A")
@@ -873,31 +873,32 @@ _StringMid(p)
 }
 
 
-_StrReplace(p)
+_StringReplace(p)
 {
    ; v1
    ; StringReplace, OutputVar, InputVar, SearchText [, ReplaceText, ReplaceAll?]
-   ; v2 obsolete
-   ; StrReplace, OutputVar, Haystack, SearchText [, ReplaceText, OutputVarCount, Limit = -1]
    ; v2
-   ; OutputVar := StrReplace(Haystack, SearchText , ReplaceText, OutputVarCount, Limit := -1)
+   ; ReplacedStr := StrReplace(Haystack, Needle [, ReplaceText, CaseSense, OutputVarCount, Limit])
+
+   comment := "; StrReplace() is not case sensitive`r`n; check for StringCaseSense in v1 source script`r`n"
+   comment .= "; and change the CaseSense param in StrReplace() if necessary`r`n"
 
    if IsEmpty(p[4]) && IsEmpty(p[5])
-      return format("{1} := StrReplace({2}, {3},,, 1)", p*)
+      return comment . format("{1} := StrReplace({2}, {3},,,, 1)", p*)
    else if IsEmpty(p[5])
-      return format("{1} := StrReplace({2}, {3}, {4},, 1)", p*)
+      return comment . format("{1} := StrReplace({2}, {3}, {4},,, 1)", p*)
    else
    {
       p5char1 := SubStr(p[5], 1, 1)
       ; MsgBox(p[5] "`n" p5char1)
 
       if (p[5] = "UseErrorLevel")    ; UseErrorLevel also implies ReplaceAll
-         return format("{1} := StrReplace({2}, {3}, {4}, ErrorLevel)", p*)
+         return comment . format("{1} := StrReplace({2}, {3}, {4},, &ErrorLevel)", p*)
       else if (p5char1 = "1") || (StrUpper(p5char1) = "A")
          ; if the first char of the ReplaceAll param starts with '1' or 'A'
          ; then all of those imply 'replace all'
          ; https://github.com/Lexikos/AutoHotkey_L/blob/master/source/script2.cpp#L7033
-         return format("{1} := StrReplace({2}, {3}, {4})", p*)
+         return comment . format("{1} := StrReplace({2}, {3}, {4})", p*)
    }
 }
 

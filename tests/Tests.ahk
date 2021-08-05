@@ -5065,7 +5065,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  var := "3.1415"
                                  varLow := "2"
                                  varHigh := "4"
-                                 if (var >= varLow && var <= varHigh)
+                                 if (var >= VarLow && var <= VarHigh)
                                     FileAppend(var . " between " . VarLow . " and " . VarHigh, "*")
          )"
 
@@ -5095,7 +5095,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       expected := "
          (Join`r`n
                                  var := "boy"
-                                 if (var >= "blue" && var <= "red")
+                                 if ((StrCompare(var, "blue") > 0) && (StrCompare(var, "red") < 0))
                                     FileAppend(var . " is alphabetically between 'blue' and 'red'", "*")
          )"
 

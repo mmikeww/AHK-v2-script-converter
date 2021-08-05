@@ -319,13 +319,30 @@ Convert(ScriptString)
          ;                                  , val1: ToExp(Equation[4])
          ;                                  , val2: ToExp(Equation[5])
          ;                                  , otb: Equation[6] } )
-         Line := Indentation . format("{1}if {3}({2} >= {4} && {2} <= {5}){6}"
-                                                                , Equation[1]                 ;else
-                                                                , Equation[2]                 ;var
-                                                                , (Equation[3]) ? "!" : ""    ;not
-                                                                , ToExp(Equation[4])          ;val1
-                                                                , ToExp(Equation[5])          ;val2
-                                                                , Equation[6] )               ;otb
+         val1 := ToExp(Equation[4])
+         val2 := ToExp(Equation[5])
+
+         if (isNumber(val1) && isNumber(val2)) || InStr(Equation[4], "%") || InStr(Equation[5], "%")
+         {
+            Line := Indentation . format("{1}if {3}({2} >= {4} && {2} <= {5}){6}"
+                                                                   , Equation[1]                 ;else
+                                                                   , Equation[2]                 ;var
+                                                                   , (Equation[3]) ? "!" : ""    ;not
+                                                                   , val1                        ;val1
+                                                                   , val2                        ;val2
+                                                                   , Equation[6] )               ;otb
+         }
+         else  ; if not numbers or variables, then compare alphabetically with StrCompare()
+         {
+            ;if ((StrCompare(var, "blue") > 0) && (StrCompare(var, "red") < 0))
+            Line := Indentation . format("{1}if {3}((StrCompare({2}, {4}) > 0) && (StrCompare({2}, {5}) < 0)){6}"
+                                                                   , Equation[1]                 ;else
+                                                                   , Equation[2]                 ;var
+                                                                   , (Equation[3]) ? "!" : ""    ;not
+                                                                   , val1                        ;val1
+                                                                   , val2                        ;val2
+                                                                   , Equation[6] )               ;otb
+         }
       }
 
       ; -------------------------------------------------------------------------------

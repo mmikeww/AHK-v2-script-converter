@@ -36,6 +36,7 @@ Convert(ScriptString)
       FileAppend,textT2E,fileT2E,encT2E | FileAppend({1}, {2}, {3})
       FileCopyDir,source,dest,flag | DirCopy, {1}, {2}, {3}
       FileCreateDir,dir | DirCreate, {1}
+      FileGetSize,OutputVar,filenameT2E,unitsT2E | {1} := FileGetSize({2}, {3})
       FileMoveDir,source,dest,flag | DirMove, {1}, {2}, {3}
       FileRemoveDir,dir,recurse | DirDelete, {1}, {2}
       FileSelectFolder,var,startingdir,opts,prompt | DirSelect, {1}, {2}, {3}, {4}

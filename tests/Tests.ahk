@@ -879,6 +879,7 @@ class ConvertTests
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
+   /*
    IfEqual_SameLineAction()
    {
       input_script := "
@@ -908,6 +909,7 @@ class ConvertTests
       ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
+   */
 
    IfEqual_CommandThenMultipleSpaces()
    {
@@ -1944,7 +1946,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
-   DriveGetFreeSpace()
+   DriveGetSpaceFree()
    {
       input_script := "
          (Join`r`n
@@ -1956,6 +1958,34 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n
                                  FreeSpace := DriveGetSpaceFree("c:\")
                                  FileAppend(FreeSpace, "*")
+         )"
+
+      ; first test that our expected code actually produces the same results in v2
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "v1 execution != v2 execution")
+      }
+
+      ; then test that our converter will correctly covert the input_script to the expected script
+      converted := Convert(input_script)
+      ; ViewStringDiff(expected, converted)
+      Yunit.assert(converted = expected, "converted script != expected script")
+   }
+
+   FileGetSize()
+   {
+      input_script := "
+         (Join`r`n
+                                 FileGetSize, size, %A_ScriptDir%\Tests.ahk
+                                 FileAppend, %size%, *
+         )"
+
+      expected := "
+         (Join`r`n
+                                 size := FileGetSize(A_ScriptDir . "\Tests.ahk")
+                                 FileAppend(size, "*")
          )"
 
       ; first test that our expected code actually produces the same results in v2

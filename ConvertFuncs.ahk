@@ -17,6 +17,8 @@ Convert(ScriptString)
    ;//              this would be used if the conversion goes from Command to Command
    ;//              because in v2, those command parameters can no longer optionally be an expression.
    ;//              these will be wrapped in %%s, so   expr+1   is now    %expr+1%
+   ;//          - param names ending in "V2VR" would convert an output variable name to a v2 VarRef
+   ;//              basically it will just add an & at the start. so var -> &var
    ;//          - any other param name will not be converted
    ;//              this means that the literal text of the parameter is unchanged
    ;//              this would be used for InputVar/OutputVar params, or whenever you want the literal text preserved
@@ -56,7 +58,7 @@ Convert(ScriptString)
       SetEnv,var,valueT2E | {1} := {2}
       Sleep,delayCBE2E | Sleep({1})
       Sort,var,optionsT2E | {1} := Sort({1}, {2})
-      SplitPath,varCBE2E,filename,dir,ext,name_no_ext,drv | SplitPath {1}, {2}, {3}, {4}, {5}, {6}
+      SplitPath,varCBE2E,filenameV2VR,dirV2VR,extV2VR,name_no_extV2VR,drvV2VR | SplitPath({1}, {2}, {3}, {4}, {5}, {6})
       StringCaseSense,paramT2E | StringCaseSense({1})
       StringLen,OutputVar,InputVar | {1} := StrLen({2})
       StringGetPos,OutputVar,InputVar,SearchTextT2E,SideT2E,OffsetCBE2E | *_StringGetPos
@@ -567,6 +569,11 @@ Convert(ScriptString)
                         Param[A_Index] := this_param                  ; dont do any conversion
                      else
                         Param[A_Index] := "%" . this_param . "%"    ; wrap in percent signs to evaluate the expr
+                  }
+                  else if (ListParam[A_Index] ~= "V2VR$")
+                  {
+                     if (Param[A_Index] != "")
+                        Param[A_Index] := "&" . Param[A_Index]
                   }
                   else
                   {

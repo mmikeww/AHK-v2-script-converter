@@ -5363,8 +5363,8 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n
                                  name := dir := ""
                                  FullFileName := "C:\My Documents\Address List.txt"
-                                 SplitPath FullFileName, name
-                                 SplitPath FullFileName, , dir
+                                 SplitPath(FullFileName, &name)
+                                 SplitPath(FullFileName, , &dir)
                                  FileAppend(name . "``n" . dir, "*")
          )"
 
@@ -5397,8 +5397,8 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n
                                  name := dir := ""
                                  FullFileName := "C:\My Documents\Address List.txt"
-                                 SplitPath FullFileName, name
-                                 SplitPath FullFileName, , dir
+                                 SplitPath(FullFileName, &name)
+                                 SplitPath(FullFileName, , &dir)
                                  FileAppend(name . "``n" . dir, "*")
          )"
 
@@ -5429,8 +5429,8 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       expected := "
          (Join`r`n
                                  name := dir := ""
-                                 SplitPath "C:\My Documents\Address List.txt", name
-                                 SplitPath "C:\My Documents\Address List.txt", , dir
+                                 SplitPath("C:\My Documents\Address List.txt", &name)
+                                 SplitPath("C:\My Documents\Address List.txt", , &dir)
                                  FileAppend(name . "``n" . dir, "*")
          )"
 

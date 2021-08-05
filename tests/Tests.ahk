@@ -2085,7 +2085,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n
                                  Haystack := "abcdefabcdef"
                                  Needle := "def"
-                                 pos := InStr(Haystack, Needle, (A_StringCaseSense="On") ? true : false, (0)+1, 2) - 1
+                                 pos := InStr(Haystack, Needle,, (0)+1, 2) - 1
                                  if (pos >= 0)
                                      FileAppend("The string was found at position " . pos . ".", "*")
          )"
@@ -2104,6 +2104,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
+   /*
    StringGetPos_SearchLeftOccurance_StringCaseSense()
    {
       input_script := "
@@ -2137,6 +2138,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
+   */
 
    StringGetPos_SearchRight()
    {
@@ -2153,7 +2155,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n
                                  Haystack := "abcdefabcdef"
                                  Needle := "bcd"
-                                 pos := InStr(Haystack, Needle, (A_StringCaseSense="On") ? true : false, -1*((0)+1), 1) - 1
+                                 pos := InStr(Haystack, Needle,, -1*((0)+1), 1) - 1
                                  if (pos >= 0)
                                      FileAppend("The string was found at position " . pos . ".", "*")
          )"
@@ -2187,7 +2189,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n
                                  Haystack := "abcdefabcdef"
                                  Needle := "cde"
-                                 pos := InStr(Haystack, Needle, (A_StringCaseSense="On") ? true : false, -1*((0)+1), 2) - 1
+                                 pos := InStr(Haystack, Needle,, -1*((0)+1), 2) - 1
                                  if (pos >= 0)
                                      FileAppend("The string was found at position " . pos . ".", "*")
          )"
@@ -2221,7 +2223,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n
                                  Haystack := "abcdefabcdef"
                                  Needle := "cde"
-                                 pos := InStr(Haystack, Needle, (A_StringCaseSense="On") ? true : false, (4)+1, 1) - 1
+                                 pos := InStr(Haystack, Needle,, (4)+1, 1) - 1
                                  if (pos >= 0)
                                      FileAppend("The string was found at position " . pos . ".", "*")
          )"
@@ -2257,7 +2259,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  Haystack := "abcdefabcdef"
                                  Needle := "cde"
                                  var := "2"
-                                 pos := InStr(Haystack, Needle, (A_StringCaseSense="On") ? true : false, (var)+1, 1) - 1
+                                 pos := InStr(Haystack, Needle,, (var)+1, 1) - 1
                                  if (pos >= 0)
                                      FileAppend("The string was found at position " . pos . ".", "*")
          )"
@@ -2293,7 +2295,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  Haystack := "abcdefabcdef"
                                  Needle := "cde"
                                  var := "1"
-                                 pos := InStr(Haystack, Needle, (A_StringCaseSense="On") ? true : false, (var+2)+1, 1) - 1
+                                 pos := InStr(Haystack, Needle,, (var+2)+1, 1) - 1
                                  if (pos >= 0)
                                      FileAppend("The string was found at position " . pos . ".", "*")
          )"
@@ -2329,7 +2331,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  Haystack := "abcdefabcdefabcdef"
                                  Needle := "cde"
                                  var := "0"
-                                 pos := InStr(Haystack, Needle, (A_StringCaseSense="On") ? true : false, -1*((var+2)+1), 2) - 1
+                                 pos := InStr(Haystack, Needle,, -1*((var+2)+1), 2) - 1
                                  if (pos >= 0)
                                      FileAppend("The string was found at position " . pos . ".", "*")
          )"
@@ -2363,7 +2365,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n
                                  Haystack := "abcdefabcdefabcdef"
                                  Needle := "cde"
-                                 pos := InStr(Haystack, Needle, (A_StringCaseSense="On") ? true : false, (4)+1, 2) - 1
+                                 pos := InStr(Haystack, Needle,, (4)+1, 2) - 1
                                  if (pos >= 0)
                                      FileAppend("The string was found at position " . pos . ".", "*")
          )"
@@ -2397,7 +2399,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n
                                  Haystack := "abcdefabcdef"
                                  Needle := "cde"
-                                 pos := InStr(Haystack, Needle, (A_StringCaseSense="On") ? true : false, -1*((4)+1), 1) - 1
+                                 pos := InStr(Haystack, Needle,, -1*((4)+1), 1) - 1
                                  if (pos >= 0)
                                      FileAppend("The string was found at position " . pos . ".", "*")
          )"
@@ -2431,7 +2433,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n
                                  Haystack := "abcdefabcdefabcdef"
                                  Needle := "cde"
-                                 pos := InStr(Haystack, Needle, (A_StringCaseSense="On") ? true : false, -1*((4)+1), 2) - 1
+                                 pos := InStr(Haystack, Needle,, -1*((4)+1), 2) - 1
                                  if (pos >= 0)
                                      FileAppend("The string was found at position " . pos . ".", "*")
          )"
@@ -2465,7 +2467,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n
                                  Haystack := "FFFF"
                                  Needle := "FF"
-                                 pos := InStr(Haystack, Needle, (A_StringCaseSense="On") ? true : false, (0)+1, 2) - 1
+                                 pos := InStr(Haystack, Needle,, (0)+1, 2) - 1
                                  if (pos >= 0)
                                      FileAppend("The string was found at position " . pos . ".", "*")
          )"
@@ -3825,7 +3827,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  Haystack := "abcdefabcdef"
                                  Needle := "cde"
                                  var := "1"
-                                 pos := InStr(Haystack, Needle, (A_StringCaseSense="On") ? true : false, (var+2)+1, 1) - 1
+                                 pos := InStr(Haystack, Needle,, (var+2)+1, 1) - 1
                                  if (pos >= 0)
                                      FileAppend("The string was found at position " . pos . ".", "*")
          )"
@@ -4354,7 +4356,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n
                                  Haystack := "abcdefghijklmnopqrs"
                                  Needle := "abc"
-                                 if InStr(Haystack, Needle, (A_StringCaseSense="On") ? true : false)
+                                 if InStr(Haystack, Needle)
                                     FileAppend("found", "*")
          )"
 
@@ -4384,7 +4386,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       expected := "
          (Join`r`n
                                  Haystack := "abcdefghijklmnopqrs"
-                                 if InStr(Haystack, "jklm", (A_StringCaseSense="On") ? true : false)
+                                 if InStr(Haystack, "jklm")
                                     FileAppend("found", "*")
          )"
 
@@ -4415,7 +4417,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       expected := "
          (Join`r`n
                                  Haystack := "z.y.x.w"
-                                 if InStr(Haystack, "y.x", (A_StringCaseSense="On") ? true : false), mouse_btns := SysGet(43)
+                                 if InStr(Haystack, "y.x",, mouse_btns := SysGet(43)
                                  FileAppend(mouse_btns, "*")
          )"
 
@@ -4449,7 +4451,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       expected := "
          (Join`r`n
                                  Haystack := "abcdefghijklmnopqrs"
-                                 if InStr(Haystack, "jklm", (A_StringCaseSense="On") ? true : false)
+                                 if InStr(Haystack, "jklm")
                                  {
                                     Sleep(10)
                                     FileAppend("found", "*")
@@ -4482,7 +4484,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       expected := "
          (Join`r`n
                                  Haystack := "abcdefghijklmnopqrs"
-                                 if !InStr(Haystack, "jklm", (A_StringCaseSense="On") ? true : false)
+                                 if !InStr(Haystack, "jklm")
                                     FileAppend("found", "*")
          )"
 

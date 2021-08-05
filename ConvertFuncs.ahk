@@ -45,8 +45,8 @@ Convert(ScriptString)
       IfGreaterOrEqual,var,valueT2E | if ({1} >= {2})
       IfLess,var,valueT2E | if ({1} < {2})
       IfLessOrEqual,var,valueT2E | if ({1} <= {2})
-      IfInString,var,valueT2E | if InStr({1}, {2}, (A_StringCaseSense="On") ? true : false)
-      IfNotInString,var,valueT2E | if !InStr({1}, {2}, (A_StringCaseSense="On") ? true : false)
+      IfInString,var,valueT2E | if InStr({1}, {2})
+      IfNotInString,var,valueT2E | if !InStr({1}, {2})
       IfExist,fileT2E | if FileExist({1})
       IfNotExist,fileT2E | if !FileExist({1})
       IfWinExist,titleT2E,textT2E,excltitleT2E,excltextT2E | if WinExist({1}, {2}, {3}, {4})
@@ -827,6 +827,8 @@ _StringGetPos(p)
       ;msgbox, % p[4] "`np4FirstChar=" p4FirstChar "`np4LastChar=" p4LastChar
       if (p4FirstChar = "`"") && (p4LastChar = "`"")   ; remove start/end quotes, would be nice if a non-expr was passed in
       {
+         ; the text param was already conveted to expr based on the SideT2E param definition
+         ; so this block handles cases such as "L2" or "R1" etc
          p4noquotes := SubStr(p[4], 2, -1)
          p4char1 := SubStr(p4noquotes, 1, 1)
          occurences := SubStr(p4noquotes, 2)
@@ -834,16 +836,16 @@ _StringGetPos(p)
          p[4] := occurences ? occurences : 1
         
          if (StrUpper(p4char1) = "R") || (p4noquotes = "1")
-            return format("{1} := InStr({2}, {3}, (A_StringCaseSense=`"On`") ? true : false, -1*(({5})+1), {4}) - 1", p*)
+            return format("{1} := InStr({2}, {3},, -1*(({5})+1), {4}) - 1", p*)
          else
-            return format("{1} := InStr({2}, {3}, (A_StringCaseSense=`"On`") ? true : false, ({5})+1, {4}) - 1", p*)
+            return format("{1} := InStr({2}, {3},, ({5})+1, {4}) - 1", p*)
       }
       else
       {
          ; else then a variable was passed (containing the "L#|R#" string),
          ;      or literal text converted to expr, something like:   "L" . A_Index
          ; output something anyway even though it won't work, so that they can see something to fix
-         return format("{1} := InStr({2}, {3}, (A_StringCaseSense=`"On`") ? true : false, ({5})+1, {4}) - 1", p*)
+         return format("{1} := InStr({2}, {3},, ({5})+1, {4}) - 1", p*)
       }
    }
 }

@@ -2038,6 +2038,38 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
+   StringGetPos_NotFound()
+   {
+      input_script := "
+         (Join`r`n
+                                 Haystack = abcdefghijklmnopqrs
+                                 Needle = xyz
+                                 StringGetPos, pos, Haystack, %Needle%
+                                 FileAppend, The string was found at position %pos%., *
+         )"
+
+      expected := "
+         (Join`r`n
+                                 Haystack := "abcdefghijklmnopqrs"
+                                 Needle := "xyz"
+                                 pos := InStr(Haystack, Needle) - 1
+                                 FileAppend("The string was found at position " . pos . ".", "*")
+         )"
+
+      ; first test that our expected code actually produces the same results in v2
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "v1 execution != v2 execution")
+      }
+
+      ; then test that our converter will correctly covert the input_script to the expected script
+      converted := Convert(input_script)
+      ; ViewStringDiff(expected, converted)
+      Yunit.assert(converted = expected, "converted script != expected script")
+   }
+
    StringGetPos_LiteralText()
    {
       input_script := "
@@ -2155,7 +2187,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n
                                  Haystack := "abcdefabcdef"
                                  Needle := "bcd"
-                                 pos := InStr(Haystack, Needle,, -1*((0)+1), 1) - 1
+                                 pos := InStr(Haystack, Needle,, -1*((0)+1)) - 1
                                  if (pos >= 0)
                                      FileAppend("The string was found at position " . pos . ".", "*")
          )"
@@ -2189,7 +2221,41 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n
                                  Haystack := "abcdefabcdef"
                                  Needle := "cde"
-                                 pos := InStr(Haystack, Needle,, -1*((0)+1), 2) - 1
+                                 pos := InStr(Haystack, Needle,, -1*((0)+1), -2) - 1
+                                 if (pos >= 0)
+                                     FileAppend("The string was found at position " . pos . ".", "*")
+         )"
+
+      ; first test that our expected code actually produces the same results in v2
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "v1 execution != v2 execution")
+      }
+
+      ; then test that our converter will correctly covert the input_script to the expected script
+      converted := Convert(input_script)
+      ; ViewStringDiff(expected, converted)
+      Yunit.assert(converted = expected, "converted script != expected script")
+   }
+
+   StringGetPos_SearchRight_Literal1Occurrence()
+   {
+      input_script := "
+         (Join`r`n
+                                 Haystack = abcdefabcdef
+                                 Needle = bcd
+                                 StringGetPos, pos, Haystack, %Needle%, 1
+                                 if pos >= 0
+                                     FileAppend, The string was found at position %pos%., *
+         )"
+
+      expected := "
+         (Join`r`n
+                                 Haystack := "abcdefabcdef"
+                                 Needle := "bcd"
+                                 pos := InStr(Haystack, Needle,, -1*((0)+1)) - 1
                                  if (pos >= 0)
                                      FileAppend("The string was found at position " . pos . ".", "*")
          )"
@@ -2223,7 +2289,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n
                                  Haystack := "abcdefabcdef"
                                  Needle := "cde"
-                                 pos := InStr(Haystack, Needle,, (4)+1, 1) - 1
+                                 pos := InStr(Haystack, Needle,, (4)+1) - 1
                                  if (pos >= 0)
                                      FileAppend("The string was found at position " . pos . ".", "*")
          )"
@@ -2259,7 +2325,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  Haystack := "abcdefabcdef"
                                  Needle := "cde"
                                  var := "2"
-                                 pos := InStr(Haystack, Needle,, (var)+1, 1) - 1
+                                 pos := InStr(Haystack, Needle,, (var)+1) - 1
                                  if (pos >= 0)
                                      FileAppend("The string was found at position " . pos . ".", "*")
          )"
@@ -2295,7 +2361,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  Haystack := "abcdefabcdef"
                                  Needle := "cde"
                                  var := "1"
-                                 pos := InStr(Haystack, Needle,, (var+2)+1, 1) - 1
+                                 pos := InStr(Haystack, Needle,, (var+2)+1) - 1
                                  if (pos >= 0)
                                      FileAppend("The string was found at position " . pos . ".", "*")
          )"
@@ -2331,7 +2397,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  Haystack := "abcdefabcdefabcdef"
                                  Needle := "cde"
                                  var := "0"
-                                 pos := InStr(Haystack, Needle,, -1*((var+2)+1), 2) - 1
+                                 pos := InStr(Haystack, Needle,, -1*((var+2)+1), -2) - 1
                                  if (pos >= 0)
                                      FileAppend("The string was found at position " . pos . ".", "*")
          )"
@@ -2399,7 +2465,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n
                                  Haystack := "abcdefabcdef"
                                  Needle := "cde"
-                                 pos := InStr(Haystack, Needle,, -1*((4)+1), 1) - 1
+                                 pos := InStr(Haystack, Needle,, -1*((4)+1)) - 1
                                  if (pos >= 0)
                                      FileAppend("The string was found at position " . pos . ".", "*")
          )"
@@ -2433,7 +2499,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n
                                  Haystack := "abcdefabcdefabcdef"
                                  Needle := "cde"
-                                 pos := InStr(Haystack, Needle,, -1*((4)+1), 2) - 1
+                                 pos := InStr(Haystack, Needle,, -1*((4)+1), -2) - 1
                                  if (pos >= 0)
                                      FileAppend("The string was found at position " . pos . ".", "*")
          )"
@@ -3827,7 +3893,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  Haystack := "abcdefabcdef"
                                  Needle := "cde"
                                  var := "1"
-                                 pos := InStr(Haystack, Needle,, (var+2)+1, 1) - 1
+                                 pos := InStr(Haystack, Needle,, (var+2)+1) - 1
                                  if (pos >= 0)
                                      FileAppend("The string was found at position " . pos . ".", "*")
          )"

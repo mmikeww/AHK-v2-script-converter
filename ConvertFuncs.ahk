@@ -817,14 +817,15 @@ _StringGetPos(p)
    if IsEmpty(p[4]) && IsEmpty(p[5])
       return format("{1} := InStr({2}, {3}) - 1", p*)
 
-   ; modelled off of:   https://github.com/Lexikos/AutoHotkey_L/blob/master/source/script.cpp#L14181
+   ; modelled off of:
+   ; https://github.com/Lexikos/AutoHotkey_L/blob/9a88309957128d1cc701ca83f1fc5cca06317325/source/script.cpp#L14732
    else
    {
       p[5] := p[5] ? p[5] : 0   ; 5th param is 'Offset' aka starting position. set default value if none specified
 
       p4FirstChar := SubStr(p[4], 1, 1)
       p4LastChar := SubStr(p[4], -1)
-      ;msgbox, % p[4] "`np4FirstChar=" p4FirstChar "`np4LastChar=" p4LastChar
+      ; msgbox(p[4] "`np4FirstChar=" p4FirstChar "`np4LastChar=" p4LastChar)
       if (p4FirstChar = "`"") && (p4LastChar = "`"")   ; remove start/end quotes, would be nice if a non-expr was passed in
       {
          ; the text param was already conveted to expr based on the SideT2E param definition
@@ -833,19 +834,36 @@ _StringGetPos(p)
          p4char1 := SubStr(p4noquotes, 1, 1)
          occurences := SubStr(p4noquotes, 2)
          ;msgbox, % p[4]
-         p[4] := occurences ? occurences : 1
-        
-         if (StrUpper(p4char1) = "R") || (p4noquotes = "1")
-            return format("{1} := InStr({2}, {3},, -1*(({5})+1), {4}) - 1", p*)
+         ; p[4] := occurences ? occurences : 1
+
+         if (StrUpper(p4char1) = "R")
+         {
+            ; only add occurrences param to InStr func if occurrences > 1
+            if isInteger(occurences) && (occurences > 1)
+               return format("{1} := InStr({2}, {3},, -1*(({5})+1), -" . occurences . ") - 1", p*)
+            else
+               return format("{1} := InStr({2}, {3},, -1*(({5})+1)) - 1", p*)
+         }
          else
-            return format("{1} := InStr({2}, {3},, ({5})+1, {4}) - 1", p*)
+         {
+            if isInteger(occurences) && (occurences > 1)
+               return format("{1} := InStr({2}, {3},, ({5})+1, " . occurences . ") - 1", p*)
+            else
+               return format("{1} := InStr({2}, {3},, ({5})+1) - 1", p*)
+         }
+      }
+      else if (p[4] = 1)
+      {
+         ; in v1 if occurrences param = "R" or "1" conduct search right to left
+         ; "1" sounds weird but its in the v1 source, see link above
+         return format("{1} := InStr({2}, {3},, -1*(({5})+1)) - 1", p*)
       }
       else
       {
          ; else then a variable was passed (containing the "L#|R#" string),
          ;      or literal text converted to expr, something like:   "L" . A_Index
          ; output something anyway even though it won't work, so that they can see something to fix
-         return format("{1} := InStr({2}, {3},, ({5})+1, {4}) - 1", p*)
+         return ";probably incorrect conversion`r`n" . format("{1} := InStr({2}, {3},, ({5})+1, {4}) - 1", p*)
       }
    }
 }

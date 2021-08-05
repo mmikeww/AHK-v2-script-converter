@@ -41,10 +41,10 @@ Convert(ScriptString)
       FormatTime,outVar,dateT2E,formatT2E | {1} := FormatTime({2}, {3})
       IfEqual,var,valueT2E | if ({1} = {2})
       IfNotEqual,var,valueT2E | if ({1} != {2})
-      IfGreater,var,valueT2E | if ({1} > {2})
-      IfGreaterOrEqual,var,valueT2E | if ({1} >= {2})
-      IfLess,var,valueT2E | if ({1} < {2})
-      IfLessOrEqual,var,valueT2E | if ({1} <= {2})
+      IfGreater,var,valueT2E | *_IfGreater
+      IfGreaterOrEqual,var,valueT2E | *_IfGreaterOrEqual
+      IfLess,var,valueT2E | *_IfLess
+      IfLessOrEqual,var,valueT2E | *_IfLessOrEqual
       IfInString,var,valueT2E | if InStr({1}, {2})
       IfNotInString,var,valueT2E | if !InStr({1}, {2})
       IfExist,fileT2E | if FileExist({1})
@@ -296,11 +296,12 @@ Convert(ScriptString)
          ;                                  , op: Equation[4]
          ;                                  , value: ToExp(Equation[5])
          ;                                  , otb: Equation[6] } )
+         op := (Equation[4] = "<>") ? "!=" : Equation[4]
          Line := Indentation . format("{1}if {2}({3} {4} {5}){6}"
                                                                  , Equation[1]          ;else
                                                                  , Equation[2]          ;not
                                                                  , RTrim(Equation[3])   ;variable
-                                                                 , Equation[4]          ;op
+                                                                 , op                   ;op
                                                                  , ToExp(Equation[5])   ;value
                                                                  , Equation[6] )        ;otb
       }
@@ -939,6 +940,42 @@ _StringReplace(p)
    }
 }
 
+
+_IfGreater(p)
+{
+   ; msgbox(p[2])
+   if isNumber(p[2]) || InStr(p[2], "%")
+      return format("if ({1} > {2})", p*)
+   else
+      return format("if (StrCompare({1}, {2}) > 0)", p*)
+}
+
+_IfGreaterOrEqual(p)
+{
+   ; msgbox(p[2])
+   if isNumber(p[2]) || InStr(p[2], "%")
+      return format("if ({1} > {2})", p*)
+   else
+      return format("if (StrCompare({1}, {2}) >= 0)", p*)
+}
+
+_IfLess(p)
+{
+   ; msgbox(p[2])
+   if isNumber(p[2]) || InStr(p[2], "%")
+      return format("if ({1} < {2})", p*)
+   else
+      return format("if (StrCompare({1}, {2}) < 0)", p*)
+}
+
+_IfLessOrEqual(p)
+{
+   ; msgbox(p[2])
+   if isNumber(p[2]) || InStr(p[2], "%")
+      return format("if ({1} < {2})", p*)
+   else
+      return format("if (StrCompare({1}, {2}) <= 0)", p*)
+}
 
 ; =============================================================================
 

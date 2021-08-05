@@ -667,7 +667,7 @@ class ConvertTests
                                  MyVar2 := "joe2"
                                  if (MyVar = MyVar2)
                                      FileAppend("The contents of MyVar and MyVar2 are identical.", "*")
-                                 else if (MyVar <> "")
+                                 else if (MyVar != "")
                                      FileAppend("MyVar is not empty/blank", "*")
          )"
 
@@ -1149,7 +1149,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       expected := "
          (Join`r`n
                                  var := "value"
-                                 if (var >= "value")
+                                 if (StrCompare(var, "value") >= 0)
                                     FileAppend(var, "*")
          )"
 
@@ -1179,7 +1179,37 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       expected := "
          (Join`r`n
                                  var := "zzz"
-                                 if (var > "value")
+                                 if (StrCompare(var, "value") > 0)
+                                    FileAppend(var, "*")
+         )"
+
+      ; first test that our expected code actually produces the same results in v2
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "v1 execution != v2 execution")
+      }
+
+      ; then test that our converter will correctly covert the input_script to the expected script
+      converted := Convert(input_script)
+      ; ViewStringDiff(expected, converted)
+      Yunit.assert(converted = expected, "converted script != expected script")
+   }
+
+   IfGreater_Numbers()
+   {
+      input_script := "
+         (Join`r`n
+                                 var := 4
+                                 IfGreater, var, 3
+                                    FileAppend, %var%, *
+         )"
+
+      expected := "
+         (Join`r`n
+                                 var := 4
+                                 if (var > 3)
                                     FileAppend(var, "*")
          )"
 
@@ -1209,7 +1239,37 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       expected := "
          (Join`r`n
                                  var := "hhh"
-                                 if (var < "value")
+                                 if (StrCompare(var, "value") < 0)
+                                    FileAppend(var, "*")
+         )"
+
+      ; first test that our expected code actually produces the same results in v2
+      if (this.test_exec = true) {
+         result_input    := ExecScript_v1(input_script)
+         result_expected := ExecScript_v2(expected)
+         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+         Yunit.assert(result_input = result_expected, "v1 execution != v2 execution")
+      }
+
+      ; then test that our converter will correctly covert the input_script to the expected script
+      converted := Convert(input_script)
+      ; ViewStringDiff(expected, converted)
+      Yunit.assert(converted = expected, "converted script != expected script")
+   }
+
+   IfLess_Numbers()
+   {
+      input_script := "
+         (Join`r`n
+                                 var := 1
+                                 IfLess, var, 4
+                                    FileAppend, %var%, *
+         )"
+
+      expected := "
+         (Join`r`n
+                                 var := 1
+                                 if (var < 4)
                                     FileAppend(var, "*")
          )"
 
@@ -1239,7 +1299,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       expected := "
          (Join`r`n
                                  var := "hhh"
-                                 if (var <= "value")
+                                 if (StrCompare(var, "value") <= 0)
                                     FileAppend(var, "*")
          )"
 

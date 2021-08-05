@@ -362,11 +362,11 @@ Convert(ScriptString)
          ;                                  , variable: Equation[2]
          ;                                  , type: ToStringExpr(Equation[4])
          ;                                  , otb: Equation[5] } )
-         Line := Indentation . format("{1}if {3}({2} is {4}){5}"
+         Line := Indentation . format("{1}if {3}is{4}({2}){5}"
                                                                 , Equation[1]                 ;else
                                                                 , Equation[2]                 ;var
                                                                 , (Equation[3]) ? "!" : ""    ;not
-                                                                , ToStringExpr(Equation[4])   ;type
+                                                                , StrTitle(Equation[4])       ;type
                                                                 , Equation[5] )               ;otb
       }
 

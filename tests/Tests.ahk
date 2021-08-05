@@ -3588,9 +3588,9 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       expected := "
          (Join`r`n
                                  var := "3.1415"
-                                 if (var is "float")
+                                 if isFloat(var)
                                     FileAppend(var . " is float", "*")
-                                 else if (var is "integer")
+                                 else if isInteger(var)
                                     FileAppend(var . " is int", "*")
          )"
 
@@ -3613,16 +3613,16 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       input_script := "
          (Join`r`n
                                  var = 3.1415
-                                 type = float
-                                 if var is %type%
+                                 mytype = float
+                                 if var is %mytype%
                                     FileAppend, %var% is float, *
          )"
 
       expected := "
          (Join`r`n
                                  var := "3.1415"
-                                 type := "float"
-                                 if (var is type)
+                                 mytype := "float"
+                                 if is%mytype%(var)
                                     FileAppend(var . " is float", "*")
          )"
 
@@ -3654,38 +3654,10 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       expected := "
          (Join`r`n
                                  var := "3.1415"
-                                 if !(var is "float")
+                                 if !isFloat(var)
                                     FileAppend(var . " is not float", "*")
-                                 else if !(var is "integer")
+                                 else if !isInteger(var)
                                     FileAppend(var . " is not int", "*")
-         )"
-
-      ; first test that our expected code actually produces the same results in v2
-      if (this.test_exec = true) {
-         result_input    := ExecScript_v1(input_script)
-         result_expected := ExecScript_v2(expected)
-         ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
-         Yunit.assert(result_input = result_expected, "v1 execution != v2 execution")
-      }
-
-      ; then test that our converter will correctly covert the input_script to the expected script
-      converted := Convert(input_script)
-      ; ViewStringDiff(expected, converted)
-      Yunit.assert(converted = expected, "converted script != expected script")
-   }
-
-   IfVarIsType_AIsUnicode()
-   {
-      input_script := "
-         (Join`r`n
-                                 if A_IsUnicode
-                                    FileAppend, AHK Unicode %A_IsUnicode%, *
-         )"
-
-      expected := "
-         (Join`r`n
-                                 if A_IsUnicode
-                                    FileAppend("AHK Unicode " . A_IsUnicode, "*")
          )"
 
       ; first test that our expected code actually produces the same results in v2

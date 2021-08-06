@@ -2045,7 +2045,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       expected := "
          (Join`r`n
                                  var := "chris mallet"
-                                 newvar := StrLower(var, "T")
+                                 newvar := StrTitle(var)
                                  if (newvar == "Chris Mallet")
                                     FileAppend("it worked", "*")
          )"

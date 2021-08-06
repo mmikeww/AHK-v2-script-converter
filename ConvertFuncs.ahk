@@ -69,8 +69,8 @@ Convert(ScriptString)
       StringRight,OutputVar,InputVar,CountCBE2E | {1} := SubStr({2}, -1*({3}))
       StringTrimLeft,OutputVar,InputVar,CountCBE2E | {1} := SubStr({2}, ({3})+1)
       StringTrimRight,OutputVar,InputVar,CountCBE2E | {1} := SubStr({2}, 1, -1*({3}))
-      StringUpper,OutputVar,InputVar,TT2E| {1} := StrUpper({2}, {3})
-      StringLower,OutputVar,InputVar,TT2E| {1} := StrLower({2}, {3})
+      StringUpper,OutputVar,InputVar,TT2E| *_StringUpper
+      StringLower,OutputVar,InputVar,TT2E| *_StringLower
       StringReplace,OutputVar,InputVar,SearchTxtT2E,ReplTxtT2E,ReplAll | *_StringReplace
       ToolTip,txtT2E,xCBE2E,yCBE2E,whichCBE2E | ToolTip({1}, {2}, {3}, {4})
       WinGetActiveStats,TitleVar,WidthVar,HeightVar,XVar,YVar | *_WinGetActiveStats
@@ -996,6 +996,23 @@ _Loop(p)
       Line := RegExReplace(Line, "(?:,\s(?:`"`")?)*$", "") ; remove trailing ,\s and ,\s""
       return Line
    }
+}
+
+
+_StringLower(p)
+{
+   if (p[3] = '"T"')
+      return format("{1} := StrTitle({2})", p*)
+   else
+      return format("{1} := StrLower({2})", p*)
+}
+
+_StringUpper(p)
+{
+   if (p[3] = '"T"')
+      return format("{1} := StrTitle({2})", p*)
+   else
+      return format("{1} := StrUpper({2})", p*)
 }
 
 

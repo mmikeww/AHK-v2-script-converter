@@ -1,10 +1,11 @@
+#Requires AutoHotKey v2.0-beta.1
 #Include Yunit\Yunit.ahk
 #Include Yunit\Window.ahk
 #Include ..\ConvertFuncs.ahk
 #Include ExecScript.ahk
 
 Yunit.Use(YunitWindow).Test(ConvertTests, ToExpTests, ToStringExprTests
-                          , RemoveSurroundingQuotesTests, RemoveSurroundingPercentsTests, ExecScriptTests)
+                          , RemoveSurroundingQuotesTests, RemoveSurroundingPercentsTests, ExecScriptTests, MsgBoxTests, GuiTests, MenuTests, V1ParSplit)
 
 
 class ConvertTests
@@ -5654,6 +5655,222 @@ class ExecScriptTests
    }
 }
 
+class MsgBoxTests
+{
+   ; we pipe the output of FileAppend to StdOutput
+   ; then ExecScript() executes the script and reads from StdOut
+
+   MsgBox1Parameter()
+   {
+      input_script := "
+         (Join`r`n
+            MsgBox This is the 1-parameter method. Commas (,) do not need to be escaped.
+         )"
+      
+      expected := "
+         (Join`r`n
+            msgResult := MsgBox("This is the 1-parameter method. Commas (,) do not need to be escaped.")
+         )"
+      
+      ; if (this.test_exec = true) {
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      ; Yunit.assert(result_input = result_expected)
+      ; }
+      converted := Convert(input_script)
+      if (expected!=converted){
+         ViewStringDiff(expected, converted)
+      }
+      Yunit.assert(converted = expected, "converted script != expected script")
+   }
+
+   MsgBox1ParameterContinuationSection()
+   {
+      input_script := "
+         (Join`r`n
+MsgBox, 
+`(
+This is the 1-parameter method. Commas (,) do not need to be escaped.
+With continuation section.
+`)
+      )"
+      
+      expected := "
+         (Join`r`n
+msgResult := MsgBox("
+`(
+This is the 1-parameter method. Commas (,) do not need to be escaped.
+With continuation section.
+`)")
+)"
+      
+      ; if (this.test_exec = true) {
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      ; Yunit.assert(result_input = result_expected)
+      ; }
+      converted := Convert(input_script)
+      ;~ if (expected!=converted){
+         ;~ ViewStringDiff(expected, converted)
+      ;~ }
+      Yunit.assert(converted = expected, "converted script != expected script")
+   }
+
+   MsgBox3Parameter()
+   {
+      input_script := "
+         (Join`r`n
+MsgBox, 4, , This is the 3-parameter method. Commas (,) do not need to be escaped.
+         )"
+      
+      expected := "
+         (Join`r`n
+msgResult := MsgBox("This is the 3-parameter method. Commas (,) do not need to be escaped.", , 4)
+         )"
+      
+      ; if (this.test_exec = true) {
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      ; Yunit.assert(result_input = result_expected)
+      ; }
+      converted := Convert(input_script)
+      if (expected!=converted){
+         ViewStringDiff(expected, converted)
+      }
+      Yunit.assert(converted = expected, "converted script != expected script")
+   }
+
+
+   MsgBox4Parameter()
+   {
+      input_script := "
+         (Join`r`n
+MsgBox, 4, , 4-parameter method: this MsgBox will time out in 5 seconds.  Continue?, 5
+         )"
+      
+      expected := "
+         (Join`r`n
+msgResult := MsgBox("4-parameter method: this MsgBox will time out in 5 seconds.  Continue?", "", "4 T5")
+         )"
+      
+      ; if (this.test_exec = true) {
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      ; Yunit.assert(result_input = result_expected)
+      ; }
+      converted := Convert(input_script)
+      ;~ if (expected!=converted){
+         ;~ ViewStringDiff(expected, converted)
+      ;~ }
+      Yunit.assert(converted = expected, "converted script != expected script")
+   }
+
+
+}
+
+
+class GuiTests
+{
+   ; we pipe the output of FileAppend to StdOutput
+   ; then ExecScript() executes the script and reads from StdOut
+
+   GuiExample1()
+   {
+      input_script := "
+         (Join`r`n
+            Gui, Add, Text,, Please enter your name:
+            Gui, Add, Edit, vName
+            Gui, Show
+         )"
+      
+      expected := "
+         (Join`r`n
+            myGui := Gui()
+            myGui.Add("Text", "", "Please enter your name:")
+            myGui.Add("Edit", "vName")
+            myGui.Show()
+         )"
+      
+      ; if (this.test_exec = true) {
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      ; Yunit.assert(result_input = result_expected)
+      ; }
+      converted := Convert(input_script)
+      if (expected!=converted){
+         ViewStringDiff(expected, converted)
+      }
+      Yunit.assert(converted = expected, "converted script != expected script")
+   }
+
+   GuiExample2()
+   {
+      input_script := "
+         (Join`r`n
+Gui, +AlwaysOnTop +Disabled -SysMenu +Owner  ; +Owner avoids a taskbar button.
+Gui, Add, Text,, Some text to display.
+Gui, Show, NoActivate, Title of Window  ; NoActivate avoids deactivating the currently active window.
+         )"
+      
+      expected := "
+         (Join`r`n
+myGui := Gui()
+myGui.Opt("+AlwaysOnTop +Disabled -SysMenu +Owner")  ; +Owner avoids a taskbar button.
+myGui.Add("Text", "", "Some text to display.")
+myGui.Name := "Title of Window"
+myGui.Show("NoActivate")  ; NoActivate avoids deactivating the currently active window.
+         )"
+      
+
+      converted := Convert(input_script)
+      ;~ if (expected!=converted){
+         ;~ ViewStringDiff(expected, converted)
+      ;~ }
+      Yunit.assert(converted = expected, "converted script != expected script")
+   }
+
+
+}
+
+class MenuTests
+{
+   ; we pipe the output of FileAppend to StdOutput
+   ; then ExecScript() executes the script and reads from StdOut
+
+   MenuExample1()
+   {
+      input_script := "
+         (Join`r`n
+Menu, Tray, Add  ; Creates a separator line.
+Menu, Tray, Add, Item1, MenuHandler  ; Creates a new menu item.
+         )"
+      
+      expected := "
+         (Join`r`n
+Tray:= A_TrayMenu
+Tray.Add()  ; Creates a separator line.
+Tray.Add("Item1", MenuHandler)  ; Creates a new menu item.
+         )"
+      
+      ; if (this.test_exec = true) {
+      ; result_input    := ExecScript_v1(input_script)
+      ; result_expected := ExecScript_v2(expected)
+      ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
+      ; Yunit.assert(result_input = result_expected)
+      ; }
+      converted := Convert(input_script)
+      ;~ if (expected!=converted){
+         ;~ ViewStringDiff(expected, converted)
+      ;~ }
+      Yunit.assert(converted = expected, "converted script != expected script")
+   }
+
+}
 
 ViewStringDiff(expected, converted)
 {

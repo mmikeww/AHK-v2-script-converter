@@ -1,7 +1,75 @@
-﻿
+﻿#Requires AutoHotKey v2.0-beta.1
+#SingleInstance Force
+
+; Added a mapkey to test on the fly
+XButton1::
+{
+	ClipSaved := ClipboardAll()   ; Save the entire clipboard to a variable of your choice.
+	A_Clipboard := ""
+	Send "^c"
+
+	if !ClipWait(3){
+		DebugWindow( "error`n",Clear:=0)
+		return
+	}
+	Clipboard1 := A_Clipboard
+	A_Clipboard := ClipSaved   ; Restore the original clipboard. Note the use of A_Clipboard (not ClipboardAll).
+	ClipSaved := ""  ; Free the memory in case the clipboard was very large.
+
+	ConvertedCode := Convert(Clipboard1)
+	DebugWindow(ConvertedCode "`n",Clear:=0) ; For AHK Studio Users
+	;~ MsgBox(ConvertedCode)
+	A_Clipboard := ConvertedCode
+   if WinExist("Convert tester"){
+      WinClose("Convert tester")
+   }
+   
+	MyGui := Gui(,"Convert tester")
+	V1Edit := MyGui.Add("Edit", "w600 vvCodeV1", Clipboard1)  ; Add a fairly wide edit control at the top of the window.
+	MyGui.Add("Button", "default", "Run V2").OnEvent("Click", RunV1)
+	MyGui.Add("Button", "default x+10 yp", "Convert again").OnEvent("Click", ButtonConvert)
+	V2Edit := MyGui.Add("Edit", "xm w600 vvCodeV2", ConvertedCode)  ; Add a fairly wide edit control at the top of the window.
+	MyGui.Add("Button", "default", "Run V2").OnEvent("Click", RunV2)
+	MyGui.Show
+
+	return
+	RunV1(*){
+		TempAhkFile := A_MyDocuments "\testV1.ahk"
+		AhkV1Exe :=  "C:\Program Files\AutoHotkey\AutoHotkey.exe"
+		oSaved := MyGui.Submit(0)  ; Save the contents of named controls into an object.
+		try {
+			FileDelete TempAhkFile
+		}
+		FileAppend oSaved.vCodeV1 , TempAhkFile
+		Run AhkV1Exe " " TempAhkFile
+	}
+	RunV2(*){
+		TempAhkFile := A_MyDocuments "\testV2.ahk"
+		AhkV2Exe := "C:\Program Files\AutoHotkey V2\AutoHotkey64.exe"
+		oSaved := MyGui.Submit(0)  ; Save the contents of named controls into an object.
+		try {
+			FileDelete TempAhkFile
+		}
+		FileAppend oSaved.vCodeV2 , TempAhkFile
+		Run AhkV2Exe " " TempAhkFile
+	}
+   ButtonConvert(*){
+      oSaved := MyGui.Submit(0)
+      V2Edit.Value := Convert(oSaved.vCodeV1)
+   }
+}	
+
 Convert(ScriptString)
 {
-
+   global Orig_Line
+   global Orig_Line_NoComment
+   global oScriptString ; array of all the lines
+   global O_Index :=0 ; current index of the lines
+   global Indentation
+   global GuiNameDefault
+   global GuiList
+   GuiNameDefault := "myGui"
+   GuiList := "|"
    ;// Commands and How to convert them
    ;// Specification format:
    ;//          CommandName,Param1,Param2,etc | Replacement string format (see below)
@@ -42,6 +110,7 @@ Convert(ScriptString)
       FileSelectFolder,var,startingdir,opts,prompt | DirSelect, {1}, {2}, {3}, {4}
       FileSelectFile,var,opts,rootdirfile,prompt,filter | FileSelect, {1}, {2}, {3}, {4}, {5}
       FormatTime,outVar,dateT2E,formatT2E | {1} := FormatTime({2}, {3})
+      Gui,SubCommand,Value1,Value2,Value3 | *_Gui
       IfEqual,var,valueT2E | if ({1} = {2})
       IfNotEqual,var,valueT2E | if ({1} != {2})
       IfGreater,var,valueT2E | *_IfGreater
@@ -56,6 +125,8 @@ Convert(ScriptString)
       IfWinNotExist,titleT2E,textT2E,excltitleT2E,excltextT2E | if !WinExist({1}, {2}, {3}, {4})
       IfWinActive,titleT2E,textT2E,excltitleT2E,excltextT2E | if WinActive({1}, {2}, {3}, {4})
       IfWinNotActive,titleT2E,textT2E,excltitleT2E,excltextT2E | if !WinActive({1}, {2}, {3}, {4})
+      Menu,MenuName,SubCommand,Value1,Value2,Value3,Value4 | *_Menu
+      MsgBox,TextOrOptions,Title,Text,Timeout | *_MsgBox
       Loop,one,two,three,four | *_Loop
       SetEnv,var,valueT2E | {1} := {2}
       Sleep,delayCBE2E | Sleep({1})
@@ -126,13 +197,23 @@ Convert(ScriptString)
    InCommentBlock := false
    InCont := 0
    Cont_String := 0
+   oScriptString := {}
+   oScriptString := StrSplit(ScriptString , "`n", "`r")
 
    ; parse each line of the input script
    Loop Parse, ScriptString, "`n", "`r"
    {
+      O_Index++
+      if (oScriptString.Length < O_Index){
+         ; This allows the user to add or remove lines if necessary
+         ; Do not forget to change the O_index if you want to remove or add the line above or lines below
+         break
+      }
+      O_Loopfield := oScriptString[O_Index]
+
       Skip := false
-      ;Line := A_LoopReadLine
-      Line := A_LoopField
+      
+      Line := O_Loopfield
       Orig_Line := Line
       RegExMatch(Line, "^(\s*)", &Indentation)
       Indentation := Indentation[1]
@@ -149,6 +230,7 @@ Convert(ScriptString)
       else
          EOLComment := ""
 
+      Orig_Line_NoComment := Line
       CommandMatch := -1
 
 
@@ -818,11 +900,6 @@ IsEmpty(param)
 ;    They all accept an array of parameters and return command(s) in text form
 ;    These are only called in one place in the script and are called dynamicly
 ; =============================================================================
-_WinGetActiveStats(p) {
-   Out := format("{1} := WinGetTitle(`"A`")", p*) . "`r`n"
-   Out .= format("WinGetPos(&{4}, &{5}, &{2}, &{3}, `"A`")", p*)
-   return Out   
-}
 
 _EnvAdd(p) {
    if !IsEmpty(p[3])
@@ -836,6 +913,251 @@ _EnvSub(p) {
       return format("{1} := DateDiff({1}, {2}, {3})", p*)
    else
       return format("{1} -= {2}", p*)
+}
+
+_Gui(p)
+{
+
+   global Orig_Line_NoComment
+   global GuiNameDefault := "myGui"
+   global GuiList
+   ;preliminary version
+   DebugWindow("GuiList:" GuiList "`n",Clear:=0)
+   GuiLine := Orig_Line_NoComment
+   LineResult:=""
+   if RegExMatch(GuiLine, "i)^\s*Gui\s*[,\s]\s*.*$"){
+      ControlLabel:=""
+      ControlName:=""
+      ControlObject:=""
+
+      if RegExMatch(GuiLine, "i)^\s*Gui\s*[\s,]\s*[^,\s]*:.*$")
+      {
+         GuiNameLine := RegExReplace(GuiLine, "i)^\s*Gui\s*[\s,]\s*([^,\s]*):.*$", "$1", &RegExCount1)
+         GuiLine := RegExReplace(GuiLine, "i)^(\s*Gui\s*[\s,]\s*)([^,\s]*):(.*)$", "$1$3", &RegExCount1)   
+         GuiNameDefault := GuiNameLine
+      }
+      else{
+         GuiNameLine:= GuiNameDefault
+      }
+      if (RegExMatch(GuiNameLine, "^\d$")){
+         GuiNameLine := "Gui" GuiNameLine
+      }
+      Var1 := RegExReplace(GuiLine, "i)^\s*Gui\s*[,\s]\s*([^,]*).*$", "$1", &RegExCount1)
+      Var2 := RegExReplace(GuiLine, "i)^\s*Gui\s*[,\s]\s*([^,]*)\s*,\s*([^,]*).*", "$2", &RegExCount2)
+      Var3 := RegExReplace(GuiLine, "i)^\s*Gui\s*[,\s]\s*([^,]*),\s*([^,]*)\s*,\s*([^,]*).*$", "$3", &RegExCount3)
+      Var4 := RegExReplace(GuiLine, "i)^\s*Gui\s*[,\s]\s*([^,]*),\s*([^,]*)\s*,\s*([^,]*),([^;]*).*", "$4", &RegExCount4)
+      Var1 := Trim(Var1)
+      Var2 := Trim(Var2)
+      Var3 := Trim(Var3)
+      Var4 := Trim(Var4)
+
+      if RegExMatch(Var3, "\bg[\w]*\b"){
+         ; Remove the goto option g....
+         ControlLabel:= RegExReplace(Var3, "^.*\bg([\w]*)\b.*$", "$1")
+         Var3:= RegExReplace(Var3, "^(.*)\bg([\w]*)\b(.*)$", "$1$3")
+      }
+      else if ((Var2="Button") and RegExCount4){
+         ControlLabel:= var2 RegExReplace(Var4, "\s", "")
+         DebugWindow("ControlLabel:" ControlLabel "`n")
+      }
+      if RegExMatch(Var3, "\vg[\w]*\b"){
+         ControlName:= RegExReplace(Var3, "^.*\vg([\w]*)\b.*$", "$1")
+      }
+
+      if !InStr(GuiList, "|" GuiNameLine "|"){
+         GuiList .= GuiNameLine "|"
+         LineResult := GuiNameLine " := Gui()`n" Indentation
+      }
+
+      if(RegExMatch(Var1, "i)^tab[23]?$")){
+         LineResult.= "Tab.UseTab(" Var2 ")`n"
+
+      }
+      if(Var1="Show"){
+         if (RegExCount3){
+            LineResult.= GuiNameLine ".Name := " ToStringExpr(Var3) "`n" Indentation
+            Var3:=""
+            RegExCount3:=0
+         }
+      }
+
+      if(RegExMatch(Var2, "i)^tab[23]?$")){
+         LineResult.= "Tab := " 
+      }
+      if(var1 = "Submit"){
+         LineResult.= "oSaved := " 
+      }
+
+      if(var1 = "Add" and (var2="Button" or ControlLabel!="")){
+         ControlObject := "my" var2
+         LineResult.= ControlObject " := " 
+      }
+
+      LineResult.= GuiNameLine "." 
+
+      if (Var1="Menu"){
+         LineResult.=  "MenuBar := " Var2
+      }
+      else{
+         if (RegExCount1){
+            if (RegExMatch(Var1, "^\s*[-\+]\w*")){
+               LineResult.= "Opt(" ToStringExpr(Var1)
+            }
+            Else{
+               LineResult.= Var1 "("
+            }
+         }
+         if (RegExCount2){
+            LineResult.= ToStringExpr(Var2)
+         }
+         if (RegExCount3){
+            LineResult.= ", " ToStringExpr(Var3)
+         }
+         else if (RegExCount4){
+            LineResult.= ", "
+         }
+         if (RegExCount4){
+            if(RegExMatch(Var2, "i)^tab[23]?$") or Var2="ListView"){
+               LineResult.= ", [" 
+               oVar4 :=""
+               Loop Parse Var4, "|", " "
+               {
+                  oVar4.= oVar4="" ? ToStringExpr(A_LoopField) : ", " ToStringExpr(A_LoopField)
+               }
+               LineResult.= oVar4 "]"
+            }
+            else{
+               LineResult.= ", " ToStringExpr(Var4)
+            }
+         }
+         if (RegExCount1){
+            LineResult.= ")"
+         }
+
+      }
+
+      if(ControlObject!=""){
+         LineResult.= "`n" Indentation ControlObject ".OnEvent(`"Click`", " ControlLabel ")"
+      }
+   }
+   DebugWindow("LineResult:" LineResult "`n")
+   Out := format("{1}", LineResult)
+   return Out   
+}
+
+_MsgBox(p)
+{
+   global O_Index
+   global Orig_Line_NoComment
+   ; v1
+   ; MsgBox, Text (1-parameter method)
+   ; MsgBox [, Options, Title, Text, Timeout]
+   ; v2
+   ; Result := MsgBox(Text, Title, Options)
+
+   DebugWindow("p[1]:" p[1] "`n",Clear:=0)
+   if RegExMatch(p[1], "i)^\dx?\d*\s*"){
+      DebugWindow("MsgBox long`n",Clear:=0)
+      text:=""
+      title:=""
+      options:=p[1]
+      if (p[3]=""){
+         ContSection := Convert_GetContSect()
+         if (ContSection!=""){
+            LastParIndex := p.Length
+            text :=  "`"`r`n" RegExReplace(ContSection,"s)^(.*\n\s*\))[^\n]*$", "$1") "`"`r`n"
+            Timeout := RegExReplace(ContSection,"s)^.*\n\s*\)\s*,\s*(\d*)\s*$", "$1", &RegExCount)
+            ; delete the empty parameter
+            if (RegExCount){
+               options.= " T" Timeout
+            }
+            title:= ToExp(p[2])
+
+         }
+      }
+      else if (isNumber(p[p.Length]) and p.Length>3){
+         text := ToExp(RegExReplace(Orig_Line, "i)MsgBox\s*,?[^,]*,[^,]*,(.*),.*?$", "$1"))
+         options.= " T" p[p.Length]
+         title:= ToExp(p[2])
+      }
+      else{
+         text := ToExp(RegExReplace(Orig_Line_NoComment, "i)MsgBox\s*,?[^,]*,[^,]*,(.*)$", "$1"))
+      }
+
+      return format("msgResult := MsgBox({1}, {2}, {3})",  text , title, ToExp(options) )
+   }
+   else if RegExMatch(p[1], "i)^\s*.*"){
+      text := RegExReplace(Orig_Line, "i)MsgBox\s*,?\s*(.*)", "$1")
+      if (text=""){
+         ContSection := Convert_GetContSect()
+         return format( "{1}", "msgResult := MsgBox(`"`r`n" ContSection "`")" )
+      }
+      return format("msgResult := MsgBox({1})",  ToExp(text) )
+   }
+
+}
+
+_Menu(p)
+{
+   global Orig_Line_NoComment
+   static MenuList := "|"
+   MenuLine := Orig_Line_NoComment
+   LineResult:=""
+   menuNameLine := RegExReplace(MenuLine, "i)^\s*Menu\s*[,\s]\s*([^,]*).*$", "$1", &RegExCount1)
+   Var2 := RegExReplace(MenuLine, "i)^\s*Menu\s*[,\s]\s*([^,]*)\s*,\s*([^,]*).*", "$2", &RegExCount2)
+   Var3 := RegExReplace(MenuLine, "i)^\s*Menu\s*[,\s]\s*([^,]*),\s*([^,]*)\s*,\s*([^,]*).*$", "$3", &RegExCount3)
+   Var4 := RegExReplace(MenuLine, "i)^\s*Menu\s*[,\s]\s*([^,]*),\s*([^,]*)\s*,\s*([^,]*),\s*:?([^;,]*).*", "$4", &RegExCount4)
+   Var5 := RegExReplace(MenuLine, "i)^\s*Menu\s*[,\s]\s*([^,]*),\s*([^,]*)\s*,\s*([^,]*),\s*:?([^;,]*)\s*,\s*([^,]*).*", "$5", &RegExCount5)
+   menuNameLine := Trim(menuNameLine)
+   Var2 := Trim(Var2)
+   Var3 := Trim(Var3)
+   Var4 := Trim(Var4)
+
+   if (Var2="Add" and RegExCount3 and !RegExCount4){
+      Var4 := Var3
+      RegExCount4 := RegExCount3
+   }
+   if (Var3="Icon"){
+      Var3 := "SetIcon"
+   }
+   if !InStr(menuList, "|" menuNameLine "|"){
+      menuList.= menuNameLine "|"
+
+      if (menuNameLine="Tray"){
+         LineResult.= menuNameLine ":= A_TrayMenu`n"
+      }
+      else{
+         LineResult.= menuNameLine ":= Menu()`n"
+      }
+   }
+
+   LineResult.= menuNameLine "." 
+
+   if (RegExCount2){
+      LineResult.= Var2 "("
+   }
+   if (RegExCount3){
+      LineResult.= ToStringExpr(Var3)
+   }
+   else if (RegExCount4){
+      LineResult.= ", "
+   }
+   if (RegExCount4){
+      if (Var2="Add"){
+         LineResult.= ", " Var4
+      }
+      else{
+         LineResult.= ", " ToStringExpr(Var4)
+      }
+   }
+   if (RegExCount5){
+      LineResult.= ", " ToStringExpr(Var5)
+   }
+   if (RegExCount1){
+      LineResult.= ")"
+   }
+   Out := format("{1}", LineResult)
+   return Out  
 }
 
 _StringGetPos(p)
@@ -1015,6 +1337,116 @@ _StringUpper(p)
       return format("{1} := StrUpper({2})", p*)
 }
 
+_WinGetActiveStats(p) {
+   Out := format("{1} := WinGetTitle(`"A`")", p*) . "`r`n"
+   Out .= format("WinGetPos(&{4}, &{5}, &{2}, &{3}, `"A`")", p*)
+   return Out   
+}
 
 ; =============================================================================
 
+Convert_GetContSect(){
+	; Go further in the lines to get the next continuation section
+	global oScriptString ; array of all the lines
+	global O_Index  ; current index of the lines
+
+	result:= ""
+
+	loop {
+		O_Index++
+		if (oScriptString.Length < O_Index){
+			break
+		}
+		LineContSect := oScriptString[O_Index]
+		FirstChar := SubStr(Trim(LineContSect), 1, 1)
+		if ((A_index=1) && (FirstChar != "(" or !RegExMatch(LineContSect, "i)^\s*\((?:\s*(?(?<=\s)(?!;)|(?<=\())(\bJoin\S*|[^\s)]+))*(?<!:)(?:\s+;.*)?$"))){
+			; no continuation section found
+			O_Index--
+			return ""
+		}
+      if ( FirstChar == ")" ){
+			result .= LineContSect
+         break
+		}
+		result .= LineContSect "`r`n"
+		
+	}
+	DebugWindow("contsect:" result "`n",Clear:=0)
+
+	return result
+}
+
+; --------------------------------------------------------------------
+; Purpose: Read a ahk v1 command line and separate the variables
+; Input:
+;   String - The string to parse.
+; Output:
+;   RETURN - array of the parsed commands.
+; --------------------------------------------------------------------
+V1ParSplit(String){
+	; Created by Ahk_user
+	; spinn-off from DeathByNukes from https://autohotkey.com/board/topic/35663-functions-to-get-the-original-command-line-and-parse-it/
+	
+	oResult:= Array() ; Array to store result
+	oIndex:=1 ; index of array
+	InArray := 0
+	InApostrophe := false
+	InFunction := 0
+	InObject := 0
+	InQuotes := false
+	
+	oString := StrSplit(String)
+	oResult.Push("")
+	Loop oString.Length
+	{
+		Char := oString[A_Index]
+		if ( !InQuotes && !InObject && !InArray && !InApostrophe && !InFunction){
+			if (Char="," && oString[A_Index-1] !="``"){
+				oIndex++
+				oResult.Push("")
+				Continue
+			}
+		}
+		
+		if ( Char = "`"" && !InApostrophe){
+			InQuotes := !InQuotes
+		}
+		else if ( Char = "`'" && !InQuotes){
+			InApostrophe := !InApostrophe
+		}
+		else if (!InQuotes && !InApostrophe){
+			if ( Char = "{"){
+				InObject++
+			}
+			else if ( Char = "}" && InObject){
+				InObject--
+			}
+			else if ( Char = "[" && !InArray){
+				InArray--
+			}
+			else if ( Char = "]" && InArray){
+				InArray++
+			}
+			else if ( Char = "(" && !InFunction){
+				InFunction++
+			}
+			else if ( Char = ")" && InFunction){
+				InFunction--
+			}
+		}
+		oResult[oIndex] := oResult[oIndex] Char
+	}
+	return oResult
+}
+
+; Function to debug
+DebugWindow(Text,Clear:=0,LineBreak:=0,Sleep:=0,AutoHide:=0){
+	if WinExist("AHK Studio"){
+		x:=ComObjActive("{DBD5A90A-A85C-11E4-B0C7-43449580656B}")
+		x.DebugWindow(Text,Clear,LineBreak,Sleep,AutoHide)
+	}
+	else{
+		OutputDebug Text
+	}
+	return
+}

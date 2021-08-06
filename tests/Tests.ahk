@@ -5214,7 +5214,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
 
       expected := "
          (Join`r`n
-                                 Loop, Files, Yunit\*.*
+                                 Loop Files, "Yunit\*.*"
                                  {
                                     FileAppend(A_LoopFilePath . "``n" . A_LoopFileFullPath, "*")
                                     break

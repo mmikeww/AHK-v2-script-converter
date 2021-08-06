@@ -56,6 +56,7 @@ Convert(ScriptString)
       IfWinNotExist,titleT2E,textT2E,excltitleT2E,excltextT2E | if !WinExist({1}, {2}, {3}, {4})
       IfWinActive,titleT2E,textT2E,excltitleT2E,excltextT2E | if WinActive({1}, {2}, {3}, {4})
       IfWinNotActive,titleT2E,textT2E,excltitleT2E,excltextT2E | if !WinActive({1}, {2}, {3}, {4})
+      Loop,one,two,three,four | *_Loop
       SetEnv,var,valueT2E | {1} := {2}
       Sleep,delayCBE2E | Sleep({1})
       Sort,var,optionsT2E | {1} := Sort({1}, {2})
@@ -984,6 +985,19 @@ _IfLessOrEqual(p)
    else
       return format("if (StrCompare({1}, {2}) <= 0)", p*)
 }
+
+
+_Loop(p)
+{
+   ; msgbox(p[2] "`n" ToExp(p[2]))
+   if (p[1] = "Files")
+   {
+      Line := format("Loop Files, {2}, {3}",, ToExp(p[2]), ToExp(p[3]))
+      Line := RegExReplace(Line, "(?:,\s(?:`"`")?)*$", "") ; remove trailing ,\s and ,\s""
+      return Line
+   }
+}
+
 
 ; =============================================================================
 

@@ -819,7 +819,7 @@ IsEmpty(param)
 ; =============================================================================
 _WinGetActiveStats(p) {
    Out := format("{1} := WinGetTitle(`"A`")", p*) . "`r`n"
-   Out .= format("WinGetPos {4}, {5}, {2}, {3}, `"A`"", p*)
+   Out .= format("WinGetPos(&{4}, &{5}, &{2}, &{3}, `"A`")", p*)
    return Out   
 }
 

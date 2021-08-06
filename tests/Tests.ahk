@@ -3198,7 +3198,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       expected := "
          (Join`r`n
                                  title := WinGetTitle("A")
-                                 WinGetPos x, y, w, h, "A"
+                                 WinGetPos(&x, &y, &w, &h, "A")
                                  FileAppend(title . "-" . w . "-" . h . "-" . x . "-" . y, "*")
          )"
 

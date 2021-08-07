@@ -125,9 +125,9 @@ Convert(ScriptString)
       IfWinNotExist,titleT2E,textT2E,excltitleT2E,excltextT2E | if !WinExist({1}, {2}, {3}, {4})
       IfWinActive,titleT2E,textT2E,excltitleT2E,excltextT2E | if WinActive({1}, {2}, {3}, {4})
       IfWinNotActive,titleT2E,textT2E,excltitleT2E,excltextT2E | if !WinActive({1}, {2}, {3}, {4})
+      Loop,one,two,three,four | *_Loop
       Menu,MenuName,SubCommand,Value1,Value2,Value3,Value4 | *_Menu
       MsgBox,TextOrOptions,Title,Text,Timeout | *_MsgBox
-      Loop,one,two,three,four | *_Loop
       SetEnv,var,valueT2E | {1} := {2}
       Sleep,delayCBE2E | Sleep({1})
       Sort,var,optionsT2E | {1} := Sort({1}, {2})
@@ -901,6 +901,7 @@ IsEmpty(param)
 ;    These are only called in one place in the script and are called dynamicly
 ; =============================================================================
 
+
 _EnvAdd(p) {
    if !IsEmpty(p[3])
       return format("{1} := DateAdd({1}, {2}, {3})", p*)
@@ -1342,6 +1343,7 @@ _WinGetActiveStats(p) {
    Out .= format("WinGetPos(&{4}, &{5}, &{2}, &{3}, `"A`")", p*)
    return Out   
 }
+
 
 ; =============================================================================
 

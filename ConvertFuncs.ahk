@@ -26,7 +26,7 @@ XButton1::
    
 	MyGui := Gui(,"Convert tester")
 	V1Edit := MyGui.Add("Edit", "w600 vvCodeV1", Clipboard1)  ; Add a fairly wide edit control at the top of the window.
-	MyGui.Add("Button", "default", "Run V2").OnEvent("Click", RunV1)
+	MyGui.Add("Button", "default", "Run V1").OnEvent("Click", RunV1)
 	MyGui.Add("Button", "default x+10 yp", "Convert again").OnEvent("Click", ButtonConvert)
 	V2Edit := MyGui.Add("Edit", "xm w600 vvCodeV2", ConvertedCode)  ; Add a fairly wide edit control at the top of the window.
 	MyGui.Add("Button", "default", "Run V2").OnEvent("Click", RunV2)
@@ -200,8 +200,7 @@ Convert(ScriptString)
    oScriptString := {}
    oScriptString := StrSplit(ScriptString , "`n", "`r")
 
-   ; parse each line of the input script
-   Loop Parse, ScriptString, "`n", "`r"
+   Loop
    {
       O_Index++
       if (oScriptString.Length < O_Index){

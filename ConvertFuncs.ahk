@@ -1416,7 +1416,7 @@ V1ParSplit(String){
 		else if ( Char = "`'" && !InQuotes){
 			InApostrophe := !InApostrophe
 		}
-		else if (!InQuotes && !InApostrophe){
+		else if (!InQuotes && !InApostrophe && (A_Index =1 || oString[A_Index-1] !="``")){
 			if ( Char = "{"){
 				InObject++
 			}

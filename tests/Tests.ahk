@@ -5,7 +5,7 @@
 #Include ExecScript.ahk
 
 Yunit.Use(YunitWindow).Test(ConvertTests, ToExpTests, ToStringExprTests
-                          , RemoveSurroundingQuotesTests, RemoveSurroundingPercentsTests, ExecScriptTests, MsgBoxTests, GuiTests, MenuTests, V1ParSplit)
+                          , RemoveSurroundingQuotesTests, RemoveSurroundingPercentsTests, ExecScriptTests, BoxTests, FlowTests, GuiTests, MenuTests, WinTests)
 
 
 class ConvertTests
@@ -36,14 +36,12 @@ class ConvertTests
                                  msg = %var% world
                                  FileAppend, %msg%, *
          )"
-
       expected := "
          (Join`r`n
                                  var := "hello"
                                  msg := var . " world"
                                  FileAppend(msg, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -65,13 +63,11 @@ class ConvertTests
                                  msg = the man said, "hello"
                                  FileAppend, %msg%, *
          )"
-
       expected := "
          (Join`r`n
                                  msg := "the man said, ``"hello``""
                                  FileAppend(msg, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -93,13 +89,11 @@ class ConvertTests
                                  msg = the man said, "hello" %A_Index%
                                  FileAppend, %msg%, *
          )"
-
       expected := "
          (Join`r`n
                                  msg := "the man said, ``"hello``" " . A_Index
                                  FileAppend(msg, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -121,13 +115,11 @@ class ConvertTests
                                  msg =    hello world   
                                  FileAppend, %msg%, *
          )"
-
       expected := "
          (Join`r`n
                                  msg := "hello world"
                                  FileAppend(msg, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -150,14 +142,12 @@ class ConvertTests
                                  if (var = 2)
                                     FileAppend, %var%, *
          )"
-
       expected := "
          (Join`r`n
                                  var := "2"
                                  if (var = 2)
                                     FileAppend(var, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -183,7 +173,6 @@ class ConvertTests
                                  var2 = hello2
                                  FileAppend, var=%var%``nvar2=%var2%, *
          )"
-
       expected := "
          (Join`r`n
                                  var := "hi"
@@ -193,7 +182,6 @@ class ConvertTests
                                  var2 := "hello2"
                                  FileAppend("var=" . var . "``nvar2=" . var2, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -222,7 +210,6 @@ class ConvertTests
                                  var2 = hello2
                                  FileAppend, var=%var%``nvar2=%var2%, *
          )"
-
       expected := "
          (Join`r`n
                                  var := "hi"
@@ -235,7 +222,6 @@ class ConvertTests
                                  var2 := "hello2"
                                  FileAppend("var=" . var . "``nvar2=" . var2, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -262,7 +248,6 @@ class ConvertTests
                                  `)
                                  FileAppend, %var%, *
          )"
-
       expected := "
          (Join`r`n
                                  Sleep(100)
@@ -273,7 +258,6 @@ class ConvertTests
                                  `)"
                                  FileAppend(var, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -298,7 +282,6 @@ class ConvertTests
                                     `)
                                  FileAppend, %var%, *
          )"
-
       expected := "
          (Join`r`n
                                  var := "
@@ -307,7 +290,6 @@ class ConvertTests
                                     `)"
                                  FileAppend(var, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -328,23 +310,19 @@ class ConvertTests
       input_script := "
          (Join`r`n
                                  var =
-
                                  `(
                                  hello
                                  `)
                                  FileAppend, %var%, *
          )"
-
       expected := "
          (Join`r`n
                                  var := "
-
                                  `(
                                  hello
                                  `)"
                                  FileAppend(var, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -352,13 +330,11 @@ class ConvertTests
          ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
          Yunit.assert(result_input = result_expected, "v1 execution != v2 execution")
       }
-
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
-
    Continuation_CommandParam()
    {
       input_script := "
@@ -370,7 +346,6 @@ class ConvertTests
                                  line2
                                  `), *
          )"
-
       expected := "
          (Join`r`n
                                  var := 9
@@ -380,7 +355,6 @@ class ConvertTests
                                  line2
                                  `), *
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -388,7 +362,6 @@ class ConvertTests
          ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
          Yunit.assert(result_input = result_expected, "v1 execution != v2 execution")
       }
-
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ; ViewStringDiff(expected, converted)
@@ -406,7 +379,6 @@ class ConvertTests
                                  ( var ) ? x : y
                                  var2 = value2
          )"
-
       expected := "
          (Join`r`n
                                  x := 50
@@ -415,7 +387,6 @@ class ConvertTests
                                  ( var ) ? x : y
                                  var2 := "value2"
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -438,14 +409,12 @@ class ConvertTests
                                  if var = helloworld
                                     FileAppend, equal, *
          )"
-
       expected := "
          (Join`r`n
                                  var := "helloworld"
                                  if (var = "helloworld")
                                     FileAppend("equal", "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -468,14 +437,12 @@ class ConvertTests
                                  if var != 
                                     FileAppend, %var%, *
          )"
-
       expected := "
          (Join`r`n
                                  var := "3"
                                  if (var != "")
                                     FileAppend(var, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -498,14 +465,12 @@ class ConvertTests
                                  if var = 8
                                     FileAppend, %var%, *
          )"
-
       expected := "
          (Join`r`n
                                  var := "8"
                                  if (var = 8)
                                     FileAppend(var, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -528,14 +493,12 @@ class ConvertTests
                                  if var > 8
                                     FileAppend, %var%, *
          )"
-
       expected := "
          (Join`r`n
                                  var := "10"
                                  if (var > 8)
                                     FileAppend(var, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -559,7 +522,6 @@ class ConvertTests
                                  if MyVar = %MyVar2%
                                      FileAppend, The contents of MyVar and MyVar2 are identical., *
          )"
-
       expected := "
          (Join`r`n
                                  MyVar := "joe"
@@ -567,7 +529,6 @@ class ConvertTests
                                  if (MyVar = MyVar2)
                                      FileAppend("The contents of MyVar and MyVar2 are identical.", "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -591,7 +552,6 @@ class ConvertTests
                                  if MyVar2 = "hello" %MyVar%
                                      FileAppend, The contents of MyVar and MyVar2 are identical., *
          )"
-
       expected := "
          (Join`r`n
                                  MyVar := "joe"
@@ -599,7 +559,6 @@ class ConvertTests
                                  if (MyVar2 = "``"hello``" " . MyVar)
                                      FileAppend("The contents of MyVar and MyVar2 are identical.", "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -625,7 +584,6 @@ class ConvertTests
                                  else if MyVar =
                                      FileAppend, MyVar is empty/blank, *
          )"
-
       expected := "
          (Join`r`n
                                  MyVar := "joe"
@@ -635,7 +593,6 @@ class ConvertTests
                                  else if (MyVar = "")
                                      FileAppend("MyVar is empty/blank", "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -661,7 +618,6 @@ class ConvertTests
                                  else if MyVar <>
                                      FileAppend, MyVar is not empty/blank, *
          )"
-
       expected := "
          (Join`r`n
                                  MyVar := "joe"
@@ -671,7 +627,6 @@ class ConvertTests
                                  else if (MyVar != "")
                                      FileAppend("MyVar is not empty/blank", "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -698,7 +653,6 @@ class ConvertTests
                                     return true
                                  }
          )"
-
       expected := "
          (Join`r`n
                                  if MyFunc()
@@ -709,7 +663,6 @@ class ConvertTests
                                     return true
                                  }
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -734,7 +687,6 @@ class ConvertTests
                                  else
                                     FileAppend, var is empty, *
          )"
-
       expected := "
          (Join`r`n
                                  var := ""
@@ -743,7 +695,6 @@ class ConvertTests
                                  else
                                     FileAppend("var is empty", "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -766,14 +717,12 @@ class ConvertTests
                                  if( method = 1 )
                                     FileAppend, %method%, *
          )"
-
       expected := "
          (Join`r`n
                                  method := 1
                                  if( method = 1 )
                                     FileAppend(method, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -797,7 +746,6 @@ class ConvertTests
                                     break
                                  FileAppend, %method%, *
          )"
-
       expected := "
          (Join`r`n
                                  method := 0
@@ -805,7 +753,6 @@ class ConvertTests
                                     break
                                  FileAppend(method, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -828,14 +775,12 @@ class ConvertTests
                                  IfEqual, var, value
                                     FileAppend, %var%, *
          )"
-
       expected := "
          (Join`r`n
                                  var := "value"
                                  if (var = "value")
                                     FileAppend(var, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -858,14 +803,12 @@ class ConvertTests
                                  IfEqual var, value
                                     FileAppend, %var%, *
          )"
-
       expected := "
          (Join`r`n
                                  var := "value"
                                  if (var = "value")
                                     FileAppend(var, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -889,14 +832,12 @@ class ConvertTests
                                  IfEqual var, value, FileGetSize, size, %A_ScriptDir%\Tests.ahk
                                  FileAppend, %size%, *
          )"
-
       expected := "
          (Join`r`n
                                  var := "value"
                                  if (var = "value"), FileGetSize, size, %A_ScriptDir%\Tests.ahk
                                  FileAppend(size, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -904,7 +845,6 @@ class ConvertTests
          ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
          Yunit.assert(result_input = result_expected, "v1 execution != v2 execution")
       }
-
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ; ViewStringDiff(expected, converted)
@@ -920,14 +860,12 @@ class ConvertTests
                                  IfEqual    var, value
                                     FileAppend, %var%, *
          )"
-
       expected := "
          (Join`r`n
                                  var := "value"
                                  if (var = "value")
                                     FileAppend(var, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -950,14 +888,12 @@ class ConvertTests
                                  IfEqual, var,     value
                                     FileAppend, %var%, *
          )"
-
       expected := "
          (Join`r`n
                                  var := "value"
                                  if (var = "value")
                                     FileAppend(var, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -980,14 +916,12 @@ class ConvertTests
                                  IfEqual, var, ``,
                                     FileAppend, var is a comma, *
          )"
-
       expected := "
          (Join`r`n
                                  var := ","
                                  if (var = ",")
                                     FileAppend("var is a comma", "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -1010,14 +944,12 @@ class ConvertTests
                                  IfEqual, var, hello``,world
                                     FileAppend, var matches, *
          )"
-
       expected := "
          (Join`r`n
                                  var := "hello,world"
                                  if (var = "hello,world")
                                     FileAppend("var matches", "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -1039,28 +971,24 @@ AND THEREFORE CANNOT SUPPORT THE UNESCAPED COMMAS.
 I THINK THE ONLY WAY TO SUPPORT BOTH WOULD BE TO CHECK IF
 THE NEXT WORD AFTER THE COMMA IS A COMMAND NAME
 WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
-
    IfEqual_EscapedCommaNotNeededInLastParam()
    {
       ; "Commas that appear within the last parameter of a command do not need to be escaped because 
       ;  the program knows to treat them literally."
       ;
       ; from:   https://autohotkey.com/docs/commands/_EscapeChar.htm
-
       input_script := "
          (Join`r`n
                                  var = ,
                                  IfEqual, var, ,
                                     FileAppend, var is a comma, *
          )"
-
       expected := "
          (Join`r`n
                                  var := ","
                                  if (var = ",")
                                     FileAppend("var is a comma", "*", "")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -1068,34 +996,29 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
          Yunit.assert(result_input = result_expected, "v1 execution != v2 execution")
       }
-
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
-
    IfEqual_EscapedCommaNotNeededMidString()
    {
       ; "Commas that appear within the last parameter of a command do not need to be escaped because 
       ;  the program knows to treat them literally."
       ;
       ; from:   https://autohotkey.com/docs/commands/_EscapeChar.htm
-
       input_script := "
          (Join`r`n
                                  var = hello,world
                                  IfEqual, var, hello,world
                                     FileAppend, var matches, *
          )"
-
       expected := "
          (Join`r`n
                                  var := "hello,world"
                                  if (var = "hello,world")
                                     FileAppend("var matches", "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -1103,7 +1026,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
          Yunit.assert(result_input = result_expected, "v1 execution != v2 execution")
       }
-
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ; ViewStringDiff(expected, converted)
@@ -1118,14 +1040,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  IfNotEqual, var, value
                                     FileAppend, %var%, *
          )"
-
       expected := "
          (Join`r`n
                                  var := "val"
                                  if (var != "value")
                                     FileAppend(var, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -1148,14 +1068,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  IfGreaterOrEqual, var, value
                                     FileAppend, %var%, *
          )"
-
       expected := "
          (Join`r`n
                                  var := "value"
                                  if (StrCompare(var, "value") >= 0)
                                     FileAppend(var, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -1178,14 +1096,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  IfGreater, var, value
                                     FileAppend, %var%, *
          )"
-
       expected := "
          (Join`r`n
                                  var := "zzz"
                                  if (StrCompare(var, "value") > 0)
                                     FileAppend(var, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -1208,14 +1124,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  IfGreater, var, 3
                                     FileAppend, %var%, *
          )"
-
       expected := "
          (Join`r`n
                                  var := 4
                                  if (var > 3)
                                     FileAppend(var, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -1238,14 +1152,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  IfLess, var, value
                                     FileAppend, %var%, *
          )"
-
       expected := "
          (Join`r`n
                                  var := "hhh"
                                  if (StrCompare(var, "value") < 0)
                                     FileAppend(var, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -1268,14 +1180,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  IfLess, var, 4
                                     FileAppend, %var%, *
          )"
-
       expected := "
          (Join`r`n
                                  var := 1
                                  if (var < 4)
                                     FileAppend(var, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -1298,14 +1208,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  IfLessOrEqual, var, value
                                     FileAppend, %var%, *
          )"
-
       expected := "
          (Join`r`n
                                  var := "hhh"
                                  if (StrCompare(var, "value") <= 0)
                                     FileAppend(var, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -1328,14 +1236,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  EnvMult, var, 5
                                  FileAppend, %var%, *
          )"
-
       expected := "
          (Join`r`n
                                  var := "3"
                                  var *= 5
                                  FileAppend(var, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -1359,7 +1265,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  EnvMult, var, var2
                                  FileAppend, %var%, *
          )"
-
       expected := "
          (Join`r`n
                                  var := "1"
@@ -1367,7 +1272,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  var *= var2
                                  FileAppend(var, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -1390,14 +1294,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  EnvAdd, var, 2
                                  FileAppend, %var%, *
          )"
-
       expected := "
          (Join`r`n
                                  var := "1"
                                  var += 2
                                  FileAppend(var, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -1421,7 +1323,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  FormatTime, var, %var%, ShortDate
                                  FileAppend, %var%, *
          )"
-
       expected := "
          (Join`r`n
                                  var := A_Now
@@ -1429,7 +1330,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  var := FormatTime(var, "ShortDate")
                                  FileAppend(var, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -1453,7 +1353,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  EnvAdd, var, two
                                  FileAppend, %var%, *
          )"
-
       expected := "
          (Join`r`n
                                  var := "4"
@@ -1461,7 +1360,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  var += two
                                  FileAppend(var, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -1485,7 +1383,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  EnvAdd, var, % two
                                  FileAppend, %var%, *
          )"
-
       expected := "
          (Join`r`n
                                  var := "4"
@@ -1493,7 +1390,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  var += two
                                  FileAppend(var, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -1516,14 +1412,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  EnvSub, var, 2
                                  FileAppend, %var%, *
          )"
-
       expected := "
          (Join`r`n
                                  var := "5"
                                  var -= 2
                                  FileAppend(var, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -1547,7 +1441,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  EnvSub, var1, %var2%, days
                                  FileAppend, %var1%, *
          )"
-
       expected := "
          (Join`r`n
                                  var1 := "20050126"
@@ -1555,7 +1448,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  var1 := DateDiff(var1, var2, "days")
                                  FileAppend(var1, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -1579,7 +1471,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  EnvSub, var, value
                                  FileAppend, %var%, *
          )"
-
       expected := "
          (Join`r`n
                                  var := "9"
@@ -1587,7 +1478,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  var -= value
                                  FileAppend(var, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -1612,7 +1502,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                     return var
                                  }
          )"
-
       expected := "
          (Join`r`n
                                  five := MyFunc()
@@ -1621,7 +1510,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                     return var
                                  }
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -1646,7 +1534,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                     return var
                                  }
          )"
-
       expected := "
          (Join`r`n
                                  five := MyFunc()
@@ -1655,7 +1542,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                     return var
                                  }
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -1681,7 +1567,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                     FileAppend, % one . two, *
                                  }
          )"
-
       expected := "
          (Join`r`n
                                  Concat(5)
@@ -1691,7 +1576,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                     FileAppend(one . two, "*")
                                  }
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -1717,7 +1601,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                     FileAppend, % one . two, *
                                  }
          )"
-
       expected := "
          (Join`r`n
                                  Concat("joe,says,")
@@ -1727,7 +1610,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                     FileAppend(one . two, "*")
                                  }
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -1753,7 +1635,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                     FileAppend, % one . two, *
                                  }
          )"
-
       expected := "
          (Join`r`n
                                  Concat(5)
@@ -1763,7 +1644,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                     FileAppend(one . two, "*")
                                  }
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -1789,7 +1669,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                     FileAppend, % var, *
                                  }
          )"
-
       expected := "
          (Join`r`n
                                  msg("me=god")
@@ -1799,7 +1678,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                     FileAppend(var, "*")
                                  }
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -1827,7 +1705,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                     FileAppend, % one + two, *
                                  }
          )"
-
       expected := "
          (Join`r`n
                                  var := 1
@@ -1838,7 +1715,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                     FileAppend(one + two, "*")
                                  }
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -1865,7 +1741,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                     FileAppend, % one . two . three . four, *
                                  }
          )"
-
       expected := "
          (Join`r`n
                                  var := "5"
@@ -1876,7 +1751,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                     FileAppend(one . two . three . four, "*")
                                  }
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -1898,13 +1772,11 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  #NoEnv
                                  FileAppend, hi, *
          )"
-
       expected := "
          (Join`r`n
                                  ; REMOVED: #NoEnv
                                  FileAppend("hi", "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -1926,13 +1798,11 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  SetFormat, integerfast, H
                                  FileAppend, hi, *
          )"
-
       expected := "
          (Join`r`n
                                  ; REMOVED: SetFormat, integerfast, H
                                  FileAppend("hi", "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -1954,13 +1824,11 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  DriveSpaceFree, FreeSpace, c:\
                                  FileAppend, %FreeSpace%, *
          )"
-
       expected := "
          (Join`r`n
                                  FreeSpace := DriveGetSpaceFree("c:\")
                                  FileAppend(FreeSpace, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -1982,13 +1850,11 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  FileGetSize, size, %A_ScriptDir%\Tests.ahk
                                  FileAppend, %size%, *
          )"
-
       expected := "
          (Join`r`n
                                  size := FileGetSize(A_ScriptDir . "\Tests.ahk")
                                  FileAppend(size, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -2011,14 +1877,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  StringUpper, newvar, var
                                  FileAppend, %newvar%, *
          )"
-
       expected := "
          (Join`r`n
                                  var := "Chris Mallet"
                                  newvar := StrUpper(var)
                                  FileAppend(newvar, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -2042,7 +1906,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  if (newvar == "Chris Mallet")
                                     FileAppend, it worked, *
          )"
-
       expected := "
          (Join`r`n
                                  var := "chris mallet"
@@ -2050,7 +1913,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  if (newvar == "Chris Mallet")
                                     FileAppend("it worked", "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -2073,14 +1935,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  StringLen, length, InputVar
                                  FileAppend, The length of InputVar is %length%., *
          )"
-
       expected := "
          (Join`r`n
                                  InputVar := "The Quick Brown Fox Jumps Over the Lazy Dog"
                                  length := StrLen(InputVar)
                                  FileAppend("The length of InputVar is " . length . ".", "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -2105,7 +1965,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  if pos >= 0
                                      FileAppend, The string was found at position %pos%., *
          )"
-
       expected := "
          (Join`r`n
                                  Haystack := "abcdefghijklmnopqrs"
@@ -2114,7 +1973,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  if (pos >= 0)
                                      FileAppend("The string was found at position " . pos . ".", "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -2138,7 +1996,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  StringGetPos, pos, Haystack, %Needle%
                                  FileAppend, The string was found at position %pos%., *
          )"
-
       expected := "
          (Join`r`n
                                  Haystack := "abcdefghijklmnopqrs"
@@ -2146,7 +2003,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  pos := InStr(Haystack, Needle) - 1
                                  FileAppend("The string was found at position " . pos . ".", "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -2170,7 +2026,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  if pos >= 0
                                      FileAppend, The string was found at position %pos%., *
          )"
-
       expected := "
          (Join`r`n
                                  Haystack := "abcdefghijklmnopqrs"
@@ -2178,7 +2033,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  if (pos >= 0)
                                      FileAppend("The string was found at position " . pos . ".", "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -2203,7 +2057,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  if pos >= 0
                                      FileAppend, The string was found at position %pos%., *
          )"
-
       expected := "
          (Join`r`n
                                  Haystack := "abcdefabcdef"
@@ -2212,7 +2065,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  if (pos >= 0)
                                      FileAppend("The string was found at position " . pos . ".", "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -2238,7 +2090,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  StringGetPos, pos, Haystack, %Needle%, L2
                                  FileAppend, The string was found at position %pos%, *
          )"
-
       expected := "
          (Join`r`n
                                  StringCaseSense("on")
@@ -2247,7 +2098,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  pos := InStr(Haystack, Needle, (A_StringCaseSense="On") ? true : false, (0)+1, 2) - 1
                                  FileAppend("The string was found at position " . pos, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -2255,7 +2105,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
          Yunit.assert(result_input = result_expected, "v1 execution != v2 execution")
       }
-
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ; ViewStringDiff(expected, converted)
@@ -2273,7 +2122,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  if pos >= 0
                                      FileAppend, The string was found at position %pos%., *
          )"
-
       expected := "
          (Join`r`n
                                  Haystack := "abcdefabcdef"
@@ -2282,7 +2130,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  if (pos >= 0)
                                      FileAppend("The string was found at position " . pos . ".", "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -2307,7 +2154,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  if pos >= 0
                                      FileAppend, The string was found at position %pos%., *
          )"
-
       expected := "
          (Join`r`n
                                  Haystack := "abcdefabcdef"
@@ -2316,7 +2162,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  if (pos >= 0)
                                      FileAppend("The string was found at position " . pos . ".", "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -2341,7 +2186,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  if pos >= 0
                                      FileAppend, The string was found at position %pos%., *
          )"
-
       expected := "
          (Join`r`n
                                  Haystack := "abcdefabcdef"
@@ -2350,7 +2194,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  if (pos >= 0)
                                      FileAppend("The string was found at position " . pos . ".", "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -2375,7 +2218,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  if pos >= 0
                                      FileAppend, The string was found at position %pos%., *
          )"
-
       expected := "
          (Join`r`n
                                  Haystack := "abcdefabcdef"
@@ -2384,7 +2226,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  if (pos >= 0)
                                      FileAppend("The string was found at position " . pos . ".", "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -2410,7 +2251,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  if pos >= 0
                                      FileAppend, The string was found at position %pos%., *
          )"
-
       expected := "
          (Join`r`n
                                  Haystack := "abcdefabcdef"
@@ -2420,7 +2260,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  if (pos >= 0)
                                      FileAppend("The string was found at position " . pos . ".", "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -2446,7 +2285,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  if pos >= 0
                                      FileAppend, The string was found at position %pos%., *
          )"
-
       expected := "
          (Join`r`n
                                  Haystack := "abcdefabcdef"
@@ -2456,7 +2294,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  if (pos >= 0)
                                      FileAppend("The string was found at position " . pos . ".", "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -2482,7 +2319,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  if pos >= 0
                                      FileAppend, The string was found at position %pos%., *
          )"
-
       expected := "
          (Join`r`n
                                  Haystack := "abcdefabcdefabcdef"
@@ -2492,7 +2328,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  if (pos >= 0)
                                      FileAppend("The string was found at position " . pos . ".", "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -2517,7 +2352,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  if pos >= 0
                                      FileAppend, The string was found at position %pos%., *
          )"
-
       expected := "
          (Join`r`n
                                  Haystack := "abcdefabcdefabcdef"
@@ -2526,7 +2360,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  if (pos >= 0)
                                      FileAppend("The string was found at position " . pos . ".", "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -2551,7 +2384,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  if pos >= 0
                                      FileAppend, The string was found at position %pos%., *
          )"
-
       expected := "
          (Join`r`n
                                  Haystack := "abcdefabcdef"
@@ -2560,7 +2392,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  if (pos >= 0)
                                      FileAppend("The string was found at position " . pos . ".", "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -2585,7 +2416,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  if pos >= 0
                                      FileAppend, The string was found at position %pos%., *
          )"
-
       expected := "
          (Join`r`n
                                  Haystack := "abcdefabcdefabcdef"
@@ -2594,7 +2424,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  if (pos >= 0)
                                      FileAppend("The string was found at position " . pos . ".", "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -2619,7 +2448,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  if pos >= 0
                                      FileAppend, The string was found at position %pos%., *
          )"
-
       expected := "
          (Join`r`n
                                  Haystack := "FFFF"
@@ -2628,7 +2456,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  if (pos >= 0)
                                      FileAppend("The string was found at position " . pos . ".", "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -2651,14 +2478,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  StringMid, out, Source, 7
                                  FileAppend, %out%, *
          )"
-
       expected := "
          (Join`r`n
                                  Source := "Hello this is a test." 
                                  out := SubStr(Source, 7)
                                  FileAppend(out, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -2681,14 +2506,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  StringMid, out, Source, 7, 4
                                  FileAppend, %out%, *
          )"
-
       expected := "
          (Join`r`n
                                  Source := "Hello this is a test." 
                                  out := SubStr(Source, 7, 4)
                                  FileAppend(out, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -2712,7 +2535,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  StringMid, out, Source, %start%, 4
                                  FileAppend, %out%, *
          )"
-
       expected := "
          (Join`r`n
                                  start := "7"
@@ -2720,7 +2542,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  out := SubStr(Source, start, 4)
                                  FileAppend(out, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -2745,7 +2566,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  StringMid, out, Source, start+5, count
                                  FileAppend, %out%, *
          )"
-
       expected := "
          (Join`r`n
                                  start := "2"
@@ -2754,7 +2574,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  out := SubStr(Source, start+5, count)
                                  FileAppend(out, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -2777,14 +2596,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  StringMid, out, InputVar, 7, 3, L
                                  FileAppend, %out%, *
          )"
-
       expected := "
          (Join`r`n
                                  InputVar := "The Red Fox"
                                  out := SubStr(SubStr(InputVar, 1, 7), -3)
                                  FileAppend(out, "*")
          )"
-
                                  ; or two lines:
                                  ;out := SubStr(InputVar, 1, 7)
                                  ;out := SubStr(out, -3)
@@ -2812,7 +2629,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  StringMid, out, InputVar, 7, 3, %left%
                                  FileAppend, %out%, *
          )"
-
       expected := "
          (Join`r`n
                                  InputVar := "The Red Fox"
@@ -2823,7 +2639,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                      out := SubStr(InputVar, 7, 3)
                                  FileAppend(out, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -2846,14 +2661,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  StringLeft, OutputVar, Str, 4
                                  FileAppend, %OutputVar%, *
          )"
-
       expected := "
          (Join`r`n
                                  Str := "This is a test."
                                  OutputVar := SubStr(Str, 1, 4)
                                  FileAppend(OutputVar, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -2877,7 +2690,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  StringLeft, OutputVar, Str, count+1
                                  FileAppend, %OutputVar%, *
          )"
-
       expected := "
          (Join`r`n
                                  Str := "This is a test."
@@ -2885,7 +2697,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  OutputVar := SubStr(Str, 1, count+1)
                                  FileAppend(OutputVar, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -2908,14 +2719,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  StringRight, OutputVar, Str, 5
                                  FileAppend, %OutputVar%, *
          )"
-
       expected := "
          (Join`r`n
                                  Str := "This is a test."
                                  OutputVar := SubStr(Str, -1*(5))
                                  FileAppend(OutputVar, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -2939,7 +2748,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  StringRight, OutputVar, Str, count-1
                                  FileAppend, %OutputVar%, *
          )"
-
       expected := "
          (Join`r`n
                                  Str := "This is a test."
@@ -2947,7 +2755,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  OutputVar := SubStr(Str, -1*(count-1))
                                  FileAppend(OutputVar, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -2970,14 +2777,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  StringTrimLeft, OutputVar, Str, 5
                                  FileAppend, %OutputVar%, *
          )"
-
       expected := "
          (Join`r`n
                                  Str := "This is a test."
                                  OutputVar := SubStr(Str, (5)+1)
                                  FileAppend(OutputVar, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -3001,7 +2806,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  StringTrimLeft, OutputVar, Str, count*1
                                  FileAppend, %OutputVar%, *
          )"
-
       expected := "
          (Join`r`n
                                  Str := "This is a test."
@@ -3009,7 +2813,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  OutputVar := SubStr(Str, (count*1)+1)
                                  FileAppend(OutputVar, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -3032,14 +2835,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  StringTrimRight, OutputVar, Str, 6
                                  FileAppend, [%OutputVar%], *
          )"
-
       expected := "
          (Join`r`n
                                  Str := "This is a test."
                                  OutputVar := SubStr(Str, 1, -1*(6))
                                  FileAppend("[" . OutputVar . "]", "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -3063,7 +2864,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  StringTrimRight, OutputVar, Str, count+3
                                  FileAppend, [%OutputVar%], *
          )"
-
       expected := "
          (Join`r`n
                                  Str := "This is a test."
@@ -3071,7 +2871,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  OutputVar := SubStr(Str, 1, -1*(count+3))
                                  FileAppend("[" . OutputVar . "]", "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -3093,13 +2892,11 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  ToolTip, helloworld
                                  FileAppend, hi, *
          )"
-
       expected := "
          (Join`r`n
                                  ToolTip("helloworld")
                                  FileAppend("hi", "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -3113,7 +2910,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
-
 
    Preserve_Indentation()
    {
@@ -3131,7 +2927,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  }
                                  FileAppend, pos=%pos%, *
          )"
-
       expected := "
          (Join`r`n
                                  if (1) {
@@ -3145,7 +2940,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  }
                                  FileAppend("pos=" . pos, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -3167,13 +2961,11 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  WinGetActiveTitle, OutputVar
                                  FileAppend, %OutputVar%, *
          )"
-
       expected := "
          (Join`r`n
                                  OutputVar := WinGetTitle("A")
                                  FileAppend(OutputVar, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -3195,14 +2987,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  WinGetActiveStats, title, w, h, x, y
                                  FileAppend, %title%-%w%-%h%-%x%-%y%, *
          )"
-
       expected := "
          (Join`r`n
                                  title := WinGetTitle("A")
                                  WinGetPos(&x, &y, &w, &h, "A")
                                  FileAppend(title . "-" . w . "-" . h . "-" . x . "-" . y, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -3224,13 +3014,11 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  var = value     ; comment after 5 spaces
                                  FileAppend, %var%, *
          )"
-
       expected := "
          (Join`r`n
                                  var := "value"     ; comment after 5 spaces
                                  FileAppend(var, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -3253,14 +3041,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  if var = value     ; comment after 5 spaces
                                     FileAppend, %var%, *
          )"
-
       expected := "
          (Join`r`n
                                  var := "value"
                                  if (var = "value")     ; comment after 5 spaces
                                     FileAppend(var, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -3283,14 +3069,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  EnvAdd, var, 2     ; comment after 5 spaces
                                  FileAppend, %var%, *
          )"
-
       expected := "
          (Join`r`n
                                  var := "1"
                                  var += 2     ; comment after 5 spaces
                                  FileAppend(var, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -3313,14 +3097,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  IfEqual, var, 1     ; comment after 5 spaces
                                     FileAppend, %var%, *
          )"
-
       expected := "
          (Join`r`n
                                  var := "1"
                                  if (var = 1)     ; comment after 5 spaces
                                     FileAppend(var, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -3342,13 +3124,11 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  var = 1
                                     #NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
          )"
-
       expected := "
          (Join`r`n
                                  var := "1"
                                  ; REMOVED:    #NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -3372,7 +3152,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  IfEqual, x, plus
                                     FileAppend, %x%, *
          )"
-
       expected := "
          (Join`r`n
                                  x := "+plus"
@@ -3380,7 +3159,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  if (x = "plus")
                                     FileAppend(x, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -3402,13 +3180,11 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  var := "value"     ; this line won't be changed by the converter
                                  FileAppend, %var%, *
          )"
-
       expected := "
          (Join`r`n
                                  var := "value"     ; this line won't be changed by the converter
                                  FileAppend(var, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -3432,14 +3208,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  var2 = %var%
                                  FileAppend, %var2%, *
          )"
-
       expected := "
          (Join`r`n
                                  var := " helloworld "
                                  var2 := Trim(var)
                                  FileAppend(var2, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -3447,7 +3221,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
          Yunit.assert(result_input = result_expected, "v1 execution != v2 execution")
       }
-
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ; ViewStringDiff(expected, converted)
@@ -3467,7 +3240,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                     return %var%
                                  }
          )"
-
       expected := "
          (Join`r`n
                                  FileAppend(MyFunc(), "*")
@@ -3478,7 +3250,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                     return var
                                  }
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -3505,7 +3276,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                     return var . hi . (1+1) ; with comment
                                  }
          )"
-
       expected := "
          (Join`r`n
                                  FileAppend(MyFunc(), "*")
@@ -3516,7 +3286,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                     return var . hi . (1+1) ; with comment
                                  }
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -3546,7 +3315,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                     return one . two
                                  }
          )"
-
       expected := "
          (Join`r`n
                                  FileAppend(MyFunc(), "*")
@@ -3560,7 +3328,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                     return one . two
                                  }
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -3585,7 +3352,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  else if var is integer
                                     FileAppend, %var% is int, *
          )"
-
       expected := "
          (Join`r`n
                                  var := "3.1415"
@@ -3594,7 +3360,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  else if isInteger(var)
                                     FileAppend(var . " is int", "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -3618,7 +3383,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  if var is %mytype%
                                     FileAppend, %var% is float, *
          )"
-
       expected := "
          (Join`r`n
                                  var := "3.1415"
@@ -3626,7 +3390,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  if is%mytype%(var)
                                     FileAppend(var . " is float", "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -3651,7 +3414,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  else if var is not integer
                                     FileAppend, %var% is not int, *
          )"
-
       expected := "
          (Join`r`n
                                  var := "3.1415"
@@ -3660,7 +3422,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  else if !isInteger(var)
                                     FileAppend(var . " is not int", "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -3683,7 +3444,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  StringReplace, NewStr, OldStr, _
                                  FileAppend, %NewStr%, *
          )"
-
       expected := "
          (Join`r`n
                                  OldStr := "The_quick_brown_fox"
@@ -3693,7 +3453,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  NewStr := StrReplace(OldStr, "_",,,, 1)
                                  FileAppend(NewStr, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -3716,7 +3475,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  StringReplace, NewStr, OldStr, %A_Space%, +
                                  FileAppend, %NewStr%, *
          )"
-
       expected := "
          (Join`r`n
                                  OldStr := "The quick brown fox"
@@ -3726,7 +3484,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  NewStr := StrReplace(OldStr, A_Space, "+",,, 1)
                                  FileAppend(NewStr, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -3749,7 +3506,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  StringReplace, NewStr, OldStr, %A_Space%, +, All
                                  FileAppend, %NewStr%, *
          )"
-
       expected := "
          (Join`r`n
                                  OldStr := "The quick brown fox"
@@ -3759,7 +3515,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  NewStr := StrReplace(OldStr, A_Space, "+")
                                  FileAppend(NewStr, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -3782,17 +3537,15 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  StringReplace, NewStr, OldStr, %A_Space%,, All
                                  FileAppend, %NewStr%, *
          )"
-
       expected := "
          (Join`r`n
                                  OldStr := "The quick brown fox"
                                  ; StrReplace() is not case sensitive
                                  ; check for StringCaseSense in v1 source script
                                  ; and change the CaseSense param in StrReplace() if necessary
-                                 NewStr := StrReplace(OldStr, A_Space, "")
+                                 NewStr := StrReplace(OldStr, A_Space, )
                                  FileAppend(NewStr, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -3815,7 +3568,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  StringReplace, NewStr, OldStr, %A_Space%, +, UseErrorLevel
                                  FileAppend, number of replacements: %ErrorLevel%, *
          )"
-
       expected := "
          (Join`r`n
                                  OldStr := "The quick brown fox"
@@ -3825,7 +3577,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  NewStr := StrReplace(OldStr, A_Space, "+",, &ErrorLevel)
                                  FileAppend("number of replacements: " . ErrorLevel, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -3849,7 +3600,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  StringLeft, OutputVar, Str, % count+1
                                  FileAppend, %OutputVar%, *
          )"
-
       expected := "
          (Join`r`n
                                  Str := "This is a test."
@@ -3857,7 +3607,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  OutputVar := SubStr(Str, 1, count+1)
                                  FileAppend(OutputVar, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -3880,7 +3629,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  StringReplace, NewStr, OldStr, % " ", % "+", All
                                  FileAppend, %NewStr%, *
          )"
-
       expected := "
          (Join`r`n
                                  OldStr := "The quick brown fox"
@@ -3890,7 +3638,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  NewStr := StrReplace(OldStr, " ", "+")
                                  FileAppend(NewStr, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -3915,7 +3662,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  StringMid, out, Source, % start+5, % count
                                  FileAppend, %out%, *
          )"
-
       expected := "
          (Join`r`n
                                  start := "2"
@@ -3924,7 +3670,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  out := SubStr(Source, start+5, count)
                                  FileAppend(out, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -3950,7 +3695,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  if pos >= 0
                                      FileAppend, The string was found at position %pos%., *
          )"
-
       expected := "
          (Join`r`n
                                  Haystack := "abcdefabcdef"
@@ -3960,7 +3704,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  if (pos >= 0)
                                      FileAppend("The string was found at position " . pos . ".", "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -3984,7 +3727,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  if pos >= 0
                                      FileAppend, The string was found at position %pos%., *
          )"
-
       expected := "
          (Join`r`n
                                  Haystack := "abcdefghijklmnopqrs"
@@ -3992,7 +3734,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  if (pos >= 0)
                                      FileAppend("The string was found at position " . pos . ".", "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -4015,14 +3756,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  IfEqual, var, % "value"
                                     FileAppend, %var%, *
          )"
-
       expected := "
          (Join`r`n
                                  var := "value"
                                  if (var = "value")
                                     FileAppend(var, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -4045,14 +3784,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  if var > % 4*2
                                     FileAppend, %var%, *
          )"
-
       expected := "
          (Join`r`n
                                  var := "10"
                                  if (var > 4*2)
                                     FileAppend(var, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -4076,7 +3813,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  StringLeft, OutputVar, Str, count
                                  FileAppend, %OutputVar%, *
          )"
-
       expected := "
          (Join`r`n
                                  Str := "This is a test."
@@ -4084,7 +3820,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  OutputVar := SubStr(Str, 1, count)
                                  FileAppend(OutputVar, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -4108,7 +3843,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  StringLeft, OutputVar, Str, %count%
                                  FileAppend, %OutputVar%, *
          )"
-
       expected := "
          (Join`r`n
                                  Str := "This is a test."
@@ -4116,7 +3850,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  OutputVar := SubStr(Str, 1, count)
                                  FileAppend(OutputVar, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -4140,7 +3873,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  StringLeft, OutputVar, Str, % count
                                  FileAppend, %OutputVar%, *
          )"
-
       expected := "
          (Join`r`n
                                  Str := "This is a test."
@@ -4148,7 +3880,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  OutputVar := SubStr(Str, 1, count)
                                  FileAppend(OutputVar, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -4173,7 +3904,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  StringLeft, OutputVar, Str, % cou%two_letters%
                                  FileAppend, %OutputVar%, *
          )"
-
       expected := "
          (Join`r`n
                                  Str := "This is a test."
@@ -4182,7 +3912,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  OutputVar := SubStr(Str, 1, cou%two_letters%)
                                  FileAppend(OutputVar, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -4203,12 +3932,10 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n
                                  Sleep, 500
          )"
-
       expected := "
          (Join`r`n
                                  Sleep(500)
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -4233,7 +3960,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  stop := A_TickCount
                                  FileAppend, % stop - start, *
          )"
-
       expected := "
          (Join`r`n
                                  half_second := 500
@@ -4242,7 +3968,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  stop := A_TickCount
                                  FileAppend(stop - start, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -4267,7 +3992,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  stop := A_TickCount
                                  FileAppend, % stop - start, *
          )"
-
       expected := "
          (Join`r`n
                                  half_second := 500
@@ -4276,7 +4000,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  stop := A_TickCount
                                  FileAppend(stop - start, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -4301,7 +4024,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  stop := A_TickCount
                                  FileAppend, % stop - start, *
          )"
-
       expected := "
          (Join`r`n
                                  half_second := 500
@@ -4310,7 +4032,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  stop := A_TickCount
                                  FileAppend(stop - start, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -4335,7 +4056,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  stop := A_TickCount
                                  FileAppend, % stop - start, *
          )"
-
       expected := "
          (Join`r`n
                                  half_second := 500
@@ -4344,7 +4064,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  stop := A_TickCount
                                  FileAppend(stop - start, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -4365,12 +4084,10 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n
                            EnvUpdate
          )"
-
       expected := "
          (Join`r`n
                            SendMessage, % WM_SETTINGCHANGE := 0x001A, 0, Environment,, % "ahk_id " . HWND_BROADCAST := "0xFFFF"
          )"
-
       ; first test that our expected code actually produces the same results in v2
       ; if (this.test_exec = true) {
          ; result_input    := ExecScript_v1(input_script)
@@ -4392,13 +4109,11 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  SetEnv, var, hello
                                  FileAppend, %var%, *
          )"
-
       expected := "
          (Join`r`n
                                  var := "hello"
                                  FileAppend(var, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -4420,13 +4135,11 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  SetEnv, var, h,e, l,l,o
                                  FileAppend, %var%, *
          )"
-
       expected := "
          (Join`r`n
                                  var := "h,e, l,l,o"
                                  FileAppend(var, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -4449,14 +4162,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  IfNotEqual, var
                                     FileAppend, %var%, *
          )"
-
       expected := "
          (Join`r`n
                                  var := "helloooo"
                                  if (var != "")
                                     FileAppend(var, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -4480,7 +4191,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  IfInString, Haystack, %Needle%
                                     FileAppend, found, *
          )"
-
       expected := "
          (Join`r`n
                                  Haystack := "abcdefghijklmnopqrs"
@@ -4488,7 +4198,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  if InStr(Haystack, Needle)
                                     FileAppend("found", "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -4511,14 +4220,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  IfInString, Haystack, jklm
                                     FileAppend, found, *
          )"
-
       expected := "
          (Join`r`n
                                  Haystack := "abcdefghijklmnopqrs"
                                  if InStr(Haystack, "jklm")
                                     FileAppend("found", "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -4542,14 +4249,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  IfInString, Haystack, y.x, SysGet, mouse_btns, 43
                                  FileAppend, %mouse_btns%, *
          )"
-
       expected := "
          (Join`r`n
                                  Haystack := "z.y.x.w"
                                  if InStr(Haystack, "y.x",, mouse_btns := SysGet(43)
                                  FileAppend(mouse_btns, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -4557,7 +4262,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
          Yunit.assert(result_input = result_expected, "v1 execution != v2 execution")
       }
-
       ; then test that our converter will correctly covert the input_script to the expected script
       converted := Convert(input_script)
       ; ViewStringDiff(expected, converted)
@@ -4576,7 +4280,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                     FileAppend, found, *
                                  }
          )"
-
       expected := "
          (Join`r`n
                                  Haystack := "abcdefghijklmnopqrs"
@@ -4586,7 +4289,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                     FileAppend("found", "*")
                                  }
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -4609,14 +4311,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  IfNotInString, Haystack, jklm
                                     FileAppend, found, *
          )"
-
       expected := "
          (Join`r`n
                                  Haystack := "abcdefghijklmnopqrs"
                                  if !InStr(Haystack, "jklm")
                                     FileAppend("found", "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -4638,13 +4338,11 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  IfExist, C:\
                                     FileAppend, the drive exists, *
          )"
-
       expected := "
          (Join`r`n
                                  if FileExist("C:\")
                                     FileAppend("the drive exists", "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -4666,13 +4364,11 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  IfNotExist, W:\
                                     FileAppend, the drive doesn't exist, *
          )"
-
       expected := "
          (Join`r`n
                                  if !FileExist("W:\")
                                     FileAppend("the drive doesn't exist", "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -4696,7 +4392,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  else
                                     FileAppend, notepad is not open, *
          )"
-
       expected := "
          (Join`r`n
                                  if WinExist("ahk_class Notepad")
@@ -4704,7 +4399,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  else
                                     FileAppend("notepad is not open", "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -4728,7 +4422,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  else
                                     FileAppend, notepad is open, *
          )"
-
       expected := "
          (Join`r`n
                                  if !WinExist("ahk_class Notepad")
@@ -4736,7 +4429,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  else
                                     FileAppend("notepad is open", "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -4760,7 +4452,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  else
                                     FileAppend, notepad is not Active, *
          )"
-
       expected := "
          (Join`r`n
                                  if WinActive("ahk_class Notepad")
@@ -4768,7 +4459,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  else
                                     FileAppend("notepad is not Active", "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -4792,15 +4482,13 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  else
                                     FileAppend, last found window is not Active, *
          )"
-
       expected := "
          (Join`r`n
-                                 if WinActive("")
+                                 if WinActive()
                                     FileAppend("last found window is Active", "*")
                                  else
                                     FileAppend("last found window is not Active", "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -4824,7 +4512,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  else
                                     FileAppend, notepad is Active, *
          )"
-
       expected := "
          (Join`r`n
                                  if !WinActive("ahk_class Notepad")
@@ -4832,7 +4519,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  else
                                     FileAppend("notepad is Active", "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -4854,13 +4540,11 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  FileCopyDir, C:\My Folder, C:\Copy of My Folder
                                  FileCopyDir, C:\My Folder, C:\Copy of My Folder, 0
          )"
-
       expected := "
          (Join`r`n
-                                 DirCopy, C:\My Folder, C:\Copy of My Folder
-                                 DirCopy, C:\My Folder, C:\Copy of My Folder, 0
+                                 DirCopy("C:\My Folder", "C:\Copy of My Folder")
+                                 DirCopy("C:\My Folder", "C:\Copy of My Folder", 0)
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -4881,12 +4565,10 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n
                                  FileCreateDir, C:\My Folder
          )"
-
       expected := "
          (Join`r`n
-                                 DirCreate, C:\My Folder
+                                 DirCreate("C:\My Folder")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -4908,13 +4590,11 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  FileMoveDir, C:\My Folder, C:\Copy of My Folder
                                  FileMoveDir, C:\My Folder, C:\Copy of My Folder, 0
          )"
-
       expected := "
          (Join`r`n
-                                 DirMove, C:\My Folder, C:\Copy of My Folder
-                                 DirMove, C:\My Folder, C:\Copy of My Folder, 0
+                                 DirMove("C:\My Folder", "C:\Copy of My Folder")
+                                 DirMove("C:\My Folder", "C:\Copy of My Folder", 0)
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -4936,13 +4616,11 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  FileRemoveDir, C:\My Folder
                                  FileRemoveDir, C:\My Folder, 0
          )"
-
       expected := "
          (Join`r`n
-                                 DirDelete, C:\My Folder
-                                 DirDelete, C:\My Folder, 0
+                                 DirDelete("C:\My Folder")
+                                 DirDelete("C:\My Folder", 0)
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -4965,14 +4643,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  FileSelectFolder, outputvar, C:\
                                  FileSelectFolder, outputvar, , 3
          )"
-
       expected := "
          (Join`r`n
-                                 DirSelect, outputvar
-                                 DirSelect, outputvar, C:\
-                                 DirSelect, outputvar, , 3
+                                 outputvar := DirSelect()
+                                 outputvar := DirSelect("C:\")
+                                 outputvar := DirSelect(, 3)
          )"
-
       ; first test that our expected code actually produces the same results in v2
       ; if (this.test_exec = true) {
          ; result_input    := ExecScript_v1(input_script)
@@ -4994,13 +4670,11 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  FileSelectFile, outputvar
                                  FileSelectFile, SelectedFile, 3, , Open a file, Text Documents (*.txt`; *.doc)
          )"
-
       expected := "
          (Join`r`n
-                                 FileSelect, outputvar
-                                 FileSelect, SelectedFile, 3, , Open a file, Text Documents (*.txt`; *.doc)
+                                 outputvar := FileSelect()
+                                 SelectedFile := FileSelect(3, "", "Open a file", "Text Documents (*.txt`; *.doc)")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       ; if (this.test_exec = true) {
          ; result_input    := ExecScript_v1(input_script)
@@ -5022,13 +4696,11 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  FormatTime, TimeString,, Time
                                  FileAppend, the current time is %TimeString%, *
          )"
-
       expected := "
          (Join`r`n
-                                 TimeString := FormatTime("", "Time")
+                                 TimeString := FormatTime(, "Time")
                                  FileAppend("the current time is " . TimeString, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       ; if (this.test_exec = true) {
          ; result_input    := ExecScript_v1(input_script)
@@ -5054,7 +4726,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  else if var between 1 and 4
                                     FileAppend, %var% between 1 and 4, *
          )"
-
       expected := "
          (Join`r`n
                                  var := "3.1415"
@@ -5063,7 +4734,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  else if (var >= 1 && var <= 4)
                                     FileAppend(var . " between 1 and 4", "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -5088,7 +4758,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  else if var not between 1 and 4
                                     FileAppend, %var% not between 1 and 4, *
          )"
-
       expected := "
          (Join`r`n
                                  var := "3.1415"
@@ -5097,7 +4766,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  else if !(var >= 1 && var <= 4)
                                     FileAppend(var . " not between 1 and 4", "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -5122,7 +4790,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  if var between %VarLow% and %VarHigh%
                                     FileAppend, %var% between %VarLow% and %VarHigh%, *
          )"
-
       expected := "
          (Join`r`n
                                  var := "3.1415"
@@ -5131,7 +4798,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  if (var >= VarLow && var <= VarHigh)
                                     FileAppend(var . " between " . VarLow . " and " . VarHigh, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -5154,14 +4820,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  if var between blue and red
                                     FileAppend, %var% is alphabetically between 'blue' and 'red', *
          )"
-
       expected := "
          (Join`r`n
                                  var := "boy"
                                  if ((StrCompare(var, "blue") > 0) && (StrCompare(var, "red") < 0))
                                     FileAppend(var . " is alphabetically between 'blue' and 'red'", "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -5182,12 +4846,10 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n
                                  RunWait, %comspec% /c dir c:\
          )"
-
       expected := "
          (Join`r`n
-                                 RunWait, %A_ComSpec% /c dir c:\
+                                 RunWait(A_ComSpec . " /c dir c:\")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -5212,7 +4874,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                     break
                                  }
          )"
-
       expected := "
          (Join`r`n
                                  Loop Files, "Yunit\*.*"
@@ -5221,7 +4882,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                     break
                                  }
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -5242,12 +4902,10 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n
                                  FileAppend, % Asc("t"), *
          )"
-
       expected := "
          (Join`r`n
                                  FileAppend(Ord("t"), "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -5268,12 +4926,10 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n
                                  FileAppend, % (true) ? Asc("t") . ComSpec : Asc("w") . ComSpec, *
          )"
-
       expected := "
          (Join`r`n
                                  FileAppend((true) ? Ord("t") . A_ComSpec : Ord("w") . A_ComSpec, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -5296,7 +4952,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  StringReplace list, list, ``,, ``,, UseErrorLevel
                                  FileAppend, %ErrorLevel%, *
          )"
-
       expected := "
          (Join`r`n
                                  list := "one,two,three"
@@ -5306,7 +4961,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  list := StrReplace(list, ",", ",",, &ErrorLevel)
                                  FileAppend(ErrorLevel, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -5329,14 +4983,12 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  Sort, MyVar, N D,  ; Sort numerically, use comma as delimiter.
                                  FileAppend, %MyVar%, *
          )"
-
       expected := "
          (Join`r`n
                                  MyVar := "5,3,7,9,1,13,999,-4"
                                  MyVar := Sort(MyVar, "N D,")  ; Sort numerically, use comma as delimiter.
                                  FileAppend(MyVar, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -5361,7 +5013,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  SplitPath, FullFileName, , dir
                                  FileAppend, %name%``n%dir%, *
          )"
-
       expected := "
          (Join`r`n
                                  name := dir := ""
@@ -5370,7 +5021,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  SplitPath(FullFileName, , &dir)
                                  FileAppend(name . "``n" . dir, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -5395,7 +5045,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  SplitPath, % FullFileName, , dir
                                  FileAppend, %name%``n%dir%, *
          )"
-
       expected := "
          (Join`r`n
                                  name := dir := ""
@@ -5404,7 +5053,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  SplitPath(FullFileName, , &dir)
                                  FileAppend(name . "``n" . dir, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -5428,7 +5076,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  SplitPath, % "C:\My Documents\Address List.txt", , dir
                                  FileAppend, %name%``n%dir%, *
          )"
-
       expected := "
          (Join`r`n
                                  name := dir := ""
@@ -5436,7 +5083,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  SplitPath("C:\My Documents\Address List.txt", , &dir)
                                  FileAppend(name . "``n" . dir, "*")
          )"
-
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
          result_input    := ExecScript_v1(input_script)
@@ -5500,10 +5146,8 @@ class ToExpTests
       /*
          from:
          https://lexikos.github.io/v2/docs/Variables.htm#Operators
-
          Within a quoted string: Evaluates Expr and inserts the result at that position within the string. 
          For example, the following are equivalent:
-
          MsgBox("Hello, %A_UserName%!")
          MsgBox, Hello`, %A_Username%!
          MsgBox("Hello, " A_UserName "!")
@@ -5617,13 +5261,11 @@ class ExecScriptTests
                                  var = hello world
                                  FileAppend, %var%, *
          )"
-
       expected := "
          (Join`r`n
                                  var := "hello world"
                                  FileAppend(var, "*")
          )"
-
       ; if (this.test_exec = true) {
          ; result_input    := ExecScript_v1(input_script)
          ; result_expected := ExecScript_v2(expected)
@@ -5639,13 +5281,11 @@ class ExecScriptTests
                                  var = hello world
                                  FileAppend, %var%, *
          )"
-
       expected := "
          (Join`r`n
                                  var := "hello world "
                                  FileAppend(var, "*")
          )"
-
       ; if (this.test_exec = true) {
          ; result_input    := ExecScript_v1(input_script)
          ; result_expected := ExecScript_v2(expected)
@@ -5655,10 +5295,27 @@ class ExecScriptTests
    }
 }
 
-class MsgBoxTests
+class BoxTests
 {
    ; we pipe the output of FileAppend to StdOutput
    ; then ExecScript() executes the script and reads from StdOut
+   InputBox1(){
+      input_script := "
+         (Join`r`n `
+InputBox, password, Enter Password, (your input will be hidden), hide
+         )"
+
+      expected := "
+         (Join`r`n
+IB := InputBox("(your input will be hidden)", "Enter Password", "Password"), password := IB.Value , ErrorLevel := IB.Result="OK" ? 0 : IB.Result="CANCEL" ? 1 : IB.Result="Timeout" ? 2 : "ERROR"
+         )"
+
+      converted := Convert(input_script)
+      ;~ if (expected!=converted){
+         ;~ ViewStringDiff(expected, converted)
+      ;~ }
+      Yunit.assert(converted = expected, "converted script != expected script")
+   }
 
    MsgBox1Parameter()
    {
@@ -5791,7 +5448,7 @@ class GuiTests
          (Join`r`n
             myGui := Gui()
             myGui.Add("Text", "", "Please enter your name:")
-            myGui.Add("Edit", "vName")
+            ogcEditName := myGui.Add("Edit", "vName")
             myGui.Show()
          )"
       
@@ -5803,7 +5460,7 @@ class GuiTests
       ; }
       converted := Convert(input_script)
       if (expected!=converted){
-         ViewStringDiff(expected, converted)
+         ; ViewStringDiff(expected, converted)
       }
       Yunit.assert(converted = expected, "converted script != expected script")
    }
@@ -5822,7 +5479,7 @@ Gui, Show, NoActivate, Title of Window  ; NoActivate avoids deactivating the cur
 myGui := Gui()
 myGui.Opt("+AlwaysOnTop +Disabled -SysMenu +Owner")  ; +Owner avoids a taskbar button.
 myGui.Add("Text", "", "Some text to display.")
-myGui.Name := "Title of Window"
+myGui.Title := "Title of Window"
 myGui.Show("NoActivate")  ; NoActivate avoids deactivating the currently active window.
          )"
       
@@ -5863,6 +5520,116 @@ Tray.Add("Item1", MenuHandler)  ; Creates a new menu item.
       ; MsgBox("'input_script' results (v1):`n[" result_input "]`n`n'expected' results (v2):`n[" result_expected "]")
       ; Yunit.assert(result_input = result_expected)
       ; }
+      converted := Convert(input_script)
+      ;~ if (expected!=converted){
+         ;~ ViewStringDiff(expected, converted)
+      ;~ }
+      Yunit.assert(converted = expected, "converted script != expected script")
+   }
+}
+
+class FlowTests
+{
+
+   loopNormal()
+   {
+      input_script := "
+         (Join`r`n
+Loop, 3
+{
+    MsgBox, Iteration number is %A_Index%.  ; A_Index will be 1, 2, then 3
+    Sleep, 100
+}
+         )"
+      
+      expected := "
+         (Join`r`n
+Loop 3
+{
+    msgResult := MsgBox("Iteration number is " . A_Index . ".")  ; A_Index will be 1, 2, then 3
+    Sleep(100)
+}
+         )"
+      
+      converted := Convert(input_script)
+      ;~ if (expected!=converted){
+         ;~ ViewStringDiff(expected, converted)
+      ;~ }
+      Yunit.assert(converted = expected, "converted script != expected script")
+   }
+
+   LoopParse1(){
+      input_script := "
+         (Join`r`n
+Colors := "red,green,blue"
+Loop, parse, Colors, ``,
+{
+    MsgBox, Color number %A_Index% is %A_LoopField%.
+}
+         )"
+
+      expected := "
+         (Join`r`n
+Colors := "red,green,blue"
+Loop parse, Colors, ","
+{
+    msgResult := MsgBox("Color number " . A_Index . " is " . A_LoopField . ".")
+}
+         )"
+
+      converted := Convert(input_script)
+      DebugWindow("converted:`n"  converted "`n")
+DebugWindow("expected:`n"  expected "`n")
+      ;~ if (expected!=converted){
+         ;~ ViewStringDiff(expected, converted)
+      ;~ }
+      Yunit.assert(converted = expected, "converted script != expected script")
+   }
+
+   LoopParse2(){
+      input_script := "
+         (Join`r`n
+Loop, parse, clipboard, ``n, ``r
+{
+    MsgBox, 4, , File number %A_Index% is %A_LoopField%.``n``nContinue?
+    IfMsgBox, No, break
+}
+         )"
+
+      expected := "
+         (Join`r`n
+Loop parse, A_Clipboard, "``n", "``r"
+{
+    msgResult := MsgBox("File number " . A_Index . " is " . A_LoopField . ".``n``nContinue?", , 4)
+    if (msgResult = "No"){
+       break
+    }
+}
+         )"
+
+      converted := Convert(input_script)
+      
+      ;~ if (expected!=converted){
+         ;~ ViewStringDiff(expected, converted)
+      ;~ }
+      Yunit.assert(converted = expected, "converted script != expected script")
+   }
+
+}
+
+class WinTests
+{
+   WinGetTitle(){
+      input_script := "
+         (Join`r`n `
+WinGetTitle, Title, A
+         )"
+
+      expected := "
+         (Join`r`n
+Title := WinGetTitle("A")
+         )"
+
       converted := Convert(input_script)
       ;~ if (expected!=converted){
          ;~ ViewStringDiff(expected, converted)

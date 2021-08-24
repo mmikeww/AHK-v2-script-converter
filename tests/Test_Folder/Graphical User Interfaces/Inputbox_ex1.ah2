@@ -1,0 +1,1 @@
+IB := InputBox("(your input will be hidden)", "Enter Password", "Password"), password := IB.Value , ErrorLevel := IB.Result="OK" ? 0 : IB.Result="CANCEL" ? 1 : IB.Result="Timeout" ? 2 : "ERROR"

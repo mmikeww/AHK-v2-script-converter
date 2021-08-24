@@ -1974,7 +1974,7 @@ _NumPut(p){
       p[4] := p[3]
       p[3] := ""
    }
-   Return p[2] " := NumPut(" p[4] ", " P[1] ", " p[3] ") ; not 100% correct"
+   Return p[2] " := NumPut(" p[4] ", " P[1] ", " p[3] ")"
 }
 
 

@@ -1546,6 +1546,10 @@ _Gui(p)
          }
 
       }
+      if (var1 = "Add" and var2 = "ActiveX" and ControlName!=""){
+         ; Fix for ActiveX control, so functions of the ActiveX can be used  
+         LineResult .= "`r`n" Indentation ControlName " := " ControlObject ".Value"
+      }
 
       if(ControlLabel!=""){
          LineResult.= "`r`n" Indentation ControlObject ".OnEvent(`"Click`", " ControlLabel ")"
@@ -1969,12 +1973,51 @@ _Menu(p)
 _NumPut(p){
    ;V1 NumPut(Number,VarOrAddress,Offset,Type)
    ;V2 NumPut Type, Number, Type2, Number2, ... Target , Offset
-   MsgBox("_NumPut needs to be fixed")
-   if (p[4]=""){
-      p[4] := p[3]
-      p[3] := ""
+   ; This should work to unwind the NumPut labyrinth
+   p[1] := StrReplace(StrReplace(p[1],"`r"),"`n")
+   p[2] := StrReplace(StrReplace(p[2],"`r"),"`n")
+   p[3] := StrReplace(StrReplace(p[3],"`r"),"`n")
+   p[4] := StrReplace(StrReplace(p[4],"`r"),"`n")
+   ParBuffer := ""
+   loop {
+         p[1] := Trim(p[1])
+         p[2] := Trim(p[2])
+         p[3] := Trim(p[3])
+         p[4] := Trim(p[4])
+         Number := p[1]
+         VarOrAddress := p[2]
+         if (p[4]="" ){
+            if (P[3]=""){
+               OffSet := ""
+               Type := "`"UPtr`""
+            }
+            else if (IsInteger(p[3])){
+               OffSet := p[3]
+               Type := "`"UPtr`""
+            }
+            else{
+               OffSet := ""
+               Type := p[3]
+            }
+         }
+         else{ ; 
+               OffSet := p[3]
+               Type := p[4]
+         }
+      NextParameters := RegExReplace(VarOrAddress,"is)^\s*Numput\((.*)\)\s*$","$1",&OutputVarCount)
+      if (OutputVarCount=0){
+         break
+      }
+      
+      ParBuffer .= Type ", " Number ", " 
+      
+      p := V1ParSplit(NextParameters)
+      loop 4-p.Length {
+         p.Push("")
+      }
    }
-   Return p[2] " := NumPut(" p[4] ", " P[1] ", " p[3] ")"
+
+   Return "NumPut(" ParBuffer VarOrAddress ", " OffSet ")"
 }
 
 

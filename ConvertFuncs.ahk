@@ -1266,6 +1266,9 @@ _DllCall(p){
       }
       if (A_Index !=1 and (InStr(p[A_Index-1] ,"*`"") or InStr(p[A_Index-1] ,"*`'"))){
          p[A_Index] := "&" p[A_Index]
+	 if (!InStr(p[A_Index] ,":=")){
+            p[A_Index] .= " := 0"
+         }
       }
       ParBuffer .= A_Index=1 ? p[A_Index] : ", " p[A_Index]
    }

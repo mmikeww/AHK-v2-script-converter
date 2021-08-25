@@ -16,6 +16,7 @@ Convert(ScriptString)
    global TreeViewNameDefault
    global StatusBarNameDefault
    global gFunctPar
+   global ScriptStringBackup
    GuiNameDefault := "myGui"
    ListViewNameDefault := "LV"
    TreeViewNameDefault := "TV"
@@ -23,6 +24,7 @@ Convert(ScriptString)
    GuiList := "|"
    MenuList := "|"
    GuiVList := Map()
+   ScriptStringBackup := ScriptString
    
    ;// Commands and How to convert them
    ;// Specification format:
@@ -80,7 +82,8 @@ Convert(ScriptString)
       EnvMult,var,valueCBE2E | {1} *= {2}
       EnvUpdate | SendMessage, `% WM_SETTINGCHANGE := 0x001A, 0, Environment,, `% "ahk_id " . HWND_BROADCAST := "0xFFFF"
       FileAppend,textT2E,fileT2E,encT2E | FileAppend({1}, {2}, {3})
-      FileCopyDir,sourceT2E,destT2E,flagT2E | DirCopy({1}, {2}, {3})
+      FileCopyDir,sourceT2E,destT2E,flagCBE2E | *_FileCopyDir
+      FileCopy,sourceT2E,destT2E,OverwriteCBE2E | *_FileCopy
       FileCreateDir,dirT2E | DirCreate({1})
       FileDelete,dirT2E | FileDelete({1})
       FileGetSize,OutputVar,FilenameT2E,unitsT2E | {1} := FileGetSize({2}, {3})
@@ -1316,6 +1319,29 @@ _EnvSub(p) {
       return format("{1} -= {2}", p*)
 }
 
+_FileCopyDir(p){
+   global ScriptStringBackup
+   ; We could check if Errorlevel is used in the next 20 lines
+   if InStr(ScriptStringBackup,"ErrorLevel"){
+      Out :=  format("Try{`r`n" Indentation "   DirCopy({1}, {2}, {3})`r`n" Indentation "   ErrorLevel := 0`r`n" Indentation "} Catch {`r`n" Indentation "   ErrorLevel := 1`r`n" Indentation "}" ,p*)
+   }
+   Else {
+      out := format("DirCopy({1}, {2}, {3})" ,p*)
+      }
+   Return RegExReplace(Out, "[\s\,]*\)", ")")
+}
+_FileCopy(p){
+   global ScriptStringBackup
+   ; We could check if Errorlevel is used in the next 20 lines
+   if InStr(ScriptStringBackup,"ErrorLevel"){
+      Out :=  format("Try{`r`n" Indentation "   FileCopy({1}, {2}, {3})`r`n" Indentation "   ErrorLevel := 0`r`n" Indentation "} Catch as Err {`r`n" Indentation "   ErrorLevel := Err.Extra`r`n" Indentation "}" ,p*)
+   }
+   Else {
+      out := format("FileCopy({1}, {2}, {3})" ,p*)
+      }
+   Return RegExReplace(Out, "[\s\,]*\)", ")")
+}
+
 _FileRead(p){
    ; FileRead, OutputVar, Filename
    ; OutputVar := FileRead(Filename , Options)
@@ -2312,6 +2338,18 @@ _Loop(p)
 
    line := ""
    if (InStr(p[1],"*") and InStr(p[1],"\")){ ; Automatically switching to Files loop
+      IncludeFolders := p[2]
+      Recurse := p[3]
+      p[3] := ""
+      if (IncludeFolders=1){
+         p[3] .= "FD"
+      }
+      else if (IncludeFolders=2){
+         p[3] .= "D"
+      }
+      if (Recurse=1){
+         p[3] .= "R"
+      }
       p[2] := p[1]
       p[1] := "Files"
    }
@@ -2332,6 +2370,7 @@ _Loop(p)
    }
    else if (p[1] = "Files")
    {
+      
       Line := format("Loop {1}, {2}, {3}","Files", ToExp(p[2]), ToExp(p[3]))
       Line := RegExReplace(Line, "(?:,\s(?:`"`")?)*$", "") ; remove trailing ,\s and ,\s""
       return Line

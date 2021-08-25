@@ -246,7 +246,7 @@ Convert(ScriptString)
       OnError(FuncQ2T,AddRemove) | OnError({1},{2})
       OnClipboardChange(ClipChangedQ2T) | OnClipboardChange(ClipChanged)
       Asc(String) | Ord({1})
-      VarSetCapacity(TargetVar,RequestedCapacity,FillByte) | {1} := Buffer({2}, {3})
+      VarSetCapacity(TargetVar,RequestedCapacity,FillByte) | *_VarSterCapacity
    )"
  
 
@@ -1266,7 +1266,7 @@ _DllCall(p){
       }
       if (A_Index !=1 and (InStr(p[A_Index-1] ,"*`"") or InStr(p[A_Index-1] ,"*`'"))){
          p[A_Index] := "&" p[A_Index]
-	 if (!InStr(p[A_Index] ,":=")){
+         if (!InStr(p[A_Index] ,":=")){
             p[A_Index] .= " := 0"
          }
       }
@@ -2408,6 +2408,13 @@ _StringUpper(p)
       return format("{1} := StrTitle({2})", p*)
    else
       return format("{1} := StrUpper({2})", p*)
+}
+
+_VarSterCapacity(p){
+   if (p[3]=""){
+      Return Format("VarSetStrCapacity(&{1}, {2})",p*)
+   }
+   Return Format("{1} := Buffer({2}, {3})",p*)
 }
 
 _WinGetActiveStats(p) {

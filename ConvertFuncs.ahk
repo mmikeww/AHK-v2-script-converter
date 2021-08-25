@@ -208,6 +208,7 @@ Convert(ScriptString)
    ;//  Similar to commands, parameters can be added
    FunctionsToConvert := "
    (
+      DllCall(DllFunction,Type1,Arg1,Type2,Arg2,Type,Arg,Type,Arg,Type,Arg,Type,Arg,Type,Arg,Type,Arg,Type,Arg,Type,Arg,Type,Arg,Type,Arg,Type,Arg,Type,Arg,ReturnType) | *_DllCall
       Func(FunctionNameQ2T) | {1}
       RegExMatch(Haystack, NeedleRegEx , OutputVarV2VR, StartingPos) | RegExMatch({1}, {2}, {3}, {4})
       RegExReplace(Haystack,NeedleRegEx,Replacement,OutputVarCountV2VR,Limit,StartingPos) | RegExReplace({1}, {2}, {3}, {4}, {5}, {6})
@@ -1256,6 +1257,21 @@ _CoordMode(p){
    Return RegExReplace(Out, "[\s\,]*\)$", ")")
 }
 
+_DllCall(p){
+   ParBuffer :=""
+   loop p.Length
+   {
+      if (p[A_Index] ~= "^&"){ ; Remove the & parameter
+         p[A_Index] := SubStr(p[A_Index], 2)
+      }
+      if (A_Index !=1 and (InStr(p[A_Index-1] ,"*`"") or InStr(p[A_Index-1] ,"*`'"))){
+         p[A_Index] := "&" p[A_Index]
+      }
+      ParBuffer .= A_Index=1 ? p[A_Index] : ", " p[A_Index]
+   }
+   Return "DllCall(" ParBuffer ")"
+}
+
 _Drive(p){
    if (p[1]="Label"){
       Out := Format("DriveSetLabel({2}, {3})", p[1],ToExp(p[2]),ToExp(p[3]))
@@ -1978,46 +1994,75 @@ _NumPut(p){
    p[2] := StrReplace(StrReplace(p[2],"`r"),"`n")
    p[3] := StrReplace(StrReplace(p[3],"`r"),"`n")
    p[4] := StrReplace(StrReplace(p[4],"`r"),"`n")
-   ParBuffer := ""
-   loop {
-         p[1] := Trim(p[1])
-         p[2] := Trim(p[2])
-         p[3] := Trim(p[3])
-         p[4] := Trim(p[4])
-         Number := p[1]
-         VarOrAddress := p[2]
-         if (p[4]="" ){
-            if (P[3]=""){
-               OffSet := ""
-               Type := "`"UPtr`""
+   if InStr(p[2], "Numput("){
+      ParBuffer := ""
+      loop {
+            p[1] := Trim(p[1])
+            p[2] := Trim(p[2])
+            p[3] := Trim(p[3])
+            p[4] := Trim(p[4])
+            Number := p[1]
+            VarOrAddress := p[2]
+            if (p[4]="" ){
+               if (P[3]=""){
+                  OffSet := ""
+                  Type := "`"UPtr`""
+               }
+               else if (IsInteger(p[3])){
+                  OffSet := p[3]
+                  Type := "`"UPtr`""
+               }
+               else{
+                  OffSet := ""
+                  Type := p[3]
+               }
             }
-            else if (IsInteger(p[3])){
-               OffSet := p[3]
-               Type := "`"UPtr`""
+            else{ ; 
+                  OffSet := p[3]
+                  Type := p[4]
             }
-            else{
-               OffSet := ""
-               Type := p[3]
-            }
+         NextParameters := RegExReplace(VarOrAddress,"is)^\s*Numput\((.*)\)\s*$","$1",&OutputVarCount)
+         if (OutputVarCount=0){
+            break
          }
-         else{ ; 
-               OffSet := p[3]
-               Type := p[4]
+         
+         ParBuffer := Type ", " Number ", `r`n" Indentation "   " ParBuffer
+         
+         p := V1ParSplit(NextParameters)
+         loop 4-p.Length {
+            p.Push("")
          }
-      NextParameters := RegExReplace(VarOrAddress,"is)^\s*Numput\((.*)\)\s*$","$1",&OutputVarCount)
-      if (OutputVarCount=0){
-         break
       }
-      
-      ParBuffer .= Type ", " Number ", " 
-      
-      p := V1ParSplit(NextParameters)
-      loop 4-p.Length {
-         p.Push("")
-      }
+      Out := "NumPut(" ParBuffer VarOrAddress ", " OffSet ")"
    }
-
-   Return "NumPut(" ParBuffer VarOrAddress ", " OffSet ")"
+   else{
+      p[1] := Trim(p[1])
+      p[2] := Trim(p[2])
+      p[3] := Trim(p[3])
+      p[4] := Trim(p[4])
+      Number := p[1]
+      VarOrAddress := p[2]
+      if (p[4]="" ){
+         if (P[3]=""){
+            OffSet := ""
+            Type := "`"UPtr`""
+         }
+         else if (IsInteger(p[3])){
+            OffSet := p[3]
+            Type := "`"UPtr`""
+         }
+         else{
+            OffSet := ""
+            Type := p[3]
+         }
+      }
+      else{ ; 
+            OffSet := p[3]
+            Type := p[4]
+      }
+      Out := "NumPut(" Type ", " Number ", " VarOrAddress ", " OffSet ")"
+   }
+   Return RegExReplace(Out, "[\s\,]*\)$", ")")
 }
 
 

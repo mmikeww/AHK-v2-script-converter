@@ -209,7 +209,12 @@ ButtonGenerateTest(*){
         SB.SetText("No text was found.", 1)
         Return
     }
-    SelectedText := DirList[TV.GetSelection()]
+    if (TV.GetSelection()!=0){
+        SelectedText := DirList[TV.GetSelection()]
+    }
+    Else{
+        SelectedText := A_ScriptDir "\tests"
+    }
     SplitPath(SelectedText, &name, &dir, &ext, &name_no_ext, &drive)
     DirNewNoExt := ext="" ? dir "\" name : dir 
     SplitPath(DirNewNoExt, &nameFolder)

@@ -364,11 +364,73 @@ Convert(ScriptString)
          }
       }
 
+      
+
+
+      ; -------------------------------------------------------------------------------
+      ;
+      ; skip empty lines or comment lines
+      ;
+      If (Trim(Line) == "") || ( FirstChar == ";" )
+      {
+         ; Do nothing, but we still want to add the line to the output file
+      }
+      
+      ; -------------------------------------------------------------------------------
+      ;
+      ; skip comment blocks with one statement
+      ;
+      else if (FirstTwo == "/*"){
+         
+         loop {
+            O_Index++
+            if (oScriptString.Length < O_Index){
+               break
+            }
+            LineContSect := oScriptString[O_Index]
+            Line .= "`r`n" . LineContSect
+            FirstTwo := SubStr(LTrim(LineContSect), 1, 2)
+            if (FirstTwo == "*/"){
+               ; End Comment block
+               break
+            } 
+         }
+         ScriptOutput .= Line . "`r`n"
+         ; Output and NewInput should become arrays, NewInput is a copy of the Input, but with empty lines added for easier comparison.
+         LastLine := Line
+         continue ; continue with the next line
+      }
+
+      
+      ; Check for , continuation sections add them to the line
+      ; https://www.autohotkey.com/docs/Scripts.htm#continuation
+      loop
+      {
+         if (oScriptString.Length < O_Index+1){
+            break
+         }
+         FirstNextLine := SubStr(LTrim(oScriptString[O_Index+1]), 1, 1)
+         FirstTwoNextLine := SubStr(LTrim(oScriptString[O_Index+1]), 1, 1)
+         TreeNextLine := SubStr(LTrim(oScriptString[O_Index+1]), 1, 1)
+         if (FirstNextLine~="[,\?:\.]" or FirstTwoNextLine="||" or FirstTwoNextLine="&&" or FirstTwoNextLine="or" or TreeNextLine ="and"){
+            O_Index++
+            Line .= oScriptString[O_Index]
+         }
+         else{
+            break
+         } 
+      }
+
       ; Loop the functions
       loop {
          oResult:= V1ParSplitfunctions(Line, A_Index)
          
          if (oResult.Found = 0){
+            break
+         }
+         if (oResult.Hook_Status>0){
+            ; This means that the function dit not close, probably a continuation section
+            ;MsgBox("Hook_Status: " oResult.Hook_Status "line:" line)
             break
          }
 
@@ -394,33 +456,6 @@ Convert(ScriptString)
                {
                   ; uses a function to fromat the parameters
                   oPar[A_Index] := ParameterFormat(oListParam[A_Index],oPar[A_Index])
-                  ; continue
-                  ; oPar[A_Index] := Trim(oPar[A_Index])
-                  ; if (oListParam[A_Index] ~= "V2VR$"){
-                  ;    oPar[A_Index] := "&" . oPar[A_Index]
-                  ; }
-                  ; else if (oListParam[A_Index] ~= "CBE2E$")    ; 'Can Be an Expression TO an Expression'
-                  ; {
-                  ;    if (SubStr(oPar[A_Index], 1, 2) = "% ")            ; if this param expression was forced
-                  ;       oPar[A_Index] := SubStr(oPar[A_Index], 3)       ; remove the forcing
-                  ;    else
-                  ;       oPar[A_Index] := RemoveSurroundingPercents(oPar[A_Index])
-                  ; }
-                  ; else if (oListParam[A_Index] ~= "CBE2T$")    ; 'Can Be an Expression TO literal Text'
-                  ; {
-                  ;    if isInteger(oPar[A_Index])                                               ; if this param is int
-                  ;    || (SubStr(oPar[A_Index], 1, 2) = "% ")                                      ; or the expression was forced
-                  ;    || ((SubStr(oPar[A_Index], 1, 1) = "%") && (SubStr(oPar[A_Index], -1) = "%"))  ; or var already wrapped in %%s
-                  ;       oPar[A_Index] := oPar[A_Index]                  ; dont do any conversion
-                  ;    else
-                  ;       oPar[A_Index] := "%" . oPar[A_Index] . "%"    ; wrap in percent signs to evaluate the expr
-                  ; }
-                  ; else if (oListParam[A_Index] ~= "Q2T$")    ; 'Can Be an quote TO literal Text'
-                  ; {
-                  ;    if ((SubStr(oPar[A_Index], 1, 1) = "`"") && (SubStr(oPar[A_Index], -1) = "`""))  ;  var already wrapped in Quotes
-                  ;       || ((SubStr(oPar[A_Index], 1, 1) = "`'") && (SubStr(oPar[A_Index], -1) = "`'")) ;  var already wrapped in Quotes
-                  ;             oPar[A_Index] := SubStr(oPar[A_Index], 2, StrLen(oPar[A_Index])-2)
-                  ; }
                }
                loop oListParam.Length
                {
@@ -452,8 +487,6 @@ Convert(ScriptString)
          ; Line := oResult.Pre oResult.func "(" oResult.Parameters ")" oResult.Post
       }
 
-
-
       ; -------------------------------------------------------------------------------
       ;
       ; replace any renamed vars
@@ -474,32 +507,6 @@ Convert(ScriptString)
 
       ; -------------------------------------------------------------------------------
       ;
-      ; skip empty lines or comment lines
-      ;
-      If (Trim(Line) == "") || ( FirstChar == ";" )
-      {
-         ; Do nothing, but we still want to add the line to the output file
-      }
-      
-      ; -------------------------------------------------------------------------------
-      ;
-      ; skip comment blocks
-      ;
-      else if FirstTwo == "/*"
-         InCommentBlock := true
-      
-      else if FirstTwo == "*/"
-         InCommentBlock := false
-      
-      else if InCommentBlock
-      {
-         ; Do nothing, but skip all the following
-
-         ;msgbox in comment block`nLine=%Line%
-      }
-      
-      ; -------------------------------------------------------------------------------
-      ;
       ;else If InStr(Line, "SendMode") && InStr(Line, "Input")
          ;Skip := true
       
@@ -511,7 +518,7 @@ Convert(ScriptString)
       ; got that RegEx from Coco here: https://github.com/cocobelgica/AutoHotkey-Util/blob/master/EnumIncludes.ahk#L65
       ; and modified it slightly
       ;
-      else if ( FirstChar == "(" )
+      if ( FirstChar == "(" )
            && RegExMatch(Line, "i)^\s*\((?:\s*(?(?<=\s)(?!;)|(?<=\())(\bJoin\S*|[^\s)]+))*(?<!:)(?:\s+;.*)?$")
       {
          InCont := 1
@@ -2752,6 +2759,7 @@ V1ParSplitFunctions(String, FunctionTarget := 1){
 		oResult.Post:= ""
 		oResult.Separator:=""
       oResult.Found := 0
+      
 	}
 	else{
 		oResult.Pre:= SubStr(String, 1 , F_Index-1)
@@ -2761,6 +2769,7 @@ V1ParSplitFunctions(String, FunctionTarget := 1){
 		oResult.Separator:= SubStr(String, F_Index-1,1)
       oResult.Found := 1
 	}
+   oResult.Hook_Status := Hook_Status
 	return oResult
 }
 

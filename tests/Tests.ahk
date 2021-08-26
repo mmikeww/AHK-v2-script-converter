@@ -5326,7 +5326,7 @@ IB := InputBox("(your input will be hidden)", "Enter Password", "Password"), pas
       
       expected := "
          (Join`r`n
-            msgResult := MsgBox("This is the 1-parameter method. Commas (,) do not need to be escaped.")
+            MsgBox("This is the 1-parameter method. Commas (,) do not need to be escaped.")
          )"
       
       ; if (this.test_exec = true) {
@@ -5355,7 +5355,7 @@ With continuation section.
       
       expected := "
          (Join`r`n
-msgResult := MsgBox("
+MsgBox("
 `(
 This is the 1-parameter method. Commas (,) do not need to be escaped.
 With continuation section.
@@ -5384,7 +5384,7 @@ MsgBox, 4, , This is the 3-parameter method. Commas (,) do not need to be escape
       
       expected := "
          (Join`r`n
-msgResult := MsgBox("This is the 3-parameter method. Commas (,) do not need to be escaped.", , 4)
+MsgBox("This is the 3-parameter method. Commas (,) do not need to be escaped.", , 4)
          )"
       
       ; if (this.test_exec = true) {
@@ -5410,7 +5410,7 @@ MsgBox, 4, , 4-parameter method: this MsgBox will time out in 5 seconds.  Contin
       
       expected := "
          (Join`r`n
-msgResult := MsgBox("4-parameter method: this MsgBox will time out in 5 seconds.  Continue?", "", "4 T5")
+MsgBox("4-parameter method: this MsgBox will time out in 5 seconds.  Continue?", "", "4 T5")
          )"
       
       ; if (this.test_exec = true) {
@@ -5546,7 +5546,7 @@ Loop, 3
          (Join`r`n
 Loop 3
 {
-    msgResult := MsgBox("Iteration number is " . A_Index . ".")  ; A_Index will be 1, 2, then 3
+    MsgBox("Iteration number is " . A_Index . ".")  ; A_Index will be 1, 2, then 3
     Sleep(100)
 }
          )"
@@ -5573,7 +5573,7 @@ Loop, parse, Colors, ``,
 Colors := "red,green,blue"
 Loop parse, Colors, ","
 {
-    msgResult := MsgBox("Color number " . A_Index . " is " . A_LoopField . ".")
+    MsgBox("Color number " . A_Index . " is " . A_LoopField . ".")
 }
          )"
 

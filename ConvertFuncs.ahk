@@ -1,8 +1,17 @@
 ﻿#Requires AutoHotKey v2.0-beta.1
 #SingleInstance Force
 
+; to do: strsplit (old command)
+; requires should change the version :D
+
 Convert(ScriptString)
 {
+   global ScriptStringsUsed := Array() ; Keeps an array of interesting strings used in the script
+   ScriptStringsUsed.ErrorLevel := InStr(ScriptString, "ErrorLevel")
+   ScriptStringsUsed.IfMsgBox := InStr(ScriptString, "IfMsgBox")
+
+   global aListPseudoArray := Array() ; list of strings that should be converted from pseudoArray to Array
+   global aListMatchObject := Array() ; list of strings that should be converted from Match Object V1 to Match Object V2
    global Orig_Line
    global Orig_Line_NoComment
    global oScriptString ; array of all the lines
@@ -12,11 +21,12 @@ Convert(ScriptString)
    global GuiList
    global GuiVList ; Used to list all variable names defined in a Gui
    global MenuList
+   
    global ListViewNameDefault
    global TreeViewNameDefault
    global StatusBarNameDefault
    global gFunctPar
-   global ScriptStringBackup
+
    GuiNameDefault := "myGui"
    ListViewNameDefault := "LV"
    TreeViewNameDefault := "TV"
@@ -24,7 +34,7 @@ Convert(ScriptString)
    GuiList := "|"
    MenuList := "|"
    GuiVList := Map()
-   ScriptStringBackup := ScriptString
+
    
    ;// Commands and How to convert them
    ;// Specification format:
@@ -154,11 +164,12 @@ Convert(ScriptString)
       SoundSet,NewSetting,ComponentTypeT2E,ControlType,DeviceNumberT2E | *_SoundSet
       SplitPath,varCBE2E,filenameV2VR,dirV2VR,extV2VR,name_no_extV2VR,drvV2VR | SplitPath({1}, {2}, {3}, {4}, {5}, {6})
       StringCaseSense,paramT2E | StringCaseSense({1})
-      StringLen,OutputVar,InputVar | {1} := StrLen({2})
       StringGetPos,OutputVar,InputVar,SearchTextT2E,SideT2E,OffsetCBE2E | *_StringGetPos
-      StringMid,OutputVar,InputVar,StartCharCBE2E,CountCBE2E,L_T2E | *_StringMid
+      StringLen,OutputVar,InputVar | {1} := StrLen({2})
       StringLeft,OutputVar,InputVar,CountCBE2E | {1} := SubStr({2}, 1, {3})
+      StringMid,OutputVar,InputVar,StartCharCBE2E,CountCBE2E,L_T2E | *_StringMid
       StringRight,OutputVar,InputVar,CountCBE2E | {1} := SubStr({2}, -1*({3}))
+      StringSplit,OutputArray,InputVar,DelimitersT2E,OmitCharsT2E | *_StringSplit
       StringTrimLeft,OutputVar,InputVar,CountCBE2E | {1} := SubStr({2}, ({3})+1)
       StringTrimRight,OutputVar,InputVar,CountCBE2E | {1} := SubStr({2}, 1, -1*({3}))
       StringUpper,OutputVar,InputVar,TT2E| *_StringUpper
@@ -204,6 +215,7 @@ Convert(ScriptString)
       #KeyHistory,MaxEvents | KeyHistory({1})
       #MaxHotkeysPerInterval,Value | A_MaxHotkeysPerInterval := {1}
       #MenuMaskKey KeyNameT2E | A_MenuMaskKey := {1}
+      #Requires AutoHotkey Version | #Requires Autohotkey v2.0-beta.1+
    )"
 
    ;// this is a list of all renamed functions, in this format:
@@ -213,7 +225,7 @@ Convert(ScriptString)
    (
       DllCall(DllFunction,Type1,Arg1,Type2,Arg2,Type,Arg,Type,Arg,Type,Arg,Type,Arg,Type,Arg,Type,Arg,Type,Arg,Type,Arg,Type,Arg,Type,Arg,Type,Arg,Type,Arg,ReturnType) | *_DllCall
       Func(FunctionNameQ2T) | {1}
-      RegExMatch(Haystack, NeedleRegEx , OutputVarV2VR, StartingPos) | RegExMatch({1}, {2}, {3}, {4})
+      RegExMatch(Haystack, NeedleRegEx , OutputVarV2VR, StartingPos) | *_RegExMatch
       RegExReplace(Haystack,NeedleRegEx,Replacement,OutputVarCountV2VR,Limit,StartingPos) | RegExReplace({1}, {2}, {3}, {4}, {5}, {6})
       StrReplace(Haystack,Needle,ReplaceText,OutputVarCountV2VR,Limit) | StrReplace({1}, {2}, {3}, , {4}, {5})
       LoadPicture(Filename,Options,ImageTypeV2VR) | LoadPicture({1},{2},{3})
@@ -242,7 +254,6 @@ Convert(ScriptString)
       SB_SetText(NewText,PartNumber,Style) | *_SB_SetText
       SB_SetParts(NewText,PartNumber,Style) | *_SB_SetParts
       SB_SetIcon(Filename,IconNumber,PartNumber) | *_SB_SetIcon
-      length() | Length
       NumPut(Number,VarOrAddress,Offset,Type) | *_NumPut
       MenuGetHandle(MenuNameQ2T) | {1}.Handle
       MenuGetName(Handle) | MenuFromHandle({1})
@@ -252,6 +263,16 @@ Convert(ScriptString)
       VarSetCapacity(TargetVar,RequestedCapacity,FillByte) | *_VarSterCapacity
    )"
  
+   ;// this is a list of all renamed Methods, in this format:
+   ;// a method has the syntax object.method(Par1, Par2)
+   ;//          OrigV1Method | ReplacementV2Method
+   ;//  Similar to commands, parameters can be added
+   MethodsToConvert := "
+   (
+      Count() | Count
+      length() | Length
+      HasKey(Key) | Has({1})
+   )"
 
    ;// this is a list of all renamed variables , in this format:
    ;//          OrigWord | ReplacementWord
@@ -268,7 +289,6 @@ Convert(ScriptString)
       ClipboardAll | ClipboardAll()
       ComObjParameter() | ComObject()
    )"
-
 
    ;Directives := "#Warn UseUnsetLocal`r`n#Warn UseUnsetGlobal"
 
@@ -439,7 +459,12 @@ Convert(ScriptString)
 
          oPar := V1ParSplit(oResult.Parameters)
          gFunctPar := oResult.Parameters
-         Loop Parse, FunctionsToConvert, "`n", "`r"
+
+         ConvertList := FunctionsToConvert
+         if RegExMatch(oResult.Pre,"\.$"){
+            ConvertList := MethodsToConvert
+         }
+         Loop Parse, ConvertList, "`n", "`r"
          {
             ListDelim := InStr(A_LoopField, "(")
             ListFunction := Trim( SubStr(A_LoopField, 1, ListDelim-1) )
@@ -1009,8 +1034,19 @@ Convert(ScriptString)
          Line := format("; REMOVED: {1}", Line)
       }
 
-      ;msgbox, New Line=`n%Line%
       Line := PreLine Line
+
+      ; Correction PseudoArray to Array
+      Loop aListPseudoArray.Length{
+         Line := ConvertPseudoArray(Line,aListPseudoArray[A_Index])
+      }
+
+      ; Correction PseudoArray to Array
+      Loop aListMatchObject.Length{
+         Line := ConvertObjectMatch(Line,aListMatchObject[A_Index])
+      }
+       
+
       ScriptOutput .= Line . EOLComment . "`r`n"
       ; Output and NewInput should become arrays, NewInput is a copy of the Input, but with empty lines added for easier comparison.
       LastLine := Line
@@ -1260,6 +1296,7 @@ _ControlGetFocus(p){
    Out := format("{1} := ControlGetClassNN(ControlGetFocus({2}, {3}, {4}, {5}))", p*)
    Return RegExReplace(Out, "[\s\,]*\)", ")")
 }
+
 _CoordMode(p){
    ; V1: CoordMode,TargetTypeT2E,RelativeToT2E | *_CoordMode
    p[2] := StrReplace(P[2], "Relative", "Window")
@@ -1320,9 +1357,8 @@ _EnvSub(p) {
 }
 
 _FileCopyDir(p){
-   global ScriptStringBackup
-   ; We could check if Errorlevel is used in the next 20 lines
-   if InStr(ScriptStringBackup,"ErrorLevel"){
+   global ScriptStringsUsed
+   if ScriptStringsUsed.ErrorLevel{
       Out :=  format("Try{`r`n" Indentation "   DirCopy({1}, {2}, {3})`r`n" Indentation "   ErrorLevel := 0`r`n" Indentation "} Catch {`r`n" Indentation "   ErrorLevel := 1`r`n" Indentation "}" ,p*)
    }
    Else {
@@ -1331,9 +1367,9 @@ _FileCopyDir(p){
    Return RegExReplace(Out, "[\s\,]*\)", ")")
 }
 _FileCopy(p){
-   global ScriptStringBackup
+   global ScriptStringsUsed
    ; We could check if Errorlevel is used in the next 20 lines
-   if InStr(ScriptStringBackup,"ErrorLevel"){
+   if ScriptStringsUsed.ErrorLevel{
       Out :=  format("Try{`r`n" Indentation "   FileCopy({1}, {2}, {3})`r`n" Indentation "   ErrorLevel := 0`r`n" Indentation "} Catch as Err {`r`n" Indentation "   ErrorLevel := Err.Extra`r`n" Indentation "}" ,p*)
    }
    Else {
@@ -1341,7 +1377,6 @@ _FileCopy(p){
       }
    Return RegExReplace(Out, "[\s\,]*\)", ")")
 }
-
 _FileRead(p){
    ; FileRead, OutputVar, Filename
    ; OutputVar := FileRead(Filename , Options)
@@ -1364,7 +1399,6 @@ _FileReadLine(p){
 
    Return p[1] " := StrSplit(FileRead(" p[2] "),`"``n`",`"``r`")[" P[3] "]"
 }
-
 _FileSelect(p){
    ; V1: FileSelectFile, OutputVar [, Options, RootDir\Filename, Title, Filter]
    ; V2: SelectedFile := FileSelect([Options, RootDir\Filename, Title, Filter])
@@ -1414,8 +1448,7 @@ _Gosub(p){
    Return trim(p[1]) "()"
 }
 
-_Gui(p)
-{
+_Gui(p){
 
    global Orig_Line_NoComment
    global GuiNameDefault
@@ -1791,6 +1824,157 @@ _Hotkey(p){
    Return RegExReplace(Out, "[\s\,]*\)$", ")")
 }
 
+_IfGreater(p){
+   ; msgbox(p[2])
+   if isNumber(p[2]) || InStr(p[2], "%")
+      return format("if ({1} > {2})", p*)
+   else
+      return format("if (StrCompare({1}, {2}) > 0)", p*)
+}
+
+_IfGreaterOrEqual(p){
+   ; msgbox(p[2])
+   if isNumber(p[2]) || InStr(p[2], "%")
+      return format("if ({1} > {2})", p*)
+   else
+      return format("if (StrCompare({1}, {2}) >= 0)", p*)
+}
+
+_IfLess(p){
+   ; msgbox(p[2])
+   if isNumber(p[2]) || InStr(p[2], "%")
+      return format("if ({1} < {2})", p*)
+   else
+      return format("if (StrCompare({1}, {2}) < 0)", p*)
+}
+
+_IfLessOrEqual(p){
+   ; msgbox(p[2])
+   if isNumber(p[2]) || InStr(p[2], "%")
+      return format("if ({1} < {2})", p*)
+   else
+      return format("if (StrCompare({1}, {2}) <= 0)", p*)
+}
+
+_InputBox(oPar){
+   ; V1: InputBox, OutputVar [, Title, Prompt, HIDE, Width, Height, X, Y, Locale, Timeout, Default]
+   ; V2: Obj := InputBox(Prompt, Title, Options, Default)
+   global O_Index
+   global ScriptStringsUsed
+   
+   global oScriptString ; array of all the lines
+   options :=""
+  
+   OutputVar := oPar[1]
+   Title := oPar.Has(2) ? oPar[2] : ""
+   Prompt := oPar.Has(3) ? oPar[3] : ""
+   Hide := oPar.Has(4) ? trim(oPar[4]) : ""
+   Width := oPar.Has(5) ? trim(oPar[5]) : ""
+   Height := oPar.Has(6) ? trim(oPar[6]) : ""
+   X := oPar.Has(7) ? trim(oPar[7]) : ""
+   Y := oPar.Has(8) ? trim(oPar[8]) : ""
+   Locale := oPar.Has(9) ? trim(oPar[9]) : ""
+   Timeout := oPar.Has(10) ? trim(oPar[10]) : ""
+   Default := oPar.Has(11) ? trim(oPar[11]) : ""
+
+   Parameters := ToExp(Prompt) ", " ToExp(Title)
+   if (Hide="hide"){
+      Options .= "Password"
+   }
+   if (Width!=""){
+      Options .= Options != "" ? " " : ""
+      Options .=  "w" 
+      Options .=  IsNumber(Width) ? Width :  "`" " Width " `""
+   }
+   if (Height!=""){
+      Options .= Options != "" ? " " : ""
+      Options .= "h"
+      Options .=  IsNumber(Height) ? Height :  "`" " Height " `""
+   }
+   if (x!=""){
+      Options .= Options != "" ? " " : ""
+      Options .= "h"
+      Options .=  IsNumber(x) ? x :  "`" " x " `""
+   }
+   if (y!=""){
+      Options .= Options != "" ? " " : ""
+      Options .= "h"
+      Options .=  IsNumber(y) ? y :  "`" " y " `""
+   }
+   if (Options!=""){
+      Parameters .= ", `"" Options "`""
+   }
+   if ScriptStringsUsed.ErrorLevel{
+      Line := format("IB := InputBox({1}), {2} := IB.Value , ErrorLevel := IB.Result=`"OK`" ? 0 : IB.Result=`"CANCEL`" ? 1 : IB.Result=`"Timeout`" ? 2 : `"ERROR`"", parameters ,OutputVar)
+   }
+   else{
+      Line := format("IB := InputBox({1}), {2} := IB.Value", parameters ,OutputVar)
+   }
+
+   return Line
+}
+
+_Loop(p){
+   
+   line := ""
+   if (InStr(p[1],"*") and InStr(p[1],"\")){ ; Automatically switching to Files loop
+      IncludeFolders := p[2]
+      Recurse := p[3]
+      p[3] := ""
+      if (IncludeFolders=1){
+         p[3] .= "FD"
+      }
+      else if (IncludeFolders=2){
+         p[3] .= "D"
+      }
+      if (Recurse=1){
+         p[3] .= "R"
+      }
+      p[2] := p[1]
+      p[1] := "Files"
+   }
+   if (p[1] = "Parse")
+   {
+      Line := p.Has(4) ? Trim(ToExp(p[4])) : ""
+      Line := Line != "" ? ", " Line : ""
+      Line := p.Has(3) ? Trim(ToExp(p[3])) Line : "" Line
+      Line := Line != "" ? ", " Line : ""
+      if (Substr(Trim(p[2]),1,1)="%"){
+         p[2] := "ParseVar := " Substr(Trim(p[2]),2)
+      }
+      Line := ", " Trim(p[2]) Line
+      Line := "Loop Parse" Line
+      ; Line := format("Loop {1}, {2}, {3}, {4}",p[1], p[2], ToExp(p[3]), ToExp(p[4]))
+      Line := RegExReplace(Line, "(?:,\s(?:`"`")?)*$", "") ; remove trailing ,\s and ,\s""
+      return Line
+   }
+   else if (p[1] = "Files")
+   {
+      
+      Line := format("Loop {1}, {2}, {3}","Files", ToExp(p[2]), ToExp(p[3]))
+      Line := RegExReplace(Line, "(?:,\s(?:`"`")?)*$", "") ; remove trailing ,\s and ,\s""
+      return Line
+   }
+   else if (p[1] = "Read" || p[1] = "Reg")
+   {
+      Line := p.Has(3) ? Trim(ToExp(p[3])) : "" 
+      Line := Line != "" ? ", " Line : ""
+      Line := p.Has(2) ? Trim(ToExp(p[2])) Line : "" Line
+      Line := Line != "" ? ", " Line : ""
+      Line := p.Has(1) ? Trim(p[1]) Line : "" Line
+      Line := "Loop " Line
+      Line := RegExReplace(Line, "(?:,\s(?:`"`")?)*$", "") ; remove trailing ,\s and ,\s""
+      return Line
+   }
+   else{
+      Line := "Loop " Trim(ToExp(p[1]))
+      return Line
+   }
+   ; Else no changes need to be made
+
+}
+
+
 _LV_Add(p){
    global ListviewNameDefault
    Return format("{1}.Add({2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}, {16}, {17})", ListviewNameDefault, p*)
@@ -1836,89 +2020,11 @@ _LV_SetImageList(p){
    Return format("{1}.SetImageList({2}, {3})", ListviewNameDefault, p*)
 }
 
-_TV_Add(p){
-   global TreeViewNameDefault
-   Return format("{1}.Add({2}, {3}, {4})", TreeViewNameDefault, p*)
-}
-_TV_Modify(p){
-   global TreeViewNameDefault
-   Return format("{1}.Modify({2}, {3}, {4})", TreeViewNameDefault, p*)
-}
-_TV_Delete(p){
-   global TreeViewNameDefault
-   Return format("{1}.Delete({2})", TreeViewNameDefault, p*)
-}
-_TV_GetSelection(p){
-   global TreeViewNameDefault
-   Return format("{1}.GetSelection({2})", TreeViewNameDefault, p*)
-}
-_TV_GetParent(p){
-   global TreeViewNameDefault
-   Return format("{1}.GetParent({2})", TreeViewNameDefault, p*)
-}
-_TV_GetChild(p){
-   global TreeViewNameDefault
-   Return format("{1}.GetChild({2})", TreeViewNameDefault, p*)
-}
-_TV_GetPrev(p){
-   global TreeViewNameDefault
-   Return format("{1}.GetPrev({2})", TreeViewNameDefault, p*)
-}
-_TV_GetNext(p){
-   global TreeViewNameDefault
-   Return format("{1}.GetNext({2}, {3})", TreeViewNameDefault, p*)
-}
-_TV_GetText(p){
-   global TreeViewNameDefault
-   Return format("{2} := {1}.GetText({3})", TreeViewNameDefault, p*)
-}
-_TV_GetCount(p){
-   global TreeViewNameDefault
-   Return format("{1}.GetCount()", TreeViewNameDefault)
-}
-_TV_SetImageList(p){
-   global TreeViewNameDefault
-   Return format("{2} := {1}.SetImageList({3})", TreeViewNameDefault)
-}
-_SB_SetText(p){
-   global StatusBarNameDefault
-   Return format("{1}.SetText({2}, {3}, {4})", StatusBarNameDefault)
-}
-_SB_SetParts(p){
-   global StatusBarNameDefault,gFunctPar
-   Return format("{1}.SetParts({2})", StatusBarNameDefault,gFunctPar)
-}
-_SB_SetIcon(p){
-   global StatusBarNameDefault,gFunctPar
-   Return format("{1}.SetIcon({2})", StatusBarNameDefault,gFunctPar)
-}
-
-_SysGet(p){
-   ; SysGet,OutputVar,SubCommand,Value
-   if (p[2]="MonitorCount"){
-      Return Format("{1} := MonitorGetCount()", p*)
-   }
-   else if (p[2]="MonitorPrimary"){
-      Return Format("{1} := MonitorGetPrimary()", p*)
-   }
-   else if (p[2]="Monitor"){
-      Return Format("MonitorGet({3}, {1}Left, {1}Top, {1}Right, {1}Bottom)", p*)
-   }
-   else if (p[2]="MonitorWorkArea"){
-      Return Format("MonitorGetWorkArea({3}, {1}Left, {1}Top, {1}Right, {1}Bottom)", p*)
-   }
-   else if (p[2]="MonitorName "){
-      Return Format("{1} := MonitorGetName({3})", p*)
-   }
-   Return Format("{1} := SysGet({2})", p*)
-}
-
-_MsgBox(p)
-{
+_MsgBox(p){
    global O_Index
    global Orig_Line_NoComment
    global oScriptString ; array of all the lines
-
+   global ScriptStringsUsed
    ; v1
    ; MsgBox, Text (1-parameter method)
    ; MsgBox [, Options, Title, Text, Timeout]
@@ -1951,16 +2057,22 @@ _MsgBox(p)
       else{
          text := ToExp(RegExReplace(Orig_Line_NoComment, "i)MsgBox\s*,?[^,]*,[^,]*,(.*)$", "$1"))
       }
-
-      return format("msgResult := MsgBox({1}, {2}, {3})",  text , title, ToExp(options) )
+      Out := format("MsgBox({1}, {2}, {3})",  text , title, ToExp(options) )
+      if ScriptStringsUsed.IfMsgBox{
+         Out := "msgResult := " Out 
+      }
+      return Out
    }
    else if RegExMatch(p[1], "i)^\s*.*"){
-      return format("msgResult := MsgBox({1})",  ToExp(p[1]) )
+      Out :=  format("MsgBox({1})",  ToExp(p[1]))
+      if ScriptStringsUsed.IfMsgBox{
+         Out := "msgResult := " Out 
+      }
+      return Out
    }
 }
 
-_Menu(p)
-{
+_Menu(p){
    global Orig_Line_NoComment
    global MenuList
    MenuLine := Orig_Line_NoComment
@@ -2101,6 +2213,11 @@ _NumPut(p){
    Return RegExReplace(Out, "[\s\,]*\)$", ")")
 }
 
+_OnExit(p){
+   ;V1 OnExit,Func,AddRemove
+   ConvertLabel2Funct(p[1])
+   Return Format("OnExit({1}, {2})",p*)
+}
 
 _Process(p){
    ; V1: Process,SubCommand,PIDOrName,Value
@@ -2109,13 +2226,58 @@ _Process(p){
       Out:= Format("ProcessSetPriority({1}, {2})", p[3], p[2])
    }
    else if (p[1]="Exist"){
-      Out:= Format("ErrorLevel := Process{1}({2}, {3})", p*)
+      if ScriptStringsUsed.ErrorLevel{
+         Out:= Format("ErrorLevel := Process{1}({2}, {3})", p*)
+      }
+      else{
+         Out:= Format("Process{1}({2}, {3})", p*)
+      }
    }
    else{
       Out:= Format("Process{1}({2}, {3})", p*)
    }
    
    Return RegExReplace(Out, "[\s\,]*\)$", ")")
+}
+
+_RegExMatch(p){
+  global aListPseudoArray
+  ; V1: FoundPos := RegExMatch(Haystack, NeedleRegEx , OutputVar, StartingPos := 1)
+  ; V2: FoundPos := RegExMatch(Haystack, NeedleRegEx , &OutputVar, StartingPos := 1)
+   
+  if (p[3]!=""){
+      OutputVar := SubStr(Trim(p[3]), 2) ; Remove the &
+      if RegexMatch(P[2],"^[^(]*O[^(]*\)"){
+         ; Object Match
+         aListMatchObject.Push(OutputVar)
+         
+         P[2] := RegExReplace(P[2],"(^[^(]*)O([^(]*\).*$)","$1$2") ; Remove the "O from the options"
+      }
+      else if RegexMatch(P[2],"^\(.*\)"){
+         aListPseudoArray.Push(OutputVar)
+      }
+      else {
+         
+         ; beneath the line, we sould write : Indentation OutputVar " := " OutputVar "[]"
+         aListPseudoArray.Push(OutputVar)
+
+      }
+  }
+  Out := Format("RegExMatch({1}, {2}, {3}, {4})",p*)
+  Return RegExReplace(Out, "[\s\,]*\)$", ")")
+}
+
+_SB_SetText(p){
+   global StatusBarNameDefault
+   Return format("{1}.SetText({2}, {3}, {4})", StatusBarNameDefault)
+}
+_SB_SetParts(p){
+   global StatusBarNameDefault,gFunctPar
+   Return format("{1}.SetParts({2})", StatusBarNameDefault,gFunctPar)
+}
+_SB_SetIcon(p){
+   global StatusBarNameDefault,gFunctPar
+   Return format("{1}.SetIcon({2})", StatusBarNameDefault,gFunctPar)
 }
 
 _SetTimer(p){
@@ -2129,8 +2291,59 @@ _SetTimer(p){
    Return RegExReplace(Out, "[\s\,]*\)$", ")")
 }
 
-_StringGetPos(p)
-{
+_SoundGet(p){
+   ; SoundGet,OutputVar,ComponentTypeT2E,ControlType,DeviceNumberT2E
+   OutputVar := p[1]
+   ComponentType := p[2]
+   ControlType := p[3]
+   DeviceNumber := p[4]
+   if (ComponentType="" and ControlType="Mute"){
+      out := Format("{1} := SoundGetMute({2}, {4})",p*)
+   }
+   else if (ComponentType="Volume" || ComponentType="Vol" || ComponentType="" ){
+      out := Format("{1} := SoundGetVolume({2}, {4})",p*)
+   }
+   else if (ComponentType="mute" ){
+      out := Format("{1} := SoundGetMute({2}, {4})",p*)
+   }
+   else{
+      out := Format(";REMOVED CV2 {1} := SoundGet{3}({2}, {4})",p*)
+   }
+   Return RegExReplace(Out, "[\s\,]*\)$", ")")
+}
+
+_SoundSet(p){
+   ; SoundSet,NewSetting,ComponentTypeT2E,ControlType,DeviceNumberT2E
+   NewSetting := p[1]
+   ComponentType := p[2]
+   ControlType := p[3]
+   DeviceNumber := p[4]
+   if (ControlType="mute" ){
+      out := Format("SoundSetMute({1}, {2}, {4})",p*)
+   }
+   else if (ComponentType="Volume" || ComponentType="Vol" || ComponentType="" ){
+      p[1] := InStr(p[1], "+") ? "`"" p[1] "`"" : p[1]
+      out := Format("SoundSetVolume({1}, {2}, {4})",p*)
+   }
+   else{
+      out := Format(";REMOVED CV2 Soundset{3}({1}, {2}, {4})",p*)
+   }
+   Return RegExReplace(Out, "[\s\,]*\)$", ")")
+}
+
+_StringLower(p){
+   if (p[3] = '"T"')
+      return format("{1} := StrTitle({2})", p*)
+   else
+      return format("{1} := StrLower({2})", p*)
+}
+_StringUpper(p){
+   if (p[3] = '"T"')
+      return format("{1} := StrTitle({2})", p*)
+   else
+      return format("{1} := StrUpper({2})", p*)
+}
+_StringGetPos(p){
    global Indentation
    
    if IsEmpty(p[4]) && IsEmpty(p[5])
@@ -2191,9 +2404,7 @@ _StringGetPos(p)
       }
    }
 }
-
-_StringMid(p)
-{
+_StringMid(p){
    if IsEmpty(p[4]) && IsEmpty(p[5])
       return format("{1} := SubStr({2}, {3})", p*)
    else if IsEmpty(p[5])
@@ -2214,9 +2425,7 @@ _StringMid(p)
       }
    }
 }
-
-_StringReplace(p)
-{
+_StringReplace(p){
    ; v1
    ; StringReplace, OutputVar, InputVar, SearchText [, ReplaceText, ReplaceAll?]
    ; v2
@@ -2243,217 +2452,78 @@ _StringReplace(p)
          return comment Indentation . format("{1} := StrReplace({2}, {3}, {4})", p*)
    }
 }
-
-_IfGreater(p)
-{
-   ; msgbox(p[2])
-   if isNumber(p[2]) || InStr(p[2], "%")
-      return format("if ({1} > {2})", p*)
-   else
-      return format("if (StrCompare({1}, {2}) > 0)", p*)
-}
-
-_IfGreaterOrEqual(p)
-{
-   ; msgbox(p[2])
-   if isNumber(p[2]) || InStr(p[2], "%")
-      return format("if ({1} > {2})", p*)
-   else
-      return format("if (StrCompare({1}, {2}) >= 0)", p*)
-}
-
-_IfLess(p)
-{
-   ; msgbox(p[2])
-   if isNumber(p[2]) || InStr(p[2], "%")
-      return format("if ({1} < {2})", p*)
-   else
-      return format("if (StrCompare({1}, {2}) < 0)", p*)
-}
-
-_IfLessOrEqual(p)
-{
-   ; msgbox(p[2])
-   if isNumber(p[2]) || InStr(p[2], "%")
-      return format("if ({1} < {2})", p*)
-   else
-      return format("if (StrCompare({1}, {2}) <= 0)", p*)
-}
-
-_InputBox(oPar){
-   ; V1: InputBox, OutputVar [, Title, Prompt, HIDE, Width, Height, X, Y, Locale, Timeout, Default]
-   ; V2: Obj := InputBox(Prompt, Title, Options, Default)
-   global O_Index
-   
-   global oScriptString ; array of all the lines
-   options :=""
-  
-   OutputVar := oPar[1]
-   Title := oPar.Has(2) ? oPar[2] : ""
-   Prompt := oPar.Has(3) ? oPar[3] : ""
-   Hide := oPar.Has(4) ? trim(oPar[4]) : ""
-   Width := oPar.Has(5) ? trim(oPar[5]) : ""
-   Height := oPar.Has(6) ? trim(oPar[6]) : ""
-   X := oPar.Has(7) ? trim(oPar[7]) : ""
-   Y := oPar.Has(8) ? trim(oPar[8]) : ""
-   Locale := oPar.Has(9) ? trim(oPar[9]) : ""
-   Timeout := oPar.Has(10) ? trim(oPar[10]) : ""
-   Default := oPar.Has(11) ? trim(oPar[11]) : ""
-
-   Parameters := ToExp(Prompt) ", " ToExp(Title)
-   if (Hide="hide"){
-      Options .= "Password"
-   }
-   if (Width!=""){
-      Options .= Options != "" ? " " : ""
-      Options .=  "w" 
-      Options .=  IsNumber(Width) ? Width :  "`" " Width " `""
-   }
-   if (Height!=""){
-      Options .= Options != "" ? " " : ""
-      Options .= "h"
-      Options .=  IsNumber(Height) ? Height :  "`" " Height " `""
-   }
-   if (x!=""){
-      Options .= Options != "" ? " " : ""
-      Options .= "h"
-      Options .=  IsNumber(x) ? x :  "`" " x " `""
-   }
-   if (y!=""){
-      Options .= Options != "" ? " " : ""
-      Options .= "h"
-      Options .=  IsNumber(y) ? y :  "`" " y " `""
-   }
-   if (Options!=""){
-      Parameters .= ", `"" Options "`""
-   }
-   Line := format("IB := InputBox({1}), {2} := IB.Value , ErrorLevel := IB.Result=`"OK`" ? 0 : IB.Result=`"CANCEL`" ? 1 : IB.Result=`"Timeout`" ? 2 : `"ERROR`"", parameters ,OutputVar)
-   
-   return Line
-}
-
-_Loop(p)
-{
-   
-
-   line := ""
-   if (InStr(p[1],"*") and InStr(p[1],"\")){ ; Automatically switching to Files loop
-      IncludeFolders := p[2]
-      Recurse := p[3]
-      p[3] := ""
-      if (IncludeFolders=1){
-         p[3] .= "FD"
-      }
-      else if (IncludeFolders=2){
-         p[3] .= "D"
-      }
-      if (Recurse=1){
-         p[3] .= "R"
-      }
-      p[2] := p[1]
-      p[1] := "Files"
-   }
-   if (p[1] = "Parse")
-   {
-      Line := p.Has(4) ? Trim(ToExp(p[4])) : ""
-      Line := Line != "" ? ", " Line : ""
-      Line := p.Has(3) ? Trim(ToExp(p[3])) Line : "" Line
-      Line := Line != "" ? ", " Line : ""
-      if (Substr(Trim(p[2]),1,1)="%"){
-         p[2] := "ParseVar := " Substr(Trim(p[2]),2)
-      }
-      Line := ", " Trim(p[2]) Line
-      Line := "Loop Parse" Line
-      ; Line := format("Loop {1}, {2}, {3}, {4}",p[1], p[2], ToExp(p[3]), ToExp(p[4]))
-      Line := RegExReplace(Line, "(?:,\s(?:`"`")?)*$", "") ; remove trailing ,\s and ,\s""
-      return Line
-   }
-   else if (p[1] = "Files")
-   {
-      
-      Line := format("Loop {1}, {2}, {3}","Files", ToExp(p[2]), ToExp(p[3]))
-      Line := RegExReplace(Line, "(?:,\s(?:`"`")?)*$", "") ; remove trailing ,\s and ,\s""
-      return Line
-   }
-   else if (p[1] = "Read" || p[1] = "Reg")
-   {
-      Line := p.Has(3) ? Trim(ToExp(p[3])) : "" 
-      Line := Line != "" ? ", " Line : ""
-      Line := p.Has(2) ? Trim(ToExp(p[2])) Line : "" Line
-      Line := Line != "" ? ", " Line : ""
-      Line := p.Has(1) ? Trim(p[1]) Line : "" Line
-      Line := "Loop " Line
-      Line := RegExReplace(Line, "(?:,\s(?:`"`")?)*$", "") ; remove trailing ,\s and ,\s""
-      return Line
-   }
-   else{
-      Line := "Loop " Trim(ToExp(p[1]))
-      return Line
-   }
-   ; Else no changes need to be made
-
-}
-
-_OnExit(p){
-   ;V1 OnExit,Func,AddRemove
-   ConvertLabel2Funct(p[1])
-   Return Format("OnExit({1}, {2})",p*)
-}
-
-_SoundGet(p){
-   ; SoundGet,OutputVar,ComponentTypeT2E,ControlType,DeviceNumberT2E
-   OutputVar := p[1]
-   ComponentType := p[2]
-   ControlType := p[3]
-   DeviceNumber := p[4]
-   if (ComponentType="" and ControlType="Mute"){
-      out := Format("{1} := SoundGetMute({2}, {4})",p*)
-   }
-   else if (ComponentType="Volume" || ComponentType="Vol" || ComponentType="" ){
-      out := Format("{1} := SoundGetVolume({2}, {4})",p*)
-   }
-   else if (ComponentType="mute" ){
-      out := Format("{1} := SoundGetMute({2}, {4})",p*)
-   }
-   else{
-      out := Format(";REMOVED CV2 {1} := SoundGet{3}({2}, {4})",p*)
-   }
+_StringSplit(p){
+   ;V1 StringSplit,OutputArray,InputVar,DelimitersT2E,OmitCharsT2E
+   ; Output should be checked to replace OutputArray\d to OutputArray[\d]
+   global aListPseudoArray
+   aListPseudoArray.Push(Trim(p[1]))
+   Out := Format("{1} := StrSplit({2},{3},{4})",p*)
    Return RegExReplace(Out, "[\s\,]*\)$", ")")
 }
 
-_SoundSet(p){
-   ; SoundSet,NewSetting,ComponentTypeT2E,ControlType,DeviceNumberT2E
-   NewSetting := p[1]
-   ComponentType := p[2]
-   ControlType := p[3]
-   DeviceNumber := p[4]
-   if (ControlType="mute" ){
-      out := Format("SoundSetMute({1}, {2}, {4})",p*)
+_SysGet(p){
+   ; SysGet,OutputVar,SubCommand,Value
+   if (p[2]="MonitorCount"){
+      Return Format("{1} := MonitorGetCount()", p*)
    }
-   else if (ComponentType="Volume" || ComponentType="Vol" || ComponentType="" ){
-      p[1] := InStr(p[1], "+") ? "`"" p[1] "`"" : p[1]
-      out := Format("SoundSetVolume({1}, {2}, {4})",p*)
+   else if (p[2]="MonitorPrimary"){
+      Return Format("{1} := MonitorGetPrimary()", p*)
    }
-   else{
-      out := Format(";REMOVED CV2 Soundset{3}({1}, {2}, {4})",p*)
+   else if (p[2]="Monitor"){
+      Return Format("MonitorGet({3}, {1}Left, {1}Top, {1}Right, {1}Bottom)", p*)
    }
-   Return RegExReplace(Out, "[\s\,]*\)$", ")")
+   else if (p[2]="MonitorWorkArea"){
+      Return Format("MonitorGetWorkArea({3}, {1}Left, {1}Top, {1}Right, {1}Bottom)", p*)
+   }
+   else if (p[2]="MonitorName "){
+      Return Format("{1} := MonitorGetName({3})", p*)
+   }
+   Return Format("{1} := SysGet({2})", p*)
 }
 
-_StringLower(p)
-{
-   if (p[3] = '"T"')
-      return format("{1} := StrTitle({2})", p*)
-   else
-      return format("{1} := StrLower({2})", p*)
+_TV_Add(p){
+   global TreeViewNameDefault
+   Return format("{1}.Add({2}, {3}, {4})", TreeViewNameDefault, p*)
 }
-
-_StringUpper(p)
-{
-   if (p[3] = '"T"')
-      return format("{1} := StrTitle({2})", p*)
-   else
-      return format("{1} := StrUpper({2})", p*)
+_TV_Modify(p){
+   global TreeViewNameDefault
+   Return format("{1}.Modify({2}, {3}, {4})", TreeViewNameDefault, p*)
+}
+_TV_Delete(p){
+   global TreeViewNameDefault
+   Return format("{1}.Delete({2})", TreeViewNameDefault, p*)
+}
+_TV_GetSelection(p){
+   global TreeViewNameDefault
+   Return format("{1}.GetSelection({2})", TreeViewNameDefault, p*)
+}
+_TV_GetParent(p){
+   global TreeViewNameDefault
+   Return format("{1}.GetParent({2})", TreeViewNameDefault, p*)
+}
+_TV_GetChild(p){
+   global TreeViewNameDefault
+   Return format("{1}.GetChild({2})", TreeViewNameDefault, p*)
+}
+_TV_GetPrev(p){
+   global TreeViewNameDefault
+   Return format("{1}.GetPrev({2})", TreeViewNameDefault, p*)
+}
+_TV_GetNext(p){
+   global TreeViewNameDefault
+   Return format("{1}.GetNext({2}, {3})", TreeViewNameDefault, p*)
+}
+_TV_GetText(p){
+   global TreeViewNameDefault
+   Return format("{2} := {1}.GetText({3})", TreeViewNameDefault, p*)
+}
+_TV_GetCount(p){
+   global TreeViewNameDefault
+   Return format("{1}.GetCount()", TreeViewNameDefault)
+}
+_TV_SetImageList(p){
+   global TreeViewNameDefault
+   Return format("{2} := {1}.SetImageList({3})", TreeViewNameDefault)
 }
 
 _VarSterCapacity(p){
@@ -2529,23 +2599,51 @@ _WinSetTitle(p){
 
 _WinWait(p){
    ; Created because else there where empty parameters.
-   out := Format("ErrorLevel := WinWait({1}, {2}, {3}, {4}, {5}) , ErrorLevel := ErrorLevel = 0 ? 1 : 0",p*)
-   Return RegExReplace(Out, "[\s\,]*\)\s,\sErrorLevel", ") , ErrorLevel")
+   if ScriptStringsUsed.ErrorLevel{
+      out := Format("ErrorLevel := WinWait({1}, {2}, {3}, {4}, {5}) , ErrorLevel := ErrorLevel = 0 ? 1 : 0",p*)
+      out := RegExReplace(Out, "[\s\,]*\)\s,\sErrorLevel", ") , ErrorLevel")
+   }
+   else{
+      out := Format("WinWait({1}, {2}, {3}, {4}, {5})",p*)
+      out := RegExReplace(Out, "[\s\,]*\)", ")")
+   }
+   Return out
 }
 _WinWaitActive(p){
    ; Created because else there where empty parameters.
-   out := Format("ErrorLevel := WinWaitActive({1}, {2}, {3}, {4}, {5}) , ErrorLevel := ErrorLevel = 0 ? 1 : 0",p*)
-   Return RegExReplace(Out, "[\s\,]*\)\s,\sErrorLevel", ") , ErrorLevel")
+   if ScriptStringsUsed.ErrorLevel{
+      out := Format("ErrorLevel := WinWaitActive({1}, {2}, {3}, {4}, {5}) , ErrorLevel := ErrorLevel = 0 ? 1 : 0",p*)
+      out := RegExReplace(Out, "[\s\,]*\)\s,\sErrorLevel", ") , ErrorLevel")
+   }
+   else{
+      out := Format("WinWaitActive({1}, {2}, {3}, {4}, {5})",p*)
+      out := RegExReplace(Out, "[\s\,]*\)", ")")
+   }
+   Return out
 }
 _WinWaitNotActive(p){
    ; Created because else there where empty parameters.
-   out := Format("ErrorLevel := WinWaitNotActive({1}, {2}, {3}, {4}, {5}) , ErrorLevel := ErrorLevel = 0 ? 1 : 0",p*)
-   Return RegExReplace(Out, "[\s\,]*\)\s,\sErrorLevel", ") , ErrorLevel")
+   if ScriptStringsUsed.ErrorLevel{
+      out := Format("ErrorLevel := WinWaitNotActive({1}, {2}, {3}, {4}, {5}) , ErrorLevel := ErrorLevel = 0 ? 1 : 0",p*)
+      out := RegExReplace(Out, "[\s\,]*\)\s,\sErrorLevel", ") , ErrorLevel")
+   }
+   else{
+      out := Format("WinWaitNotActive({1}, {2}, {3}, {4}, {5})",p*)
+      out := RegExReplace(Out, "[\s\,]*\)", ")")
+   }
+   Return out
 }
 _WinWaitClose(p){
    ; Created because else there where empty parameters.
-   out := Format("ErrorLevel := WinWaitClose({1}, {2}, {3}, {4}, {5}) , ErrorLevel := ErrorLevel = 0 ? 1 : 0",p*)
-   Return RegExReplace(Out, "[\s\,]*\)\s,\sErrorLevel", ") , ErrorLevel")
+   if ScriptStringsUsed.ErrorLevel{
+      out := Format("ErrorLevel := WinWaitClose({1}, {2}, {3}, {4}, {5}) , ErrorLevel := ErrorLevel = 0 ? 1 : 0",p*)
+      out := RegExReplace(Out, "[\s\,]*\)\s,\sErrorLevel", ") , ErrorLevel")
+   }
+   else{
+      out := Format("WinWaitClose({1}, {2}, {3}, {4}, {5})",p*)
+      out := RegExReplace(Out, "[\s\,]*\)", ")")
+   }
+   Return out
 }
 
 _HashtagIfWinActivate(p){
@@ -2554,6 +2652,7 @@ _HashtagIfWinActivate(p){
    }
    Return format("#HotIf WinActive({1}, {2})",p*)
 }
+
 ; =============================================================================
 
 Convert_GetContSect(){
@@ -2899,4 +2998,36 @@ ParameterFormat(ParName,ParValue){
    }
 
    Return ParValue
+}
+
+;// Converts PseudoArray to Array
+;//  Example array123 => array[123]
+;//  Example array%A_index% => array[A_index]
+ConvertPseudoArray(ScriptStringInput,ArrayName){
+    if InStr(ScriptStringInput,ArrayName){ ; InStr is faster than only Regex
+      Loop { ; arrayName0 = arrayName.Length
+         ScriptStringInput := RegExReplace(ScriptStringInput, "is)(^(|.*[^\w])" ArrayName ")0(([^\w].*|)$)", "$1.Length$4",&OutputVarCount)   
+      } Until OutputVarCount = 0
+      Loop {
+         ScriptStringInput := RegExReplace(ScriptStringInput, "is)(^(|.*[^\w])" ArrayName ")(%(\w+)%|(\d+))(([^\w].*|)$)", "$1[$4$5]$6",&OutputVarCount)   
+      } Until OutputVarCount = 0
+    }
+    Return ScriptStringInput
+}
+
+;// Converts Object Match V1 to Object Match V2
+;//  Example ObjectMatch.Value(N) => ObjectMatch[N]
+;//  Example ObjectMatch.Len(N) => ObjectMatch.Len[N]
+;//  Example ObjectMatch.Mark() => ObjectMatch.Mark
+
+ConvertObjectMatch(ScriptStringInput,ObjectMatchName){
+    if InStr(ScriptStringInput,ObjectMatchName){ ; InStr is faster than only Regex
+      Loop { ; arrayName0 = arrayName.Length
+         ScriptStringInput := RegExReplace(ScriptStringInput, "is)(^(|.*[^\w])" ObjectMatchName ").Value\((.*?)\)(([^\w].*|)$)", "$1[$3]$4",&OutputVarCount)   
+      } Until OutputVarCount = 0
+      Loop { ; arrayName0 = arrayName.Length
+         ScriptStringInput := RegExReplace(ScriptStringInput, "is)(^(|.*[^\w])" ObjectMatchName ").(Mark|Count)\(\)(([^\w].*|)$)", "$1.$3$4",&OutputVarCount)   
+      } Until OutputVarCount = 0
+    }
+    Return ScriptStringInput
 }

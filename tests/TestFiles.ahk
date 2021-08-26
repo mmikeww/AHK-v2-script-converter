@@ -6,8 +6,10 @@
 #Include ..\ConvertFuncs.ahk
 
 global icons
-
-
+GuiTest()
+Return
+GuiTest(){
+    global
 ; The following folder will be the root folder for the TreeView. Note that loading might take a long
 ; time if an entire drive such as C:\ is specified:
 TreeRoot := A_ScriptDir "\Test_Folder"
@@ -72,8 +74,8 @@ ButtonValidateConversion.OnEvent("Click", ButtonGenerateTest)
 
 ; Call Gui_Size whenever the window is resized:
 MyGui.OnEvent("Size", Gui_Size)
-MyGui.OnEvent("Close", (*) => ExitApp())
-MyGui.OnEvent("Escape", (*) => ExitApp())
+; MyGui.OnEvent("Close", (*) => ExitApp())
+; MyGui.OnEvent("Escape", (*) => ExitApp())
 
 FileMenu := Menu()
 FileMenu.Add "Run tests", (*) => Run('"C:\Program Files\AutoHotkey V2\AutoHotkey64.exe" "' A_ScriptDir '\Tests.ahk"')
@@ -102,7 +104,7 @@ MyGui.MenuBar := Menus
 ; Display the window. The OS will notify the script whenever the user performs an eligible action:
 MyGui.Show
 Return
-
+}
 RunV1(*){
     CloseV1(myGui)
     if (CheckBoxViewSymbols.Value){
@@ -218,6 +220,7 @@ ButtonGenerateTest(*){
     SplitPath(SelectedText, &name, &dir, &ext, &name_no_ext, &drive)
     DirNewNoExt := ext="" ? dir "\" name : dir 
     SplitPath(DirNewNoExt, &nameFolder)
+
     Loop {
         if !FileExist(DirNewNoExt "\" nameFolder "_test" A_Index ".ah1"){
             NameSuggested := nameFolder "_test" A_Index ".ah1"
@@ -226,6 +229,9 @@ ButtonGenerateTest(*){
     }
     SelectedFile := FileSelect("S 8", DirNewNoExt "\" NameSuggested , "Save the validated test", "(*.ah1)")
     if (SelectedFile!=""){
+        if !InStr(SelectedFile,".ah1"){
+            SelectedFile .= ".ah1"
+        }
         if FileExist(SelectedFile){
             msgResult := MsgBox("Do you want to override the existing test?", , 4132)
             if (msgResult = "No"){
@@ -469,18 +475,23 @@ Gui_Size(thisGui, MinMax, Width, Height)  ; Expand/Shrink ListView and TreeView 
 
 XButton1::
 {
-   ClipSaved := ClipboardAll()   ; Save the entire clipboard to a variable of your choice.
-   A_Clipboard := ""
-   Send "^c"
 
-   if !ClipWait(3){
-      DebugWindow( "error`n",Clear:=0)
-      return
-   }
-   Clipboard1 := A_Clipboard
-   A_Clipboard := ClipSaved   ; Restore the original clipboard. Note the use of A_Clipboard (not ClipboardAll).
-   ClipSaved := ""  ; Free the memory in case the clipboard was very large.
-   V1Edit.Text := Clipboard1
+    ClipSaved := ClipboardAll()   ; Save the entire clipboard to a variable of your choice.
+    A_Clipboard := ""
+    Send "^c"
+    if !WinExist("V2 Convertor Tester"){
+       GuiTest()
+    }
+
+    if !ClipWait(3){
+        DebugWindow( "error`n",Clear:=0)
+        return
+    }
+
+    Clipboard1 := A_Clipboard
+    A_Clipboard := ClipSaved   ; Restore the original clipboard. Note the use of A_Clipboard (not ClipboardAll).
+    ClipSaved := ""  ; Free the memory in case the clipboard was very large.
+    V1Edit.Text := Clipboard1
     V2ExpectedEdit.Text := ""
    ButtonConvert(myGui)
    WinActivate(myGui)

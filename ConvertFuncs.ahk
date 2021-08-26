@@ -164,6 +164,7 @@ Convert(ScriptString)
       SoundSet,NewSetting,ComponentTypeT2E,ControlType,DeviceNumberT2E | *_SoundSet
       SplashTextOn,Width,Height,TitleT2E,TextT2E | *_SplashTextOn
       SplashTextOff | SplashTextGui.Destroy
+      SplashImage,ImageFileT2E,Options,SubTextT2E,MainTextT2E,WinTitleT2E,FontNameT2E | *_SplashImage
       SplitPath,varCBE2E,filenameV2VR,dirV2VR,extV2VR,name_no_extV2VR,drvV2VR | SplitPath({1}, {2}, {3}, {4}, {5}, {6})
       StringCaseSense,paramT2E | StringCaseSense({1})
       StringGetPos,OutputVar,InputVar,SearchTextT2E,SideT2E,OffsetCBE2E | *_StringGetPos
@@ -2338,6 +2339,26 @@ _SplashTextOn(p){
    P[1] := P[1]="" ? 200 : P[1]
    P[2] := P[2]="" ? 0 : P[2]
    Return "SplashTextGui := Gui(`"ToolWindow -Sysmenu Disabled`", " p[3] "), SplashTextGui.Add(`"Text`",, " p[4] "), SplashTextGui.Show(`"w" p[1] " h" p[2] "`")"
+}
+_SplashImage(p){
+   ;V1 : SplashImage , ImageFile, Options, SubText, MainText, WinTitle, FontName
+   ;V1 : SplashImage , Off
+   ;V2 : Removed
+   ; not perfect, but
+   
+   if (P[1]="Off"){
+      Out := "SplashImageGui.Destroy"
+   }
+   else if (P[1]="Show"){
+      Out := "SplashImageGui.Show()"
+   }
+   else{
+      Out := "SplashImageGui := Gui(`"ToolWindow -Sysmenu Disabled`")" 
+      Out .= P[6]=!"" ? ", SplashImageGui.Title := " P[6] " " : ""
+      Out .= ", SplashImageGui.MarginY := 0, SplashImageGui.MarginX := 0, SplashImageGui.AddPicture(`"`", " P[1] "), SplashImageGui.Show()"
+   }
+
+   Return Out
 }
 
 _StringLower(p){

@@ -162,6 +162,8 @@ Convert(ScriptString)
       SoundGet,OutputVar,ComponentTypeT2E,ControlType,DeviceNumberT2E | *_SoundGet
       SoundPlay,FrequencyCBE2E,DurationCBE2E | SoundPlay({1},{2})
       SoundSet,NewSetting,ComponentTypeT2E,ControlType,DeviceNumberT2E | *_SoundSet
+      SplashTextOn,Width,Height,TitleT2E,TextT2E | *_SplashTextOn
+      SplashTextOff | SplashTextGui.Destroy
       SplitPath,varCBE2E,filenameV2VR,dirV2VR,extV2VR,name_no_extV2VR,drvV2VR | SplitPath({1}, {2}, {3}, {4}, {5}, {6})
       StringCaseSense,paramT2E | StringCaseSense({1})
       StringGetPos,OutputVar,InputVar,SearchTextT2E,SideT2E,OffsetCBE2E | *_StringGetPos
@@ -192,6 +194,7 @@ Convert(ScriptString)
       WinHide,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | WinHide({1}, {2}, {3}, {4})
       WinKill,WinTitleT2E,WinTextT2E,SecondsToWaitCBE2E,ExcludeTitleT2E,ExcludeTextT2E | WinKill({1}, {2}, {3}, {4}, {5})
       WinMaximize,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | WinMaximize({1}, {2}, {3}, {4})
+      WinMove,var1,var2,X,Y,Width,Height,ExcludeTitleT2E,ExcludeTextT2E | *_WinMove
       WinMinimize,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | WinMinimize({1}, {2}, {3}, {4})
       WinMenuSelectItem,WinTitleT2E,WinTextT2E,MenuT2E,SubMenu1T2E,SubMenu2T2E,SubMenu3T2E,SubMenu4T2E,SubMenu5T2E,SubMenu6T2E,ExcludeTitleT2E,ExcludeTextT2E | MenuSelect({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11})
       WinSet,SubCommand,ValueT2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | *_WinSet
@@ -291,7 +294,7 @@ Convert(ScriptString)
    )"
 
    ;Directives := "#Warn UseUnsetLocal`r`n#Warn UseUnsetGlobal"
-
+   ; Splashtexton and Splashtextoff is removed, but alternative gui code is available
    Remove := "
    (
       #AllowSameLineComments
@@ -308,8 +311,6 @@ Convert(ScriptString)
       SoundGetWaveVolume
       SoundSetWaveVolume
       SplashImage
-      SplashTextOn
-      SplashTextOff
       A_FormatInteger
       A_FormatFloat
       AutoTrim
@@ -2331,6 +2332,14 @@ _SoundSet(p){
    Return RegExReplace(Out, "[\s\,]*\)$", ")")
 }
 
+_SplashTextOn(p){
+   ;V1 : SplashTextOn,Width,Height,TitleT2E,TextT2E 
+   ;V2 : Removed
+   P[1] := P[1]="" ? 200 : P[1]
+   P[2] := P[2]="" ? 0 : P[2]
+   Return "SplashTextGui := Gui(`"ToolWindow -Sysmenu Disabled`", " p[3] "), SplashTextGui.Add(`"Text`",, " p[4] "), SplashTextGui.Show(`"w" p[1] " h" p[2] "`")"
+}
+
 _StringLower(p){
    if (p[3] = '"T"')
       return format("{1} := StrTitle({2})", p*)
@@ -2552,6 +2561,22 @@ _WinGet(p) {
       Out .= Indentation "}"
    }
    Return RegExReplace(Out, "[\s\,]*\)$", ")")  
+}
+
+_WinMove(p){
+   ;V1 : WinMove, WinTitle, WinText, X, Y , Width, Height, ExcludeTitle, ExcludeText
+   ;V1 : WinMove, X, Y
+   ;V2 : WinMove X, Y , Width, Height, WinTitle, WinText, ExcludeTitle, ExcludeText
+   if (p[3]="" and p[4]=""){
+      
+      Out := Format("WinMove({1}, {2})",p*)
+   }
+   else{
+      p[1] := ToExp(p[1])
+      p[2] := ToExp(p[2])
+      Out := Format("WinMove({3}, {4}, {5}, {6}, {1}, {2}, {7}, {8})",p*)
+   }
+   Return RegExReplace(Out, "[\s\,]*\)$", ")") 
 }
 
 _WinSet(p) {

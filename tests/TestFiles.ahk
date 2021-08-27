@@ -6,9 +6,13 @@
 #Include ..\ConvertFuncs.ahk
 
 global icons
-GuiTest()
+FileTempScript := A_ScriptDir "\TempScript.ah1"
+TempV1Script := FileExist(FileTempScript) ? FileRead(A_ScriptDir "\TempScript.ah1") : ""
+GuiTest(TempV1Script)
+
+
 Return
-GuiTest(){
+GuiTest(strV1Script:=""){
     global
 ; The following folder will be the root folder for the TreeView. Note that loading might take a long
 ; time if an entire drive such as C:\ is specified:
@@ -49,7 +53,7 @@ ButtonEvaluateTests := MyGui.Add("Button", "", "Evaluate Tests")
 ButtonEvaluateTests.OnEvent("Click", AddSubFoldersToTree.Bind(TreeRoot, DirList,"0"))
 CheckBoxViewSymbols := MyGui.Add("CheckBox", "yp x+50", "View Symbols")
 CheckBoxViewSymbols.OnEvent("Click", ViewSymbols)
-V1Edit := MyGui.Add("Edit", "x280 y0 w600 vvCodeV1 +Multi +WantTab", "")  ; Add a fairly wide edit control at the top of the window.
+V1Edit := MyGui.Add("Edit", "x280 y0 w600 vvCodeV1 +Multi +WantTab", strV1Script)  ; Add a fairly wide edit control at the top of the window.
 ButtonRunV1 := MyGui.Add("Button", "", "Run V1")
 ButtonRunV1.OnEvent("Click", RunV1)
 ButtonCloseV1 := MyGui.Add("Button", " x+10 yp +Disabled", "Close V1")
@@ -498,6 +502,11 @@ XButton1::
 }
 
 XButton2::{
+    FileTempScript := A_ScriptDir "\TempScript.ah1"
+    if (FileExist(FileTempScript)){
+        FileDelete(FileTempScript)
+    } 
+    FileAppend(V1Edit.Text,FileTempScript)
     Reload
 }
 

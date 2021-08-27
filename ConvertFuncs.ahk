@@ -2344,20 +2344,26 @@ _SplashImage(p){
    ;V1 : SplashImage , ImageFile, Options, SubText, MainText, WinTitle, FontName
    ;V1 : SplashImage , Off
    ;V2 : Removed
-   ; not perfect, but
+   ; To be improved to interpreted the options
    
-   if (P[1]="Off"){
+   if (p[1]="Off"){
       Out := "SplashImageGui.Destroy"
    }
-   else if (P[1]="Show"){
+   else if (p[1]="Show"){
       Out := "SplashImageGui.Show()"
    }
    else{
+      width := 200
       Out := "SplashImageGui := Gui(`"ToolWindow -Sysmenu Disabled`")" 
-      Out .= P[6]=!"" ? ", SplashImageGui.Title := " P[6] " " : ""
-      Out .= ", SplashImageGui.MarginY := 0, SplashImageGui.MarginX := 0, SplashImageGui.AddPicture(`"`", " P[1] "), SplashImageGui.Show()"
+      Out .= p[5]!="" ? ", SplashImageGui.Title := " p[5] " " : ""
+      Out .= p[4]="" and p[3]="" ? ", SplashImageGui.MarginY := 0, SplashImageGui.MarginX := 0" : ""
+      Out .= p[4]!="" ? ", SplashImageGui.SetFont(`"bold`"," p[6] "), SplashImageGui.AddText(`"w" width " Center`", " p[4] ")" : ""
+      Out .= ", SplashImageGui.AddPicture(`"w" width " h-1`", " p[1] ")"
+      Out .= p[4]!="" and p[3]!="" ? ", SplashImageGui.SetFont(`"norm`"," p[6] ")" : p[3]!="" and p[6]!="" ? ", SplashImageGui.SetFont(," p[6] ")" :""
+      Out .= p[3]!="" ? ", SplashImageGui.AddText(`"w" width " Center`", " p[3] ")" : ""
+      Out .= ", SplashImageGui.Show()"
    }
-
+   Out := RegExReplace(Out, "[\s\,]*\)", ")")
    Return Out
 }
 

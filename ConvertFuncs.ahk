@@ -68,7 +68,7 @@ Convert(ScriptString)
       BlockInput,Option | BlockInput {1}
       DriveSpaceFree,OutputVar,PathT2E | {1} := DriveGetSpaceFree({2})
       Click,keysT2E | Click({1})
-      ClipWait,Timeout,WaitForAnyData | Errorlevel := !ClipWait({1},{2})
+      ClipWait,Timeout,WaitForAnyData | Errorlevel := !ClipWait({1}, {2})
       Control,SubCommand,ValueT2E,ControlCBE2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | *_Control
       ControlClick,Control-or-PosCBE2E,WinTitleT2E,WinTextT2E,WhichButtonT2E,ClickCountT2E,OptionsT2E,ExcludeTitleT2E,ExcludeTextT2E | ControlClick({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8})
       ControlFocus,ControlCBE2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | ControlFocus({1}, {2}, {3}, {4}, {5})
@@ -145,6 +145,7 @@ Convert(ScriptString)
       PixelGetColor,OutputVar,XT2E,YT2E,ModeT2E | {1} := PixelGetColor({2}, {3}, {4})
       PostMessage,Msg,wParam,lParam,ControlCBE2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | PostMessage({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8})
       Process,SubCommand,PIDOrNameT2E,ValueT2E | *_Process
+      Progress, ProgressParam1 ,SubTextT2E,MainTextT2E,WinTitleT2E,FontNameT2E | *_Progress
       RunAs,UserT2E,PasswordT2E,DomainT2E | RunAs({1}, {2}, {3})
       Run,TargetT2E,WorkingDirT2E,OptionsT2E,OutputVarPIDV2VR | Run({1}, {2}, {3}, {4})
       RunWait,TargetT2E,WorkingDirT2E,OptionsT2E,OutputVarPIDV2VR | RunWait({1}, {2}, {3}, {4})
@@ -158,9 +159,9 @@ Convert(ScriptString)
       SendEvent,keysT2E | SendEvent({1})
       Sleep,delayCBE2E | Sleep({1})
       Sort,var,optionsT2E | {1} := Sort({1}, {2})
-      SoundBeep,FrequencyCBE2E,DurationCBE2E | SoundBeep({1},{2})
+      SoundBeep,FrequencyCBE2E,DurationCBE2E | SoundBeep({1}, {2})
       SoundGet,OutputVar,ComponentTypeT2E,ControlType,DeviceNumberT2E | *_SoundGet
-      SoundPlay,FrequencyCBE2E,DurationCBE2E | SoundPlay({1},{2})
+      SoundPlay,FrequencyT2E,DurationCBE2E | SoundPlay({1}, {2})
       SoundSet,NewSetting,ComponentTypeT2E,ControlType,DeviceNumberT2E | *_SoundSet
       SplashTextOn,Width,Height,TitleT2E,TextT2E | *_SplashTextOn
       SplashTextOff | SplashTextGui.Destroy
@@ -306,7 +307,6 @@ Convert(ScriptString)
       #LTrim
       #MaxMem
       #NoEnv
-      Progress
       SetBatchLines
       SetFormat
       SoundGetWaveVolume
@@ -439,7 +439,8 @@ Convert(ScriptString)
          TreeNextLine := SubStr(LTrim(oScriptString[O_Index+1]), 1, 1)
          if (FirstNextLine~="[,\?:\.]" or FirstTwoNextLine="||" or FirstTwoNextLine="&&" or FirstTwoNextLine="or" or TreeNextLine ="and"){
             O_Index++
-            Line .= oScriptString[O_Index]
+            ; Known effect : removes the linefeeds and comments of continuation sections
+            Line .= RegExReplace(oScriptString[O_Index], "(\s+`;.*)$", "")
          }
          else{
             break
@@ -801,6 +802,9 @@ Convert(ScriptString)
             Line := Equation[3]
       }
 
+      ; Convert Assiociated Arrays to Map
+      Line := AssArr2Map(Line)
+      
       ; -------------------------------------------------------------------------------
       ;
       ; Command replacing
@@ -985,8 +989,10 @@ Convert(ScriptString)
                   ;    msgbox("in else`nLine: " Line "`nPart[2]: " Part[2] "`n`nListParam.Length: " ListParam.Length "`nParam.Length: " Param.Length "`n`n" paramsstr)
                   ; }
 
-                  if (same_line_action)
+                  if (same_line_action){
+                     ; Error in this line, extra parameters should be: put on next line that needs to be converterd, or converted in the line
                      Line := Indentation . format(Part[2], Param*) . "," extra_params
+                  }
                   else
                      Line := Indentation . format(Part[2], Param*)
 
@@ -1098,9 +1104,9 @@ ToExp(Text)
          If Symbol == "%"
          {
             If (DeRef := !DeRef) && (A_Index != 1)
-               TOut .= qu . " . "
+               TOut .= qu . " " ;TOut .= qu . " . "
             else If (!DeRef) && (A_Index != StrLen(Text))
-               TOut .= " . " . qu
+               TOut .= " " . qu ;TOut .= " . " . qu
          }
          else
          {
@@ -2316,11 +2322,16 @@ _SoundGet(p){
 
 _SoundSet(p){
    ; SoundSet,NewSetting,ComponentTypeT2E,ControlType,DeviceNumberT2E
+   ; Not 100% verified, more examples would be helpfull.
    NewSetting := p[1]
    ComponentType := p[2]
    ControlType := p[3]
    DeviceNumber := p[4]
    if (ControlType="mute" ){
+      if (p[2]="`"Microphone`""){
+         p[4] := "`"Microphone`""
+         p[2]:= ""
+      }
       out := Format("SoundSetMute({1}, {2}, {4})",p*)
    }
    else if (ComponentType="Volume" || ComponentType="Vol" || ComponentType="" ){
@@ -2340,9 +2351,10 @@ _SplashTextOn(p){
    P[2] := P[2]="" ? 0 : P[2]
    Return "SplashTextGui := Gui(`"ToolWindow -Sysmenu Disabled`", " p[3] "), SplashTextGui.Add(`"Text`",, " p[4] "), SplashTextGui.Show(`"w" p[1] " h" p[2] "`")"
 }
+
 _SplashImage(p){
-   ;V1 : SplashImage , ImageFile, Options, SubText, MainText, WinTitle, FontName
-   ;V1 : SplashImage , Off
+   ;V1 : SplashImage, ImageFile, Options, SubText, MainText, WinTitle, FontName
+   ;V1 : SplashImage, Off
    ;V2 : Removed
    ; To be improved to interpreted the options
    
@@ -2353,7 +2365,8 @@ _SplashImage(p){
       Out := "SplashImageGui.Show()"
    }
    else{
-      width := 200
+      mOptions := GetMapOptions(p[1])
+      width := mOptions.Has("W") ? mOptions["W"] : 200
       Out := "SplashImageGui := Gui(`"ToolWindow -Sysmenu Disabled`")" 
       Out .= p[5]!="" ? ", SplashImageGui.Title := " p[5] " " : ""
       Out .= p[4]="" and p[3]="" ? ", SplashImageGui.MarginY := 0, SplashImageGui.MarginX := 0" : ""
@@ -2362,6 +2375,80 @@ _SplashImage(p){
       Out .= p[4]!="" and p[3]!="" ? ", SplashImageGui.SetFont(`"norm`"," p[6] ")" : p[3]!="" and p[6]!="" ? ", SplashImageGui.SetFont(," p[6] ")" :""
       Out .= p[3]!="" ? ", SplashImageGui.AddText(`"w" width " Center`", " p[3] ")" : ""
       Out .= ", SplashImageGui.Show()"
+   }
+   Out := RegExReplace(Out, "[\s\,]*\)", ")")
+   Return Out
+}
+
+_Progress(p){
+   ;V1 : Progress, ProgressParam1, SubTextT2E, MainTextT2E, WinTitleT2E, FontNameT2E
+   ;V1 : Progress , Off
+   ;V2 : Removed
+   ; To be improved to interpreted the options
+   
+   if (p[1]="Off"){
+      Out := "ProgressGui.Destroy"
+   }
+   else if (p[1]="Show"){
+      Out := "ProgressGui.Show()"
+   }
+   else if (p[2]="" && p[3]="" && p[4]="" && p[5]=""){
+      Out := "gocProgress.Value := " p[1]
+   }
+   else{
+      width := 200
+      mOptions := GetMapOptions(p[1])
+      width := mOptions.Has("W") ? mOptions["W"] : 200
+      GuiOptions :=""
+      GuiShowOptions :=""
+      SubTextFontOptions :=""
+      MainTextFontOptions :=""
+      ProgressOptions := ""
+      ProgressStart := ""
+      if (mOptions.Has("M")){
+         if (mOptions["M"]=""){
+            GuiOptions :="ToolWindow -Sysmenu"
+         }
+         else if (mOptions["M"]="1"){
+            GuiOptions :="ToolWindow -Sysmenu +Resize"
+         }
+         else if (mOptions["M"]="2"){
+            GuiOptions :="+Resize"
+         }
+      }
+      else{
+         GuiOptions :="ToolWindow -Sysmenu Disabled"
+      }
+      if (mOptions.Has("B")){
+         if (mOptions["B"]=""){
+            GuiOptions := "-Caption"
+         }
+         else if (mOptions["B"]="1"){
+            GuiOptions := "-Caption +Border"
+         }
+         else if (mOptions["B"]="2"){
+            GuiOptions := "-Border"
+         }
+      }
+      GuiShowOptions .= mOptions.Has("X") ? " X" mOptions["X"] : ""
+      GuiShowOptions .= mOptions.Has("Y") ? " Y" mOptions["Y"] : ""
+      GuiShowOptions .= mOptions.Has("W") ? " W" mOptions["W"] : ""
+      GuiShowOptions .= mOptions.Has("H") ? " H" mOptions["H"] : ""
+      MainTextFontOptions := mOptions.Has("WM") ? "W" mOptions["WM"] : "Bold"
+      MainTextFontOptions .= mOptions.Has("FM") ? " S" mOptions["FM"] : ""
+      SubTextFontOptions := mOptions.Has("WS") ? "W" mOptions["WS"] : mOptions.Has("WM") ? " W400" : ""
+      SubTextFontOptions .= mOptions.Has("FS") ? " S" mOptions["FS"] : mOptions.Has("FM") ? " S8" : ""
+      ProgressOptions .= mOptions.Has("R") ? " Range" mOptions["R"] : ""
+      ProgressStart .= mOptions.Has("P") ? mOptions["P"] : ""
+      
+      Out := "ProgressGui := Gui(`"" GuiOptions "`")" 
+      Out .= p[4]!="" ? ", ProgressGui.Title := " p[4] " " : ""
+      Out .= (p[3]="" and p[2]="") or mOptions.Has("FM") or mOptions.Has("FS") ? ", ProgressGui.MarginY := 5, ProgressGui.MarginX := 5" : ""
+      Out .= p[3]!="" ? ", ProgressGui.SetFont(" ToExp(MainTextFontOptions) "," p[5] "), ProgressGui.AddText(`"x0 w" width " Center`", " p[3] ")" : ""
+      Out .= ", gocProgress := ProgressGui.AddProgress(`"x10 w" width-20 " h20" ProgressOptions "`", " ProgressStart ")"
+      Out .= p[3]!="" and p[2]!="" ? ", ProgressGui.SetFont(" ToExp(SubTextFontOptions) "," p[5] ")" : p[2]!="" and p[5]!="" ? ", ProgressGui.SetFont(," p[5] ")" :""
+      Out .= p[2]!="" ? ", ProgressGui.AddText(`"x0 w" width " Center`", " p[2] ")" : ""
+      Out .= ", ProgressGui.Show(" ToExp(GuiShowOptions) ")"
    }
    Out := RegExReplace(Out, "[\s\,]*\)", ")")
    Return Out
@@ -3082,4 +3169,46 @@ ConvertObjectMatch(ScriptStringInput,ObjectMatchName){
       } Until OutputVarCount = 0
     }
     Return ScriptStringInput
+}
+
+; Returns a Map of options like x100 y200 ...
+GetMapOptions(Options){
+   mOptions := Map()
+   Loop parse, Options, " "
+   {
+      if (StrLen(A_LoopField)>0){
+         mOptions[SubStr(StrUpper(A_LoopField),1,1)] := SubStr(A_LoopField,2)
+      }
+      if (StrLen(A_LoopField)>2){
+         mOptions[SubStr(StrUpper(A_LoopField),1,2)] := SubStr(A_LoopField,3)
+      }
+   }
+   Return mOptions
+}
+
+; Converts arrays to maps
+AssArr2Map(ScriptString){
+    if RegExMatch(ScriptString,"is)^.*?\{\s*[\w]+?\s*:\s*([^\}]*)\s*.*"){ 
+        Key := RegExReplace(ScriptString,"is)(^.*?)\{\s*([\w]+?)\s*:\s*([^\,}]*)\s*(.*)","$2")
+        Value := RegExReplace(ScriptString,"is)(^.*?)\{\s*([\w]+?)\s*:\s*([^\,}]*)\s*(.*)","$3")
+        ScriptStringBegin := RegExReplace(ScriptString,"is)(^.*?)\{\s*([\w]+?)\s*:\s*([^\,}]*)\s*(.*)","$1")
+        ScriptString1 := ScriptStringBegin "map(" ToExp(Key) ", " Value
+        ScriptStringRest := RegExReplace(ScriptString,"is)(^.*?)\{\s*([\w]+?)\s*:\s*([^\,}]*)\s*(.*$)","$4")
+        loop {
+            if RegExMatch(ScriptStringRest,"is)^\s*,\s*[\w]+?\s*:\s*([^\},]*)\s*.*"){
+                Key := RegExReplace(ScriptStringRest,"is)^\s*,\s*([\w]+?)\s*:\s*([^\},]*)\s*(.*)","$1")
+                Value := RegExReplace(ScriptStringRest,"is)^\s*,\s*([\w]+?)\s*:\s*([^\},]*)\s*(.*)","$2")
+                ScriptString1 .= ", " ToExp(Key) ", " Value
+                ScriptStringRest := RegExReplace(ScriptStringRest,"is)^\s*,\s*([\w]+?)\s*:\s*([^\},]*)\s*(.*$)","$3")
+            }
+            else {
+                if RegExMatch(ScriptStringRest,"is)^\s*(\})\s*.*"){
+                    ScriptStringRest := RegExReplace(ScriptStringRest,"is)^\s*(\})(\s*.*$)",")$2")
+                }
+                break
+            }
+        }
+        ScriptString := ScriptString1 ScriptStringRest
+    }
+    return ScriptString
 }

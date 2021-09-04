@@ -893,6 +893,7 @@ Convert(ScriptString)
       }
       ; 
       
+      LabelRedoCommandReplacing:
       ; -------------------------------------------------------------------------------
       ;
       ; Command replacing
@@ -1078,8 +1079,11 @@ Convert(ScriptString)
                   ; }
 
                   if (same_line_action){
-                     ; Error in this line, extra parameters should be: put on next line that needs to be converterd, or converted in the line
-                     Line := Indentation . format(Part[2], Param*) . "," extra_params
+                     ; Error in this line, extra parameters should be: put on next line that needs to be converted, or converted in the line
+                     PreLine .= format(Part[2], Param*) . ","
+                     Line := extra_params
+                     Goto LabelRedoCommandReplacing
+                     ;Line := Indentation . format(Part[2], Param*) . "," extra_params
                   }
                   else
                      Line := Indentation . format(Part[2], Param*)

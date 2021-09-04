@@ -1,0 +1,1 @@
+WinGetPos(&X, &Y, , , "A")

@@ -10,5 +10,5 @@ Loop Parse, Colors, ",|;"
     ; Retrieve the delimiter found by the parsing loop.
     Delimiter := SubStr(Colors, Position, 1)
 
-    msgResult := MsgBox("Field: " . A_LoopField . "`nDelimiter: " . Delimiter)
+    MsgBox("Field: " A_LoopField "`nDelimiter: " Delimiter)
 }

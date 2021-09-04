@@ -180,7 +180,7 @@ class ConvertTests
                                  var = hello
                                  *`/
                                  var2 := "hello2"
-                                 FileAppend("var=" . var . "``nvar2=" . var2, "*")
+                                 FileAppend("var=" var "``nvar2=" var2, "*")
          )"
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
@@ -220,7 +220,7 @@ class ConvertTests
                                  `)
                                  *`/
                                  var2 := "hello2"
-                                 FileAppend("var=" . var . "``nvar2=" . var2, "*")
+                                 FileAppend("var=" var "``nvar2=" var2, "*")
          )"
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
@@ -556,7 +556,7 @@ class ConvertTests
          (Join`r`n
                                  MyVar := "joe"
                                  MyVar2 := "``"hello``" joe"
-                                 if (MyVar2 = "``"hello``" " . MyVar)
+                                 if (MyVar2 = "``"hello``" " MyVar)
                                      FileAppend("The contents of MyVar and MyVar2 are identical.", "*")
          )"
       ; first test that our expected code actually produces the same results in v2
@@ -1852,7 +1852,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
       expected := "
          (Join`r`n
-                                 size := FileGetSize(A_ScriptDir . "\Tests.ahk")
+                                 size := FileGetSize(A_ScriptDir "\Tests.ahk")
                                  FileAppend(size, "*")
          )"
       ; first test that our expected code actually produces the same results in v2
@@ -1939,7 +1939,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n
                                  InputVar := "The Quick Brown Fox Jumps Over the Lazy Dog"
                                  length := StrLen(InputVar)
-                                 FileAppend("The length of InputVar is " . length . ".", "*")
+                                 FileAppend("The length of InputVar is " length ".", "*")
          )"
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
@@ -1971,7 +1971,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  Needle := "def"
                                  pos := InStr(Haystack, Needle) - 1
                                  if (pos >= 0)
-                                     FileAppend("The string was found at position " . pos . ".", "*")
+                                     FileAppend("The string was found at position " pos ".", "*")
          )"
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
@@ -2001,7 +2001,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  Haystack := "abcdefghijklmnopqrs"
                                  Needle := "xyz"
                                  pos := InStr(Haystack, Needle) - 1
-                                 FileAppend("The string was found at position " . pos . ".", "*")
+                                 FileAppend("The string was found at position " pos ".", "*")
          )"
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
@@ -2031,7 +2031,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  Haystack := "abcdefghijklmnopqrs"
                                  pos := InStr(Haystack, "def") - 1
                                  if (pos >= 0)
-                                     FileAppend("The string was found at position " . pos . ".", "*")
+                                     FileAppend("The string was found at position " pos ".", "*")
          )"
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
@@ -2063,7 +2063,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  Needle := "def"
                                  pos := InStr(Haystack, Needle,, (0)+1, 2) - 1
                                  if (pos >= 0)
-                                     FileAppend("The string was found at position " . pos . ".", "*")
+                                     FileAppend("The string was found at position " pos ".", "*")
          )"
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
@@ -2096,7 +2096,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  Haystack := "abcdefabcdef"
                                  Needle := "DEF"
                                  pos := InStr(Haystack, Needle, (A_StringCaseSense="On") ? true : false, (0)+1, 2) - 1
-                                 FileAppend("The string was found at position " . pos, "*")
+                                 FileAppend("The string was found at position " pos, "*")
          )"
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
@@ -2128,7 +2128,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  Needle := "bcd"
                                  pos := InStr(Haystack, Needle,, -1*((0)+1)) - 1
                                  if (pos >= 0)
-                                     FileAppend("The string was found at position " . pos . ".", "*")
+                                     FileAppend("The string was found at position " pos ".", "*")
          )"
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
@@ -2160,7 +2160,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  Needle := "cde"
                                  pos := InStr(Haystack, Needle,, -1*((0)+1), -2) - 1
                                  if (pos >= 0)
-                                     FileAppend("The string was found at position " . pos . ".", "*")
+                                     FileAppend("The string was found at position " pos ".", "*")
          )"
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
@@ -2192,7 +2192,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  Needle := "bcd"
                                  pos := InStr(Haystack, Needle,, -1*((0)+1)) - 1
                                  if (pos >= 0)
-                                     FileAppend("The string was found at position " . pos . ".", "*")
+                                     FileAppend("The string was found at position " pos ".", "*")
          )"
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
@@ -2224,7 +2224,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  Needle := "cde"
                                  pos := InStr(Haystack, Needle,, (4)+1) - 1
                                  if (pos >= 0)
-                                     FileAppend("The string was found at position " . pos . ".", "*")
+                                     FileAppend("The string was found at position " pos ".", "*")
          )"
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
@@ -2258,7 +2258,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  var := "2"
                                  pos := InStr(Haystack, Needle,, (var)+1) - 1
                                  if (pos >= 0)
-                                     FileAppend("The string was found at position " . pos . ".", "*")
+                                     FileAppend("The string was found at position " pos ".", "*")
          )"
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
@@ -2292,7 +2292,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  var := "1"
                                  pos := InStr(Haystack, Needle,, (var+2)+1) - 1
                                  if (pos >= 0)
-                                     FileAppend("The string was found at position " . pos . ".", "*")
+                                     FileAppend("The string was found at position " pos ".", "*")
          )"
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
@@ -2326,7 +2326,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  var := "0"
                                  pos := InStr(Haystack, Needle,, -1*((var+2)+1), -2) - 1
                                  if (pos >= 0)
-                                     FileAppend("The string was found at position " . pos . ".", "*")
+                                     FileAppend("The string was found at position " pos ".", "*")
          )"
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
@@ -2358,7 +2358,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  Needle := "cde"
                                  pos := InStr(Haystack, Needle,, (4)+1, 2) - 1
                                  if (pos >= 0)
-                                     FileAppend("The string was found at position " . pos . ".", "*")
+                                     FileAppend("The string was found at position " pos ".", "*")
          )"
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
@@ -2390,7 +2390,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  Needle := "cde"
                                  pos := InStr(Haystack, Needle,, -1*((4)+1)) - 1
                                  if (pos >= 0)
-                                     FileAppend("The string was found at position " . pos . ".", "*")
+                                     FileAppend("The string was found at position " pos ".", "*")
          )"
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
@@ -2422,7 +2422,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  Needle := "cde"
                                  pos := InStr(Haystack, Needle,, -1*((4)+1), -2) - 1
                                  if (pos >= 0)
-                                     FileAppend("The string was found at position " . pos . ".", "*")
+                                     FileAppend("The string was found at position " pos ".", "*")
          )"
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
@@ -2454,7 +2454,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  Needle := "FF"
                                  pos := InStr(Haystack, Needle,, (0)+1, 2) - 1
                                  if (pos >= 0)
-                                     FileAppend("The string was found at position " . pos . ".", "*")
+                                     FileAppend("The string was found at position " pos ".", "*")
          )"
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
@@ -2839,7 +2839,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n
                                  Str := "This is a test."
                                  OutputVar := SubStr(Str, 1, -1*(6))
-                                 FileAppend("[" . OutputVar . "]", "*")
+                                 FileAppend("[" OutputVar "]", "*")
          )"
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
@@ -2869,7 +2869,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  Str := "This is a test."
                                  count := 3
                                  OutputVar := SubStr(Str, 1, -1*(count+3))
-                                 FileAppend("[" . OutputVar . "]", "*")
+                                 FileAppend("[" OutputVar "]", "*")
          )"
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
@@ -2938,7 +2938,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                           pos := InStr(var, "al") - 1
                                     }
                                  }
-                                 FileAppend("pos=" . pos, "*")
+                                 FileAppend("pos=" pos, "*")
          )"
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
@@ -2991,7 +2991,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n
                                  title := WinGetTitle("A")
                                  WinGetPos(&x, &y, &w, &h, "A")
-                                 FileAppend(title . "-" . w . "-" . h . "-" . x . "-" . y, "*")
+                                 FileAppend(title "-" w "-" h "-" x "-" y, "*")
          )"
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
@@ -3356,9 +3356,9 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n
                                  var := "3.1415"
                                  if isFloat(var)
-                                    FileAppend(var . " is float", "*")
+                                    FileAppend(var " is float", "*")
                                  else if isInteger(var)
-                                    FileAppend(var . " is int", "*")
+                                    FileAppend(var " is int", "*")
          )"
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
@@ -3388,7 +3388,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  var := "3.1415"
                                  mytype := "float"
                                  if is%mytype%(var)
-                                    FileAppend(var . " is float", "*")
+                                    FileAppend(var " is float", "*")
          )"
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
@@ -3418,9 +3418,9 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n
                                  var := "3.1415"
                                  if !isFloat(var)
-                                    FileAppend(var . " is not float", "*")
+                                    FileAppend(var " is not float", "*")
                                  else if !isInteger(var)
-                                    FileAppend(var . " is not int", "*")
+                                    FileAppend(var " is not int", "*")
          )"
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
@@ -3575,7 +3575,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  ; check for StringCaseSense in v1 source script
                                  ; and change the CaseSense param in StrReplace() if necessary
                                  NewStr := StrReplace(OldStr, A_Space, "+",, &ErrorLevel)
-                                 FileAppend("number of replacements: " . ErrorLevel, "*")
+                                 FileAppend("number of replacements: " ErrorLevel, "*")
          )"
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
@@ -3702,7 +3702,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  var := "1"
                                  pos := InStr(Haystack, Needle,, (var+2)+1) - 1
                                  if (pos >= 0)
-                                     FileAppend("The string was found at position " . pos . ".", "*")
+                                     FileAppend("The string was found at position " pos ".", "*")
          )"
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
@@ -3732,7 +3732,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  Haystack := "abcdefghijklmnopqrs"
                                  pos := InStr(Haystack, "def") - 1
                                  if (pos >= 0)
-                                     FileAppend("The string was found at position " . pos . ".", "*")
+                                     FileAppend("The string was found at position " pos ".", "*")
          )"
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
@@ -4699,7 +4699,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       expected := "
          (Join`r`n
                                  TimeString := FormatTime(, "Time")
-                                 FileAppend("the current time is " . TimeString, "*")
+                                 FileAppend("the current time is " TimeString, "*")
          )"
       ; first test that our expected code actually produces the same results in v2
       ; if (this.test_exec = true) {
@@ -4730,9 +4730,9 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n
                                  var := "3.1415"
                                  if (var >= 5 && var <= 10)
-                                    FileAppend(var . " between 5 and 10", "*")
+                                    FileAppend(var " between 5 and 10", "*")
                                  else if (var >= 1 && var <= 4)
-                                    FileAppend(var . " between 1 and 4", "*")
+                                    FileAppend(var " between 1 and 4", "*")
          )"
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
@@ -4762,9 +4762,9 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n
                                  var := "3.1415"
                                  if !(var >= 0.0 && var <= 1.0)
-                                    FileAppend(var . " not between 0.0 and 1.0", "*")
+                                    FileAppend(var " not between 0.0 and 1.0", "*")
                                  else if !(var >= 1 && var <= 4)
-                                    FileAppend(var . " not between 1 and 4", "*")
+                                    FileAppend(var " not between 1 and 4", "*")
          )"
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
@@ -4796,7 +4796,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  varLow := "2"
                                  varHigh := "4"
                                  if (var >= VarLow && var <= VarHigh)
-                                    FileAppend(var . " between " . VarLow . " and " . VarHigh, "*")
+                                    FileAppend(var " between " VarLow " and " VarHigh, "*")
          )"
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
@@ -4824,7 +4824,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n
                                  var := "boy"
                                  if ((StrCompare(var, "blue") > 0) && (StrCompare(var, "red") < 0))
-                                    FileAppend(var . " is alphabetically between 'blue' and 'red'", "*")
+                                    FileAppend(var " is alphabetically between 'blue' and 'red'", "*")
          )"
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
@@ -4848,7 +4848,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          )"
       expected := "
          (Join`r`n
-                                 RunWait(A_ComSpec . " /c dir c:\")
+                                 RunWait(A_ComSpec " /c dir c:\")
          )"
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
@@ -4878,7 +4878,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n
                                  Loop Files, "Yunit\*.*"
                                  {
-                                    FileAppend(A_LoopFilePath . "``n" . A_LoopFileFullPath, "*")
+                                    FileAppend(A_LoopFilePath "``n" A_LoopFileFullPath, "*")
                                     break
                                  }
          )"
@@ -5019,7 +5019,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  FullFileName := "C:\My Documents\Address List.txt"
                                  SplitPath(FullFileName, &name)
                                  SplitPath(FullFileName, , &dir)
-                                 FileAppend(name . "``n" . dir, "*")
+                                 FileAppend(name "``n" dir, "*")
          )"
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
@@ -5051,7 +5051,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  FullFileName := "C:\My Documents\Address List.txt"
                                  SplitPath(FullFileName, &name)
                                  SplitPath(FullFileName, , &dir)
-                                 FileAppend(name . "``n" . dir, "*")
+                                 FileAppend(name "``n" dir, "*")
          )"
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
@@ -5081,7 +5081,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  name := dir := ""
                                  SplitPath("C:\My Documents\Address List.txt", &name)
                                  SplitPath("C:\My Documents\Address List.txt", , &dir)
-                                 FileAppend(name . "``n" . dir, "*")
+                                 FileAppend(name "``n" dir, "*")
          )"
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
@@ -5122,7 +5122,7 @@ class ToExpTests
       ; "hello" %A_Index%
       ; "`"hello`" " . A_Index
       orig := "`"hello`" `%A_Index`%"
-      expected := "`"```"hello```" `" . A_Index"
+      expected := "`"```"hello```" `" A_Index"
       converted := ToExp(orig)
       ;Msgbox, expected: %expected%`nconverted: %converted%
       Yunit.assert(converted = expected)
@@ -5131,9 +5131,9 @@ class ToExpTests
    RemovePercents()
    {
       Yunit.assert(ToExp("`%hello`%") = "hello")
-      Yunit.assert(ToExp("`%hello`%world") = "hello . `"world`"")
-      Yunit.assert(ToExp("`%hello`% world") = "hello . `" world`"")
-      Yunit.assert(ToExp("one `%two`% three") = "`"one `" . two . `" three`"")
+      Yunit.assert(ToExp("`%hello`%world") = "hello `"world`"")
+      Yunit.assert(ToExp("`%hello`% world") = "hello `" world`"")
+      Yunit.assert(ToExp("one `%two`% three") = "`"one `" two `" three`"")
    }
    
    RemoveEscapedCommas()
@@ -5307,7 +5307,7 @@ InputBox, password, Enter Password, (your input will be hidden), hide
 
       expected := "
          (Join`r`n
-IB := InputBox("(your input will be hidden)", "Enter Password", "Password"), password := IB.Value , ErrorLevel := IB.Result="OK" ? 0 : IB.Result="CANCEL" ? 1 : IB.Result="Timeout" ? 2 : "ERROR"
+IB := InputBox("(your input will be hidden)", "Enter Password", "Password"), password := IB.Value
          )"
 
       converted := Convert(input_script)
@@ -5447,7 +5447,7 @@ class GuiTests
       expected := "
          (Join`r`n
             myGui := Gui()
-            myGui.Add("Text", "", "Please enter your name:")
+            myGui.Add("Text", , "Please enter your name:")
             ogcEditName := myGui.Add("Edit", "vName")
             myGui.Show()
          )"
@@ -5478,7 +5478,7 @@ Gui, Show, NoActivate, Title of Window  ; NoActivate avoids deactivating the cur
          (Join`r`n
 myGui := Gui()
 myGui.Opt("+AlwaysOnTop +Disabled -SysMenu +Owner")  ; +Owner avoids a taskbar button.
-myGui.Add("Text", "", "Some text to display.")
+myGui.Add("Text", , "Some text to display.")
 myGui.Title := "Title of Window"
 myGui.Show("NoActivate")  ; NoActivate avoids deactivating the currently active window.
          )"
@@ -5546,7 +5546,7 @@ Loop, 3
          (Join`r`n
 Loop 3
 {
-    MsgBox("Iteration number is " . A_Index . ".")  ; A_Index will be 1, 2, then 3
+    MsgBox("Iteration number is " A_Index ".")  ; A_Index will be 1, 2, then 3
     Sleep(100)
 }
          )"
@@ -5573,7 +5573,7 @@ Loop, parse, Colors, ``,
 Colors := "red,green,blue"
 Loop parse, Colors, ","
 {
-    MsgBox("Color number " . A_Index . " is " . A_LoopField . ".")
+    MsgBox("Color number " A_Index " is " A_LoopField ".")
 }
          )"
 
@@ -5600,7 +5600,7 @@ Loop, parse, clipboard, ``n, ``r
          (Join`r`n
 Loop parse, A_Clipboard, "``n", "``r"
 {
-    msgResult := MsgBox("File number " . A_Index . " is " . A_LoopField . ".``n``nContinue?", , 4)
+    msgResult := MsgBox("File number " A_Index " is " A_LoopField ".``n``nContinue?", , 4)
     if (msgResult = "No"){
        break
     }

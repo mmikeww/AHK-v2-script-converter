@@ -24,6 +24,7 @@ Convert(ScriptString)
    global MenuList
    global mAltLabel := GetAltLabelsMap(ScriptString) ; Create a map of labels who are identical
    global mGuiCType := map() ; Create a map to return the type of control
+   global mGuiCObject := map() ; Create a map to return the object of a control
    
    global ListViewNameDefault
    global TreeViewNameDefault
@@ -68,7 +69,7 @@ Convert(ScriptString)
    ;//          - use asterisk * and a function name to call, for custom processing when the params dont directly match up
    CommandsToConvert := "
    (
-      BlockInput,Option | BlockInput {1}
+      BlockInput,OptionT2E | BlockInput({1})
       DriveSpaceFree,OutputVar,PathT2E | {1} := DriveGetSpaceFree({2})
       Click,keysT2E | Click({1})
       ClipWait,Timeout,WaitForAnyData | Errorlevel := !ClipWait({1}, {2})
@@ -231,21 +232,21 @@ Convert(ScriptString)
    ;//  Similar to commands, parameters can be added
    FunctionsToConvert := "
    (
-      DllCall(DllFunction,Type1,Arg1,Type2,Arg2,Type,Arg,Type,Arg,Type,Arg,Type,Arg,Type,Arg,Type,Arg,Type,Arg,Type,Arg,Type,Arg,Type,Arg,Type,Arg,Type,Arg,ReturnType) | *_DllCall
+      DllCall(DllFunction,Type1,Arg1,val*) | *_DllCall
       Func(FunctionNameQ2T) | {1}
       RegExMatch(Haystack, NeedleRegEx , OutputVarV2VR, StartingPos) | *_RegExMatch
       RegExReplace(Haystack,NeedleRegEx,Replacement,OutputVarCountV2VR,Limit,StartingPos) | RegExReplace({1}, {2}, {3}, {4}, {5}, {6})
       StrReplace(Haystack,Needle,ReplaceText,OutputVarCountV2VR,Limit) | StrReplace({1}, {2}, {3}, , {4}, {5})
       LoadPicture(Filename,Options,ImageTypeV2VR) | LoadPicture({1},{2},{3})
-      LV_Add(Options, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field) | *_LV_Add
+      LV_Add(Options, Field*) | *_LV_Add
       LV_Delete(RowNumber) | *_LV_Delete
       LV_DeleteCol(ColumnNumber) | *_LV_DeleteCol
       LV_GetCount(ColumnNumber) | *_LV_GetCount
       LV_GetText(OutputVar, RowNumber, ColumnNumber) | *_LV_GetText
       LV_GetNext(StartingRowNumber, RowType) | *_LV_GetNext
       LV_InsertCol(ColumnNumber , Options, ColumnTitle) | *_LV_InsertCol
-      LV_Insert(RowNumber, Options, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field) | *_LV_Insert
-      LV_Modify(RowNumber, Options, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field) | *_LV_Modify
+      LV_Insert(RowNumber, Options, Field*) | *_LV_Insert
+      LV_Modify(RowNumber, Options, Field*) | *_LV_Modify
       LV_ModifyCol(ColumnNumber, Options, ColumnTitle) | *_LV_ModifyCol
       LV_SetImageList(ImageListID, IconType) | *_LV_SetImageList
       TV_Add(Name,ParentItemID,Options) | *_TV_Add
@@ -262,11 +263,12 @@ Convert(ScriptString)
       SB_SetText(NewText,PartNumber,Style) | *_SB_SetText
       SB_SetParts(NewText,PartNumber,Style) | *_SB_SetParts
       SB_SetIcon(Filename,IconNumber,PartNumber) | *_SB_SetIcon
-      NumPut(Number,VarOrAddress,Offset,Type) | *_NumPut
       MenuGetHandle(MenuNameQ2T) | {1}.Handle
       MenuGetName(Handle) | MenuFromHandle({1})
+      NumPut(Number,VarOrAddress,Offset,Type) | *_NumPut
+      Object(Array*) | *_Object
       OnError(FuncQ2T,AddRemove) | OnError({1},{2})
-      OnClipboardChange(ClipChangedQ2T) | OnClipboardChange(ClipChanged)
+      OnClipboardChange(FuncQ2T,AddRemove) | OnClipboardChange({1},{2})
       Asc(String) | Ord({1})
       VarSetCapacity(TargetVar,RequestedCapacity,FillByte) | *_VarSterCapacity
    )"
@@ -389,9 +391,9 @@ Convert(ScriptString)
       if RegExMatch(Line, "^\s*({\s*).*$"){
          LineNoHotkey := RegExReplace(Line,"(^\s*)({\s*)(.*$)","$1$3")
          if (LineNoHotkey!=""){
-            PreLine := PreLine RegExReplace(Line,"(^\s*)({\s*)(.*$)","$2")
+            PreLine := PreLine RegExReplace(Line,"(^\s*)({\s*)(.*$)","$1$2")
             Line := LineNoHotkey
-            Orig_Line := RegExReplace(Line,"(^\s*)({\s*)(.*$)","$1$3")
+            Orig_Line := RegExReplace(Line,"(^\s*)({\s*)(.*$)","$3")
          }
       }
       if RegExMatch(Line, "i)^\s*(}?\s*(Try|Else)\s*[\s{]\s*).*$"){
@@ -503,7 +505,10 @@ Convert(ScriptString)
                Part[2]:= trim(Part[2])
                loop oPar.Length
                {
-                  ; uses a function to fromat the parameters
+                  if (A_Index>1 and InStr(oListParam[A_Index-1],"*")){
+                     oListParam.InSertAt(A_Index, oListParam[A_Index-1])
+                  }
+                  ; Uses a function to format the parameters
                   oPar[A_Index] := ParameterFormat(oListParam[A_Index],oPar[A_Index])
                }
                loop oListParam.Length
@@ -1054,6 +1059,9 @@ Convert(ScriptString)
                      Param[A_Index] := this_param
                      continue
                   }
+                  if (A_Index>1 and InStr(ListParam[A_Index-1],"*")){
+                     ListParam.InsertAt(A_Index, ListParam[A_Index-1])
+                  }
                   ; uses a function to format the parameters
                   Param[A_Index] := ParameterFormat(ListParam[A_Index],Param[A_Index])
 
@@ -1145,7 +1153,7 @@ Convert(ScriptString)
       Loop aListMatchObject.Length{
          Line := ConvertObjectMatch(Line,aListMatchObject[A_Index])
       }
-       
+
       ScriptOutput .= Line . EOLComment . "`r`n"
       ; Output and NewInput should become arrays, NewInput is a copy of the Input, but with empty lines added for easier comparison.
       LastLine := Line
@@ -1156,6 +1164,12 @@ Convert(ScriptString)
       if aListLabelsToFunction[A_Index].label
       ScriptOutput := ConvertLabel2Func(ScriptOutput, aListLabelsToFunction[A_Index].label, aListLabelsToFunction[A_Index].parameters)
    }
+
+   If InStr(ScriptOutput,"OnClipboardChange:"){
+      ;ScriptOutput :=  RegExReplace(ScriptOutput, "is)^(.*\n[\s\t]*)(OnClipboardChange:)(.*)$" , "$1ClipChanged:$3")
+      ScriptOutput := "OnClipboardChange(ClipChanged)`r`n" ConvertLabel2Func(ScriptOutput, "OnClipboardChange", "Type", "ClipChanged",[{NeedleRegEx: "i)^(.*)\b\QA_EventInfo\E\b(.*)$",Replacement : "$1Type$2"}])
+   }
+
 
    ; The following will be uncommented at a a later time
    ;If FoundSubStr
@@ -1568,6 +1582,7 @@ _Gui(p){
    global oScriptString ; array of all the lines
    global O_Index  ; current index of the lines
    global GuiVList
+   global mGuiCObject
    ;preliminary version
    
    SubCommand := RegExMatch(p[1],"i)^\s*[^:]*?\s*:\s*(.*)$",&newGuiName) = 0 ? Trim(p[1]) : newGuiName[1]
@@ -1617,7 +1632,8 @@ _Gui(p){
          ControlName:= RegExReplace(Var3, "^.*\bv([\w]*)\b.*$", "$1")
 
          ControlObject := InStr(ControlName, SubStr(Var2,1,4)) ? "ogc" ControlName : "ogc" Var2 ControlName
-         if (Var2!="Pic" and Var2!="Picture"){ ; Exclude pictures from the submit (this generates an error)
+         mGuiCObject[ControlName] := ControlObject
+         if (Var2!="Pic" and Var2!="Picture" and Var2!="Text" and Var2!="Button" and Var2!="Link"){ ; Exclude Controls from the submit (this generates an error)
             if (GuiVList.Has(GuiNameLine)){
                GuiVList[GuiNameLine] .= "`r`n" ControlName
             }
@@ -1633,6 +1649,8 @@ _Gui(p){
          if (ControlObject=""){
             ControlObject := InStr(ControlHwnd, SubStr(Var4,1,4)) ? "ogc" StrReplace(ControlHwnd,"hwnd") : "ogc" Var4 StrReplace(ControlHwnd,"hwnd")
          }
+         mGuiCObject["%" ControlHwnd "%"] := ControlObject
+         mGuiCObject["% " ControlHwnd] := ControlObject
       }
       
       if !InStr(GuiList, "|" GuiNameLine "|"){
@@ -1735,7 +1753,7 @@ _Gui(p){
             LineResult.= ", "
          }
          if (Var4!=""){
-            if(RegExMatch(Var2, "i)^tab[23]?$") or Var2="ListView" or Var2="DropDownList" or Var2="ListBox"){
+            if(RegExMatch(Var2, "i)^tab[23]?$") or Var2="ListView" or Var2="DropDownList" or Var2="ListBox" or Var2="ComboBox"){
                LineResult.= ", [" 
                oVar4 :=""
                Loop Parse Var4, "|", " "
@@ -1784,7 +1802,7 @@ _Gui(p){
          aListLabelsToFunction.Push({label: ControlLabel, parameters:"*"})
       }
       if(ControlHwnd!=""){
-         LineResult.= "`r`n" Indentation ControlHwnd " := " ControlName ".hwnd"
+         LineResult.= "`r`n" Indentation ControlHwnd " := " ControlObject ".hwnd"
       }
    }
    DebugWindow("LineResult:" LineResult "`r`n")
@@ -1799,12 +1817,37 @@ _GuiControl(p){
    ControlID := Trim(p[2])
    Value := Trim(p[3])
    Out := ""
-   ControlObject := "ogc" ControlID ; for now, this can be improved in the future
+   ControlObject := mGuiCObject.Has(ControlID) ? mGuiCObject[ControlID] : "ogc" ControlID
+
+   Type := mGuiCType.Has(ControlObject) ? mGuiCType[ControlObject] : ""
    if (SubCommand=""){
       ; Not perfect, as this should be dependent on the type of control
-      Type := mGuiCType[ControlObject]
-      if (Type="ListBox"){
-         Return ControlObject ".Add([" ToExp(Value) "])" 
+      
+      if (Type="Button" or Type="Link"){
+         return ControlObject ".Text := " ToExp(Value) 
+      }
+      if (Type="ListBox" or Type="DropDownList" or Type="ComboBox" or Type="tab"){
+         PreSelected := ""
+         If (SubStr(Value,1,1)="|"){
+            Value := SubStr(Value,2)
+            Out .= ControlObject ".Delete() `;Clean the list`r`n" Indentation
+         }
+         ObjectValue := "[" 
+         Loop Parse Value, "|", " "
+         {
+            if (A_LoopField="" and A_Index!=1){
+               PreSelected := LoopFieldPrev
+               continue
+            }
+            ObjectValue.= ObjectValue="[" ? ToStringExpr(A_LoopField) : ", " ToStringExpr(A_LoopField)
+            LoopFieldPrev:= A_LoopField
+         }
+         ObjectValue .= "]"
+         Out .= ControlObject ".Add(" ObjectValue ")"
+         if (PreSelected!=""){
+            Out .= "`r`n" Indentation ControlID ".ChooseString(" ToStringExpr(PreSelected) ")"
+         }
+         Return Out
       }
       if InStr(Value,"|"){
 
@@ -1813,24 +1856,33 @@ _GuiControl(p){
             Value := SubStr(Value,2)
             Out .= ControlObject ".Delete() `;Clean the list`r`n" Indentation
          }
-         Items := "[" 
+         ObjectValue := "[" 
          Loop Parse Value, "|", " "
          {
             if (A_LoopField="" and A_Index!=1){
                PreSelected := LoopFieldPrev
                continue
             }
-            Items.= Items="[" ? ToStringExpr(A_LoopField) : ", " ToStringExpr(A_LoopField)
+            ObjectValue.= ObjectValue="[" ? ToStringExpr(A_LoopField) : ", " ToStringExpr(A_LoopField)
             LoopFieldPrev:= A_LoopField
          }
-         Items .= "]"
-         Out .= ControlObject ".Add(" Items ")"
+         ObjectValue .= "]"
+         Out .= ControlObject ".Add(" ObjectValue ")"
          if (PreSelected!=""){
             Out .= "`r`n" Indentation ControlID ".ChooseString(" ToStringExpr(PreSelected) ")"
          }
          Return Out
       }
-      Return ControlObject ".Value := " ToExp(Value)
+      if (Type="UpDown" or Type="Slider" or Type="Progress"){
+         if (SubStr(Value,1,1)="-"){
+            return ControlObject ".Value -= " ToExp(Value)
+         }
+         else if (SubStr(Value,1,1)="+"){
+            return ControlObject ".Value += " ToExp(Value)
+         }
+         return ControlObject ".Value := " ToExp(Value)
+      }
+      return ControlObject ".Value := " ToExp(Value)
    }
    else if (SubCommand="Text"){
       Return ControlObject ".Text := " ToExp(Value)
@@ -2373,6 +2425,17 @@ _NumPut(p){
       Out := "NumPut(" Type ", " Number ", " VarOrAddress ", " OffSet ")"
    }
    Return RegExReplace(Out, "[\s\,]*\)$", ")")
+}
+
+_Object(p){
+   Parameters := ""
+   Function := p.Has(2) ? "Map" : "Object" ; If parameters are used, a map object is intended
+   Loop p.Length
+   {
+      Parameters .= Parameters="" ? p[A_Index] : ", " p[A_Index]
+   }
+   ; Should we convert used statements as mapname.test to mapname["test"]? 
+   Return Function "(" Parameters ")"
 }
 
 _OnExit(p){
@@ -3250,6 +3313,7 @@ Format2(FormatStr , Values*){
    ;//              this means that the literal text of the parameter is unchanged
    ;//              this would be used for InputVar/OutputVar params, or whenever you want the literal text preserved
 ParameterFormat(ParName,ParValue){
+   ParName := StrReplace(ParName,"*") ; Remove the *, that indicate an array
    ParValue := Trim(ParValue)
    if (ParName ~= "V2VR$"){
       if (ParValue != "")
@@ -3364,16 +3428,34 @@ AssArr2Map(ScriptString){
 }
 
 ; Function that converts specific label to string and adds brackets
-ConvertLabel2Func(ScriptString, Label, Parameters:=""){
+; ScriptString        :  Script
+; Label               :  Label to change to fuction
+; Parameters          :  Parameters to use
+; NewFunctionName     :  Name of new function
+; aRegexReplaceList   :  Array with objects with NeedleRegEx and Replacement properties to be used in the label
+;                         example: [NeedleRegEx: "(.*)V1(.*)",Replacement : "$1V2$2"]
+ConvertLabel2Func(ScriptString, Label, Parameters:="", NewFunctionName :="", aRegexReplaceList:=""){
     oScriptString := StrSplit(ScriptString, "`n", "`r")
     Result := ""
     LabelPointer := 0 ; active searching for the end of the hotkey
     LabelStart := 0 ; active searching for the beginning of the bracket
     RestString := ScriptString ;Used to have a string to look the rest of the file
-
+    if (NewFunctionName=""){ ; Use Labelname if no FunctionName is defined
+       NewFunctionName := Label
+    }
     loop oScriptString.Length {
         Line := oScriptString[A_Index]
         
+         if (LabelPointer=1 or LabelStart=1){
+            if IsObject(aRegexReplaceList){
+               Loop aRegexReplaceList.Length {
+                  if aRegexReplaceList[A_Index].NeedleRegEx
+                     Line := RegExReplace(Line, aRegexReplaceList[A_Index].NeedleRegEx, aRegexReplaceList[A_Index].Replacement)
+                     ;MsgBox(Line "`n" aRegexReplaceList[A_Index].NeedleRegEx "`n" aRegexReplaceList[A_Index].Replacement)
+               }
+            }
+        }
+
         if (LabelPointer=1){
             if RegExMatch(RestString,"is)^\s*([\w]+?\([^\)]*\)[\s\n\r]*(`;[^\r\n]*|)([\s\n\r]*){).*"){ ; Function declaration detection
                 ; not bulletproof perfect, but a start
@@ -3412,16 +3494,20 @@ ConvertLabel2Func(ScriptString, Label, Parameters:=""){
                 Result .= "} `; V1toV2: Added Bracket before label`r`n"
                 LabelPointer := 0
             }
+            else if (RegExMatch(RestString,"is)^[\s`n`r\t]*(`;[^\r\n]*|)([\s\n\r\t]*)$")>0 and RegExMatch( oScriptString[A_Index-1],"is)^[\s`n`r\t]*(return).*")>0){ ; Label
+                Result .= "} `; V1toV2: Added bracket in the end`r`n"
+                LabelPointer := 0
+            }
         }
         ; This check needs to be at the bottom.
         if Instr(Line, Label ":"){
             If RegexMatch(Line,"is)^(\s*|.*\n\s*)(\Q" Label "\E):(.*)", &Var){
                 if RegExMatch(Line,"is)(\s*)(\Q" Label "\E):(\s*[^\s;].+)"){
                     ;Oneline detected
-                    Line := Var[1] Var[2] "(" Parameters "){`r`n   " Var[3] "`r`n}"
+                    Line := Var[1] NewFunctionName "(" Parameters "){`r`n   " Var[3] "`r`n}"
                 }
                 else{
-                    Line := Var[1] Var[2] "(" Parameters ")" Var[3]
+                    Line := Var[1] NewFunctionName "(" Parameters ")" Var[3]
                     LabelStart := 1
                 }
             }

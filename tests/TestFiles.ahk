@@ -40,7 +40,7 @@ TV := MyGui.Add("TreeView", "r20 w180 ImageList" ImageListID)
 
 ; Create a Status Bar to give info about the number of files and their total size:
 SB := MyGui.Add("StatusBar")
-SB.SetParts(300, 200)  ; Create three parts in the bar (the third part fills all the remaining width).
+SB.SetParts(300, 300)  ; Create three parts in the bar (the third part fills all the remaining width).
 
 ; Add folders and their subfolders to the tree. Display the status in case loading takes a long time:
 M := Gui("ToolWindow -SysMenu Disabled AlwaysOnTop", "Loading the tree..."), M.Show("w200 h0")
@@ -54,21 +54,23 @@ ButtonEvaluateTests.OnEvent("Click", AddSubFoldersToTree.Bind(TreeRoot, DirList,
 CheckBoxViewSymbols := MyGui.Add("CheckBox", "yp x+50", "View Symbols")
 CheckBoxViewSymbols.OnEvent("Click", ViewSymbols)
 V1Edit := MyGui.Add("Edit", "x280 y0 w600 vvCodeV1 +Multi +WantTab", strV1Script)  ; Add a fairly wide edit control at the top of the window.
-ButtonRunV1 := MyGui.Add("Button", "", "Run V1")
+ButtonRunV1 := MyGui.Add("Button", "w60", "Run V1")
 ButtonRunV1.OnEvent("Click", RunV1)
-ButtonCloseV1 := MyGui.Add("Button", " x+10 yp +Disabled", "Close V1")
+ButtonCloseV1 := MyGui.Add("Button", " x+10 yp w60 +Disabled", "Close V1")
 ButtonCloseV1.OnEvent("Click", CloseV1)
 oButtonConvert := MyGui.Add("Button", "default x+10 yp", "Convert =>")
 oButtonConvert.OnEvent("Click", ButtonConvert)
 V2Edit := MyGui.Add("Edit", "x600 ym w600 vvCodeV2 +Multi +WantTab", "")  ; Add a fairly wide edit control at the top of the window.
 V2ExpectedEdit := MyGui.Add("Edit", "x1000 ym w600 H100 vvCodeV2Expected +Multi +WantTab", "")  ; Add a fairly wide edit control at the top of the window.
-ButtonRunV2 := MyGui.Add("Button", "", "Run V2")
+ButtonRunV2 := MyGui.Add("Button", "w60", "Run V2")
 ButtonRunV2.OnEvent("Click", RunV2)
-ButtonCloseV2 := MyGui.Add("Button", " x+10 yp +Disabled", "Close V2" )
+ButtonCloseV2 := MyGui.Add("Button", " x+10 yp w60 +Disabled", "Close V2" )
 ButtonCloseV2.OnEvent("Click", CloseV2)
-ButtonRunV2E := MyGui.Add("Button", "", "Run V2 E")
+ButtonCompVscV2 := MyGui.Add("Button", " x+10 yp w80", "Compare VSC" )
+ButtonCompVscV2.OnEvent("Click", CompVscV2)
+ButtonRunV2E := MyGui.Add("Button", "w50", "Run V2E")
 ButtonRunV2E.OnEvent("Click", RunV2E)
-ButtonCloseV2E := MyGui.Add("Button", " x+10 yp +Disabled", "Close V2 E" )
+ButtonCloseV2E := MyGui.Add("Button", " x+10 yp w60 +Disabled", "Close V2E" )
 ButtonCloseV2E.OnEvent("Click", CloseV2E)
 CheckBoxV2E := MyGui.Add("CheckBox", "yp x+50 Checked", "View Expected Code")
 CheckBoxV2E.OnEvent("Click", ViewV2E)
@@ -87,7 +89,8 @@ FileMenu.Add "Open test folder", (*) => Run(TreeRoot)
 FileMenu.Add()
 FileMenu.Add "E&xit", (*) => ExitApp()
 TestMenu := Menu()
-TestMenu.Add("AddBracketToHotkeyTest", (*) => MsgBox(AddBracket(V1Edit.Text)))
+TestMenu.Add("AddBracketToHotkeyTest", (*) => V2Edit.Text := AddBracket(V1Edit.Text))
+TestMenu.Add("GetAltLabelsMap", (*) => V2Edit.Text := GetAltLabelsMap(V1Edit.Text))
 ViewMenu := Menu()
 ViewMenu.Add("Zoom In`tCtrl+NumpadAdd", MenuZoomIn)
 ViewMenu.Add("Zoom Out`tCtrl+NumpadSub", MenuZoomOut)
@@ -154,6 +157,29 @@ CloseV2(*){
         WinClose(TempAhkFile . " ahk_class AutoHotkey")
     }
     ButtonCloseV2.Opt("+Disabled")
+}
+
+CompVscV2(*){
+    if (CheckBoxViewSymbols.Value){
+        MenuShowSymols()
+    }
+    TempAhkFileV2 := A_MyDocuments "\testV2.ahk"
+    AhkV2Exe := "C:\Program Files\AutoHotkey V2\AutoHotkey64.exe"
+    oSaved := MyGui.Submit(0)  ; Save the contents of named controls into an object.
+    try {
+        FileDelete TempAhkFileV2
+    }
+    FileAppend oSaved.vCodeV2 , TempAhkFileV2
+    
+    TempAhkFileV1 := A_MyDocuments "\testV1.ahk"
+    AhkV1Exe :=  "C:\Program Files\AutoHotkey\AutoHotkey.exe"
+    oSaved := MyGui.Submit(0)  ; Save the contents of named controls into an object.
+    try {
+        FileDelete TempAhkFileV1
+    }
+    FileAppend V1Edit.Text, TempAhkFileV1
+    Run "C:\Users\" A_UserName "\AppData\Local\Programs\Microsoft VS Code\Code.exe -d `"" TempAhkFileV1 "`" `"" TempAhkFileV2 "`""
+    Return
 }
 RunV2E(*){
     CloseV2E(myGui)
@@ -327,6 +353,8 @@ MenuZoomOut(*){
 MenuViewExpected(*){
     CheckBoxV2E.Value := !CheckBoxV2E.Value
     ViewV2E(myGui)
+    MyGui.GetPos(,, &Width,&Height)
+    Gui_Size(MyGui, 0, Width, Height-54)
 }
 
 ViewV2E(*){
@@ -342,7 +370,6 @@ ViewV2E(*){
         WinMove(, , Width-3,,MyGui)
     }
 
-    
 }
 
 MenuViewTree(*){
@@ -360,8 +387,7 @@ MenuViewTree(*){
     Gui_Size(MyGui, 0, Width, Height-54)
 }
 
-AddSubFoldersToTree(Folder, DirList, ParentItemID := 0,*)
-{
+AddSubFoldersToTree(Folder, DirList, ParentItemID := 0,*){
     if (ParentItemID="0"){
         global Number_Tests := 0
         global Number_Tests_Pass := 0
@@ -388,8 +414,9 @@ AddSubFoldersToTree(Folder, DirList, ParentItemID := 0,*)
                     Number_Tests_Pass++
                 }
                 else{
-                    MsgBox("[" TextV2Expected "]`n`n[" TextV2Converted "]")
+                    ;MsgBox("[" TextV2Expected "]`n`n[" TextV2Converted "]")
                     ItemID := TV.Add(A_LoopFileName, ParentItemID, icons.fail)
+                    TV.Modify(ParentItemID, "Expand")
                 }
                 
             }
@@ -427,6 +454,8 @@ TV_ItemSelect(thisCtrl, Item)  ; This function is called when a new item is sele
         V1Edit.Text := v1Text
         V2Edit.Text := Convert(v1Text)
         V2ExpectedEdit.Text := FileRead(StrReplace(DirList[Item],".ah1",".ah2"))
+        MyGui.GetPos(,, &Width,&Height)
+        Gui_Size(MyGui, 0, Width, Height-54)
         ; ControlSetText V1Edit, V1Edit
         ; MsgBox(v1Text)
     }
@@ -451,7 +480,7 @@ Gui_Size(thisGui, MinMax, Width, Height)  ; Expand/Shrink ListView and TreeView 
     V2ExpectedEdit.GetPos(,, &V2ExpectedEdit_W)
     
     TreeViewWidth := TV_W
-    if (V2ExpectedEdit_W>0){
+    if (V2ExpectedEdit_W>0 and V2ExpectedEdit.Text!=""){
         NumberEdits := 3
     }
     else{
@@ -461,16 +490,26 @@ Gui_Size(thisGui, MinMax, Width, Height)  ; Expand/Shrink ListView and TreeView 
 
     V1Edit.Move(TreeViewWidth,,EditWith,EditHeight)
     V2Edit.Move(TreeViewWidth+EditWith,,EditWith,EditHeight)
-    V2ExpectedEdit.Move(TreeViewWidth+EditWith*2,,EditWith,EditHeight)
     ButtonEvaluateTests.Move(,ButtonHeight)
     CheckBoxViewSymbols.Move(TreeViewWidth+EditWith-180,EditHeight+6)
     ButtonRunV1.Move(TreeViewWidth,ButtonHeight)
-    ButtonCloseV1.Move(TreeViewWidth+50,ButtonHeight)
+    ButtonCloseV1.Move(TreeViewWidth+62,ButtonHeight)
     oButtonConvert.Move(TreeViewWidth+EditWith-80,ButtonHeight)
     ButtonRunV2.Move(TreeViewWidth+EditWith,ButtonHeight)
-    ButtonCloseV2.Move(TreeViewWidth+EditWith+50,ButtonHeight)
-    ButtonRunV2E.Move(TreeViewWidth+EditWith*2,ButtonHeight)
-    ButtonCloseV2E.Move(TreeViewWidth+EditWith*2+60,ButtonHeight)
+    ButtonCloseV2.Move(TreeViewWidth+EditWith+62,ButtonHeight)
+    ButtonCompVscV2.Move(TreeViewWidth+EditWith+124,ButtonHeight)
+    if (V2ExpectedEdit_W){
+        V2ExpectedEdit.Move(TreeViewWidth+EditWith*2,,EditWith,EditHeight)
+        ButtonRunV2E.Move(TreeViewWidth+EditWith*2,ButtonHeight)
+        ButtonCloseV2E.Move(TreeViewWidth+EditWith*2+52,ButtonHeight)
+        ButtonRunV2E.Visible := 1
+        ButtonCloseV2E.Visible := 1
+    }
+    else{
+        ButtonRunV2E.Visible := 0
+        ButtonCloseV2E.Visible := 0
+    }
+
     
     CheckBoxV2E.Move(Width-220,EditHeight+6)
     ButtonValidateConversion.Move(Width-80,ButtonHeight)

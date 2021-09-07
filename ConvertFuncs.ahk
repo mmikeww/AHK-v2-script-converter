@@ -62,6 +62,9 @@ Convert(ScriptString)
    ;//              these will be wrapped in %%s, so   expr+1   is now    %expr+1%
    ;//          - param names ending in "V2VR" would convert an output variable name to a v2 VarRef
    ;//              basically it will just add an & at the start. so var -> &var
+   ;//          - param names ending in "On2True" would convert an OnOff Parameter name to a Mode
+   ;//              On => True
+   ;//              Off => False
    ;//          - any other param name will not be converted
    ;//              this means that the literal text of the parameter is unchanged
    ;//              this would be used for InputVar/OutputVar params, or whenever you want the literal text preserved
@@ -86,7 +89,8 @@ Convert(ScriptString)
       ControlSendRaw,ControlT2QE,KeysT2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | ControlSendText({2}, {1}, {3}, {4}, {5}, {6})
       ControlSetText,ControlT2QE,NewTextT2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | ControlSetText({2}, {1}, {3}, {4}, {5}, {6})
       CoordMode,TargetTypeT2E,RelativeToT2E | *_CoordMode
-      DetectHiddenWindows,Mode | DetectHiddenWindows({1})
+      DetectHiddenText,ModeOn2True | DetectHiddenText({1})
+      DetectHiddenWindows,ModeOn2True | DetectHiddenWindows({1})
       Drive,SubCommand,Value1,Value2 | *_Drive
       DriveGet,OutputVar,SubCommand,ValueT2E | {1} := DriveGet{2}({3})
       EnvAdd,var,valueCBE2E,TimeUnitsT2E | *_EnvAdd
@@ -156,7 +160,11 @@ Convert(ScriptString)
       RunWait,TargetT2E,WorkingDirT2E,OptionsT2E,OutputVarPIDV2VR | RunWait({1}, {2}, {3}, {4})
       SetEnv,var,valueT2E | {1} := {2}
       SetTimer,LabelCBE2E,PeriodOnOffDeleteCBE2E,PriorityCBE2E | *_SetTimer
-      SetTitleMatchMode,MatchModeT2QE | SetTitleMatchMode({1})
+      SetTitleMatchMode,MatchModeT2E | SetTitleMatchMode({1})
+      SetScrollLockState, StateT2E | SetScrollLockState({1})
+      SetNumLockState, StateT2E | SetNumLockState({1})
+      SetCapsLockState, StateT2E | SetCapsLockState({1})
+      SetStoreCapsLockMode,OnOffOn2True | SetStoreCapsLockMode({1})
       SetWinDelay,DelayT2QE | SetWinDelay({1})
       Send,keysT2E | Send({1})
       SendText,keysT2E | SendText({1})
@@ -3386,11 +3394,20 @@ ParameterFormat(ParName,ParValue){
    }
    if (ParName ~= "T2E$")           ; 'Text TO Expression'
    {
-      ParValue := ParValue!="" ? ToExp(ParValue) : ""
+      if (SubStr(ParValue, 1, 2) = "% "){
+         ParValue := SubStr(ParValue, 3)
+      } else{
+         ParValue := ParValue!="" ? ToExp(ParValue) : ""
+      }
+
    }
    else if (ParName ~= "T2QE$")           ; 'Text TO Quote Expression'
    {
       ParValue := ToExp(ParValue)
+   }
+   else if (ParName ~= "i)On2True$")           ; 'Text TO Quote Expression'
+   {
+      ParValue := RegexReplace(RegexReplace(ParValue, "i)\bon\b", "True"), "i)\boff\b", "False")
    }
 
    Return ParValue

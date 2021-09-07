@@ -75,16 +75,16 @@ Convert(ScriptString)
       Click,keysT2E | Click({1})
       ClipWait,Timeout,WaitForAnyData | Errorlevel := !ClipWait({1}, {2})
       Control,SubCommand,ValueT2E,ControlCBE2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | *_Control
-      ControlClick,Control-or-PosCBE2E,WinTitleT2E,WinTextT2E,WhichButtonT2E,ClickCountT2E,OptionsT2E,ExcludeTitleT2E,ExcludeTextT2E | ControlClick({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8})
-      ControlFocus,ControlCBE2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | ControlFocus({1}, {2}, {3}, {4}, {5})
-      ControlGet,OutputVar,SubCommand,ValueT2E,ControlCBE2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | *_ControlGet
+      ControlClick,Control-or-PosT2QE,WinTitleT2E,WinTextT2E,WhichButtonT2E,ClickCountT2E,OptionsT2E,ExcludeTitleT2E,ExcludeTextT2E | ControlClick({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8})
+      ControlFocus,ControlT2QE,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | ControlFocus({1}, {2}, {3}, {4}, {5})
+      ControlGet,OutputVar,SubCommand,ValueT2E,ControlT2QE,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | *_ControlGet
       ControlGetFocus,OutputVar,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | *_ControlGetFocus
-      ControlGetPos,XV2VR,YV2VR,WidthV2VR,HeightV2VR,ControlCBE2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | ControlGetPos({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8})
+      ControlGetPos,XV2VR,YV2VR,WidthV2VR,HeightV2VR,ControlT2QE,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | ControlGetPos({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8})
       ControlGetText,OutputVar,ControlCBE2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | {1} := ControlGetText({2}, {3}, {4}, {5}, {6})
-      ControlMove,ControlCBE2E,XCBE2E,YCBE2E,WidthCBE2E,HeightT2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | ControlMove({2}, {3}, {4}, {5}, {1}, {6}, {7}, {8}, {9})
-      ControlSend,ControlCBE2E,KeysT2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | ControlSend({2}, {1}, {3}, {4}, {5}, {6})
-      ControlSendRaw,ControlCBE2E,KeysT2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | ControlSendText({2}, {1}, {3}, {4}, {5}, {6})
-      ControlSetText,ControlCBE2E,NewTextT2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | ControlSetText({2}, {1}, {3}, {4}, {5}, {6})
+      ControlMove,ControlT2QE,XCBE2E,YCBE2E,WidthCBE2E,HeightT2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | ControlMove({2}, {3}, {4}, {5}, {1}, {6}, {7}, {8}, {9})
+      ControlSend,ControlT2QE,KeysT2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | ControlSend({2}, {1}, {3}, {4}, {5}, {6})
+      ControlSendRaw,ControlT2QE,KeysT2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | ControlSendText({2}, {1}, {3}, {4}, {5}, {6})
+      ControlSetText,ControlT2QE,NewTextT2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | ControlSetText({2}, {1}, {3}, {4}, {5}, {6})
       CoordMode,TargetTypeT2E,RelativeToT2E | *_CoordMode
       DetectHiddenWindows,Mode | DetectHiddenWindows({1})
       Drive,SubCommand,Value1,Value2 | *_Drive
@@ -156,6 +156,8 @@ Convert(ScriptString)
       RunWait,TargetT2E,WorkingDirT2E,OptionsT2E,OutputVarPIDV2VR | RunWait({1}, {2}, {3}, {4})
       SetEnv,var,valueT2E | {1} := {2}
       SetTimer,LabelCBE2E,PeriodOnOffDeleteCBE2E,PriorityCBE2E | *_SetTimer
+      SetTitleMatchMode,MatchModeT2QE | SetTitleMatchMode({1})
+      SetWinDelay,DelayT2QE | SetWinDelay({1})
       Send,keysT2E | Send({1})
       SendText,keysT2E | SendText({1})
       SendInput,keysT2E | SendInput({1})
@@ -172,6 +174,8 @@ Convert(ScriptString)
       SplashTextOff | SplashTextGui.Destroy
       SplashImage,ImageFileT2E,Options,SubTextT2E,MainTextT2E,WinTitleT2E,FontNameT2E | *_SplashImage
       SplitPath,varCBE2E,filenameV2VR,dirV2VR,extV2VR,name_no_extV2VR,drvV2VR | SplitPath({1}, {2}, {3}, {4}, {5}, {6})
+      StatusBarGetText,Part,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | {1} := StatusBarGetText({2}, {3}, {4}, {5})
+      StatusBarWait,BarTextT2E,Timeout,Part,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E |  StatusBarWait({1}, {2}, {3}, {4}, {5}, {6})
       StringCaseSense,param | ;REMOVED StringCaseSense, {1}
       StringGetPos,OutputVar,InputVar,SearchTextT2E,SideT2E,OffsetCBE2E | *_StringGetPos
       StringLen,OutputVar,InputVar | {1} := StrLen({2})
@@ -2294,7 +2298,6 @@ _MsgBox(p){
                options.= " T" Timeout
             }
             title:= ToExp(p[2])
-
          }
       }
       else if (isNumber(p[p.Length]) and p.Length>3){
@@ -2312,7 +2315,7 @@ _MsgBox(p){
       return Out
    }
    else if RegExMatch(p[1], "i)^\s*.*"){
-      Out :=  format("MsgBox({1})",  ToExp(p[1]))
+      Out :=  format("MsgBox({1})",  p[1]="" ? "" : ToExp(p[1]))
       if ScriptStringsUsed.IfMsgBox{
          Out := "msgResult := " Out 
       }

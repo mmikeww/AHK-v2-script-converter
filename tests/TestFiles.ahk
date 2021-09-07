@@ -2,8 +2,7 @@
 
 #Include ..\ConvertFuncs.ahk
 #Include ExecScript.ahk
-#Include AddBracket.ah2
-#Include ..\ConvertFuncs.ahk
+
 
 global icons
 FileTempScript := A_ScriptDir "\TempScript.ah1"

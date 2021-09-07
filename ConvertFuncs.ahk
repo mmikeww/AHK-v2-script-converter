@@ -6,6 +6,7 @@
 
 Convert(ScriptString)
 {
+
    global ScriptStringsUsed := Array() ; Keeps an array of interesting strings used in the script
    ScriptStringsUsed.ErrorLevel := InStr(ScriptString, "ErrorLevel")
    ScriptStringsUsed.IfMsgBox := InStr(ScriptString, "IfMsgBox")
@@ -1162,7 +1163,8 @@ Convert(ScriptString)
    ; Convert labels listed in aListLabelsToFunction
    Loop aListLabelsToFunction.Length {
       if aListLabelsToFunction[A_Index].label
-      ScriptOutput := ConvertLabel2Func(ScriptOutput, aListLabelsToFunction[A_Index].label, aListLabelsToFunction[A_Index].parameters)
+      ScriptOutput := ConvertLabel2Func(ScriptOutput, aListLabelsToFunction[A_Index].label, aListLabelsToFunction[A_Index].parameters, aListLabelsToFunction[A_Index].HasOwnProp("NewFunctionName") ? aListLabelsToFunction[A_Index].NewFunctionName : "", aListLabelsToFunction[A_Index].HasOwnProp("aRegexReplaceList") ? aListLabelsToFunction[A_Index].aRegexReplaceList : "")
+      
    }
 
    If InStr(ScriptOutput,"OnClipboardChange:"){
@@ -1178,6 +1180,9 @@ Convert(ScriptString)
    ; trim the very last newline that we add to every line (a few code lines above)
    if (SubStr(ScriptOutput, -2) = "`r`n")
       ScriptOutput := SubStr(ScriptOutput, 1, -2)
+
+   ; Add Brackets to Hotkeys
+   ScriptOutput := AddBracket(ScriptOutput)
 
    return ScriptOutput
 }
@@ -1633,7 +1638,7 @@ _Gui(p){
 
          ControlObject := InStr(ControlName, SubStr(Var2,1,4)) ? "ogc" ControlName : "ogc" Var2 ControlName
          mGuiCObject[ControlName] := ControlObject
-         if (Var2!="Pic" and Var2!="Picture" and Var2!="Text" and Var2!="Button" and Var2!="Link"){ ; Exclude Controls from the submit (this generates an error)
+         if (Var2!="Pic" and Var2!="Picture" and Var2!="Text" and Var2!="Button" and Var2!="Link" and Var2!="Progress" and Var2!="GroupBox" and Var2!="Statusbar" and Var2!="ActiveX"){ ; Exclude Controls from the submit (this generates an error)
             if (GuiVList.Has(GuiNameLine)){
                GuiVList[GuiNameLine] .= "`r`n" ControlName
             }
@@ -1699,7 +1704,10 @@ _Gui(p){
          if(var2="TreeView" and ControlObject!=""){
             TreeViewNameDefault := ControlObject
          }
-         if(var2="StatusBar" and ControlObject!=""){
+         if(var2="StatusBar" ){
+            if (ControlObject=""){
+               ControlObject := StatusBarNameDefault
+            }
             StatusBarNameDefault := ControlObject
          }
          if(var2="Button" or var2="ListView" or ControlLabel!="" or ControlObject!=""){
@@ -1820,12 +1828,18 @@ _GuiControl(p){
    ControlObject := mGuiCObject.Has(ControlID) ? mGuiCObject[ControlID] : "ogc" ControlID
 
    Type := mGuiCType.Has(ControlObject) ? mGuiCType[ControlObject] : ""
+   
+   if (SubCommand=""){
+      if (Type="Groupbox" or Type="Button" or Type="Link"){
+         SubCommand := "Text" 
+      }
+      else if (Type="Radio" and (Value!="0" or Value!="1" or Value!="-1" or InStr(Value,"%")) ){
+         SubCommand := "Text" 
+      }
+   }
    if (SubCommand=""){
       ; Not perfect, as this should be dependent on the type of control
       
-      if (Type="Button" or Type="Link"){
-         return ControlObject ".Text := " ToExp(Value) 
-      }
       if (Type="ListBox" or Type="DropDownList" or Type="ComboBox" or Type="tab"){
          PreSelected := ""
          If (SubStr(Value,1,1)="|"){
@@ -1885,6 +1899,29 @@ _GuiControl(p){
       return ControlObject ".Value := " ToExp(Value)
    }
    else if (SubCommand="Text"){
+      if (Type="ListBox" or Type="DropDownList" or Type="tab"  or Type~="i)tab\d"){
+         PreSelected := ""
+         If (SubStr(Value,1,1)="|"){
+            Value := SubStr(Value,2)
+            Out .= ControlObject ".Delete() `;Clean the list`r`n" Indentation
+         }
+         ObjectValue := "[" 
+         Loop Parse Value, "|", " "
+         {
+            if (A_LoopField="" and A_Index!=1){
+               PreSelected := LoopFieldPrev
+               continue
+            }
+            ObjectValue.= ObjectValue="[" ? ToStringExpr(A_LoopField) : ", " ToStringExpr(A_LoopField)
+            LoopFieldPrev:= A_LoopField
+         }
+         ObjectValue .= "]"
+         Out .= ControlObject ".Add(" ObjectValue ")"
+         if (PreSelected!=""){
+            Out .= "`r`n" Indentation ControlID ".ChooseString(" ToStringExpr(PreSelected) ")"
+         }
+         Return Out
+      }
       Return ControlObject ".Text := " ToExp(Value)
    }
    else if (SubCommand="Move" or SubCommand="MoveDraw"){
@@ -2441,7 +2478,8 @@ _Object(p){
 _OnExit(p){
    ;V1 OnExit,Func,AddRemove
    if RegexMatch(Orig_ScriptString,"\n(\s*)" p[1] ":\s"){
-      aListLabelsToFunction.Push({label: p[1], parameters:"A_ExitReason, ExitCode"})
+      aListLabelsToFunction.Push({label: p[1], parameters:"A_ExitReason, ExitCode", aRegexReplaceList : [{NeedleRegEx: "i)^(.*)\bReturn\b([\s\t]*;.*|)$",Replacement : "$1Return 1$2"}]})
+      
    }
    ; return needs to be replaced by return 1 inside the exitcode
    Return Format("OnExit({1}, {2})",p*)
@@ -2497,7 +2535,7 @@ _RegExMatch(p){
 
 _SB_SetText(p){
    global StatusBarNameDefault
-   Return format("{1}.SetText({2}, {3}, {4})", StatusBarNameDefault)
+   Return format("{1}.SetText({2}, {3}, {4})", StatusBarNameDefault,p*)
 }
 _SB_SetParts(p){
    global StatusBarNameDefault,gFunctPar
@@ -3287,7 +3325,7 @@ Format2(FormatStr , Values*){
    return Format(FormatStr , Values*)
 }
 
-  ;// Param format:
+;// Param format:
    ;//          - param names ending in "T2E" will convert a literal Text param TO an Expression
    ;//              this would be used when converting a Command to a Func or otherwise needing an expr
    ;//              such as      word -> "word"      or      %var% -> var
@@ -3312,6 +3350,8 @@ Format2(FormatStr , Values*){
    ;//          - any other param name will not be converted
    ;//              this means that the literal text of the parameter is unchanged
    ;//              this would be used for InputVar/OutputVar params, or whenever you want the literal text preserved
+
+
 ParameterFormat(ParName,ParValue){
    ParName := StrReplace(ParName,"*") ; Remove the *, that indicate an array
    ParValue := Trim(ParValue)
@@ -3433,12 +3473,13 @@ AssArr2Map(ScriptString){
 ; Parameters          :  Parameters to use
 ; NewFunctionName     :  Name of new function
 ; aRegexReplaceList   :  Array with objects with NeedleRegEx and Replacement properties to be used in the label
-;                         example: [NeedleRegEx: "(.*)V1(.*)",Replacement : "$1V2$2"]
+;                         example: [{NeedleRegEx: "(.*)V1(.*)",Replacement : "$1V2$2"}]
 ConvertLabel2Func(ScriptString, Label, Parameters:="", NewFunctionName :="", aRegexReplaceList:=""){
     oScriptString := StrSplit(ScriptString, "`n", "`r")
     Result := ""
     LabelPointer := 0 ; active searching for the end of the hotkey
     LabelStart := 0 ; active searching for the beginning of the bracket
+    RegexPointer := 0
     RestString := ScriptString ;Used to have a string to look the rest of the file
     if (NewFunctionName=""){ ; Use Labelname if no FunctionName is defined
        NewFunctionName := Label
@@ -3446,7 +3487,7 @@ ConvertLabel2Func(ScriptString, Label, Parameters:="", NewFunctionName :="", aRe
     loop oScriptString.Length {
         Line := oScriptString[A_Index]
         
-         if (LabelPointer=1 or LabelStart=1){
+         if (LabelPointer=1 or LabelStart=1 or RegexPointer=1){
             if IsObject(aRegexReplaceList){
                Loop aRegexReplaceList.Length {
                   if aRegexReplaceList[A_Index].NeedleRegEx
@@ -3454,25 +3495,29 @@ ConvertLabel2Func(ScriptString, Label, Parameters:="", NewFunctionName :="", aRe
                      ;MsgBox(Line "`n" aRegexReplaceList[A_Index].NeedleRegEx "`n" aRegexReplaceList[A_Index].Replacement)
                }
             }
-        }
+         }
 
-        if (LabelPointer=1){
+        if (LabelPointer=1 or RegexPointer=1){
             if RegExMatch(RestString,"is)^\s*([\w]+?\([^\)]*\)[\s\n\r]*(`;[^\r\n]*|)([\s\n\r]*){).*"){ ; Function declaration detection
                 ; not bulletproof perfect, but a start
-                Result .= "} `; V1toV2: Added bracket before function`r`n"
+                Result .= LabelPointer=1 ? "} `; V1toV2: Added bracket before function`r`n" : ""
                 LabelPointer := 0
+                RegexPointer := 0
             }
         }
         if (RegExMatch(Line,"i)^(\s*;).*") or RegExMatch(Line,"i)^(\s*)$")){ ; comment or empty
             ; Do noting
         }
         else if (RegExMatch(Line,"i)^\s*[\s`n`r\t]*([^;`n`r\s\{}\[\]\=:]+?\:\:).*")>0){ ; Hotkey or string
-            if (LabelPointer=1){
-                Result .= "} `; V1toV2: Added Bracket before hotkey or Hotstring`r`n"
+            if (LabelPointer=1 or RegexPointer=1){
+                Result .= LabelPointer=1 ? "} `; V1toV2: Added Bracket before hotkey or Hotstring`r`n" : ""
                 LabelPointer := 0
+                RegexPointer := 0
             }
             if (RegExMatch(Line,"i)^\s*[\s`n`r\t]*([^;`n`r\s\{}\[\]\=:]+?\:\:\s*[^\s;].+)")>0){
                 ; oneline detected do noting
+                LabelPointer := 0
+                RegexPointer := 0
             }
         }
         else If (LabelStart=1){
@@ -3485,30 +3530,41 @@ ConvertLabel2Func(ScriptString, Label, Parameters:="", NewFunctionName :="", aRe
             }
             LabelStart := 0
         }
-        if (LabelPointer=1){
+        if (LabelPointer=1 or RegexPointer=1){
             if (RegExMatch(RestString,"is)^[\s`n`r\t]*([^;`n`r\s\{}\[\]\=:]+?\:\:).*")>0){ ; Hotkey or string
-                Result .= "} `; V1toV2: Added Bracket before hotkey or Hotstring`r`n"
+                Result .= LabelPointer=1 ? "} `; V1toV2: Added Bracket before hotkey or Hotstring`r`n" : ""
                 LabelPointer := 0
+                RegexPointer := 0
             }
-            else if (RegExMatch(RestString,"is)^(|;[^\n]*\n)*[\s`n`r\t]*([^;`n`r\s\{}\[\]\=:]+?\:\s).*")>0 and RegExMatch( oScriptString[A_Index-1],"is)^[\s`n`r\t]*(return|exitapp|exit).*")>0){ ; Label
-                Result .= "} `; V1toV2: Added Bracket before label`r`n"
+            else if (RegExMatch(RestString,"is)^(|;[^\n]*\n)*[\s`n`r\t]*\}?[\s`n`r\t]*([^;`n`r\s\{}\[\]\=:]+?\:\s).*")>0 and RegExMatch( oScriptString[A_Index-1],"is)^[\s`n`r\t]*(return|exitapp|exit).*")>0){ ; Label
+                Result .= LabelPointer=1 ? "} `; V1toV2: Added Bracket before label`r`n" : ""
                 LabelPointer := 0
+                RegexPointer := 0
             }
-            else if (RegExMatch(RestString,"is)^[\s`n`r\t]*(`;[^\r\n]*|)([\s\n\r\t]*)$")>0 and RegExMatch( oScriptString[A_Index-1],"is)^[\s`n`r\t]*(return).*")>0){ ; Label
-                Result .= "} `; V1toV2: Added bracket in the end`r`n"
+            else if (RegExMatch(RestString,"is)^[\s`n`r\t]*\}?[\s`n`r\t]*(`;[^\r\n]*|)([\s\n\r\t]*)$")>0 and RegExMatch( oScriptString[A_Index-1],"is)^[\s`n`r\t]*(return).*")>0){ ; Label
+                Result .= LabelPointer=1 ? "} `; V1toV2: Added bracket in the end`r`n" : ""
                 LabelPointer := 0
+                RegexPointer := 0
             }
         }
         ; This check needs to be at the bottom.
         if Instr(Line, Label ":"){
             If RegexMatch(Line,"is)^(\s*|.*\n\s*)(\Q" Label "\E):(.*)", &Var){
                 if RegExMatch(Line,"is)(\s*)(\Q" Label "\E):(\s*[^\s;].+)"){
-                    ;Oneline detected
-                    Line := Var[1] NewFunctionName "(" Parameters "){`r`n   " Var[3] "`r`n}"
+                     ;Oneline detected
+                     Line := Var[1] NewFunctionName "(" Parameters "){`r`n   " Var[3] "`r`n}"
+                     if IsObject(aRegexReplaceList){
+                     Loop aRegexReplaceList.Length {
+                        if aRegexReplaceList[A_Index].NeedleRegEx
+                           Line := RegExReplace(Line, aRegexReplaceList[A_Index].NeedleRegEx, aRegexReplaceList[A_Index].Replacement)
+                           ;MsgBox(Line "`n" aRegexReplaceList[A_Index].NeedleRegEx "`n" aRegexReplaceList[A_Index].Replacement)
+                     }
+                  }
                 }
                 else{
                     Line := Var[1] NewFunctionName "(" Parameters ")" Var[3]
                     LabelStart := 1
+                    RegexPointer:=1
                 }
             }
         }
@@ -3519,6 +3575,75 @@ ConvertLabel2Func(ScriptString, Label, Parameters:="", NewFunctionName :="", aRe
     if (LabelPointer=1){
         Result .= "} `; Added bracket in the end`r`n"
     }
+    return Result
+}
+
+; Adds Brakets to hotkeys
+AddBracket(ScriptString){
+    oScriptString := StrSplit(ScriptString, "`n", "`r")
+    Result := ""
+    HotkeyPointer := 0 ; active searching for the end of the hotkey
+    HotkeyStart := 0 ; active searching for the beginning of the bracket
+    RestString := ScriptString ;Used to have a string to look the rest of the file
+
+    loop oScriptString.Length {
+        Line := oScriptString[A_Index]
+        
+        if (HotkeyPointer=1){
+            if RegExMatch(RestString,"is)^\s*([\w]+?\([^\)]*\)[\s\n\r]*(`;[^\r\n]*|)([\s\n\r]*){).*"){ ; Function declaration detection
+                ; not bulletproof perfect, but a start
+                Result .= "} `; Added bracket before function`r`n"
+                HotkeyPointer := 0
+            }
+        }
+        if (RegExMatch(Line,"i)^(\s*;).*") or RegExMatch(Line,"i)^(\s*)$")){ ; comment or empty
+            ; Do noting
+        }
+        else if (RegExMatch(Line,"i)^\s*[\s`n`r\t]*([^;`n`r\s\{}\[\]\=:]+?\:\:).*")>0){ ; Hotkey or string
+            if (HotkeyPointer=1){
+                Result .= "} `; V1toV2: Added Bracket before hotkey or Hotstring`r`n"
+                HotkeyPointer := 0
+            }
+            if (RegExMatch(Line,"i)^\s*[\s`n`r\t]*([^;`n`r\s\{}\[\]\=:]+?\:\:\s*[^\s;].+)")>0){
+                ; oneline detected do noting
+            }
+            else {
+                ; Hotkey detected start searching for start
+                HotkeyStart := 1
+            }
+        }
+        else If (HotkeyStart=1){
+            if (RegExMatch(Line,"i)^\s*({).*")){ ; Hotkey is already good :)
+                HotkeyPointer := 0
+            }
+            else{
+                Result .= "{ `; V1toV2: Added bracket`r`n"
+                HotkeyPointer := 1
+            }
+            HotkeyStart := 0
+        }
+        if (HotkeyPointer=1){
+            if (RegExMatch(RestString,"is)^[\s`n`r\t]*([^;`n`r\s\{}\[\]\=:]+?\:\:).*")>0){ ; Hotkey or string
+                Result .= "} `; V1toV2: Added Bracket before hotkey or Hotstring`r`n"
+                HotkeyPointer := 0
+            }
+            else if (RegExMatch(RestString,"is)^[\s`n`r\t]*([^;`n`r\s\{}\[\]\=:]+?\:\s).*")>0 and RegExMatch( oScriptString[A_Index-1],"is)^[\s`n`r\t]*(return).*")>0){ ; Label
+                Result .= "} `; V1toV2: Added Bracket before label`r`n"
+                HotkeyPointer := 0
+            }
+            else if (RegExMatch(RestString,"is)^[\s`n`r\t]*(`;[^\r\n]*|)([\s\n\r\t]*)$")>0 and RegExMatch( oScriptString[A_Index-1],"is)^[\s`n`r\t]*(return).*")>0){ ; Label
+                Result .= "} `; V1toV2: Added bracket in the end`r`n"
+                HotkeyPointer := 0
+            }
+        }
+        RestString := SubStr(RestString, InStr(RestString,"`n")+1)
+        Result .= Line
+        Result .= A_Index != oScriptString.Length ? "`r`n" : ""
+    }
+    if (HotkeyPointer=1){
+        Result .= "`r`n} `; V1toV2: Added bracket in the end`r`n"
+    }
+
     return Result
 }
 
@@ -3553,3 +3678,4 @@ GetAltLabelsMap(ScriptString){
     ; }
     return mAltLabels
 }
+

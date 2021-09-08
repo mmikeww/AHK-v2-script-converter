@@ -218,6 +218,7 @@ Convert(ScriptString)
       WinMenuSelectItem,WinTitleT2E,WinTextT2E,MenuT2E,SubMenu1T2E,SubMenu2T2E,SubMenu3T2E,SubMenu4T2E,SubMenu5T2E,SubMenu6T2E,ExcludeTitleT2E,ExcludeTextT2E | MenuSelect({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11})
       WinSet,SubCommand,ValueT2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | *_WinSet
       WinSetTitle,WinTitleT2E,WinTextT2E,NewTitleT2E,ExcludeTitleT2E,ExcludeTextT2E | *_WinSetTitle
+      WinRestore,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | WinRestore({1}, {2}, {3}, {4})
       WinShow,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | WinShow({1}, {2}, {3}, {4})
       WinWait,WinTitleT2E,WinTextT2E,TimeoutCBE2E,ExcludeTitleT2E,ExcludeTextT2E | *_WinWait
       WinWaitActive,WinTitleT2E,WinTextT2E,TimeoutCBE2E,ExcludeTitleT2E,ExcludeTextT2E | ErrorLevel := WinWaitActive({1}, {2}, {3}, {4}, {5}) , ErrorLevel := ErrorLevel = 0 ? 1 : 0

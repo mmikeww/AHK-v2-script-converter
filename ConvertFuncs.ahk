@@ -77,17 +77,17 @@ Convert(ScriptString)
       DriveSpaceFree,OutputVar,PathT2E | {1} := DriveGetSpaceFree({2})
       Click,keysT2E | Click({1})
       ClipWait,Timeout,WaitForAnyData | Errorlevel := !ClipWait({1}, {2})
-      Control,SubCommand,ValueT2E,ControlCBE2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | *_Control
-      ControlClick,Control-or-PosT2QE,WinTitleT2E,WinTextT2E,WhichButtonT2E,ClickCountT2E,OptionsT2E,ExcludeTitleT2E,ExcludeTextT2E | ControlClick({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8})
-      ControlFocus,ControlT2QE,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | ControlFocus({1}, {2}, {3}, {4}, {5})
-      ControlGet,OutputVar,SubCommand,ValueT2E,ControlT2QE,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | *_ControlGet
+      Control,SubCommand,ValueT2E,ControlT2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | *_Control
+      ControlClick,Control-or-PosT2E,WinTitleT2E,WinTextT2E,WhichButtonT2E,ClickCountT2E,OptionsT2E,ExcludeTitleT2E,ExcludeTextT2E | ControlClick({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8})
+      ControlFocus,ControlT2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | ControlFocus({1}, {2}, {3}, {4}, {5})
+      ControlGet,OutputVar,SubCommand,ValueT2E,ControlT2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | *_ControlGet
       ControlGetFocus,OutputVar,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | *_ControlGetFocus
-      ControlGetPos,XV2VR,YV2VR,WidthV2VR,HeightV2VR,ControlT2QE,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | ControlGetPos({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8})
-      ControlGetText,OutputVar,ControlCBE2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | {1} := ControlGetText({2}, {3}, {4}, {5}, {6})
-      ControlMove,ControlT2QE,XCBE2E,YCBE2E,WidthCBE2E,HeightT2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | ControlMove({2}, {3}, {4}, {5}, {1}, {6}, {7}, {8}, {9})
-      ControlSend,ControlT2QE,KeysT2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | ControlSend({2}, {1}, {3}, {4}, {5}, {6})
-      ControlSendRaw,ControlT2QE,KeysT2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | ControlSendText({2}, {1}, {3}, {4}, {5}, {6})
-      ControlSetText,ControlT2QE,NewTextT2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | ControlSetText({2}, {1}, {3}, {4}, {5}, {6})
+      ControlGetPos,XV2VR,YV2VR,WidthV2VR,HeightV2VR,ControlT2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | ControlGetPos({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8})
+      ControlGetText,OutputVar,ControlT2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | {1} := ControlGetText({2}, {3}, {4}, {5}, {6})
+      ControlMove,ControlT2E,XCBE2E,YCBE2E,WidthCBE2E,HeightT2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | ControlMove({2}, {3}, {4}, {5}, {1}, {6}, {7}, {8}, {9})
+      ControlSend,ControlT2E,KeysT2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | ControlSend({2}, {1}, {3}, {4}, {5}, {6})
+      ControlSendRaw,ControlT2E,KeysT2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | ControlSendText({2}, {1}, {3}, {4}, {5}, {6})
+      ControlSetText,ControlT2E,NewTextT2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | ControlSetText({2}, {1}, {3}, {4}, {5}, {6})
       CoordMode,TargetTypeT2E,RelativeToT2E | *_CoordMode
       DetectHiddenText,ModeOn2True | DetectHiddenText({1})
       DetectHiddenWindows,ModeOn2True | DetectHiddenWindows({1})
@@ -1377,35 +1377,25 @@ _Control(p){
    else if (p[1]="ChooseString"){
       p[1] := "ChooseString"
    }
-   else if (p[1]="EditPaste"){
-      return format("EditPaste({2},{3},{4},{5},{6})", p*)
+   Out := format("Control{1}({2},{3},{4},{5},{6})", p*)
+   if (p[1]="EditPaste"){
+      Out := format("EditPaste({2},{3},{4},{5},{6})", p*)
    }
    else if (p[1]="Show" || p[1]="ShowDropDown" || p[1]="HideDropDown" || p[1]="Hide"){
-      return format("Control{1}({3},{4},{5},{6})", p*)
+      Out := format("Control{1}({3},{4},{5},{6})", p*)
    }
-   return format("Control{1}({2},{3},{4},{5},{6})", p*)
+   return RegExReplace(Out, "[\s\,]*\)$", ")") 
 }
 
 _ControlGet(p){
    ;ControlGet, OutputVar, SubCommand , Value, Control, WinTitle, WinText, ExcludeTitle, ExcludeText
    ; unfinished
-   if (p[2]="List"){
-      if (p[3]!=""){
-         MsgBox("Listview, to be implemented")
-      }
-      p[2] := "Items"
-      Out := format("o{1} := Control{2}({3}, {4}, {5}, {6}, {7}, {8})", p*) "`r`n"
-      Out .= Indentation "for FileName in o " p[1] "`r`n"
-      Out .= Indentation "{`r`n"
-      Out .= Indentation p[1] " .= A_index=2 ? `"``r`n`" : `"`"`r`n"
-      Out .= Indentation p[1] " .= A_index=1 ? FileName : Regexreplace(FileName,`"^.*\\([^\\]*)$`" ,`"$1`") `"``r``n`"`n"
-      Out .= Indentation "}"
-   }
-   else if(p[2]="Tab" || p[2]="FindString"){
+
+   if(p[2]="Tab" || p[2]="FindString"){
       p[2] := "Index"
    }
    if (p[2]="Checked" || p[2]="Enabled" || p[2]="Visible" || p[2]="Index" || p[2]="Choice" || p[2]="Style" || p[2]="ExStyle"){
-      Out := format("{1} := Control{2}({4}, {5}, {6}, {7}, {8})", p*)
+      Out := format("{1} := ControlGet{2}({4}, {5}, {6}, {7}, {8})", p*)
    }
    else if (p[2]="LineCount"){
       Out := format("{1} := EditGetLineCount({4}, {5}, {6}, {7}, {8})", p*)
@@ -1425,6 +1415,23 @@ _ControlGet(p){
    else {
       Out := format("{1} := ControlGet{2}({3}, {4}, {5}, {6}, {7}, {8})", p*)
    }
+
+   if (p[2]="List"){
+      if (p[3]!=""){
+         Out := format("{1} := ListViewGetContent({3}, {4}, {5}, {6}, {7}, {8})", p*)
+      }
+      Else{
+         p[2] := "Items"
+         Out := format("o{1} := ControlGet{2}({4}, {5}, {6}, {7}, {8})", p*) "`r`n"
+         Out .= Indentation "loop o" p[1] ".length`r`n"
+         Out .= Indentation "{`r`n"
+         Out .= Indentation p[1] " .= A_index=1 ? `"`" : `"``n`"`r`n" ; Attenttion do not add ``r!!!
+         Out .= Indentation p[1] " .= o" p[1] "[A_Index] `r`n"
+         Out .= Indentation "}"
+      }
+ 
+   }
+
    Return RegExReplace(Out, "[\s\,]*\)$", ")")
 }
 
@@ -1775,13 +1782,18 @@ _Gui(p){
          }
          if (Var4!=""){
             if(RegExMatch(Var2, "i)^tab[23]?$") or Var2="ListView" or Var2="DropDownList" or Var2="ListBox" or Var2="ComboBox"){
-               LineResult.= ", [" 
-               oVar4 :=""
+               ObjectValue := "[" 
+               ChooseString :=""
                Loop Parse Var4, "|", " "
                {
-                  oVar4.= oVar4="" ? ToStringExpr(A_LoopField) : ", " ToStringExpr(A_LoopField)
+                  if (RegExMatch(Var2, "i)^tab[23]?$") and A_LoopField=""){
+                     ChooseString := "`" Choose" A_Index-1 "`""
+                     continue
+                  }
+                  ObjectValue.= ObjectValue="[" ? ToStringExpr(A_LoopField) : ", " ToStringExpr(A_LoopField)
                }
-               LineResult.= oVar4 "]"
+               ObjectValue .= "]"
+               LineResult.= ChooseString ", " ObjectValue 
             }
             else{
                LineResult.= ", " ToStringExpr(Var4)
@@ -2228,7 +2240,7 @@ _Loop(p){
       return Line
    }
    else{
-      Line := "Loop " Trim(ToExp(p[1]))
+      Line :=  p[1]!="" ? "Loop " Trim(ToExp(p[1])) : "Loop"
       return Line
    }
    ; Else no changes need to be made

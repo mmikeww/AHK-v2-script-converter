@@ -1,0 +1,2 @@
+; REMOVED: #NoEnv
+FileAppend("hi", "*")

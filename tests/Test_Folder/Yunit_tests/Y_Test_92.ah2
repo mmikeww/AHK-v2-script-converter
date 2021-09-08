@@ -1,0 +1,2 @@
+ToolTip("helloworld")
+FileAppend("hi", "*")

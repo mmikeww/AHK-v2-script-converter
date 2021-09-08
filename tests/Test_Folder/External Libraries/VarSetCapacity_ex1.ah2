@@ -1,0 +1,1 @@
+VarSetStrCapacity(&MyVar, 10240000)

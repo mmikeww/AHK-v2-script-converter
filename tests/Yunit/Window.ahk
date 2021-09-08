@@ -19,7 +19,7 @@ class YunitWindow
 		MyGui.SetFont("s10")
 		this.tv := MyGui.Add("TreeView","x10 y30 w" . (width-20) . " h" . (height-60) . " vYunitWindowEntries")
 		this.tv.SetImageList(hImageList)
-		
+		this.tv.OnEvent("ContextMenu", TV_ContextMenu)
 		MyGui.SetFont("s8")
 		MyGui.Add("StatusBar","vYunitWindowStatusBar -Theme BackgroundGreen")
 		MyGui.Opt("+Resize +MinSize320x200")
@@ -84,6 +84,15 @@ class YunitWindow
 			Parent := this.Categories[Category]
 		}
 	}
+
+}
+
+TV_ContextMenu(thisCtrl,Item,*){
+	Text := thisCtrl.GetText(Item)
+	TVMenu := Menu()
+	BoundFunc := SetClipboard.Bind(Text)
+    TVMenu.Add("Copy [" Text "]" , BoundFunc)
+	TVMenu.Show
 }
 
 YUnit_OnClose(Gui) {
@@ -98,3 +107,7 @@ YUnit_OnSize(MyGui, EventInfo, Width, Height) {
   Return
 }
 
+SetClipboard(Clipboard,*){
+	A_Clipboard := Clipboard
+	Return
+}

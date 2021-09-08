@@ -1,0 +1,1 @@
+Title := WinGetTitle("A")

@@ -1,0 +1,2 @@
+var := "hello"
+FileAppend(var, "*")

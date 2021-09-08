@@ -1,0 +1,1 @@
+DetectHiddenWindows, On

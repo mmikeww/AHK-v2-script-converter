@@ -1,0 +1,1 @@
+DetectHiddenText, Off

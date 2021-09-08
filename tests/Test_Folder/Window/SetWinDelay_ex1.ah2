@@ -1,0 +1,1 @@
+SetWinDelay(10)

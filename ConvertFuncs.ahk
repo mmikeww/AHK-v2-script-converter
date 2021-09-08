@@ -2359,6 +2359,24 @@ _Menu(p){
    Var3 := Trim(Var3)
    Var4 := Trim(Var4)
    DebugWindow(menuList "`r`n")
+   if (Var2="Default"){
+      return menuNameLine ".Default := " ToExp(Var3)
+   }
+   if (Var2="NoDefault"){
+      return menuNameLine ".Default := `"`""
+   }
+   if (Var2="Standard"){
+      return menuNameLine ".AddStandard()"
+   }
+   if (Var2="NoStandard"){
+      ; maybe keep track of added items, if menu is new, just Delete everything
+      return menuNameLine ".Delete() `; V1toV2: not 100% replacement of NoStandard, Only if NoStandard is used at the beginning"
+      ; alternative line:
+      ; return menuNameLine ".Delete(`"&Open`")`r`n" indentation menuNameLine ".Delete(`"&Help`")`r`n" indentation menuNameLine ".Delete(`"&Window Spy`")`r`n" indentation menuNameLine ".Delete(`"&Reload Script`")`r`n" indentation menuNameLine ".Delete(`"&Edit Script`")`r`n" indentation menuNameLine ".Delete(`"&Suspend Hotkeys`")`r`n" indentation menuNameLine ".Delete(`"&Pause Script`")`r`n" indentation menuNameLine ".Delete(`"E&xit`")`r`n"
+   }
+   if (Var2="DeleteAll"){
+      return menuNameLine ".Delete()"
+   }
    if (Var2="Add" and RegExCount3 and !RegExCount4){
       Var4 := Var3
       RegExCount4 := RegExCount3
@@ -2390,9 +2408,10 @@ _Menu(p){
    }
    if (RegExCount4){
       if (Var2="Add"){
-         LineResult.= ", " Var4
+         FunctionName := RegExReplace(Var4, "&","") ; Removes & from labels
+         LineResult.= ", " FunctionName
          if RegexMatch(Orig_ScriptString,"\n(\s*)" Var4 ":\s"){
-            aListLabelsToFunction.Push({label: Var4, parameters:"*"})
+            aListLabelsToFunction.Push({label: Var4, parameters:"A_ThisMenuItem, A_ThisMenuItemPos, MyMenu", NewFunctionName: FunctionName})
          }
       }
       else{
@@ -2405,8 +2424,8 @@ _Menu(p){
    if (RegExCount1){
       LineResult.= ")"
    }
-   Out := format("{1}", LineResult)
-   return Out  
+   
+   return LineResult  
 }
 
 _NumPut(p){

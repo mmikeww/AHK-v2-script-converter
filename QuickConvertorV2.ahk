@@ -3,7 +3,8 @@
 #Include ConvertFuncs.ahk
 ; #Include ExecScript.ahk
 
-
+global AhkV1Exe := "C:\Program Files\AutoHotkey\AutoHotkey.exe"
+global AhkV2Exe := A_ScriptDir . "\v2converter.exe"
 global icons
 FileTempScript := A_ScriptDir "\Tests\TempScript.ah1"
 TempV1Script := FileExist(FileTempScript) ? FileRead(FileTempScript) : ""
@@ -82,11 +83,11 @@ ButtonValidateConversion.OnEvent("Click", ButtonGenerateTest)
 
 ; Call Gui_Size whenever the window is resized:
 MyGui.OnEvent("Size", Gui_Size)
-; MyGui.OnEvent("Close", (*) => ExitApp())
+MyGui.OnEvent("Close", (*) => ExitApp())
 ; MyGui.OnEvent("Escape", (*) => ExitApp())
 
 FileMenu := Menu()
-FileMenu.Add "Run tests", (*) => Run('"C:\Program Files\AutoHotkey V2\AutoHotkey64.exe" "' A_ScriptDir 'Tests\Tests.ahk"')
+FileMenu.Add "Run tests", (*) => Run(A_ScriptDir "\Tests\Tests.exe")
 FileMenu.Add "Open test folder", (*) => Run(TreeRoot)
 FileMenu.Add()
 FileMenu.Add "E&xit", (*) => ExitApp()
@@ -123,7 +124,6 @@ RunV1(*){
         MenuShowSymols()
     }
     TempAhkFile := A_MyDocuments "\testV1.ahk"
-    AhkV1Exe :=  "C:\Program Files\AutoHotkey\AutoHotkey.exe"
     oSaved := MyGui.Submit(0)  ; Save the contents of named controls into an object.
     try {
         FileDelete TempAhkFile
@@ -146,7 +146,6 @@ RunV2(*){
         MenuShowSymols()
     }
     TempAhkFile := A_MyDocuments "\testV2.ahk"
-    AhkV2Exe := "C:\Program Files\AutoHotkey V2\AutoHotkey64.exe"
     oSaved := MyGui.Submit(0)  ; Save the contents of named controls into an object.
     try {
         FileDelete TempAhkFile
@@ -169,7 +168,6 @@ CompVscV2(*){
         MenuShowSymols()
     }
     TempAhkFileV2 := A_MyDocuments "\testV2.ahk"
-    AhkV2Exe := "C:\Program Files\AutoHotkey V2\AutoHotkey64.exe"
     oSaved := MyGui.Submit(0)  ; Save the contents of named controls into an object.
     try {
         FileDelete TempAhkFileV2
@@ -177,7 +175,6 @@ CompVscV2(*){
     FileAppend oSaved.vCodeV2 , TempAhkFileV2
     
     TempAhkFileV1 := A_MyDocuments "\testV1.ahk"
-    AhkV1Exe :=  "C:\Program Files\AutoHotkey\AutoHotkey.exe"
     oSaved := MyGui.Submit(0)  ; Save the contents of named controls into an object.
     try {
         FileDelete TempAhkFileV1
@@ -192,7 +189,6 @@ RunV2E(*){
         MenuShowSymols()
     }
     TempAhkFile := A_MyDocuments "\testV2E.ahk"
-    AhkV2Exe := "C:\Program Files\AutoHotkey V2\AutoHotkey64.exe"
     oSaved := MyGui.Submit(0)  ; Save the contents of named controls into an object.
     try {
         FileDelete TempAhkFile

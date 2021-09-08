@@ -1,0 +1,1 @@
+ControlSetText("New Text Here", "Edit1", "Untitled -")

@@ -1,0 +1,1 @@
+WinSetRegion("50-0 W200 H250 R40-40", "ahk_class Notepad")

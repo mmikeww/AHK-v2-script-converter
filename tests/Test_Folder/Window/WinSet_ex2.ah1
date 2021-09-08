@@ -1,0 +1,1 @@
+WinSet, TransColor, White, Untitled - Notepad

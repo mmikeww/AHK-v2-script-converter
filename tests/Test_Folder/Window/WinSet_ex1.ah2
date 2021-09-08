@@ -1,0 +1,1 @@
+WinSetTransparent(200, "Untitled - Notepad")

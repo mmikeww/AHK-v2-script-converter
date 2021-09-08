@@ -1,0 +1,1 @@
+WinSet, Transparent, 200, Untitled - Notepad

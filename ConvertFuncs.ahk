@@ -1159,7 +1159,7 @@ Convert(ScriptString)
 
       ; Correction PseudoArray to Array
       Loop aListPseudoArray.Length{
-         Line := ConvertPseudoArray(Line,aListPseudoArray[A_Index])
+         Line := ConvertPseudoArray(Line,aListPseudoArray[A_Index].name,aListPseudoArray[A_Index].HasOwnProp("newname") ? aListPseudoArray[A_Index].newname : "")
       }
 
       ; Correction PseudoArray to Array
@@ -2531,12 +2531,14 @@ _RegExMatch(p){
          P[2] := RegExReplace(P[2],"(^[^(]*)O([^(]*\).*$)","$1$2") ; Remove the "O from the options"
       }
       else if RegexMatch(P[2],"^\(.*\)"){
-         aListPseudoArray.Push(OutputVar)
+         ; aListPseudoArray.Push(OutputVar)
+         aListPseudoArray.Push({name:OutputVar})
       }
       else {
          
          ; beneath the line, we sould write : Indentation OutputVar " := " OutputVar "[]"
-         aListPseudoArray.Push(OutputVar)
+         ; aListPseudoArray.Push(OutputVar)
+         aListPseudoArray.Push({name:OutputVar})
 
       }
   }
@@ -2563,6 +2565,7 @@ _SetTimer(p){
    }
    else{
       Out := format("SetTimer({1},{2},{3})",p*)
+      aListLabelsToFunction.Push({label: p[1], parameters:""})
    }
    
    Return RegExReplace(Out, "[\s\,]*\)$", ")")
@@ -2848,7 +2851,8 @@ _StringSplit(p){
    ;V1 StringSplit,OutputArray,InputVar,DelimitersT2E,OmitCharsT2E
    ; Output should be checked to replace OutputArray\d to OutputArray[\d]
    global aListPseudoArray
-   aListPseudoArray.Push(Trim(p[1]))
+   ;aListPseudoArray.Push(Trim(p[1]))
+   aListPseudoArray.Push({name:Trim(p[1])})
    Out := Format("{1} := StrSplit({2},{3},{4})",p*)
    Return RegExReplace(Out, "[\s\,]*\)$", ")")
 }
@@ -2936,12 +2940,21 @@ _WinGet(p) {
    p[2]:= p[2]="ControlList" ? "Controls" : p[2]
    
    Out := format("{1} := WinGet{2}({3},{4},{5},{6})", p*)
-   if (P[2]="Class" || P[2]="List" || P[2]="Controls" || P[2]="ControlsHwnd" ||  P[2]="ControlsHwnd"){
+   if (P[2]="Class" || P[2]="Controls" || P[2]="ControlsHwnd" ||  P[2]="ControlsHwnd"){
       Out := format("o{1} := WinGet{2}({3},{4},{5},{6})", p*) "`r`n"
       Out .= Indentation "For v in o" P[1] "`r`n"
       Out .= Indentation "{`r`n"
       Out .= Indentation "   " P[1] " .= A_index=1 ? v : `"``r``n`" v`r`n"
       Out .= Indentation "}"
+   }
+   if (P[2]="List"){
+      Out := format("o{1} := WinGet{2}({3},{4},{5},{6})", p*) "`r`n"
+      Out .= Indentation "a" P[1] " := Array()`r`n"
+      Out .= Indentation P[1] " := o" P[1] ".Length`r`n"
+      Out .= Indentation "For v in o" P[1] "`r`n"
+      Out .= Indentation "{   a" P[1] ".Push(v)`r`n"
+      Out .= Indentation "}"
+      aListPseudoArray.Push({name: P[1],newname: "a" P[1]})
    }
    Return RegExReplace(Out, "[\s\,]*\)$", ")")  
 }
@@ -3416,14 +3429,22 @@ ParameterFormat(ParName,ParValue){
 ;// Converts PseudoArray to Array
 ;//  Example array123 => array[123]
 ;//  Example array%A_index% => array[A_index]
-ConvertPseudoArray(ScriptStringInput,ArrayName){
+ConvertPseudoArray(ScriptStringInput,ArrayName,NewName:=""){
+   if (NewName=""){
+      NewName := ArrayName
+   }
     if InStr(ScriptStringInput,ArrayName){ ; InStr is faster than only Regex
       Loop { ; arrayName0 = arrayName.Length
-         ScriptStringInput := RegExReplace(ScriptStringInput, "is)(^(|.*[^\w])" ArrayName ")0(([^\w].*|)$)", "$1.Length$4",&OutputVarCount)   
+         ScriptStringInput := RegExReplace(ScriptStringInput, "is)(^(|.*[^\w]))" ArrayName "0(([^\w].*|)$)", "$1" NewName ".Length$4",&OutputVarCount)   
       } Until OutputVarCount = 0
       Loop {
-         ScriptStringInput := RegExReplace(ScriptStringInput, "is)(^(|.*[^\w])" ArrayName ")(%(\w+)%|(\d+))(([^\w].*|)$)", "$1[$4$5]$6",&OutputVarCount)   
+         ScriptStringInput := RegExReplace(ScriptStringInput, "is)(^(|.*[^\w]))" ArrayName "(%(\w+)%|(\d+))(([^\w].*|)$)", "$1" NewName "[$4$5]$6",&OutputVarCount)   
       } Until OutputVarCount = 0
+      if (NewName != ArrayName){
+         Loop {
+            ScriptStringInput := RegExReplace(ScriptStringInput, "is)(^(|.*[^\w]))" ArrayName "(\[(.*)$)", "$1" NewName "[$3",&OutputVarCount)   
+         } Until OutputVarCount = 0
+      }
     }
     Return ScriptStringInput
 }

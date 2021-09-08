@@ -2977,11 +2977,9 @@ _WinMove(p){
 }
 
 _WinSet(p) {
+   
    if (p[1]="AlwaysOnTop"){
-         p[2] := p[2]="on" ? 1 : p[2]="off" ? 0 : p[2]="toggle" ? -1 : p[2]  
-   }
-   if (p[1]="Region" or p[1]="Style" or p[1]="ExStyle"){
-      p[2] :=  ToExp(p[2])
+         p[2] := p[2]="`"on`"" ? 1 : p[2]="`"off`"" ? 0 : p[2]="`"toggle`"" ? -1 : p[2]  
    }
    if (p[1]="Bottom"){
       Out := format("WinMoveBottom({2}, {3}, {4}, {5}, {6})", p*)

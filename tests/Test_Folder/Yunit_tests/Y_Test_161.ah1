@@ -1,0 +1,2 @@
+WinGetActiveTitle, OutputVar
+FileAppend, %OutputVar%, *

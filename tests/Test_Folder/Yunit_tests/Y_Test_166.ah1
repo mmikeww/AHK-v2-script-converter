@@ -1,0 +1,1 @@
+MsgBox, 4, , 4-parameter method: this MsgBox will time out in 5 seconds.  Continue?, 5

@@ -282,6 +282,7 @@ Convert(ScriptString)
       SB_SetIcon(Filename,IconNumber,PartNumber) | *_SB_SetIcon
       MenuGetHandle(MenuNameQ2T) | {1}.Handle
       MenuGetName(Handle) | MenuFromHandle({1})
+      NumGet(VarOrAddress,Offset,Type) | *_NumGet
       NumPut(Number,VarOrAddress,Offset,Type) | *_NumPut
       Object(Array*) | *_Object
       OnError(FuncQ2T,AddRemove) | OnError({1}, {2})
@@ -1456,10 +1457,10 @@ _DllCall(p){
    ParBuffer :=""
    loop p.Length
    {
-      if (p[A_Index] ~= "^&"){ ; Remove the & parameter
+      if !(p[A_Index] ~= "^&"){ ; Remove the & parameter
          p[A_Index] := SubStr(p[A_Index], 2)
       }
-      if (A_Index !=1 and (InStr(p[A_Index-1] ,"*`"") or InStr(p[A_Index-1] ,"*`'"))){
+      if (A_Index !=1 and (InStr(p[A_Index-1] ,"*`"") or InStr(p[A_Index-1] ,"*`'") or InStr(p[A_Index-1] ,"P`"") or InStr(p[A_Index-1] ,"P`'"))){
          p[A_Index] := "&" p[A_Index]
          if (!InStr(p[A_Index] ,":=")){
             p[A_Index] .= " := 0"
@@ -2430,6 +2431,16 @@ _Menu(p){
    }
    
    return LineResult  
+}
+
+_NumGet(p){
+   ;V1: NumGet(VarOrAddress , Offset := 0, Type := "UPtr")
+   ;V2: NumGet(Source, Offset, Type)
+   if (p[2]="" and p[3]=""){
+      p[2] := '"UPtr"'
+   }
+   Out := "NumGet(" P[1] ", " p[2] ", " p[3] ")"
+   Return RegExReplace(Out, "[\s\,]*\)$", ")")
 }
 
 _NumPut(p){

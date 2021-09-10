@@ -1457,7 +1457,7 @@ _DllCall(p){
    ParBuffer :=""
    loop p.Length
    {
-      if !(p[A_Index] ~= "^&"){ ; Remove the & parameter
+      if (p[A_Index] ~= "^&"){ ; Remove the & parameter
          p[A_Index] := SubStr(p[A_Index], 2)
       }
       if (A_Index !=1 and (InStr(p[A_Index-1] ,"*`"") or InStr(p[A_Index-1] ,"*`'") or InStr(p[A_Index-1] ,"P`"") or InStr(p[A_Index-1] ,"P`'"))){

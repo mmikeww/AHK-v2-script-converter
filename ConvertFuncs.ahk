@@ -53,6 +53,9 @@ Convert(ScriptString)
    ;//          - param names ending in "T2QE" will convert a literal Text param TO an Quoted Expression
    ;//              this would be used when converting a Command to a expr
    ;//              This is the same as T2E, but will return an "" if empty.
+   ;//          - param names ending in "Q2T" will convert a Quoted Text param TO text
+   ;//              this would be used when converting a function variable that holds a label or function
+   ;//              "WM_LBUTTONDOWN" => WM_LBUTTONDOWN
    ;//          - param names ending in "CBE2E" would convert parameters that 'Can Be an Expression TO an EXPR' 
    ;//              this would only be used if the conversion goes from Command to Func 
    ;//              we'd need to strip a preceeding "% " which was used to force an expr when it was unnecessary 
@@ -281,8 +284,9 @@ Convert(ScriptString)
       MenuGetName(Handle) | MenuFromHandle({1})
       NumPut(Number,VarOrAddress,Offset,Type) | *_NumPut
       Object(Array*) | *_Object
-      OnError(FuncQ2T,AddRemove) | OnError({1},{2})
-      OnClipboardChange(FuncQ2T,AddRemove) | OnClipboardChange({1},{2})
+      OnError(FuncQ2T,AddRemove) | OnError({1}, {2})
+      OnMessage(MsgNumber, FunctionQ2T, MaxThreads) | OnMessage({1}, {2}, {3})
+      OnClipboardChange(FuncQ2T,AddRemove) | OnClipboardChange({1}, {2})
       Asc(String) | Ord({1})
       VarSetCapacity(TargetVar,RequestedCapacity,FillByte) | *_VarSterCapacity
    )"
@@ -3388,6 +3392,9 @@ Format2(FormatStr , Values*){
    ;//          - param names ending in "T2QE" will convert a literal Text param TO an Quoted Expression
    ;//              this would be used when converting a Command to a expr
    ;//              This is the same as T2E, but will return an "" if empty.
+   ;//          - param names ending in "Q2T" will convert a Quoted Text param TO text
+   ;//              this would be used when converting a function variable that holds a label or function
+   ;//              "WM_LBUTTONDOWN" => WM_LBUTTONDOWN
    ;//          - param names ending in "CBE2E" would convert parameters that 'Can Be an Expression TO an EXPR' 
    ;//              this would only be used if the conversion goes from Command to Func 
    ;//              we'd need to strip a preceeding "% " which was used to force an expr when it was unnecessary 

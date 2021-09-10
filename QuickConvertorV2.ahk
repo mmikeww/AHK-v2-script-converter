@@ -3,8 +3,7 @@
 #Include ConvertFuncs.ahk
 ; #Include ExecScript.ahk
 
-global AhkV1Exe := "C:\Program Files\AutoHotkey\AutoHotkey.exe"
-global AhkV2Exe := A_ScriptDir . "\v2converter.exe"
+
 global icons
 FileTempScript := A_ScriptDir "\Tests\TempScript.ah1"
 TempV1Script := FileExist(FileTempScript) ? FileRead(FileTempScript) : ""
@@ -50,44 +49,71 @@ M.Hide()
 ; Call TV_ItemSelect whenever a new item is selected:
 TV.OnEvent("ItemSelect", TV_ItemSelect)
 ButtonEvaluateTests := MyGui.Add("Button", "", "Evaluate Tests")
+ButtonEvaluateTests.StatusBar := "Evaluate tests again"
 ButtonEvaluateTests.OnEvent("Click", AddSubFoldersToTree.Bind(TreeRoot, DirList,"0"))
 CheckBoxViewSymbols := MyGui.Add("CheckBox", "yp x+50", "View Symbols")
+CheckBoxViewSymbols.StatusBar := "Display invisible symbols like spaces, tabs and linefeeds"
 CheckBoxViewSymbols.OnEvent("Click", ViewSymbols)
 V1Edit := MyGui.Add("Edit", "x280 y0 w600 vvCodeV1 +Multi +WantTab", strV1Script)  ; Add a fairly wide edit control at the top of the window.
+V1Edit.OnEvent("Change",Edit_Change)
 ButtonRunV1 := MyGui.Add("Button", "w60", "Run V1")
+ButtonRunV1.StatusBar := "Run the converted V2 code"
 ButtonRunV1.OnEvent("Click", RunV1)
 ButtonCloseV1 := MyGui.Add("Button", " x+10 yp w60 +Disabled", "Close V1")
+ButtonCloseV1.StatusBar := "Close the running V1 code"
 ButtonCloseV1.OnEvent("Click", CloseV1)
 oButtonConvert := MyGui.Add("Button", "default x+10 yp", "Convert =>")
+oButtonConvert.StatusBar := "Convert V1 code again to V2"
 oButtonConvert.OnEvent("Click", ButtonConvert)
 V2Edit := MyGui.Add("Edit", "x600 ym w600 vvCodeV2 +Multi +WantTab", "")  ; Add a fairly wide edit control at the top of the window.
+V2Edit.OnEvent("Change",Edit_Change)
 V2ExpectedEdit := MyGui.Add("Edit", "x1000 ym w600 H100 vvCodeV2Expected +Multi +WantTab", "")  ; Add a fairly wide edit control at the top of the window.
+V2ExpectedEdit.OnEvent("Change",Edit_Change)
 ButtonRunV2 := MyGui.Add("Button", "w60", "Run V2")
+ButtonRunV2.StatusBar := "Run this code in Autohotkey V2"
 ButtonRunV2.OnEvent("Click", RunV2)
 ButtonCloseV2 := MyGui.Add("Button", " x+10 yp w60 +Disabled", "Close V2" )
+ButtonCloseV2.StatusBar := "Close the running V2 code"
 ButtonCloseV2.OnEvent("Click", CloseV2)
+ButtonCompDiffV2 := MyGui.Add("Button", " x+10 yp w60", "Compare" )
+ButtonCompDiffV2.StatusBar := "Compare V1 and V2 code"
+ButtonCompDiffV2.OnEvent("Click", CompDiffV2)
 ButtonCompVscV2 := MyGui.Add("Button", " x+10 yp w80", "Compare VSC" )
+ButtonCompVscV2.StatusBar := "Compare V1 and V2 code in VS Code"
 if !FileExist("C:\Users\" A_UserName "\AppData\Local\Programs\Microsoft VS Code\Code.exe"){
     ButtonCompVscV2.Visible := 0
 }
 ButtonCompVscV2.OnEvent("Click", CompVscV2)
 ButtonRunV2E := MyGui.Add("Button", "w50", "Run V2E")
+ButtonRunV2.StatusBar := "Run expected V2 code"
 ButtonRunV2E.OnEvent("Click", RunV2E)
 ButtonCloseV2E := MyGui.Add("Button", " x+10 yp w60 +Disabled", "Close V2E" )
+ButtonCloseV2E.StatusBar := "Close the running expected V2 code"
 ButtonCloseV2E.OnEvent("Click", CloseV2E)
-CheckBoxV2E := MyGui.Add("CheckBox", "yp x+50 Checked", "View Expected Code")
+ButtonCompDiffV2E := MyGui.Add("Button", " x+10 yp w60", "Compare" )
+ButtonCompDiffV2E.StatusBar := "Compare V2 and expected V2 code"
+ButtonCompDiffV2E.OnEvent("Click", CompDiffV2E)
+ButtonCompVscV2E := MyGui.Add("Button", " x+10 yp w80", "Compare VSC" )
+ButtonCompVscV2E.StatusBar := "Compare V2 and Expected V2 code in VS Code"
+if !FileExist("C:\Users\" A_UserName "\AppData\Local\Programs\Microsoft VS Code\Code.exe"){
+    ButtonCompVscV2E.Visible := 0
+}
+CheckBoxV2E := MyGui.Add("CheckBox", "yp x+50 Checked", "View Expected")
+CheckBoxV2E.StatusBar := "Display expected V2 code if it exists"
 CheckBoxV2E.OnEvent("Click", ViewV2E)
 
 ButtonValidateConversion := MyGui.Add("Button", " x+10 yp", "Save as test")
+ButtonValidateConversion.StatusBar := "Save the converted code as valid test"
 ButtonValidateConversion.OnEvent("Click", ButtonGenerateTest)
 
 ; Call Gui_Size whenever the window is resized:
 MyGui.OnEvent("Size", Gui_Size)
-MyGui.OnEvent("Close", (*) => ExitApp())
+
+; MyGui.OnEvent("Close", (*) => ExitApp())
 ; MyGui.OnEvent("Escape", (*) => ExitApp())
 
 FileMenu := Menu()
-FileMenu.Add "Run tests", (*) => Run(A_ScriptDir "\Tests\Tests.exe")
+FileMenu.Add "Run tests", (*) => Run('"C:\Program Files\AutoHotkey V2\AutoHotkey64.exe" "' A_ScriptDir 'Tests\Tests.ahk"')
 FileMenu.Add "Open test folder", (*) => Run(TreeRoot)
 FileMenu.Add()
 FileMenu.Add "E&xit", (*) => ExitApp()
@@ -116,6 +142,7 @@ MyGui.Show
 if (strV1Script!=""){
     ButtonConvert(myGui)
 }
+OnMessage(0x0200, On_WM_MOUSEMOVE)
 Return
 }
 RunV1(*){
@@ -124,6 +151,7 @@ RunV1(*){
         MenuShowSymols()
     }
     TempAhkFile := A_MyDocuments "\testV1.ahk"
+    AhkV1Exe :=  "C:\Program Files\AutoHotkey\AutoHotkey.exe"
     oSaved := MyGui.Submit(0)  ; Save the contents of named controls into an object.
     try {
         FileDelete TempAhkFile
@@ -146,6 +174,7 @@ RunV2(*){
         MenuShowSymols()
     }
     TempAhkFile := A_MyDocuments "\testV2.ahk"
+    AhkV2Exe := "C:\Program Files\AutoHotkey V2\AutoHotkey64.exe"
     oSaved := MyGui.Submit(0)  ; Save the contents of named controls into an object.
     try {
         FileDelete TempAhkFile
@@ -168,13 +197,15 @@ CompVscV2(*){
         MenuShowSymols()
     }
     TempAhkFileV2 := A_MyDocuments "\testV2.ahk"
+    AhkV2Exe := "C:\Program Files\AutoHotkey V2\AutoHotkey64.exe"
     oSaved := MyGui.Submit(0)  ; Save the contents of named controls into an object.
     try {
         FileDelete TempAhkFileV2
     }
-    FileAppend oSaved.vCodeV2 , TempAhkFileV2
+    FileAppend V2Edit.text , TempAhkFileV2
     
     TempAhkFileV1 := A_MyDocuments "\testV1.ahk"
+    AhkV1Exe :=  "C:\Program Files\AutoHotkey\AutoHotkey.exe"
     oSaved := MyGui.Submit(0)  ; Save the contents of named controls into an object.
     try {
         FileDelete TempAhkFileV1
@@ -183,12 +214,95 @@ CompVscV2(*){
     Run "C:\Users\" A_UserName "\AppData\Local\Programs\Microsoft VS Code\Code.exe -d `"" TempAhkFileV1 "`" `"" TempAhkFileV2 "`""
     Return
 }
+
+CompVscV2E(*){
+    if (CheckBoxViewSymbols.Value){
+        MenuShowSymols()
+    }
+    TempAhkFileV2 := A_MyDocuments "\testV2.ahk"
+    AhkV2Exe := "C:\Program Files\AutoHotkey V2\AutoHotkey64.exe"
+    oSaved := MyGui.Submit(0)  ; Save the contents of named controls into an object.
+    try {
+        FileDelete TempAhkFileV2
+    }
+    FileAppend V2Edit.Text , TempAhkFileV2
+    
+    TempAhkFileV2E := A_MyDocuments "\testV2E.ahk"
+    AhkV1Exe :=  "C:\Program Files\AutoHotkey\AutoHotkey.exe"
+    oSaved := MyGui.Submit(0)  ; Save the contents of named controls into an object.
+    try {
+        FileDelete TempAhkFileV2E
+    }
+    FileAppend V2ExpectedEdit.Text, TempAhkFileV2E
+    Run "C:\Users\" A_UserName "\AppData\Local\Programs\Microsoft VS Code\Code.exe -d `"" TempAhkFileV2E "`" `"" TempAhkFileV2 "`""
+    Return
+}
+
+CompDiffV2(*){
+    if (CheckBoxViewSymbols.Value){
+        MenuShowSymols()
+    }
+    TempAhkFileV2 := A_MyDocuments "\testV2.ahk"
+    oSaved := MyGui.Submit(0)  ; Save the contents of named controls into an object.
+    try {
+        FileDelete TempAhkFileV2
+    }
+    FileAppend V2Edit.text , TempAhkFileV2
+    
+    TempAhkFileV1 := A_MyDocuments "\testV1.ahk"
+    oSaved := MyGui.Submit(0)  ; Save the contents of named controls into an object.
+    try {
+        FileDelete TempAhkFileV1
+    }
+    FileAppend V1Edit.Text, TempAhkFileV1
+
+   RunWait('"' A_ScriptDir '\diff\VisualDiff.exe" "' A_ScriptDir '\diff\VisualDiff.ahk" "' . TempAhkFileV1 . '" "' . TempAhkFileV2 . '"')
+
+    Return
+}
+
+CompDiffV2E(*){
+    if (CheckBoxViewSymbols.Value){
+        MenuShowSymols()
+    }
+    TempAhkFileV2 := A_MyDocuments "\testV2.ahk"
+    oSaved := MyGui.Submit(0)  ; Save the contents of named controls into an object.
+    try {
+        FileDelete TempAhkFileV2
+    }
+    FileAppend V2Edit.text , TempAhkFileV2
+    
+    TempAhkFileV2E := A_MyDocuments "\testV2E.ahk"
+    oSaved := MyGui.Submit(0)  ; Save the contents of named controls into an object.
+    try {
+        FileDelete TempAhkFileV2E
+    }
+    FileAppend V2ExpectedEdit.Text, TempAhkFileV2E
+
+   RunWait('"' A_ScriptDir '\diff\VisualDiff.exe" "' A_ScriptDir '\diff\VisualDiff.ahk" "' . TempAhkFileV2E . '" "' . TempAhkFileV2 . '"')
+
+    Return
+}
+
+Edit_Change(*){
+    GuiCtrlObj := MyGui.FocusedCtrl
+    if IsObject(GuiCtrlObj){
+        CurrentCol := EditGetCurrentCol(GuiCtrlObj)
+	    CurrentLine := EditGetCurrentLine(GuiCtrlObj)
+        PreText := GuiCtrlObj.Name="vCodeV1" ? "Autohotkey V1" : GuiCtrlObj.Name="vCodeV2" ? "Autohotkey V2" : GuiCtrlObj.Name="vCodeV2Expected" ? "Autohotkey V2 (Expected)" : ""
+        if (PreText !=""){
+	    SB.SetText(PreText ", Ln " CurrentLine ",  Col " CurrentCol , 2)
+        }
+    }
+}
+
 RunV2E(*){
     CloseV2E(myGui)
     if (CheckBoxViewSymbols.Value){
         MenuShowSymols()
     }
     TempAhkFile := A_MyDocuments "\testV2E.ahk"
+    AhkV2Exe := "C:\Program Files\AutoHotkey V2\AutoHotkey64.exe"
     oSaved := MyGui.Submit(0)  ; Save the contents of named controls into an object.
     try {
         FileDelete TempAhkFile
@@ -210,8 +324,8 @@ ButtonConvert(*){
         MenuShowSymols()
     }
     V2Edit.Text := Convert(V1Edit.Text)
-    
 }
+
 MenuShowSymols(*){
     ViewMenu.ToggleCheck("Show Symols")
     CheckBoxViewSymbols.Value := !CheckBoxViewSymbols.Value
@@ -239,7 +353,7 @@ ButtonGenerateTest(*){
     input_script := V1Edit.Text
     expected_script := V2Edit.Text
     if (expected_script= "" or input_script =""){
-        SB.SetText("No text was found.", 1)
+        SB.SetText("No text was found.", 3)
         Return
     }
     if (TV.GetSelection()!=0){
@@ -266,7 +380,7 @@ ButtonGenerateTest(*){
         if FileExist(SelectedFile){
             msgResult := MsgBox("Do you want to override the existing test?", , 4132)
             if (msgResult = "No"){
-                SB.SetText("Aborted saving test.", 1)
+                SB.SetText("Aborted saving test.", 3)
                 Return
             }
             FileDelete(SelectedFile)
@@ -278,7 +392,7 @@ ButtonGenerateTest(*){
         FileAppend(input_script,SelectedFile)
         FileAppend(expected_script,StrReplace(SelectedFile,".ah1",".ah2"))
         V2ExpectedEdit.Text := V2Edit.Text
-        SB.SetText("Test is saved.", 1)
+        SB.SetText("Test is saved.", 3)
         AddSubFoldersToTree(TreeRoot, DirList,"0")
     }
 
@@ -433,7 +547,7 @@ AddSubFoldersToTree(Folder, DirList, ParentItemID := 0,*){
         DirList := AddSubFoldersToTree(A_LoopFilePath, DirList, ItemID)
     }
     TV.Opt("+Redraw")
-    SB.SetText("Number of tests: " . Number_Tests . " ( " . Number_Tests - Number_Tests_Pass . " failed / " . Number_Tests_Pass . " passed)", 2)
+    SB.SetText("Number of tests: " . Number_Tests . " ( " . Number_Tests - Number_Tests_Pass . " failed / " . Number_Tests_Pass . " passed)", 1)
     return DirList
 }
 
@@ -498,23 +612,42 @@ Gui_Size(thisGui, MinMax, Width, Height)  ; Expand/Shrink ListView and TreeView 
     oButtonConvert.Move(TreeViewWidth+EditWith-80,ButtonHeight)
     ButtonRunV2.Move(TreeViewWidth+EditWith,ButtonHeight)
     ButtonCloseV2.Move(TreeViewWidth+EditWith+62,ButtonHeight)
-    ButtonCompVscV2.Move(TreeViewWidth+EditWith+124,ButtonHeight)
+    ButtonCompDiffV2.Move(TreeViewWidth+EditWith+124,ButtonHeight)
+    ButtonCompVscV2.Move(TreeViewWidth+EditWith+186,ButtonHeight)
     if (V2ExpectedEdit_W){
         V2ExpectedEdit.Move(TreeViewWidth+EditWith*2,,EditWith,EditHeight)
         ButtonRunV2E.Move(TreeViewWidth+EditWith*2,ButtonHeight)
         ButtonCloseV2E.Move(TreeViewWidth+EditWith*2+52,ButtonHeight)
+        ButtonCompDiffV2E.Move(TreeViewWidth+EditWith*2+124,ButtonHeight)
+        ButtonCompVscV2E.Move(TreeViewWidth+EditWith*2+186,ButtonHeight)
         ButtonRunV2E.Visible := 1
         ButtonCloseV2E.Visible := 1
+        ButtonCompDiffV2E.Visible := 1
+        ButtonCompVscV2E.Visible := 1
     }
     else{
         ButtonRunV2E.Visible := 0
         ButtonCloseV2E.Visible := 0
+        ButtonCompDiffV2E.Visible := 0
+        ButtonCompVscV2E.Visible := 0
     }
-
     
     CheckBoxV2E.Move(Width-220,EditHeight+6)
     ButtonValidateConversion.Move(Width-80,ButtonHeight)
     DllCall("LockWindowUpdate", "Uint",0)
+}
+
+On_WM_MOUSEMOVE(wparam, lparam, msg, hwnd){
+    static PrevHwnd := 0
+    if (Hwnd != PrevHwnd){
+        Text := ""
+        CurrControl := GuiCtrlFromHwnd(Hwnd)
+        if CurrControl{
+            StatusbarText := CurrControl.HasProp("StatusBar") ? CurrControl.StatusBar : ""
+            SB.SetText(StatusbarText , 3)
+        }
+        PrevHwnd := Hwnd
+    } 
 }
 
 XButton1::
@@ -548,6 +681,12 @@ XButton2::{
     } 
     FileAppend(V1Edit.Text,FileTempScript)
     Reload
+}
+
+~LButton::
+{
+    Sleep(100)
+    Edit_Change()
 }
 
 gui_KeyDown(wb, wParam, lParam, nMsg, hWnd) {

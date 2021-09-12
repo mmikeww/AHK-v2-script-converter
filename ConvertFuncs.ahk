@@ -161,6 +161,7 @@ Convert(ScriptString)
       RunAs,UserT2E,PasswordT2E,DomainT2E | RunAs({1}, {2}, {3})
       Run,TargetT2E,WorkingDirT2E,OptionsT2E,OutputVarPIDV2VR | Run({1}, {2}, {3}, {4})
       RunWait,TargetT2E,WorkingDirT2E,OptionsT2E,OutputVarPIDV2VR | RunWait({1}, {2}, {3}, {4})
+      SetControlDelay,DelayT2QE | SetControlDelay({1})
       SetEnv,var,valueT2E | {1} := {2}
       SetTimer,LabelCBE2E,PeriodOnOffDeleteCBE2E,PriorityCBE2E | *_SetTimer
       SetTitleMatchMode,MatchModeT2E | SetTitleMatchMode({1})
@@ -243,6 +244,7 @@ Convert(ScriptString)
       #MenuMaskKey KeyNameT2E | A_MenuMaskKey := {1}
       #Requires AutoHotkey Version | #Requires Autohotkey v2.0-beta.1+
    )"
+
 
    ;// this is a list of all renamed functions, in this format:
    ;//          OrigV1Function | ReplacementV2Function
@@ -329,6 +331,9 @@ Convert(ScriptString)
       ClipboardAll | ClipboardAll()
       ComObjParameter() | ComObject()
       A_isUnicode | 1
+      A_LoopRegKey "\" A_LoopRegSubKey | A_LoopRegKey
+      A_LoopRegKey . "\" . A_LoopRegSubKey | A_LoopRegKey
+      %A_LoopRegKey%\%A_LoopRegSubKey% | %A_LoopRegKey%
    )"
 
    ;Directives := "#Warn UseUnsetLocal`r`n#Warn UseUnsetGlobal"
@@ -572,7 +577,8 @@ Convert(ScriptString)
 
          if InStr(Line, srchtxt)
          {
-            Line := RegExReplace(Line, "i)([^\w]|^)" . srchtxt . "([^\w])", "$1" . rplctxt . "$2")
+            Line := RegExReplace(Line, "i)([^\w]|^)\Q" . srchtxt . "\E([^\w]|$)", "$1" . rplctxt . "$2")
+            ;MsgBox(Line "`n" srchtxt "`n" rplctxt)
          }
       }
 
@@ -3151,6 +3157,7 @@ Convert_GetContSect(){
    return "`r`n" result
 }
 
+; Checks if IfMsgBox is used in the next lines
 Check_IfMsgBox(){
    ; Go further in the lines to get the next continuation section
    global oScriptString ; array of all the lines
@@ -3186,6 +3193,7 @@ Check_IfMsgBox(){
 ; Output:
 ;   RETURN - array of the parsed commands.
 ; --------------------------------------------------------------------
+; Returns an Array of the parameters, taking into account brackets and quotes
 V1ParSplit(String){
    ; Created by Ahk_user
    ; Tries to split the parameters better because sometimes the , is part of a quote, function or object
@@ -3294,6 +3302,7 @@ V1ParSplit(String){
 ;       oResult.post          text afther the function
 ;       oResult.separator     character before the function
 ; --------------------------------------------------------------------
+; Returns an object of parameters in the function properties: pre, function, parameters, post & separator
 V1ParSplitFunctions(String, FunctionTarget := 1){
 	; Will try to extract the function of the given line
 	; Created by Ahk_user
@@ -3422,8 +3431,7 @@ Format2(FormatStr , Values*){
    ;//          - any other param name will not be converted
    ;//              this means that the literal text of the parameter is unchanged
    ;//              this would be used for InputVar/OutputVar params, or whenever you want the literal text preserved
-
-
+; Converts Parameter to different format T2E T2QE Q2T CBE2E CBE2T Q2T V2VR
 ParameterFormat(ParName,ParValue){
    ParName := StrReplace(ParName,"*") ; Remove the *, that indicate an array
    ParValue := Trim(ParValue)
@@ -3474,9 +3482,10 @@ ParameterFormat(ParName,ParValue){
    Return ParValue
 }
 
-;// Converts PseudoArray to Array
+
 ;//  Example array123 => array[123]
 ;//  Example array%A_index% => array[A_index]
+;// Converts PseudoArray to Array
 ConvertPseudoArray(ScriptStringInput,ArrayName,NewName:=""){
    if (NewName=""){
       NewName := ArrayName
@@ -3497,11 +3506,10 @@ ConvertPseudoArray(ScriptStringInput,ArrayName,NewName:=""){
     Return ScriptStringInput
 }
 
-;// Converts Object Match V1 to Object Match V2
 ;//  Example ObjectMatch.Value(N) => ObjectMatch[N]
 ;//  Example ObjectMatch.Len(N) => ObjectMatch.Len[N]
 ;//  Example ObjectMatch.Mark() => ObjectMatch.Mark
-
+;// Converts Object Match V1 to Object Match V2
 ConvertObjectMatch(ScriptStringInput,ObjectMatchName){
     if InStr(ScriptStringInput,ObjectMatchName){ ; InStr is faster than only Regex
       Loop { ; arrayName0 = arrayName.Length
@@ -3563,6 +3571,7 @@ AssArr2Map(ScriptString){
 ; NewFunctionName     :  Name of new function
 ; aRegexReplaceList   :  Array with objects with NeedleRegEx and Replacement properties to be used in the label
 ;                         example: [{NeedleRegEx: "(.*)V1(.*)",Replacement : "$1V2$2"}]
+; Function that converts specific label to string and adds brackets
 ConvertLabel2Func(ScriptString, Label, Parameters:="", NewFunctionName :="", aRegexReplaceList:=""){
     oScriptString := StrSplit(ScriptString, "`n", "`r")
     Result := ""
@@ -3736,6 +3745,7 @@ AddBracket(ScriptString){
     return Result
 }
 
+; Creates a Map of labels who can be replaced by other labels (if labels are defined above each other)
 GetAltLabelsMap(ScriptString){
     oScriptString := StrSplit(ScriptString, "`n", "`r")
     LabelPrev := ""

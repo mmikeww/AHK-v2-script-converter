@@ -127,7 +127,7 @@ Convert(ScriptString)
       GroupAdd,GroupNameT2E,WinTitleT2E,WinTextT2E,LabelT2E,ExcludeTitleT2E,ExcludeTextT2E | GroupAdd({1}, {2}, {3}, {4}, {5}, {6})
       GroupClose,GroupNameT2E,ModeT2E | GroupClose({1}, {2})
       GroupDeactivate,GroupNameT2E,ModeT2E | GroupDeactivate({1}, {2})
-      Hotkey,Var1,Var2,Var3 | *_Hotkey
+      Hotkey,Var1,Var2CBE2E,Var3 | *_Hotkey
       KeyWait,KeyNameT2E,OptionsT2E | *_KeyWait
       IfEqual,var,valueT2QE | if ({1} = {2})
       IfNotEqual,var,valueT2QE | if ({1} != {2})
@@ -240,18 +240,24 @@ Convert(ScriptString)
       #HotkeyInterval,Milliseconds | A_HotkeyInterval := {1}
       #HotkeyModifierTimeout,Milliseconds | A_HotkeyModifierTimeout := {1}
       #If Expression | #HotIf {1}
-      #IfTimeout | #HotIfTimeout {1}
+      #IfTimeout,ExpressionCBE2E | #HotIfTimeout {1}
+      #InputLevel,LevelCBE2E | #InputLevel {1}
       #IfWinActive,WinTitleT2E,WinTextT2E | *_HashtagIfWinActivate
       #IfWinExist,WinTitleT2E,WinTextT2E | #HotIf WinExist({1}, {2})
       #IfWinNotActive ,WinTitleT2E,WinTextT2E | #HotIf !WinActive({1}, {2})
       #IfWinNotExist,WinTitleT2E,WinTextT2E | #HotIf !WinExist({1}, {2})
+      #InputLevel,LevelCBE2E | #InputLevel {1}
       #InstallKeybdHook | InstallKeybdHook()
       #InstallMouseHook | InstallMouseHook()
       #Persistent | Persistent
-      #KeyHistory,MaxEvents | KeyHistory({1})
-      #MaxHotkeysPerInterval,Value | A_MaxHotkeysPerInterval := {1}
-      #MenuMaskKey KeyNameT2E | A_MenuMaskKey := {1}
-      #Requires AutoHotkey Version | #Requires Autohotkey v2.0-beta.1+
+      #KeyHistory,MaxEventsCBE2E | KeyHistory({1})
+      #MaxHotkeysPerInterval,ValueCBE2E | A_MaxHotkeysPerInterval := {1}
+      #MaxThreads,ValueCBE2E | #MaxThreads {1}
+      #MaxThreadsBuffer,OnOffOn2True | #MaxThreadsBuffer {1}
+      #MaxThreadsPerHotkey,ValueCBE2E | #MaxThreadsPerHotkey {1}
+      #MenuMaskKey,KeyNameT2E | A_MenuMaskKey := {1}
+      #UseHook,OnOffOn2True | #UseHook {1}
+      #Requires,AutoHotkey Version | #Requires Autohotkey v2.0-beta.1+
    )"
 
 
@@ -2084,6 +2090,15 @@ _GuiControlGet(p){
 }
 
 _Hotkey(p){
+   
+   ;Convert label to function
+   
+
+   if RegexMatch(Orig_ScriptString,"\n(\s*)" p[2] ":\s"){
+      aListLabelsToFunction.Push({label: p[2], parameters:"ThisHotkey"})
+   } 
+   
+   
    if(p[1]="IfWinActive"){
          p[2] := p[2] ="" ? "" : ToExp(p[2])
          p[3] :=  p[3] ="" ? "" : ToExp(p[3])
@@ -2103,6 +2118,9 @@ _Hotkey(p){
          p[2] := p[2] ="" ? "" : ToExp(p[2])
          p[3] :=  p[3] ="" ? "" : ToExp(p[3])
          Out := Format("HotIfWinNotExist({2}, {3})",p*)
+   }
+   else if(p[1]="If"){
+         Out := Format("HotIf({2}, {3})",p*)
    }
    else{
       p[1] :=  p[1] ="" ? "" : ToExp(p[1])
@@ -3500,7 +3518,8 @@ ParameterFormat(ParName,ParValue){
    }
    else if (ParName ~= "i)On2True$")           ; 'Text TO Quote Expression'
    {
-      ParValue := RegexReplace(RegexReplace(ParValue, "i)\bon\b", "True"), "i)\boff\b", "False")
+      ParValue := RegexReplace(ParValue, "^%\s*(.*?)%?$", "$1")
+      ParValue := RegexReplace(RegexReplace(ParValue, "i)\bon\b", "true"), "i)\boff\b", "false")
    }
 
    Return ParValue
@@ -3721,12 +3740,12 @@ AddBracket(ScriptString){
         if (RegExMatch(Line,"i)^(\s*;).*") or RegExMatch(Line,"i)^(\s*)$")){ ; comment or empty
             ; Do noting
         }
-        else if (RegExMatch(Line,"i)^\s*[\s`n`r\t]*([^;`n`r\{}\[\]\=:]+?\:\:).*")>0){ ; Hotkey or string
+        else if (RegExMatch(Line,"i)^\s*[\s\n\r\t]*((:[\s\*\?BCKOPRSIETXZ0-9]*:|)[^;\n\r\{}\[\=:]+?\:\:).*")>0){ ; Hotkey or string
             if (HotkeyPointer=1){
                 Result .= "} `; V1toV2: Added Bracket before hotkey or Hotstring`r`n"
                 HotkeyPointer := 0
             }
-            if (RegExMatch(Line,"i)^\s*[\s`n`r\t]*([^;`n`r\{}\[\]\=:]+?\:\:\s*[^\s;].+)")>0){
+            if (RegExMatch(Line,"i)^\s*[\s\n\r\t]*((:[\s\*\?BCKOPRSIETXZ0-9]*:|)[^;\n\r\{}\[\=:]+?\:\:\s*[^\s;].+)")>0){
                 ; oneline detected do noting
             }
             else {
@@ -3735,7 +3754,24 @@ AddBracket(ScriptString){
             }
         }
         else If (HotkeyStart=1){
-            if (RegExMatch(Line,"i)^\s*({).*")){ ; Hotkey is already good :)
+            if (RegExMatch(Line,"i)^\s*([{\(]).*")){ ; Hotkey is already good :)
+                HotkeyPointer := 0
+            }
+            else if RegExMatch(RestString,"is)^\s*([\w]+?\([^\)]*\)[\s\n\r]*(`;[^\r\n]*|)([\s\n\r]*){).*"){ ; Function declaration detection
+                ; Named Function Hotkeys do not need brackets
+                ; https://lexikos.github.io/v2/docs/Hotstrings.htm
+                ; Maybe add an * to the function?
+                A_Index2 := A_Index-1
+                Loop oScriptString.Length - A_Index2{
+                   if RegExMatch(oScriptString[A_Index2+A_Index],"i)^\s*([\w]+?\().*$"){
+                      oScriptString[A_Index2+A_Index] := RegExReplace(oScriptString[A_Index2+A_Index],"i)(^\s*[\w]+?\()[\s]*(\).*)$", "$1*$2")
+                      if (A_Index=1){
+                         Line := oScriptString[A_Index2+A_Index]
+                      }
+                      Break
+                   }
+                }
+                RegExReplace(RestString,"is)^(\s*)([\w]+?\([^\)]*\)[\s\n\r]*(`;[^\r\n]*|)([\s\n\r]*){).*","$1")
                 HotkeyPointer := 0
             }
             else{
@@ -3745,15 +3781,15 @@ AddBracket(ScriptString){
             HotkeyStart := 0
         }
         if (HotkeyPointer=1){
-            if (RegExMatch(RestString,"is)^[\s`n`r\t]*([^;`n`r\{}\[\]\=:]+?\:\:).*")>0){ ; Hotkey or string
+            if (RegExMatch(RestString,"is)^[\s\n\r\t]*((:[\s\*\?BCKOPRSIETXZ0-9]*:|)[^;\n\r\{}\[\]\=:]+?\:\:).*")>0){ ; Hotkey or string
                 Result .= "} `; V1toV2: Added Bracket before hotkey or Hotstring`r`n"
                 HotkeyPointer := 0
             }
-            else if (RegExMatch(RestString,"is)^[\s`n`r\t]*([^;`n`r\s\{}\[\]\=:]+?\:\s).*")>0 and RegExMatch( oScriptString[A_Index-1],"is)^[\s`n`r\t]*(return).*")>0){ ; Label
+            else if (RegExMatch(RestString,"is)^[\s\n\r\t]*((:[\s\*\?BCKOPRSIETXZ0-9]*:|)[^;\n\r\s\{}\[\=:]+?\:\:?\s).*")>0 and RegExMatch(oScriptString[A_Index-1],"is)^[\s\n\r\t]*(return|exit|exitapp).*")>0){ ; Label
                 Result .= "} `; V1toV2: Added Bracket before label`r`n"
                 HotkeyPointer := 0
             }
-            else if (RegExMatch(RestString,"is)^[\s`n`r\t]*(`;[^\r\n]*|)([\s\n\r\t]*)$")>0 and RegExMatch( oScriptString[A_Index-1],"is)^[\s`n`r\t]*(return).*")>0){ ; Label
+            else if (RegExMatch(RestString,"is)^[\s\n\r\t]*(`;[^\r\n]*|)([\s\n\r\t]*)$")>0 and RegExMatch(oScriptString[A_Index-1],"is)^[\s\n\r\t]*(return|exit|exitapp).*")>0){ ; Label
                 Result .= "} `; V1toV2: Added bracket in the end`r`n"
                 HotkeyPointer := 0
             }

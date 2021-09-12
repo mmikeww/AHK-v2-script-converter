@@ -1,0 +1,1 @@
+SetCapsLockState(!GetKeyState("CapsLock", "T"))

@@ -1,0 +1,1 @@
+SetDefaultMouseSpeed, 0

@@ -1,0 +1,1 @@
+SetStoreCapsLockMode, Off

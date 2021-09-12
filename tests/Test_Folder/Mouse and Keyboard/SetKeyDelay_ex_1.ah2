@@ -1,0 +1,1 @@
+SetKeyDelay(0)

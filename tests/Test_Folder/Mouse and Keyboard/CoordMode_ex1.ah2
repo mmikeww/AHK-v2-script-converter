@@ -1,0 +1,1 @@
+CoordMode("ToolTip", "Screen")

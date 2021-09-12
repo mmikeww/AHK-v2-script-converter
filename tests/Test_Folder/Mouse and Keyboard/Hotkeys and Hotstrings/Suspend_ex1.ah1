@@ -1,0 +1,1 @@
+^!s::Suspend  ; Ctrl+Alt+S

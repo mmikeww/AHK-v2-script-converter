@@ -1,0 +1,1 @@
+Hotkey("RCtrl & RShift", "AltTab")

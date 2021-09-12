@@ -117,6 +117,7 @@ Convert(ScriptString)
       FileSelectFolder,var,startingdirT2E,opts,promptT2E | {1} := DirSelect({2}, {3}, {4})
       FileSelectFile,var,opts,rootdirfile,prompt,filter | *_FileSelect
       FormatTime,outVar,dateT2E,formatT2E | {1} := FormatTime({2}, {3})
+      GetKeyState,OutputVar,KeyNameT2E,ModeT2E | {1} := GetKeyState({2}, {3}) ? "D" : "U"
       Gui,SubCommand,Value1,Value2,Value3 | *_Gui
       GuiControl,SubCommand,ControlID,Value | *_GuiControl
       GuiControlGet,OutputVar,SubCommand,ControlID,Value | *_GuiControlGet
@@ -127,7 +128,7 @@ Convert(ScriptString)
       GroupClose,GroupNameT2E,ModeT2E | GroupClose({1}, {2})
       GroupDeactivate,GroupNameT2E,ModeT2E | GroupDeactivate({1}, {2})
       Hotkey,Var1,Var2,Var3 | *_Hotkey
-      KeyWait,KeyNameT2E,OptionsT2E | KeyWait({1}, {2})
+      KeyWait,KeyNameT2E,OptionsT2E | *_KeyWait
       IfEqual,var,valueT2QE | if ({1} = {2})
       IfNotEqual,var,valueT2QE | if ({1} != {2})
       IfGreater,var,valueT2QE | *_IfGreater
@@ -145,13 +146,15 @@ Convert(ScriptString)
       ImageSearch,OutputVarXV2VR,OutputVarYV2VR,X1,Y1,X2,Y2,ImageFileT2E | ErrorLevel := ImageSearch({1}, {2}, {3}, {4}, {5}, {6}, {7})
       IniRead,OutputVar,FilenameT2E,SectionT2E,KeyT2E,DefaultT2E | {1} := IniRead({2}, {3}, {4}, {5})
       IniWrite,ValueT2E,FilenameT2E,SectionT2E,KeyT2E | IniWrite({1}, {2}, {3}, {4})
+      Input,OutputVar,OptionsT2E,EndKeysT2E,MatchListT2E | *_input
       Inputbox,OutputVar,Title,Prompt,HIDE,Width,Height,X,Y,Locale,Timeout,Default | *_InputBox
       Loop,one,two,three,four | *_Loop
       Menu,MenuName,SubCommand,Value1,Value2,Value3,Value4 | *_Menu
       MsgBox,TextOrOptions,Title,Text,Timeout | *_MsgBox
       MouseGetPos,OutputVarXV2VR,OutputVarYV2VR,OutputVarWinV2VR,OutputVarControlV2VR,Flag | MouseGetPos({1}, {2}, {3}, {4}, {5})
       MouseClick,WhichButtonT2E,XT2E,YT2E,ClickCountT2E,SpeedT2E,DownOrUpT2E,RelativeT2E | MouseClick({1}, {2}, {3}, {4}, {5}, {6}, {7})
-      MouseClickDrag,WhichButtonT2E,X1T2E,Y1T2E,X2T2E,Y2T2E,SpeedT2E,RelativeT2E | MouseClick({1}, {2}, {3}, {4}, {5}, {6}, {7})
+      MouseClickDrag,WhichButtonT2E,X1T2E,Y1T2E,X2T2E,Y2T2E,SpeedT2E,RelativeT2E | MouseClickDrag({1}, {2}, {3}, {4}, {5}, {6}, {7})
+      MouseMove,XT2E,YT2E,SpeedT2E,RelativeT2E | MouseMove({1}, {2}, {3}, {4})
       OnExit,Func,AddRemove | *_OnExit
       PixelSearch,OutputVarXV2VR,OutputVarYV2VR,X1T2E,Y1T2E,X2T2E,Y2T2E,ColorIDCBE2E,VariationT2E,ModeT2E | ErrorLevel := PixelSearch({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9})
       PixelGetColor,OutputVar,XT2E,YT2E,ModeT2E | {1} := PixelGetColor({2}, {3}, {4})
@@ -169,12 +172,18 @@ Convert(ScriptString)
       SetNumLockState, StateT2E | SetNumLockState({1})
       SetCapsLockState, StateT2E | SetCapsLockState({1})
       SetStoreCapsLockMode,OnOffOn2True | SetStoreCapsLockMode({1})
+      SetKeyDelay,DelayT2E,PressDurationT2E,PlayT2E | SetKeyDelay({1}, {2}, {3})
+      SetMouseDelay,DelayT2E,PlayT2E | SetMouseDelay({1}, {2})
       SetWinDelay,DelayT2QE | SetWinDelay({1})
       Send,keysT2E | Send({1})
       SendText,keysT2E | SendText({1})
+      SendMode,ModeT2E | SendMode({1})
       SendInput,keysT2E | SendInput({1})
+      SendLevel, LevelT2E | SendLevel({1})
+      SetDefaultMouseSpeed, LevelT2E | SetDefaultMouseSpeed({1})
       SendMessage,Msg,wParamCBE2E,lParamCBE2E,ControlCBE2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E,TimeoutCBE2E | ErrorLevel := SendMessage({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9})
       SendPlay,keysT2E | SendPlay({1})
+      SendEvent,keysT2E | SendEvent({1})
       SendEvent,keysT2E | SendEvent({1})
       Sleep,delayCBE2E | Sleep({1})
       Sort,var,optionsT2E | {1} := Sort({1}, {2})
@@ -430,8 +439,6 @@ Convert(ScriptString)
       }
 
       
-
-
       ; -------------------------------------------------------------------------------
       ;
       ; skip empty lines or comment lines
@@ -477,7 +484,7 @@ Convert(ScriptString)
          FirstNextLine := SubStr(LTrim(oScriptString[O_Index+1]), 1, 1)
          FirstTwoNextLine := SubStr(LTrim(oScriptString[O_Index+1]), 1, 1)
          TreeNextLine := SubStr(LTrim(oScriptString[O_Index+1]), 1, 1)
-         if (FirstNextLine~="[,\?:\.]" or FirstTwoNextLine="||" or FirstTwoNextLine="&&" or FirstTwoNextLine="or" or TreeNextLine ="and"){
+         if (FirstNextLine~="[,\.]" or FirstTwoNextLine~="[\?:]\s" or FirstTwoNextLine="||" or FirstTwoNextLine="&&" or FirstTwoNextLine="or" or TreeNextLine ="and"){
             O_Index++
             ; Known effect : removes the linefeeds and comments of continuation sections
             Line .= RegExReplace(oScriptString[O_Index], "(\s+`;.*)$", "")
@@ -1182,6 +1189,7 @@ Convert(ScriptString)
       ScriptOutput .= Line . EOLComment . "`r`n"
       ; Output and NewInput should become arrays, NewInput is a copy of the Input, but with empty lines added for easier comparison.
       LastLine := Line
+      
    }
 
    ; Convert labels listed in aListLabelsToFunction
@@ -2140,6 +2148,11 @@ _IfLessOrEqual(p){
       return format("if (StrCompare({1}, {2}) <= 0)", p*)
 }
 
+_Input(p){
+   Out := format("ih{1} := InputHook({2},{3},{4}), ih{1}.Start(), ih{1}.Wait(), {1} := ih{1}.Input", p*)
+   Return out := RegExReplace(Out, "[\s\,]*\)", ")")
+}
+
 _InputBox(oPar){
    ; V1: InputBox, OutputVar [, Title, Prompt, HIDE, Width, Height, X, Y, Locale, Timeout, Default]
    ; V2: Obj := InputBox(Prompt, Title, Options, Default)
@@ -2196,6 +2209,17 @@ _InputBox(oPar){
    }
 
    return Line
+}
+
+_KeyWait(p){
+   ; Errorlevel is not set in V2
+   if ScriptStringsUsed.ErrorLevel{
+      out := Format("ErrorLevel := KeyWait({1}, {2})",p*)
+   }
+   else{
+      out := Format("KeyWait({1}, {2})",p*)
+   }
+   Return out := RegExReplace(Out, "[\s\,]*\)", ")")
 }
 
 _Loop(p){
@@ -3436,7 +3460,7 @@ ParameterFormat(ParName,ParValue){
    ParName := StrReplace(ParName,"*") ; Remove the *, that indicate an array
    ParValue := Trim(ParValue)
    if (ParName ~= "V2VR$"){
-      if (ParValue != "")
+      if (ParValue != "" and !InStr(ParValue, "&"))
          ParValue := "&" . ParValue
    }
    else if (ParName ~= "CBE2E$")    ; 'Can Be an Expression TO an Expression'
@@ -3697,12 +3721,12 @@ AddBracket(ScriptString){
         if (RegExMatch(Line,"i)^(\s*;).*") or RegExMatch(Line,"i)^(\s*)$")){ ; comment or empty
             ; Do noting
         }
-        else if (RegExMatch(Line,"i)^\s*[\s`n`r\t]*([^;`n`r\s\{}\[\]\=:]+?\:\:).*")>0){ ; Hotkey or string
+        else if (RegExMatch(Line,"i)^\s*[\s`n`r\t]*([^;`n`r\{}\[\]\=:]+?\:\:).*")>0){ ; Hotkey or string
             if (HotkeyPointer=1){
                 Result .= "} `; V1toV2: Added Bracket before hotkey or Hotstring`r`n"
                 HotkeyPointer := 0
             }
-            if (RegExMatch(Line,"i)^\s*[\s`n`r\t]*([^;`n`r\s\{}\[\]\=:]+?\:\:\s*[^\s;].+)")>0){
+            if (RegExMatch(Line,"i)^\s*[\s`n`r\t]*([^;`n`r\{}\[\]\=:]+?\:\:\s*[^\s;].+)")>0){
                 ; oneline detected do noting
             }
             else {
@@ -3721,7 +3745,7 @@ AddBracket(ScriptString){
             HotkeyStart := 0
         }
         if (HotkeyPointer=1){
-            if (RegExMatch(RestString,"is)^[\s`n`r\t]*([^;`n`r\s\{}\[\]\=:]+?\:\:).*")>0){ ; Hotkey or string
+            if (RegExMatch(RestString,"is)^[\s`n`r\t]*([^;`n`r\{}\[\]\=:]+?\:\:).*")>0){ ; Hotkey or string
                 Result .= "} `; V1toV2: Added Bracket before hotkey or Hotstring`r`n"
                 HotkeyPointer := 0
             }

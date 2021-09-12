@@ -43,7 +43,10 @@ SB.SetParts(300, 300)  ; Create three parts in the bar (the third part fills all
 
 ; Add folders and their subfolders to the tree. Display the status in case loading takes a long time:
 M := Gui("ToolWindow -SysMenu Disabled AlwaysOnTop", "Loading the tree..."), M.Show("w200 h0")
+
+; DirList := Map()
 DirList := AddSubFoldersToTree(TreeRoot, Map())
+
 M.Hide()
 
 ; Call TV_ItemSelect whenever a new item is selected:
@@ -54,7 +57,7 @@ ButtonEvaluateTests.OnEvent("Click", AddSubFoldersToTree.Bind(TreeRoot, DirList,
 CheckBoxViewSymbols := MyGui.Add("CheckBox", "yp x+50", "View Symbols")
 CheckBoxViewSymbols.StatusBar := "Display invisible symbols like spaces, tabs and linefeeds"
 CheckBoxViewSymbols.OnEvent("Click", ViewSymbols)
-V1Edit := MyGui.Add("Edit", "x280 y0 w600 vvCodeV1 +Multi +WantTab", strV1Script)  ; Add a fairly wide edit control at the top of the window.
+V1Edit := MyGui.Add("Edit", "x280 y0 w600 vvCodeV1 +Multi +WantTab +0x100", strV1Script)  ; Add a fairly wide edit control at the top of the window.
 V1Edit.OnEvent("Change",Edit_Change)
 ButtonRunV1 := MyGui.Add("Button", "w60", "Run V1")
 ButtonRunV1.StatusBar := "Run the converted V2 code"
@@ -65,9 +68,9 @@ ButtonCloseV1.OnEvent("Click", CloseV1)
 oButtonConvert := MyGui.Add("Button", "default x+10 yp", "Convert =>")
 oButtonConvert.StatusBar := "Convert V1 code again to V2"
 oButtonConvert.OnEvent("Click", ButtonConvert)
-V2Edit := MyGui.Add("Edit", "x600 ym w600 vvCodeV2 +Multi +WantTab", "")  ; Add a fairly wide edit control at the top of the window.
+V2Edit := MyGui.Add("Edit", "x600 ym w600 vvCodeV2 +Multi +WantTab +0x100", "")  ; Add a fairly wide edit control at the top of the window.
 V2Edit.OnEvent("Change",Edit_Change)
-V2ExpectedEdit := MyGui.Add("Edit", "x1000 ym w600 H100 vvCodeV2Expected +Multi +WantTab", "")  ; Add a fairly wide edit control at the top of the window.
+V2ExpectedEdit := MyGui.Add("Edit", "x1000 ym w600 H100 vvCodeV2Expected +Multi +WantTab +0x100", "")  ; Add a fairly wide edit control at the top of the window.
 V2ExpectedEdit.OnEvent("Change",Edit_Change)
 ButtonRunV2 := MyGui.Add("Button", "w60", "Run V2")
 ButtonRunV2.StatusBar := "Run this code in Autohotkey V2"
@@ -98,7 +101,7 @@ ButtonCompVscV2E.StatusBar := "Compare V2 and Expected V2 code in VS Code"
 if !FileExist("C:\Users\" A_UserName "\AppData\Local\Programs\Microsoft VS Code\Code.exe"){
     ButtonCompVscV2E.Visible := 0
 }
-CheckBoxV2E := MyGui.Add("CheckBox", "yp x+50 Checked", "View Expected")
+CheckBoxV2E := MyGui.Add("CheckBox", "yp x+50 Checked", "Expected")
 CheckBoxV2E.StatusBar := "Display expected V2 code if it exists"
 CheckBoxV2E.OnEvent("Click", ViewV2E)
 
@@ -347,6 +350,7 @@ ViewSymbols(*){
 }
 
 ButtonGenerateTest(*){
+    
     if (CheckBoxViewSymbols.Value){
         MenuShowSymols()
     }
@@ -360,10 +364,29 @@ ButtonGenerateTest(*){
         SelectedText := DirList[TV.GetSelection()]
     }
     Else{
-        SelectedText := A_ScriptDir "\tests"
+        SelectedText := A_ScriptDir "\tests\Test_Folder"
+    }
+    
+    if Instr(SelectedText,".ah1"){
+        if (FileRead(SelectedText) = V1Edit.text){
+            msgResult := MsgBox("Do You want to overwrite the existing test?", , 308)
+            if (msgResult="YES"){
+                if FileExist(StrReplace(SelectedText,".ah1",".ah2")){
+                    FileDelete(StrReplace(SelectedText,".ah1",".ah2"))
+                }
+                FileAppend(expected_script,StrReplace(SelectedText,".ah1",".ah2"))
+                SB.SetText("Test is saved.", 3)
+                TV.Modify(TV.GetSelection(), icons.pass)
+            }
+            else{
+                SB.SetText("Aborted.", 3)
+            }
+            Return
+        }
     }
     SplitPath(SelectedText, &name, &dir, &ext, &name_no_ext, &drive)
     DirNewNoExt := ext="" ? dir "\" name : dir 
+    IDParent := ext="" ? TV.GetSelection() : TV.GetParent(TV.GetSelection()) 
     SplitPath(DirNewNoExt, &nameFolder)
 
     Loop {
@@ -388,12 +411,16 @@ ButtonGenerateTest(*){
                 FileDelete(StrReplace(SelectedFile,".ah1",".ah2"))
             }
         }
-
+        
         FileAppend(input_script,SelectedFile)
         FileAppend(expected_script,StrReplace(SelectedFile,".ah1",".ah2"))
         V2ExpectedEdit.Text := V2Edit.Text
         SB.SetText("Test is saved.", 3)
-        AddSubFoldersToTree(TreeRoot, DirList,"0")
+        SplitPath(SelectedFile, &OutFileName, &OutDir)
+        
+        ItemID := TV.Add(OutFileName, IDParent, icons.pass)
+        DirList[ItemID] := A_LoopFilePath
+        DirList[A_LoopFilePath] := ItemID
     }
 
 }
@@ -544,6 +571,7 @@ AddSubFoldersToTree(Folder, DirList, ParentItemID := 0,*){
             continue
         }
         DirList[ItemID] := A_LoopFilePath
+        DirList[A_LoopFilePath] := ItemID
         DirList := AddSubFoldersToTree(A_LoopFilePath, DirList, ItemID)
     }
     TV.Opt("+Redraw")
@@ -632,7 +660,7 @@ Gui_Size(thisGui, MinMax, Width, Height)  ; Expand/Shrink ListView and TreeView 
         ButtonCompVscV2E.Visible := 0
     }
     
-    CheckBoxV2E.Move(Width-220,EditHeight+6)
+    CheckBoxV2E.Move(Width-160,EditHeight+6)
     ButtonValidateConversion.Move(Width-80,ButtonHeight)
     DllCall("LockWindowUpdate", "Uint",0)
 }
@@ -652,7 +680,6 @@ On_WM_MOUSEMOVE(wparam, lparam, msg, hwnd){
 
 XButton1::
 {
-
     ClipSaved := ClipboardAll()   ; Save the entire clipboard to a variable of your choice.
     A_Clipboard := ""
     Send "^c"
@@ -674,6 +701,19 @@ XButton1::
    WinActivate(myGui)
 }
 
+^XButton1::
+{
+    ClipSaved := ClipboardAll()   ; Save the entire clipboard to a variable of your choice.
+    A_Clipboard := ""
+    Send "^c"
+    if !ClipWait(3){
+        DebugWindow( "error`n",Clear:=0)
+        return
+    }
+    gui_AhkHelp(A_Clipboard)
+    A_Clipboard := ClipSaved
+}
+
 XButton2::{
     FileTempScript := A_ScriptDir "\Tests\TempScript.ah1"
     if (FileExist(FileTempScript)){
@@ -685,6 +725,25 @@ XButton2::{
 
 ~LButton::
 {
+    if WinActive("testV2.ahk"){
+        ErrorText := WinGetText("testV2.ahk")
+        Line := RegexReplace(WinGetText("testV2.ahk"),"s).*Error at line (\d*)\..*","$1",&RegexCount)
+        if (RegexCount){
+            LineCount := EditGetLineCount(V2Edit)
+            if (Line>LineCount){
+                return ; The line number is beyond the total number of lines
+            }
+            else{
+                FoundPos := InStr(V2Edit.Text, "`n", , , Line-1)
+                WinActivate myGui
+                ControlFocus(V2Edit)
+                SendMessage(0xB1, FoundPos, FoundPos+1,,V2Edit)
+                Sleep(300)
+                SendInput("{Right}{Left}")
+            }
+        }
+    }
+
     Sleep(100)
     Edit_Change()
 }
@@ -713,3 +772,32 @@ gui_KeyDown(wb, wParam, lParam, nMsg, hWnd) {
 	return 0
 }
 
+gui_AhkHelp(SearchString,Version:="V2"){
+    if !isSet(Url){
+        WBGui := Gui()
+        WBGui.Opt("+Resize")
+        WBGui.MarginX := "0", WBGui.MarginY := "0"
+        global Url,WB,WBGui
+        WBGui.Title := "AutoHotKey Help"
+        ogcActiveXWBC := WBGui.Add("ActiveX", "xm w980 h640 vIE", "Shell.Explorer")
+        WB := ogcActiveXWBC.Value
+        WBGui.OnEvent("Size", WBGui_Size)
+    }
+    
+    if (Version="V1"){
+        URLSearch := "https://www.autohotkey.com/docs/search.htm?q="
+    }
+    else{
+        URLSearch := "https://lexikos.github.io/v2/docs/search.htm?q="
+    }
+    URL := URLSearch SearchString "&m=2"
+    
+    WB.Navigate(URL)
+    FuncObj := gui_KeyDown.Bind(WB)
+    OnMessage(0x100, FuncObj, 2) 
+    WBGui.Show()
+
+    WBGui_Size(thisGui, MinMax, Width, Height){
+        ogcActiveXWBC.Move(,,Width,Height) ; Gives an error Webbrowser has no method named move
+    }
+}

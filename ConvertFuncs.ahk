@@ -162,7 +162,7 @@ Convert(ScriptString)
       Process,SubCommand,PIDOrNameT2E,ValueT2E | *_Process
       Progress, ProgressParam1 ,SubTextT2E,MainTextT2E,WinTitleT2E,FontNameT2E | *_Progress
       RunAs,UserT2E,PasswordT2E,DomainT2E | RunAs({1}, {2}, {3})
-      Run,TargetT2E,WorkingDirT2E,OptionsT2E,OutputVarPIDV2VR | Run({1}, {2}, {3}, {4})
+      Run,TargetT2E,WorkingDirT2E,OptionsT2E,OutputVarPIDV2VR | *_Run
       RunWait,TargetT2E,WorkingDirT2E,OptionsT2E,OutputVarPIDV2VR | RunWait({1}, {2}, {3}, {4})
       SetControlDelay,DelayT2QE | SetControlDelay({1})
       SetEnv,var,valueT2E | {1} := {2}
@@ -419,7 +419,7 @@ Convert(ScriptString)
       ; Prelines is code that does not need to changes anymore, but coud prevent correct command conversion
       PreLine := ""
 
-      if RegExMatch(Line, "^\s*(.+::).*$"){
+      if RegExMatch(Line, "^\s*(.*[^\s]::).*$"){
          LineNoHotkey := RegExReplace(Line,"(^\s*).+::(.*$)","$1$2")
          if (LineNoHotkey!=""){
             PreLine:= RegExReplace(Line,"^\s*(.+::).*$","$1")
@@ -935,7 +935,7 @@ Convert(ScriptString)
          }
       }
       ; 
-      
+
       LabelRedoCommandReplacing:
       ; -------------------------------------------------------------------------------
       ;
@@ -1718,10 +1718,10 @@ _Gui(p){
             if RegexMatch(Orig_ScriptString,"\n(\s*)" aEventRename[A_Index].oldlabel ":\s"){
                if mAltLabel.Has(aEventRename[A_Index].oldlabel){
                   aEventRename[A_Index].oldlabel := mAltLabel[aEventRename[A_Index].oldlabel]
+                  ; Alternative label is available
                }
                else{
                   aListLabelsToFunction.Push({label: aEventRename[A_Index].oldlabel, parameters:aEventRename[A_Index].parameters,NewFunctionName:aEventRename[A_Index].NewFunctionName})
-
                }
                LineResult .= GuiNameLine ".OnEvent(`"" aEventRename[A_Index].event "`", " aEventRename[A_Index].NewFunctionName ")`r`n"
             }
@@ -2757,7 +2757,7 @@ _Progress(p){
    ;V1 : Progress , Off
    ;V2 : Removed
    ; To be improved to interpreted the options
-   
+
    if (p[1]="Off"){
       Out := "ProgressGui.Destroy"
    }
@@ -2826,6 +2826,16 @@ _Progress(p){
    Return Out
 }
 
+_Run(p){
+   if InStr(p[3],"UseErrorLevel"){
+      p[3] := RegExReplace(p[3],"i)(.*?)\s*\bUseErrorLevel\b(.*)","$1$2")
+      Out := format("ErrorLevel := `"ERROR`"`r`nTry ErrorLevel := Run({1}, {2}, {3}, {4})",p*)
+   }else{
+      Out := format("Run({1}, {2}, {3}, {4})",p*)
+   }
+   
+   Return RegExReplace(Out, "[\s\,]*\)$", ")") 
+}
 _StringLower(p){
    if (p[3] = '"T"')
       return format("{1} := StrTitle({2})", p*)

@@ -1,6 +1,7 @@
 ﻿#SingleInstance Force
 
 #Include ConvertFuncs.ahk
+#INCLUDE <_GuiCtlExt>
 ; #Include ExecScript.ahk
 
 
@@ -59,26 +60,34 @@ CheckBoxViewSymbols.StatusBar := "Display invisible symbols like spaces, tabs an
 CheckBoxViewSymbols.OnEvent("Click", ViewSymbols)
 V1Edit := MyGui.Add("Edit", "x280 y0 w600 vvCodeV1 +Multi +WantTab +0x100", strV1Script)  ; Add a fairly wide edit control at the top of the window.
 V1Edit.OnEvent("Change",Edit_Change)
-ButtonRunV1 := MyGui.Add("Button", "w60", "Run V1")
+; ButtonRunV1 := MyGui.Add("Button", "w60", "Run V1")
+ButtonRunV1 := MyGui.AddPicButton("w24 h24", "mmcndmgr.dll","icon33 h23")
 ButtonRunV1.StatusBar := "Run the converted V2 code"
 ButtonRunV1.OnEvent("Click", RunV1)
-ButtonCloseV1 := MyGui.Add("Button", " x+10 yp w60 +Disabled", "Close V1")
+; ButtonCloseV1 := MyGui.Add("Button", " x+10 yp w60 +Disabled", "Close V1")
+ButtonCloseV1 := MyGui.AddPicButton("w24 h24 x+10 yp", "mmcndmgr.dll","icon62 h23")
 ButtonCloseV1.StatusBar := "Close the running V1 code"
 ButtonCloseV1.OnEvent("Click", CloseV1)
-oButtonConvert := MyGui.Add("Button", "default x+10 yp", "Convert =>")
+; oButtonConvert := MyGui.Add("Button", "default x+10 yp", "Convert =>")
+
+oButtonConvert := MyGui.AddPicButton("w60 h22", "netshell.dll","icon98 h20")
 oButtonConvert.StatusBar := "Convert V1 code again to V2"
 oButtonConvert.OnEvent("Click", ButtonConvert)
 V2Edit := MyGui.Add("Edit", "x600 ym w600 vvCodeV2 +Multi +WantTab +0x100", "")  ; Add a fairly wide edit control at the top of the window.
 V2Edit.OnEvent("Change",Edit_Change)
 V2ExpectedEdit := MyGui.Add("Edit", "x1000 ym w600 H100 vvCodeV2Expected +Multi +WantTab +0x100", "")  ; Add a fairly wide edit control at the top of the window.
 V2ExpectedEdit.OnEvent("Change",Edit_Change)
-ButtonRunV2 := MyGui.Add("Button", "w60", "Run V2")
+; ButtonRunV2 := MyGui.Add("Button", "w60", "Run V2")
+
+ButtonRunV2 := MyGui.AddPicButton("w24 h24", "mmcndmgr.dll","icon33 h23")
 ButtonRunV2.StatusBar := "Run this code in Autohotkey V2"
 ButtonRunV2.OnEvent("Click", RunV2)
-ButtonCloseV2 := MyGui.Add("Button", " x+10 yp w60 +Disabled", "Close V2" )
+; ButtonCloseV2 := MyGui.Add("Button", " x+10 yp w60 +Disabled", "Close V2" )
+ButtonCloseV2 := MyGui.AddPicButton("w24 h24 x+10 yp", "mmcndmgr.dll","icon62 h23")
 ButtonCloseV2.StatusBar := "Close the running V2 code"
 ButtonCloseV2.OnEvent("Click", CloseV2)
-ButtonCompDiffV2 := MyGui.Add("Button", " x+10 yp w60", "Compare" )
+; ButtonCompDiffV2 := MyGui.Add("Button", " x+10 yp w60", "Compare" )
+ButtonCompDiffV2 := MyGui.AddPicButton("w24 h24", "shell32.dll","icon239 h20")
 ButtonCompDiffV2.StatusBar := "Compare V1 and V2 code"
 ButtonCompDiffV2.OnEvent("Click", CompDiffV2)
 ButtonCompVscV2 := MyGui.Add("Button", " x+10 yp w80", "Compare VSC" )
@@ -87,13 +96,16 @@ if !FileExist("C:\Users\" A_UserName "\AppData\Local\Programs\Microsoft VS Code\
     ButtonCompVscV2.Visible := 0
 }
 ButtonCompVscV2.OnEvent("Click", CompVscV2)
-ButtonRunV2E := MyGui.Add("Button", "w50", "Run V2E")
+; ButtonRunV2E := MyGui.Add("Button", "w50", "Run V2E")
+ButtonRunV2E := MyGui.AddPicButton("w24 h24 x+10 yp", "mmcndmgr.dll","icon33 h23")
 ButtonRunV2.StatusBar := "Run expected V2 code"
 ButtonRunV2E.OnEvent("Click", RunV2E)
-ButtonCloseV2E := MyGui.Add("Button", " x+10 yp w60 +Disabled", "Close V2E" )
+; ButtonCloseV2E := MyGui.Add("Button", " x+10 yp w60 +Disabled", "Close V2E" )
+ButtonCloseV2E := MyGui.AddPicButton("w24 h24", "mmcndmgr.dll","icon62 h23")
 ButtonCloseV2E.StatusBar := "Close the running expected V2 code"
 ButtonCloseV2E.OnEvent("Click", CloseV2E)
-ButtonCompDiffV2E := MyGui.Add("Button", " x+10 yp w60", "Compare" )
+; ButtonCompDiffV2E := MyGui.Add("Button", " x+10 yp w60", "Compare" )
+ButtonCompDiffV2E := MyGui.AddPicButton("w24 h24", "shell32.dll","icon239 h20")
 ButtonCompDiffV2E.StatusBar := "Compare V2 and expected V2 code"
 ButtonCompDiffV2E.OnEvent("Click", CompDiffV2E)
 ButtonCompVscV2E := MyGui.Add("Button", " x+10 yp w80", "Compare VSC" )
@@ -105,7 +117,8 @@ CheckBoxV2E := MyGui.Add("CheckBox", "yp x+50 Checked", "Expected")
 CheckBoxV2E.StatusBar := "Display expected V2 code if it exists"
 CheckBoxV2E.OnEvent("Click", ViewV2E)
 
-ButtonValidateConversion := MyGui.Add("Button", " x+10 yp", "Save as test")
+; ButtonValidateConversion := MyGui.Add("Button", " x+10 yp", "Save as test")
+ButtonValidateConversion := MyGui.AddPicButton("w24 h24", "shell32.dll","icon259 h18")
 ButtonValidateConversion.StatusBar := "Save the converted code as valid test"
 ButtonValidateConversion.OnEvent("Click", ButtonGenerateTest)
 
@@ -169,6 +182,9 @@ CloseV1(*){
     if WinExist(TempAhkFile . " ahk_class AutoHotkey"){
         WinClose(TempAhkFile . " ahk_class AutoHotkey")
     }
+    if WinExist("testV1.ahk"){
+        WinClose()
+    }
     ButtonCloseV1.Opt("+Disabled")
 }
 RunV2(*){
@@ -191,6 +207,9 @@ CloseV2(*){
     DetectHiddenWindows(1)
     if WinExist(TempAhkFile . " ahk_class AutoHotkey"){
         WinClose(TempAhkFile . " ahk_class AutoHotkey")
+    }
+    if WinExist("testV2.ahk"){
+        WinClose()
     }
     ButtonCloseV2.Opt("+Disabled")
 }
@@ -636,18 +655,18 @@ Gui_Size(thisGui, MinMax, Width, Height)  ; Expand/Shrink ListView and TreeView 
     ButtonEvaluateTests.Move(,ButtonHeight)
     CheckBoxViewSymbols.Move(TreeViewWidth+EditWith-180,EditHeight+6)
     ButtonRunV1.Move(TreeViewWidth,ButtonHeight)
-    ButtonCloseV1.Move(TreeViewWidth+62,ButtonHeight)
+    ButtonCloseV1.Move(TreeViewWidth+28,ButtonHeight)
     oButtonConvert.Move(TreeViewWidth+EditWith-80,ButtonHeight)
     ButtonRunV2.Move(TreeViewWidth+EditWith,ButtonHeight)
-    ButtonCloseV2.Move(TreeViewWidth+EditWith+62,ButtonHeight)
-    ButtonCompDiffV2.Move(TreeViewWidth+EditWith+124,ButtonHeight)
-    ButtonCompVscV2.Move(TreeViewWidth+EditWith+186,ButtonHeight)
+    ButtonCloseV2.Move(TreeViewWidth+EditWith+28,ButtonHeight)
+    ButtonCompDiffV2.Move(TreeViewWidth+EditWith+56,ButtonHeight)
+    ButtonCompVscV2.Move(TreeViewWidth+EditWith+116,ButtonHeight)
     if (V2ExpectedEdit_W){
         V2ExpectedEdit.Move(TreeViewWidth+EditWith*2,,EditWith,EditHeight)
         ButtonRunV2E.Move(TreeViewWidth+EditWith*2,ButtonHeight)
-        ButtonCloseV2E.Move(TreeViewWidth+EditWith*2+52,ButtonHeight)
-        ButtonCompDiffV2E.Move(TreeViewWidth+EditWith*2+124,ButtonHeight)
-        ButtonCompVscV2E.Move(TreeViewWidth+EditWith*2+186,ButtonHeight)
+        ButtonCloseV2E.Move(TreeViewWidth+EditWith*2+28,ButtonHeight)
+        ButtonCompDiffV2E.Move(TreeViewWidth+EditWith*2+56,ButtonHeight)
+        ButtonCompVscV2E.Move(TreeViewWidth+EditWith*2+116,ButtonHeight)
         ButtonRunV2E.Visible := 1
         ButtonCloseV2E.Visible := 1
         ButtonCompDiffV2E.Visible := 1
@@ -660,8 +679,8 @@ Gui_Size(thisGui, MinMax, Width, Height)  ; Expand/Shrink ListView and TreeView 
         ButtonCompVscV2E.Visible := 0
     }
     
-    CheckBoxV2E.Move(Width-160,EditHeight+6)
-    ButtonValidateConversion.Move(Width-80,ButtonHeight)
+    CheckBoxV2E.Move(Width-100,EditHeight+6)
+    ButtonValidateConversion.Move(Width-30,ButtonHeight)
     DllCall("LockWindowUpdate", "Uint",0)
 }
 
@@ -748,6 +767,7 @@ XButton2::{
     Edit_Change()
 }
 
+
 gui_KeyDown(wb, wParam, lParam, nMsg, hWnd) {
 	; if (Chr(wParam) ~= "[BD-UW-Z]" || wParam = 0x74) ; Disable Ctrl+O/L/F/N and F5.
 		; return
@@ -801,3 +821,5 @@ gui_AhkHelp(SearchString,Version:="V2"){
         ogcActiveXWBC.Move(,,Width,Height) ; Gives an error Webbrowser has no method named move
     }
 }
+
+

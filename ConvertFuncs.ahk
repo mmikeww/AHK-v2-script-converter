@@ -1709,18 +1709,21 @@ _Gui(p){
          
          ; Add the events if they are used.
          aEventRename := []
-         aEventRename.Push({oldlabel:GuiOldName "GuiClose",event:"Close",parameters:"*"})
-         aEventRename.Push({oldlabel:GuiOldName "GuiEscape",event:"Escape",parameters:"*"})
-         aEventRename.Push({oldlabel:GuiOldName "GuiSize",event:"Size",parameters:"thisGui, MinMax, A_GuiWidth, A_GuiHeight"})
-         aEventRename.Push({oldlabel:GuiOldName "GuiConTextMenu",event:"ConTextMenu",parameters:"*"})
-         aEventRename.Push({oldlabel:GuiOldName "GuiDropFiles",event:"DropFiles",parameters:"thisGui, Ctrl, FileArray, *"})
+         aEventRename.Push({oldlabel:GuiOldName "GuiClose",event:"Close",parameters:"*",NewFunctionName: GetV2Label(GuiOldName "GuiClose")})
+         aEventRename.Push({oldlabel:GuiOldName "GuiEscape",event:"Escape",parameters:"*",NewFunctionName: GetV2Label(GuiOldName "GuiEscape")})
+         aEventRename.Push({oldlabel:GuiOldName "GuiSize",event:"Size",parameters:"thisGui, MinMax, A_GuiWidth, A_GuiHeight",NewFunctionName: GetV2Label(GuiOldName "GuiSize")})
+         aEventRename.Push({oldlabel:GuiOldName "GuiConTextMenu",event:"ConTextMenu",parameters:"*",NewFunctionName: GetV2Label(GuiOldName "GuiConTextMenu")})
+         aEventRename.Push({oldlabel:GuiOldName "GuiDropFiles",event:"DropFiles",parameters:"thisGui, Ctrl, FileArray, *",NewFunctionName: GetV2Label(GuiOldName "GuiDropFiles")})
          Loop aEventRename.Length{
             if RegexMatch(Orig_ScriptString,"\n(\s*)" aEventRename[A_Index].oldlabel ":\s"){
                if mAltLabel.Has(aEventRename[A_Index].oldlabel){
                   aEventRename[A_Index].oldlabel := mAltLabel[aEventRename[A_Index].oldlabel]
                }
-               aListLabelsToFunction.Push({label: aEventRename[A_Index].oldlabel, parameters:aEventRename[A_Index].parameters})
-               LineResult .= GuiNameLine ".OnEvent(`"" aEventRename[A_Index].event "`", " aEventRename[A_Index].oldlabel ")`r`n"
+               else{
+                  aListLabelsToFunction.Push({label: aEventRename[A_Index].oldlabel, parameters:aEventRename[A_Index].parameters,NewFunctionName:aEventRename[A_Index].NewFunctionName})
+
+               }
+               LineResult .= GuiNameLine ".OnEvent(`"" aEventRename[A_Index].event "`", " aEventRename[A_Index].NewFunctionName ")`r`n"
             }
          }
       }
@@ -1856,8 +1859,8 @@ _Gui(p){
          if (mGuiCType.Has(ControlObject) and (mGuiCType[ControlObject]="ListBox" or mGuiCType[ControlObject]="ComboBox")){
             ControlEvent := "DoubleClick"
          }
-         LineResult.= "`r`n" Indentation ControlObject ".OnEvent(`"" ControlEvent "`", " ControlLabel ")"
-         aListLabelsToFunction.Push({label: ControlLabel, parameters:"*"})
+         LineResult.= "`r`n" Indentation ControlObject ".OnEvent(`"" ControlEvent "`", " GetV2Label(ControlLabel) ")"
+         aListLabelsToFunction.Push({label: ControlLabel, parameters:"*", NewFunctionName: GetV2Label(ControlLabel)})
       }
       if(ControlHwnd!=""){
          LineResult.= "`r`n" Indentation ControlHwnd " := " ControlObject ".hwnd"
@@ -2595,18 +2598,20 @@ _Process(p){
    ; V1: Process,SubCommand,PIDOrName,Value
 
    if (p[1]="Priority"){
-      Out:= Format("ProcessSetPriority({1}, {2})", p[3], p[2])
+      if ScriptStringsUsed.ErrorLevel{
+         Out:= Format("ErrorLevel := ProcessSetPriority({1}, {2})", p*)
+      }
+      else{
+         Out:= Format("ProcessSetPriority({1}, {2})", p[3], p[2])
+      }
    }
-   else if (p[1]="Exist"){
+   else {
       if ScriptStringsUsed.ErrorLevel{
          Out:= Format("ErrorLevel := Process{1}({2}, {3})", p*)
       }
       else{
          Out:= Format("Process{1}({2}, {3})", p*)
       }
-   }
-   else{
-      Out:= Format("Process{1}({2}, {3})", p*)
    }
    
    Return RegExReplace(Out, "[\s\,]*\)$", ")")
@@ -3625,6 +3630,7 @@ ConvertLabel2Func(ScriptString, Label, Parameters:="", NewFunctionName :="", aRe
     if (NewFunctionName=""){ ; Use Labelname if no FunctionName is defined
        NewFunctionName := Label
     }
+    NewFunctionName:= GetV2Label(NewFunctionName)
     loop oScriptString.Length {
         Line := oScriptString[A_Index]
         
@@ -3719,7 +3725,11 @@ ConvertLabel2Func(ScriptString, Label, Parameters:="", NewFunctionName :="", aRe
     return Result
 }
 
-; Adds Brakets to hotkeys
+
+/**
+ * Adds brackets to script
+ * @param {*} ScriptString string containing a script of multiple lines
+ */
 AddBracket(ScriptString){
     oScriptString := StrSplit(ScriptString, "`n", "`r")
     Result := ""
@@ -3805,7 +3815,11 @@ AddBracket(ScriptString){
     return Result
 }
 
-; Creates a Map of labels who can be replaced by other labels (if labels are defined above each other)
+
+/**
+ * Creates a Map of labels who can be replaced by other labels (if labels are defined above each other)
+ * @param {*} ScriptString string containing a script of multiple lines
+ */
 GetAltLabelsMap(ScriptString){
     oScriptString := StrSplit(ScriptString, "`n", "`r")
     LabelPrev := ""
@@ -3838,3 +3852,8 @@ GetAltLabelsMap(ScriptString){
     return mAltLabels
 }
 
+; Corrects labels by adding "_" before it if it is not allowed. Other rules can be added later on like replacement of forbidden characters
+GetV2Label(LabelName){
+   NewLabelName := RegExReplace(LabelName, "^(\d.*)", "_$1") ; adds "_" before label if first char is number
+   return NewLabelName
+}

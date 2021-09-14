@@ -185,6 +185,7 @@ Convert(ScriptString)
       SendPlay,keysT2E | SendPlay({1})
       SendEvent,keysT2E | SendEvent({1})
       SendEvent,keysT2E | SendEvent({1})
+      Shutdown, FlagCBE2E | Shutdown({1})
       Sleep,delayCBE2E | Sleep({1})
       Sort,var,optionsT2E | {1} := Sort({1}, {2})
       SoundBeep,FrequencyCBE2E,DurationCBE2E | SoundBeep({1}, {2})
@@ -264,8 +265,11 @@ Convert(ScriptString)
    ;// this is a list of all renamed functions, in this format:
    ;//          OrigV1Function | ReplacementV2Function
    ;//  Similar to commands, parameters can be added
+   ; order of Is important do not change
    FunctionsToConvert := "
    (
+      ComObject(vt, value, Flags) | ComValue({1}, {2}, {3})
+      ComObjCreate(CLSID , IID) | ComObject({1}, {2})
       DllCall(DllFunction,Type1,Arg1,val*) | *_DllCall
       Func(FunctionNameQ2T) | {1}
       RegExMatch(Haystack, NeedleRegEx , OutputVarV2VR, StartingPos) | *_RegExMatch
@@ -1366,6 +1370,7 @@ IsEmpty(param)
    return false
 }
 
+
 ; =============================================================================
 ; Command formatting functions
 ;    They all accept an array of parameters and return command(s) in text form
@@ -1709,21 +1714,21 @@ _Gui(p){
          
          ; Add the events if they are used.
          aEventRename := []
-         aEventRename.Push({oldlabel:GuiOldName "GuiClose",event:"Close",parameters:"*",NewFunctionName: GetV2Label(GuiOldName "GuiClose")})
-         aEventRename.Push({oldlabel:GuiOldName "GuiEscape",event:"Escape",parameters:"*",NewFunctionName: GetV2Label(GuiOldName "GuiEscape")})
-         aEventRename.Push({oldlabel:GuiOldName "GuiSize",event:"Size",parameters:"thisGui, MinMax, A_GuiWidth, A_GuiHeight",NewFunctionName: GetV2Label(GuiOldName "GuiSize")})
-         aEventRename.Push({oldlabel:GuiOldName "GuiConTextMenu",event:"ConTextMenu",parameters:"*",NewFunctionName: GetV2Label(GuiOldName "GuiConTextMenu")})
-         aEventRename.Push({oldlabel:GuiOldName "GuiDropFiles",event:"DropFiles",parameters:"thisGui, Ctrl, FileArray, *",NewFunctionName: GetV2Label(GuiOldName "GuiDropFiles")})
+         aEventRename.Push({oldlabel:GuiOldName "GuiClose",event:"Close",parameters:"*",NewFunctionName: GuiOldName "GuiClose"})
+         aEventRename.Push({oldlabel:GuiOldName "GuiEscape",event:"Escape",parameters:"*",NewFunctionName: GuiOldName "GuiEscape"})
+         aEventRename.Push({oldlabel:GuiOldName "GuiSize",event:"Size",parameters:"thisGui, MinMax, A_GuiWidth, A_GuiHeight",NewFunctionName: GuiOldName "GuiSize"})
+         aEventRename.Push({oldlabel:GuiOldName "GuiConTextMenu",event:"ConTextMenu",parameters:"*",NewFunctionName: GuiOldName "GuiConTextMenu"})
+         aEventRename.Push({oldlabel:GuiOldName "GuiDropFiles",event:"DropFiles",parameters:"thisGui, Ctrl, FileArray, *",NewFunctionName: GuiOldName "GuiDropFiles"})
          Loop aEventRename.Length{
             if RegexMatch(Orig_ScriptString,"\n(\s*)" aEventRename[A_Index].oldlabel ":\s"){
                if mAltLabel.Has(aEventRename[A_Index].oldlabel){
-                  aEventRename[A_Index].oldlabel := mAltLabel[aEventRename[A_Index].oldlabel]
+                  aEventRename[A_Index].NewFunctionName := mAltLabel[aEventRename[A_Index].oldlabel]
                   ; Alternative label is available
                }
                else{
-                  aListLabelsToFunction.Push({label: aEventRename[A_Index].oldlabel, parameters:aEventRename[A_Index].parameters,NewFunctionName:aEventRename[A_Index].NewFunctionName})
+                  aListLabelsToFunction.Push({label: aEventRename[A_Index].oldlabel, parameters:aEventRename[A_Index].parameters,NewFunctionName: GetV2Label(aEventRename[A_Index].NewFunctionName)})
                }
-               LineResult .= GuiNameLine ".OnEvent(`"" aEventRename[A_Index].event "`", " aEventRename[A_Index].NewFunctionName ")`r`n"
+               LineResult .= GuiNameLine ".OnEvent(`"" aEventRename[A_Index].event "`", " GetV2Label(aEventRename[A_Index].NewFunctionName) ")`r`n"
             }
          }
       }
@@ -2055,9 +2060,11 @@ _GuiControlGet(p){
    }
 
    Out := ""
-   ControlObject := "ogc" ControlID ; for now, this can be improved in the future
+   ControlObject := mGuiCObject.Has(ControlID) ? mGuiCObject[ControlID] : "ogc" ControlID
+   Type := mGuiCType.Has(ControlObject) ? mGuiCType[ControlObject] : ""
+
    if (SubCommand=""){
-      if (Value="text"){
+      if (Value="text" or Type := "ListBox"){
          Out := OutputVar " := " ControlObject ".Text"
       }
       else{
@@ -2193,9 +2200,10 @@ _InputBox(oPar){
    Y := oPar.Has(8) ? trim(oPar[8]) : ""
    Locale := oPar.Has(9) ? trim(oPar[9]) : ""
    Timeout := oPar.Has(10) ? trim(oPar[10]) : ""
-   Default := oPar.Has(11) ? trim(oPar[11]) : ""
+   Default := oPar.Has(11) and oPar[11] != "" ? ToExp(trim(oPar[11])) : ""
 
-   Parameters := ToExp(Prompt) ", " ToExp(Title)
+   Parameters := ToExp(Prompt)
+   Title := ToExp(Title)
    if (Hide="hide"){
       Options .= "Password"
    }
@@ -2219,17 +2227,16 @@ _InputBox(oPar){
       Options .= "h"
       Options .=  IsNumber(y) ? y :  "`" " y " `""
    }
-   if (Options!=""){
-      Parameters .= ", `"" Options "`""
-   }
+   Options := Options = "" ? "" : "`"" Options "`""
+
    if ScriptStringsUsed.ErrorLevel{
-      Line := format("IB := InputBox({1}), {2} := IB.Value , ErrorLevel := IB.Result=`"OK`" ? 0 : IB.Result=`"CANCEL`" ? 1 : IB.Result=`"Timeout`" ? 2 : `"ERROR`"", parameters ,OutputVar)
+      Line := format("IB := InputBox({1}, {3}, {4}, {5}), {2} := IB.Value , ErrorLevel := IB.Result=`"OK`" ? 0 : IB.Result=`"CANCEL`" ? 1 : IB.Result=`"Timeout`" ? 2 : `"ERROR`"", parameters ,OutputVar, Title, Options, Default)
    }
    else{
-      Line := format("IB := InputBox({1}), {2} := IB.Value", parameters ,OutputVar)
+      Line := format("IB := InputBox({1}, {3}, {4}, {5}), {2} := IB.Value", parameters ,OutputVar, Title, Options, Default)
    }
 
-   return Line
+   Return out := RegExReplace(Line, "[\s\,]*\)", ")")
 }
 
 _KeyWait(p){
@@ -2599,10 +2606,10 @@ _Process(p){
 
    if (p[1]="Priority"){
       if ScriptStringsUsed.ErrorLevel{
-         Out:= Format("ErrorLevel := ProcessSetPriority({1}, {2})", p*)
+         Out:= Format("ErrorLevel := ProcessSetPriority({3}, {2})", p*)
       }
       else{
-         Out:= Format("ProcessSetPriority({1}, {2})", p[3], p[2])
+         Out:= Format("ProcessSetPriority({3}, {2})", p*)
       }
    }
    else {
@@ -3814,6 +3821,13 @@ AddBracket(ScriptString){
                 HotkeyPointer := 0
             }
         }
+        
+        ; Convert wrong labels
+        if RegexMatch(Line, "is)^\s*([^:\s\t,\{\}\[\]\(\)]+):(\s.*|)$"){
+            Label := GetV2Label(RegExReplace(Line, "is)(^\s*)([^:\s\t,\{\}\[\]\(\)]+):(\s.*|)$","$2"))
+            Line := Regexreplace(Line, "is)(^\s*)([^:\s\t,\{\}\[\]\(\)]+):(\s.*$|$)", "$1" Label ":$3")
+        }
+
         RestString := SubStr(RestString, InStr(RestString,"`n")+1)
         Result .= Line
         Result .= A_Index != oScriptString.Length ? "`r`n" : ""

@@ -7,8 +7,8 @@ if not NewPID
 }
 ; Otherwise:
 MsgBox("A matching process has appeared (Process ID is " NewPID ").")
-ErrorLevel := ProcessSetPriority(Priority, NewPID)
-ErrorLevel := ProcessSetPriority(Priority)  ; Have the script set itself to high priority.
+ErrorLevel := ProcessSetPriority("Low", NewPID)
+ErrorLevel := ProcessSetPriority("High")  ; Have the script set itself to high priority.
 WinClose("Untitled - Notepad")
 ErrorLevel := ProcessWaitClose(NewPID, 5)
 if ErrorLevel ; The PID still exists.

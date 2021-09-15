@@ -1860,12 +1860,16 @@ _Gui(p){
          if mAltLabel.Has(ControlLabel){
             ControlLabel := mAltLabel[ControlLabel]
          }
-         ControlEvent := "Click"
-         if (mGuiCType.Has(ControlObject) and (mGuiCType[ControlObject]="ListBox" or mGuiCType[ControlObject]="ComboBox")){
+         ControlEvent := "Change"
+
+         if (mGuiCType.Has(ControlObject) and mGuiCType[ControlObject] ~= "i)(ListBox|ComboBox)"){
             ControlEvent := "DoubleClick"
          }
+         if (mGuiCType.Has(ControlObject) and mGuiCType[ControlObject] ~= "i)(Button|Checkbox|Link|Radio|Picture|Statusbar|Text)") {
+            ControlEvent := "Click"          
+         }
          LineResult.= "`r`n" Indentation ControlObject ".OnEvent(`"" ControlEvent "`", " GetV2Label(ControlLabel) ")"
-         aListLabelsToFunction.Push({label: ControlLabel, parameters:"*", NewFunctionName: GetV2Label(ControlLabel)})
+         aListLabelsToFunction.Push({label: ControlLabel, parameters:"GuiCtrlObj, Info, *", NewFunctionName: GetV2Label(ControlLabel)})
       }
       if(ControlHwnd!=""){
          LineResult.= "`r`n" Indentation ControlHwnd " := " ControlObject ".hwnd"

@@ -161,7 +161,7 @@ Convert(ScriptString)
       PostMessage,Msg,wParam,lParam,ControlCBE2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | PostMessage({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8})
       Process,SubCommand,PIDOrNameT2E,ValueT2E | *_Process
       Progress, ProgressParam1,SubTextT2E,MainTextT2E,WinTitleT2E,FontNameT2E | *_Progress
-      RegRead,OutputVar,KeyNameT2E,ValueNameT2E | {1} := RegRead({2}, {3})
+      RegRead,OutputVar,KeyName,ValueName,var4 | *_RegRead
       RegWrite,ValueTypeT2E,KeyNameT2E,var3T2E,var4T2E,var5T2E | *_RegWrite
       RegDelete,var1,var2,var3 | *_RegDelete
       RunAs,UserT2E,PasswordT2E,DomainT2E | RunAs({1}, {2}, {3})
@@ -2877,32 +2877,47 @@ _Progress(p){
    Return Out
 }
 
+_RegRead(p){
+   ; Possible an error if old syntax is used without 5th parameter
+   if (p[4] != "" or (InStr(p[3], "\") and !InStr(p[2], "\"))){
+      ; Old V1 syntax RegRead, ValueType, RootKey, SubKey , ValueName, Value
+      p[2] := ToExp(p[2] "\" p[3])
+      p[3] := ToExp(p[4])
+   }else{
+      ; New V1 syntax RegRead, ValueType, KeyName , ValueName, Value
+      p[2] := ToExp(p[2])
+      p[3] := ToExp(p[3])  
+   }
+   p[3] := p[3] = "`"`"" ? "" : p[3]
+   Out := format("{1} := RegRead({2}, {3})", p*)
+   Return RegExReplace(Out, "[\s\,]*\)$", ")") 
+}
 _RegWrite(p){
    ; Possible an error if old syntax is used without 5th parameter
-   if (p[5] = ""){
-      ; New V1 syntax RegWrite, ValueType, KeyName , ValueName, Value
-      Out := format("RegWrite({4}, {1}, {2}, {3})",p*)
-   }else{
+   if (p[5] != "" or (!InStr(p[2], "\") and InStr(p[3], "\"))){
       ; Old V1 syntax RegWrite, ValueType, RootKey, SubKey , ValueName, Value
       Out := format("RegWrite({5}, {1}, {2} `"\`" {3}, {4})", p*)
       ; Cleaning up the code
       Out := StrReplace(Out,"`" `"\`" `"","\")
       Out := StrReplace(Out, "`"\`" `"", "`"\")
       Out := StrReplace(Out, "`" `"\`"", "\`"")
+   }else{
+      ; New V1 syntax RegWrite, ValueType, KeyName , ValueName, Value
+      Out := format("RegWrite({4}, {1}, {2}, {3})",p*) 
    }
    Return RegExReplace(Out, "[\s\,]*\)$", ")") 
 }
 
 _RegDelete(p){
    ; Possible an error if old syntax is used without 3th parameter
-   if (p[3] = ""){
-      ; New V1 syntax RegDelete, KeyName, ValueName
-      p[1] := ToExp(p[1])
-      p[2] := ToExp(p[2]) 
-   }else{
+   if (p[1] != "" and (p[3] != "" or (!InStr(p[1],"\") and InStr(p[2], "\")))){
       ; Old V1 syntax RegDelete, RootKey, SubKey, ValueName
       p[1] := ToExp(p[1] "\" p[2])
       p[2] := ToExp(p[3])
+   }else{
+      ; New V1 syntax RegDelete, KeyName, ValueName
+      p[1] := ToExp(p[1])
+      p[2] := ToExp(p[2])
    }
    p[1] := p[1] = "`"`"" ? "" : p[1]
    p[2] := p[2] = "`"`"" ? "" : p[2]

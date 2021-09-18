@@ -3076,14 +3076,15 @@ _SysGet(p){
       Return Format("{1} := MonitorGetPrimary()", p*)
    }
    else if (p[2]="Monitor"){
-      Return Format("MonitorGet({3}, {1}Left, {1}Top, {1}Right, {1}Bottom)", p*)
+      Return Format("MonitorGet({3}, &{1}Left, &{1}Top, &{1}Right, &{1}Bottom)", p*)
    }
    else if (p[2]="MonitorWorkArea"){
-      Return Format("MonitorGetWorkArea({3}, {1}Left, {1}Top, {1}Right, {1}Bottom)", p*)
+      Return Format("MonitorGetWorkArea({3}, &{1}Left, &{1}Top, &{1}Right, &{1}Bottom)", p*)
    }
-   else if (p[2]="MonitorName "){
+   else if (p[2]="MonitorName"){
       Return Format("{1} := MonitorGetName({3})", p*)
    }
+   p[2] := ToExp(p[2])
    Return Format("{1} := SysGet({2})", p*)
 }
 

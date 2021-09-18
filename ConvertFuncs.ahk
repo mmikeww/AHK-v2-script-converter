@@ -160,20 +160,24 @@ Convert(ScriptString)
       PixelGetColor,OutputVar,XT2E,YT2E,ModeT2E | {1} := PixelGetColor({2}, {3}, {4})
       PostMessage,Msg,wParam,lParam,ControlCBE2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | PostMessage({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8})
       Process,SubCommand,PIDOrNameT2E,ValueT2E | *_Process
-      Progress, ProgressParam1 ,SubTextT2E,MainTextT2E,WinTitleT2E,FontNameT2E | *_Progress
+      Progress, ProgressParam1,SubTextT2E,MainTextT2E,WinTitleT2E,FontNameT2E | *_Progress
+      RegRead,OutputVar,KeyNameT2E,ValueNameT2E | {1} := RegRead({2}, {3})
+      RegWrite,ValueTypeT2E,KeyNameT2E,var3T2E,var4T2E,var5T2E | *_RegWrite
+      RegDelete,var1,var2,var3 | *_RegDelete
       RunAs,UserT2E,PasswordT2E,DomainT2E | RunAs({1}, {2}, {3})
       Run,TargetT2E,WorkingDirT2E,OptionsT2E,OutputVarPIDV2VR | *_Run
       RunWait,TargetT2E,WorkingDirT2E,OptionsT2E,OutputVarPIDV2VR | RunWait({1}, {2}, {3}, {4})
+      SetCapsLockState, StateT2E | SetCapsLockState({1})
       SetControlDelay,DelayT2QE | SetControlDelay({1})
       SetEnv,var,valueT2E | {1} := {2}
-      SetTimer,LabelCBE2E,PeriodOnOffDeleteCBE2E,PriorityCBE2E | *_SetTimer
-      SetTitleMatchMode,MatchModeT2E | SetTitleMatchMode({1})
-      SetScrollLockState, StateT2E | SetScrollLockState({1})
       SetNumLockState, StateT2E | SetNumLockState({1})
-      SetCapsLockState, StateT2E | SetCapsLockState({1})
-      SetStoreCapsLockMode,OnOffOn2True | SetStoreCapsLockMode({1})
       SetKeyDelay,DelayT2E,PressDurationT2E,PlayT2E | SetKeyDelay({1}, {2}, {3})
       SetMouseDelay,DelayT2E,PlayT2E | SetMouseDelay({1}, {2})
+      SetRegView, RegViewT2E | SetRegView({1})
+      SetScrollLockState, StateT2E | SetScrollLockState({1})
+      SetStoreCapsLockMode,OnOffOn2True | SetStoreCapsLockMode({1})
+      SetTimer,LabelCBE2E,PeriodOnOffDeleteCBE2E,PriorityCBE2E | *_SetTimer
+      SetTitleMatchMode,MatchModeT2E | SetTitleMatchMode({1})
       SetWinDelay,DelayT2QE | SetWinDelay({1})
       Send,keysT2E | Send({1})
       SendText,keysT2E | SendText({1})
@@ -1763,13 +1767,16 @@ _Gui(p){
             }
             StatusBarNameDefault := ControlObject
          }
-         if(var2="Button" or var2="ListView" or ControlLabel!="" or ControlObject!=""){
+         if(var2 ~= "i)(Button|ListView|TreeView)" or ControlLabel!="" or ControlObject!=""){
             if (ControlObject=""){
                ControlObject := "ogc" var2 RegExReplace(Var4, "[^\w_]", "")
             }
             LineResult.= ControlObject " := " 
             if (var2="ListView"){
                ListViewNameDefault := ControlObject
+            }
+            if (var2="TreeView"){
+               TreeViewNameDefault := ControlObject
             }
          }
          If (ControlObject!=""){
@@ -1862,14 +1869,16 @@ _Gui(p){
          }
          ControlEvent := "Change"
 
-         if (mGuiCType.Has(ControlObject) and mGuiCType[ControlObject] ~= "i)(ListBox|ComboBox)"){
+         if (mGuiCType.Has(ControlObject) and mGuiCType[ControlObject] ~= "i)(ListBox|ComboBox|ListView|TreeView)"){
             ControlEvent := "DoubleClick"
          }
          if (mGuiCType.Has(ControlObject) and mGuiCType[ControlObject] ~= "i)(Button|Checkbox|Link|Radio|Picture|Statusbar|Text)") {
             ControlEvent := "Click"          
          }
-         LineResult.= "`r`n" Indentation ControlObject ".OnEvent(`"" ControlEvent "`", " GetV2Label(ControlLabel) ")"
-         aListLabelsToFunction.Push({label: ControlLabel, parameters:"GuiCtrlObj, Info, *", NewFunctionName: GetV2Label(ControlLabel)})
+         V1GuiControlEvent := ControlEvent ="Change" ? "Normal" : ControlEvent
+         V1GuiControlEvent := V1GuiControlEvent = "Click" ? "Normal" : ControlEvent
+         LineResult.= "`r`n" Indentation ControlObject ".OnEvent(`"" ControlEvent "`", " GetV2Label(ControlLabel) ".Bind(`"" V1GuiControlEvent "`"))"
+         aListLabelsToFunction.Push({label: ControlLabel, parameters:"A_GuiEvent, GuiCtrlObj, Info, *", NewFunctionName: GetV2Label(ControlLabel)})
       }
       if(ControlHwnd!=""){
          LineResult.= "`r`n" Indentation ControlHwnd " := " ControlObject ".hwnd"
@@ -1987,10 +1996,12 @@ _GuiControl(p){
       Return ControlObject ".Text := " ToExp(Value)
    }
    else if (SubCommand="Move" or SubCommand="MoveDraw"){
-      X:= RegExMatch(Value,"i)^.*\bx`"(\s*[^`"]*)\b.*$",&newX) = 0 ? "" : newX[1]
-      Y:= RegExMatch(Value,"i)^.*\by`"(\s*[^`"]*)\b.*$",&newY) = 0 ? "" : newY[1]
-      W:= RegExMatch(Value,"i)^.*\bw`"(\s*[^`"]*)\b.*$",&newW) = 0 ? "" : newW[1]
-      H:= RegExMatch(Value,"i)^.*\bh`"(\s*[^`"]*)\b.*$",&newH) = 0 ? "" : newH[1]
+      
+      X:= RegExMatch(Value,"i)^.*\bx`"\s*\.?\s*([^`"]*?)\s*\.?\s*(`".*|)$",&newX) = 0 ? "" : newX[1]
+      Y:= RegExMatch(Value,"i)^.*\by`"\s*\.?\s*([^`"]*?)\s*\.?\s*(`".*|)$",&newY) = 0 ? "" : newY[1]
+      W:= RegExMatch(Value,"i)^.*\bw`"\s*\.?\s*([^`"]*?)\s*\.?\s*(`".*|)$",&newW) = 0 ? "" : newW[1]
+      H:= RegExMatch(Value,"i)^.*\bh`"\s*\.?\s*([^`"]*?)\s*\.?\s*(`".*|)$",&newH) = 0 ? "" : newH[1]
+      
       if (X=""){
          X:= RegExMatch(Value, "i)^.*\bx([\w]*)\b.*$",&newX) = 0 ? "" : newX[1]
       }
@@ -2273,6 +2284,13 @@ _Loop(p){
       p[2] := p[1]
       p[1] := "Files"
    }
+   
+If (p[1]~="i)^(HKEY|HKLM|HKU|HKCR|HKCC).*"){
+   p[3] := p[2]
+   p[2] := p[1]
+   p[1] := "Reg"
+}
+
    if (p[1] = "Parse")
    {
       Line := p.Has(4) ? Trim(ToExp(p[4])) : ""
@@ -2317,7 +2335,14 @@ _Loop(p){
 
 _LV_Add(p){
    global ListviewNameDefault
-   Return format("{1}.Add({2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}, {16}, {17})", ListviewNameDefault, p*)
+   Out := ListviewNameDefault ".Add("
+   loop p.Length
+   {
+      Out .= p[A_Index] ", "
+   }
+   Out .= ")"
+   ; Out := format("{1}.Add({2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}, {16}, {17})", ListviewNameDefault, p*)
+   Return RegExReplace(Out, "[\s\,]*\)$", ")")
 }
 _LV_Delete(p){
    global ListviewNameDefault
@@ -2345,11 +2370,23 @@ _LV_InsertCol(p){
 }
 _LV_Insert(p){
    global ListviewNameDefault
-   Return format("{1}.Insert({2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}, {16}, {17})", ListviewNameDefault, p*)
+   Out := ListviewNameDefault ".Insert("
+   loop p.Length
+   {
+      Out .= p[A_Index] ", "
+   }
+   Out .= ")"
+   Return RegExReplace(Out, "[\s\,]*\)$", ")")
 }
 _LV_Modify(p){
    global ListviewNameDefault
-   Return format("{1}.Modify({2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}, {16}, {17})", ListviewNameDefault, p*)
+   Out := ListviewNameDefault ".Modify("
+   loop p.Length
+   {
+      Out .= p[A_Index] ", "
+   }
+   Out .= ")"
+   Return RegExReplace(Out, "[\s\,]*\)$", ")")
 }
 _LV_ModifyCol(p){
    global ListviewNameDefault
@@ -2476,10 +2513,13 @@ _Menu(p){
    if (RegExCount4){
       if (Var2="Add"){
          FunctionName := RegExReplace(Var4, "&","") ; Removes & from labels
-         LineResult.= ", " FunctionName
-         if RegexMatch(Orig_ScriptString,"\n(\s*)" Var4 ":\s"){
+         if mAltLabel.Has(FunctionName) {
+            FunctionName := mAltLabel[FunctionName]
+         }
+         else if RegexMatch(Orig_ScriptString,"\n(\s*)" Var4 ":\s"){
             aListLabelsToFunction.Push({label: Var4, parameters:"A_ThisMenuItem, A_ThisMenuItemPos, MyMenu", NewFunctionName: FunctionName})
          }
+         LineResult .= ", " FunctionName
       }
       else{
          LineResult.= ", " ToStringExpr(Var4)
@@ -2837,10 +2877,44 @@ _Progress(p){
    Return Out
 }
 
+_RegWrite(p){
+   ; Possible an error if old syntax is used without 5th parameter
+   if (p[5] = ""){
+      ; New V1 syntax RegWrite, ValueType, KeyName , ValueName, Value
+      Out := format("RegWrite({4}, {1}, {2}, {3})",p*)
+   }else{
+      ; Old V1 syntax RegWrite, ValueType, RootKey, SubKey , ValueName, Value
+      Out := format("RegWrite({5}, {1}, {2} `"\`" {3}, {4})", p*)
+      ; Cleaning up the code
+      Out := StrReplace(Out,"`" `"\`" `"","\")
+      Out := StrReplace(Out, "`"\`" `"", "`"\")
+      Out := StrReplace(Out, "`" `"\`"", "\`"")
+   }
+   Return RegExReplace(Out, "[\s\,]*\)$", ")") 
+}
+
+_RegDelete(p){
+   ; Possible an error if old syntax is used without 3th parameter
+   if (p[3] = ""){
+      ; New V1 syntax RegDelete, KeyName, ValueName
+      p[1] := ToExp(p[1])
+      p[2] := ToExp(p[2]) 
+   }else{
+      ; Old V1 syntax RegDelete, RootKey, SubKey, ValueName
+      p[1] := ToExp(p[1] "\" p[2])
+      p[2] := ToExp(p[3])
+   }
+   p[1] := p[1] = "`"`"" ? "" : p[1]
+   p[2] := p[2] = "`"`"" ? "" : p[2]
+   p[3] := p[3] = "`"`"" ? "" : p[3]
+   Out := format("RegDelete({1}, {2})", p*)
+   Return RegExReplace(Out, "[\s\,]*\)$", ")") 
+}
+
 _Run(p){
    if InStr(p[3],"UseErrorLevel"){
       p[3] := RegExReplace(p[3],"i)(.*?)\s*\bUseErrorLevel\b(.*)","$1$2")
-      Out := format("ErrorLevel := `"ERROR`"`r`nTry ErrorLevel := Run({1}, {2}, {3}, {4})",p*)
+      Out := format("{   ErrorLevel := `"ERROR`"`r`n" Indentation "   Try ErrorLevel := Run({1}, {2}, {3}, {4})`r`n" Indentation "}",p*)
    }else{
       Out := format("Run({1}, {2}, {3}, {4})",p*)
    }

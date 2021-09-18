@@ -1,0 +1,1 @@
+A_HotkeyModifierTimeout := Milliseconds

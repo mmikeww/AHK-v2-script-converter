@@ -1,0 +1,2 @@
+#HotIf 
+Esc::ExitApp

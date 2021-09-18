@@ -107,6 +107,7 @@ Convert(ScriptString)
       FileCopyDir,sourceT2E,destT2E,flagCBE2E | *_FileCopyDir
       FileCopy,sourceT2E,destT2E,OverwriteCBE2E | *_FileCopy
       FileCreateDir,dirT2E | DirCreate({1})
+      FileCreateShortcut,TargetT2E,LinkFileT2E,WorkingDirT2E,ArgsT2E,DescriptionT2E,IconFileT2E,ShortcutKeyT2E,IconNumberT2E,RunStateT2E | FileCreateShortcut({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9})
       FileDelete,dirT2E | FileDelete({1})
       FileEncoding,FilePatternT2E | FileEncoding({1})
       FileGetAttrib,OutputVar,FilenameT2E | {1} := FileGetAttrib({2})

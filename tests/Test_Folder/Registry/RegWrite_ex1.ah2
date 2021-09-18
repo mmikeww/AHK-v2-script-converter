@@ -1,0 +1,1 @@
+RegWrite("Test Value", "REG_SZ", "HKEY_LOCAL_MACHINE\SOFTWARE\TestKey", "MyValueName")

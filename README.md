@@ -48,4 +48,5 @@ And of course, create a Pull Request with your changed code
 - Uberi for his [updates to the original](https://autohotkey.com/board/topic/65333-v2-script-converter/?p=419671)
 - [Mergely](https://github.com/wickedest/Mergely) for the javascript diff library
 - Aurelain's [Exo](https://autohotkey.com/boards/viewtopic.php?t=5714) for the interface to run the javascript in an AHK gui
+- AHK_User (= dmtr99) Updating the code to V2-Beta and is currently working on it
 - I'm sure many others

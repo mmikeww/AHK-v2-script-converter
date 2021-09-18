@@ -1,0 +1,1 @@
+SetWorkingDir(A_ScriptDir)

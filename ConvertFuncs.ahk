@@ -169,7 +169,7 @@ Convert(ScriptString)
       MouseMove,XT2E,YT2E,SpeedT2E,RelativeT2E | MouseMove({1}, {2}, {3}, {4})
       OnExit,Func,AddRemove | *_OnExit
       OutputDebug,TextT2E | OutputDebug({1})
-      PixelSearch,OutputVarXV2VR,OutputVarYV2VR,X1T2E,Y1T2E,X2T2E,Y2T2E,ColorIDCBE2E,VariationT2E,ModeT2E | ErrorLevel := PixelSearch({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9})
+      PixelSearch,OutputVarXV2VR,OutputVarYV2VR,X1T2E,Y1T2E,X2T2E,Y2T2E,ColorIDCBE2E,VariationT2E,ModeT2E | ErrorLevel := PixelSearch({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8})
       PixelGetColor,OutputVar,XT2E,YT2E,ModeT2E | {1} := PixelGetColor({2}, {3}, {4})
       PostMessage,Msg,wParam,lParam,ControlCBE2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | PostMessage({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8})
       Process,SubCommand,PIDOrNameT2E,ValueT2E | *_Process
@@ -261,14 +261,15 @@ Convert(ScriptString)
       #ErrorStdOut,EncodingCBE2E | #ErrorStdOut {1}
       #HotkeyInterval,MillisecondsCBE2E | A_HotkeyInterval := {1}
       #HotkeyModifierTimeout,MillisecondsCBE2E | A_HotkeyModifierTimeout := {1}
+      #HotString,Expression | #HotString {1}
       #If Expression | #HotIf {1}
       #IfTimeout,ExpressionCBE2E | #HotIfTimeout {1}
-      #Include, FileOrDirName | #Include {1}
-      #IncludeAgain, FileOrDirName | #IncludeAgain {1}
+      #Include,FileOrDirName | #Include {1}
+      #IncludeAgain,FileOrDirName | #IncludeAgain {1}
       #InputLevel,LevelCBE2E | #InputLevel {1}
       #IfWinActive,WinTitleT2E,WinTextT2E | *_HashtagIfWinActivate
       #IfWinExist,WinTitleT2E,WinTextT2E | #HotIf WinExist({1}, {2})
-      #IfWinNotActive ,WinTitleT2E,WinTextT2E | #HotIf !WinActive({1}, {2})
+      #IfWinNotActive,WinTitleT2E,WinTextT2E | #HotIf !WinActive({1}, {2})
       #IfWinNotExist,WinTitleT2E,WinTextT2E | #HotIf !WinExist({1}, {2})
       #InputLevel,LevelCBE2E | #InputLevel {1}
       #InstallKeybdHook | InstallKeybdHook()

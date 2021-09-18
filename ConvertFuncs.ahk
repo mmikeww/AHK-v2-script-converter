@@ -108,14 +108,24 @@ Convert(ScriptString)
       FileCopy,sourceT2E,destT2E,OverwriteCBE2E | *_FileCopy
       FileCreateDir,dirT2E | DirCreate({1})
       FileDelete,dirT2E | FileDelete({1})
+      FileEncoding,FilePatternT2E | FileEncoding({1})
+      FileGetAttrib,OutputVar,FilenameT2E | {1} := FileGetAttrib({2})
       FileGetSize,OutputVar,FilenameT2E,unitsT2E | {1} := FileGetSize({2}, {3})
+      FileGetTime,OutputVar,FilenameT2E,WhichTimeT2E | {1} := FileGetTime({2}, {3})
+      FileGetVersion,OutputVar,FilenameT2E | {1} := FileGetVersion({2})
       FileGetShortcut,LinkFileT2E,OutTargetV2VR,OutDirV2VR,OutArgsV2VR,OutDescriptionV2VR,OutIconV2VR,OutIconNumV2VR,OutRunStateV2VR | FileGetShortcut({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8})
+      FileInstall,SourceT2E,DestT2E,OverwriteT2E | FileInstall({1}, {2}, {3})
+      FileMove,SourceT2E,DestPatternT2E,OverwriteT2E | FileMove({1}, {2}, {3})
       FileMoveDir,SourceT2E,DestT2E,FlagT2E | DirMove({1}, {2}, {3})
       FileRead,OutputVar,Filename | *_FileRead
       FileReadLine,OutputVar,FilenameT2E,LineNumCBE2E | *_FileReadLine
+      FileRecycle,FilePatternT2E | FileRecycle({1})
+      FileRecycleEmpty,FilePatternT2E | FileRecycleEmpty({1})
       FileRemoveDir,dirT2E,recurse | DirDelete({1}, {2})
-      FileSelectFolder,var,startingdirT2E,opts,promptT2E | {1} := DirSelect({2}, {3}, {4})
       FileSelectFile,var,opts,rootdirfile,prompt,filter | *_FileSelect
+      FileSelectFolder,var,startingdirT2E,opts,promptT2E | {1} := DirSelect({2}, {3}, {4})
+      FileSetAttrib,AttributesT2E,FilePatternT2E,OperateOnFolders,Recurse | *_FileSetAttrib
+      FileSetTime,YYYYMMDDHH24MISST2E,FilePatternT2E,WhichTimeT2E,OperateOnFolders,Recurse | *_FileSetTime
       FormatTime,outVar,dateT2E,formatT2E | {1} := FormatTime({2}, {3})
       GetKeyState,OutputVar,KeyNameT2E,ModeT2E | {1} := GetKeyState({2}, {3}) ? "D" : "U"
       Gui,SubCommand,Value1,Value2,Value3 | *_Gui
@@ -144,6 +154,7 @@ Convert(ScriptString)
       IfWinActive,titleT2E,textT2E,excltitleT2E,excltextT2E | if WinActive({1}, {2}, {3}, {4})
       IfWinNotActive,titleT2E,textT2E,excltitleT2E,excltextT2E | if !WinActive({1}, {2}, {3}, {4})
       ImageSearch,OutputVarXV2VR,OutputVarYV2VR,X1,Y1,X2,Y2,ImageFileT2E | ErrorLevel := ImageSearch({1}, {2}, {3}, {4}, {5}, {6}, {7})
+      IniDelete,FilenameT2E,SectionT2E,KeyT2E | IniDelete({1}, {2}, {3})
       IniRead,OutputVar,FilenameT2E,SectionT2E,KeyT2E,DefaultT2E | {1} := IniRead({2}, {3}, {4}, {5})
       IniWrite,ValueT2E,FilenameT2E,SectionT2E,KeyT2E | IniWrite({1}, {2}, {3}, {4})
       Input,OutputVar,OptionsT2E,EndKeysT2E,MatchListT2E | *_input
@@ -179,6 +190,7 @@ Convert(ScriptString)
       SetTimer,LabelCBE2E,PeriodOnOffDeleteCBE2E,PriorityCBE2E | *_SetTimer
       SetTitleMatchMode,MatchModeT2E | SetTitleMatchMode({1})
       SetWinDelay,DelayT2QE | SetWinDelay({1})
+      SetWorkingDir,DirNameT2E | SetWorkingDir({1})
       Send,keysT2E | Send({1})
       SendText,keysT2E | SendText({1})
       SendMode,ModeT2E | SendMode({1})
@@ -1619,6 +1631,29 @@ _FileSelect(p){
       Line .= Indentation "}"
    }
    return Line
+}
+
+_FileSetAttrib(p){
+   ; old V1 : FileSetAttrib, Attributes , FilePattern, OperateOnFolders?, Recurse?
+   ; New V2 : FileSetAttrib Attributes , FilePattern, Mode (DFR)
+   OperateOnFolders := P[3]
+   Recurse := P[4]
+   P[3] := OperateOnFolders=1 ? "DF" : OperateOnFolders = 2 ? "D" : ""
+   P[3] .= Recurse=1 ? "R" : ""
+   P[3] := P[3]="" ? "" :ToExp(P[3])
+   Out := format("FileSetAttrib({1}, {2}, {3})", p*)
+   Return out := RegExReplace(Out, "[\s\,]*\)", ")")
+}
+_FileSetTime(p){
+   ; old V1 : FileSetTime, YYYYMMDDHH24MISS, FilePattern, WhichTime, OperateOnFolders?, Recurse?
+   ; New V2 : YYYYMMDDHH24MISS, FilePattern, WhichTime, Mode (DFR)
+   OperateOnFolders := P[4]
+   Recurse := P[5]
+   P[4] := OperateOnFolders=1 ? "DF" : OperateOnFolders = 2 ? "D" : ""
+   P[4] .= Recurse=1 ? "R" : ""
+   P[4] := P[4]="" ? "" :ToExp(P[4])
+   Out := format("FileSetTime({1}, {2}, {3}, {4})", p*)
+   Return out := RegExReplace(Out, "[\s\,]*\)", ")")
 }
 
 _Gosub(p){

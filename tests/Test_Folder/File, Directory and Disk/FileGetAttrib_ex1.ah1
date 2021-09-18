@@ -1,0 +1,1 @@
+FileGetAttrib, OutputVar, C:\New Folder

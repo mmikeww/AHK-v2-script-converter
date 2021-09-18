@@ -1,0 +1,1 @@
+OutputVar := FileGetTime("C:\My Documents\test.doc")

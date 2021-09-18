@@ -1,0 +1,1 @@
+FileSetAttrib("^H", "C:\MyFiles")

@@ -1,0 +1,1 @@
+FileRemoveDir, C:\Download Temp

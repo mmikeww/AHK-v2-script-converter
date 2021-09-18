@@ -1,0 +1,1 @@
+FileSetAttrib, +RH, C:\MyFiles\*.*, 1  ; +RH is identical to +R+H

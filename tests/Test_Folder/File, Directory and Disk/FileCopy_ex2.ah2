@@ -1,0 +1,1 @@
+FileCopy("C:\My File.txt", "C:\My File New.txt")

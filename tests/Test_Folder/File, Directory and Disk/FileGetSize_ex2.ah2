@@ -1,0 +1,1 @@
+OutputVar := FileGetSize("C:\My Documents\test.doc", "K")

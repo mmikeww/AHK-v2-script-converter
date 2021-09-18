@@ -1,0 +1,1 @@
+Version := FileGetVersion("C:\My Application.exe")

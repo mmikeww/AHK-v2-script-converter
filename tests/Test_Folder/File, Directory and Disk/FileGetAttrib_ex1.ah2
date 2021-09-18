@@ -1,0 +1,1 @@
+OutputVar := FileGetAttrib("C:\New Folder")

@@ -1,0 +1,1 @@
+DirMove("C:\My Folder", "C:\New Location\My Folder", "R")

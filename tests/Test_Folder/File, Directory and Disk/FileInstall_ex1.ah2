@@ -1,0 +1,1 @@
+FileInstall("My File.txt", A_Desktop "\Example File.txt", 1)

@@ -176,6 +176,7 @@ Convert(ScriptString)
       PostMessage,Msg,wParam,lParam,ControlCBE2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | PostMessage({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8})
       Process,SubCommand,PIDOrNameT2E,ValueT2E | *_Process
       Progress, ProgressParam1,SubTextT2E,MainTextT2E,WinTitleT2E,FontNameT2E | *_Progress
+      Random,OutputVar,MinT2E,MaxT2E | *_Random
       RegRead,OutputVar,KeyName,ValueName,var4 | *_RegRead
       RegWrite,ValueTypeT2E,KeyNameT2E,var3T2E,var4T2E,var5T2E | *_RegWrite
       RegDelete,var1,var2,var3 | *_RegDelete
@@ -2801,6 +2802,16 @@ _Progress(p) {
    }
    Out := RegExReplace(Out, "[\s\,]*\)", ")")
    Return Out
+}
+
+_Random(p) {
+   ; v1: Random, OutputVar, Min, Max
+   if (p[1] = "") {
+      ; Old V1 syntax RegRead, ValueType, RootKey, SubKey , ValueName, Value
+      Return "; REMOVED Random reseed"
+   }
+   Out := format("{1} := Random({2}, {3})", p*)
+   Return RegExReplace(Out, "[\s\,]*\)$", ")")
 }
 
 _RegRead(p) {

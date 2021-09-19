@@ -5,8 +5,8 @@
 
 global icons, TestMode, FontSize, ViewExpectedCode
 
-TestMode := IniRead("QuickConvertorV2.ini", "Convertor", "TestMode", 1)
-ViewExpectedCode := IniRead("QuickConvertorV2.ini", "Convertor", "ViewExpectedCode", 1)
+TestMode := IniRead("QuickConvertorV2.ini", "Convertor", "TestMode", 0)
+ViewExpectedCode := IniRead("QuickConvertorV2.ini", "Convertor", "ViewExpectedCode", 0)
 FontSize := 10
 IniWrite(TestMode, "QuickConvertorV2.ini", "Convertor", "TestMode")
 IniWrite(ViewExpectedCode, "QuickConvertorV2.ini", "Convertor", "ViewExpectedCode")

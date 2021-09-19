@@ -2395,6 +2395,9 @@ _MsgBox(p) {
       }
       return Out
    } else if RegExMatch(p[1], "i)^\s*.*") {
+      if !InStr(p[1],"`n"){
+         p[1] := RegExReplace(Orig_Line_NoComment, "i)MsgBox\s*,?(.*)$", "$1")
+      }
       Out := format("MsgBox({1})", p[1] = "" ? "" : ToExp(p[1]))
       if ScriptStringsUsed.IfMsgBox {
          Out := "msgResult := " Out

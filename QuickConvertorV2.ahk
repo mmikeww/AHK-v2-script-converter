@@ -2,10 +2,15 @@
 
 #Include ConvertFuncs.ahk
 #Include <_GuiCtlExt>
-; #Include ExecScript.ahk
 
+global icons, TestMode, FontSize, ViewExpectedCode
 
-global icons
+TestMode := IniRead("QuickConvertorV2.ini", "Convertor", "TestMode", 1)
+ViewExpectedCode := IniRead("QuickConvertorV2.ini", "Convertor", "ViewExpectedCode", 1)
+FontSize := 10
+IniWrite(TestMode, "QuickConvertorV2.ini", "Convertor", "TestMode")
+IniWrite(ViewExpectedCode, "QuickConvertorV2.ini", "Convertor", "ViewExpectedCode")
+
 FileTempScript := A_ScriptDir "\Tests\TempScript.ah1"
 TempV1Script := FileExist(FileTempScript) ? FileRead(FileTempScript) : ""
 GuiTest(TempV1Script)
@@ -45,8 +50,12 @@ SB.SetParts(300, 300)  ; Create three parts in the bar (the third part fills all
 ; Add folders and their subfolders to the tree. Display the status in case loading takes a long time:
 M := Gui("ToolWindow -SysMenu Disabled AlwaysOnTop", "Loading the tree..."), M.Show("w200 h0")
 
-;DirList := Map()
-DirList := AddSubFoldersToTree(TreeRoot, Map())
+if TestMode{
+    DirList := AddSubFoldersToTree(TreeRoot, Map())
+}
+else{
+    DirList := Map()
+}
 
 M.Hide()
 
@@ -60,15 +69,15 @@ CheckBoxViewSymbols.StatusBar := "Display invisible symbols like spaces, tabs an
 CheckBoxViewSymbols.OnEvent("Click", ViewSymbols)
 V1Edit := MyGui.Add("Edit", "x280 y0 w600 vvCodeV1 +Multi +WantTab +0x100", strV1Script)  ; Add a fairly wide edit control at the top of the window.
 V1Edit.OnEvent("Change",Edit_Change)
-; ButtonRunV1 := MyGui.Add("Button", "w60", "Run V1")
+
 ButtonRunV1 := MyGui.AddPicButton("w24 h24", "mmcndmgr.dll","icon33 h23")
 ButtonRunV1.StatusBar := "Run the converted V2 code"
 ButtonRunV1.OnEvent("Click", RunV1)
-; ButtonCloseV1 := MyGui.Add("Button", " x+10 yp w60 +Disabled", "Close V1")
+
 ButtonCloseV1 := MyGui.AddPicButton("w24 h24 x+10 yp", "mmcndmgr.dll","icon62 h23")
 ButtonCloseV1.StatusBar := "Close the running V1 code"
 ButtonCloseV1.OnEvent("Click", CloseV1)
-; oButtonConvert := MyGui.Add("Button", "default x+10 yp", "Convert =>")
+
 
 oButtonConvert := MyGui.AddPicButton("w60 h22", "netshell.dll","icon98 h20")
 oButtonConvert.StatusBar := "Convert V1 code again to V2"
@@ -77,16 +86,15 @@ V2Edit := MyGui.Add("Edit", "x600 ym w600 vvCodeV2 +Multi +WantTab +0x100", "") 
 V2Edit.OnEvent("Change",Edit_Change)
 V2ExpectedEdit := MyGui.Add("Edit", "x1000 ym w600 H100 vvCodeV2Expected +Multi +WantTab +0x100", "")  ; Add a fairly wide edit control at the top of the window.
 V2ExpectedEdit.OnEvent("Change",Edit_Change)
-; ButtonRunV2 := MyGui.Add("Button", "w60", "Run V2")
 
 ButtonRunV2 := MyGui.AddPicButton("w24 h24", "mmcndmgr.dll","icon33 h23")
 ButtonRunV2.StatusBar := "Run this code in Autohotkey V2"
 ButtonRunV2.OnEvent("Click", RunV2)
-; ButtonCloseV2 := MyGui.Add("Button", " x+10 yp w60 +Disabled", "Close V2" )
+
 ButtonCloseV2 := MyGui.AddPicButton("w24 h24 x+10 yp", "mmcndmgr.dll","icon62 h23")
 ButtonCloseV2.StatusBar := "Close the running V2 code"
 ButtonCloseV2.OnEvent("Click", CloseV2)
-; ButtonCompDiffV2 := MyGui.Add("Button", " x+10 yp w60", "Compare" )
+
 ButtonCompDiffV2 := MyGui.AddPicButton("w24 h24", "shell32.dll","icon239 h20")
 ButtonCompDiffV2.StatusBar := "Compare V1 and V2 code"
 ButtonCompDiffV2.OnEvent("Click", CompDiffV2)
@@ -96,15 +104,15 @@ if !FileExist("C:\Users\" A_UserName "\AppData\Local\Programs\Microsoft VS Code\
     ButtonCompVscV2.Visible := 0
 }
 ButtonCompVscV2.OnEvent("Click", CompVscV2)
-; ButtonRunV2E := MyGui.Add("Button", "w50", "Run V2E")
+
 ButtonRunV2E := MyGui.AddPicButton("w24 h24 x+10 yp", "mmcndmgr.dll","icon33 h23")
 ButtonRunV2.StatusBar := "Run expected V2 code"
 ButtonRunV2E.OnEvent("Click", RunV2E)
-; ButtonCloseV2E := MyGui.Add("Button", " x+10 yp w60 +Disabled", "Close V2E" )
+
 ButtonCloseV2E := MyGui.AddPicButton("w24 h24", "mmcndmgr.dll","icon62 h23")
 ButtonCloseV2E.StatusBar := "Close the running expected V2 code"
 ButtonCloseV2E.OnEvent("Click", CloseV2E)
-; ButtonCompDiffV2E := MyGui.Add("Button", " x+10 yp w60", "Compare" )
+
 ButtonCompDiffV2E := MyGui.AddPicButton("w24 h24", "shell32.dll","icon239 h20")
 ButtonCompDiffV2E.StatusBar := "Compare V2 and expected V2 code"
 ButtonCompDiffV2E.OnEvent("Click", CompDiffV2E)
@@ -114,10 +122,12 @@ if !FileExist("C:\Users\" A_UserName "\AppData\Local\Programs\Microsoft VS Code\
     ButtonCompVscV2E.Visible := 0
 }
 CheckBoxV2E := MyGui.Add("CheckBox", "yp x+50 Checked", "Expected")
+CheckBoxV2E.Value := ViewExpectedCode
+
 CheckBoxV2E.StatusBar := "Display expected V2 code if it exists"
 CheckBoxV2E.OnEvent("Click", ViewV2E)
 
-; ButtonValidateConversion := MyGui.Add("Button", " x+10 yp", "Save as test")
+; Save as test
 ButtonValidateConversion := MyGui.AddPicButton("w24 h24", "shell32.dll","icon259 h18")
 ButtonValidateConversion.StatusBar := "Save the converted code as valid test"
 ButtonValidateConversion.OnEvent("Click", ButtonGenerateTest)
@@ -133,6 +143,8 @@ FileMenu.Add "Run tests", (*) => Run('"' A_ScriptDir "\AutoHotKey Exe\AutoHotkey
 FileMenu.Add "Open test folder", (*) => Run(TreeRoot)
 FileMenu.Add()
 FileMenu.Add "E&xit", (*) => ExitApp()
+SettingsMenu := Menu()
+SettingsMenu.Add("Testmode", MenuTestMode)
 TestMenu := Menu()
 TestMenu.Add("AddBracketToHotkeyTest", (*) => V2Edit.Text := AddBracket(V1Edit.Text))
 TestMenu.Add("GetAltLabelsMap", (*) => V2Edit.Text := GetAltLabelsMap(V1Edit.Text))
@@ -147,14 +159,26 @@ HelpMenu := Menu()
 HelpMenu.Add("Command Help`tF1",MenuCommandHelp)
 Menus := MenuBar()
 Menus.Add("&File", FileMenu)  ; Attach the two submenus that were created above.
-Menus.Add("&View", ViewMenu)  ; Attach the two submenus that were created above.
+Menus.Add("&Settings", SettingsMenu)
+Menus.Add("&View", ViewMenu)
 Menus.Add "&Reload", (*) => Reload()
 Menus.Add( "Test", TestMenu)
 Menus.Add( "Help", HelpMenu)
 MyGui.MenuBar := Menus
 
+if ViewExpectedCode{
+    ViewMenu.Check("View Expected Code")
+}
+
 ; Display the window. The OS will notify the script whenever the user performs an eligible action:
 MyGui.Show
+sleep(500)
+if TestMode {
+
+    TestMode := !TestMode
+    MenuTestMode('')
+}
+
 if (strV1Script!=""){
     ButtonConvert(myGui)
 }
@@ -333,6 +357,7 @@ RunV2E(*){
     Run AhkV2Exe " " TempAhkFile
     ButtonCloseV2E.Opt("-Disabled")
 }
+
 CloseV2E(*){
     TempAhkFile := A_MyDocuments "\testV2E.ahk"
     DetectHiddenWindows(1)
@@ -513,9 +538,10 @@ MenuZoomOut(*){
 
 MenuViewExpected(*){
     CheckBoxV2E.Value := !CheckBoxV2E.Value
+    IniWrite(CheckBoxV2E.Value, "QuickConvertorV2.ini", "Convertor", "ViewExpectedCode")
     ViewV2E(myGui)
     MyGui.GetPos(,, &Width,&Height)
-    Gui_Size(MyGui, 0, Width, Height-54)
+    Gui_Size(MyGui, 0, Width - 14, Height - 60)
 }
 
 ViewV2E(*){
@@ -530,7 +556,7 @@ ViewV2E(*){
         V2ExpectedEdit.Move(,,180,)
         WinMove(, , Width-3,,MyGui)
     }
-
+    IniWrite(CheckBoxV2E.Value, "QuickConvertorV2.ini", "Convertor", "ViewExpectedCode")
 }
 
 MenuViewTree(*){
@@ -545,7 +571,28 @@ MenuViewTree(*){
         ButtonEvaluateTests.Visible := true
     }
     MyGui.GetPos(,, &Width,&Height)
-    Gui_Size(MyGui, 0, Width, Height-54)
+    Gui_Size(MyGui, 0, Width - 14, Height - 60)
+}
+
+MenuTestMode(*){
+    global
+    SettingsMenu.ToggleCheck("Testmode")
+    TestMode := !TestMode
+    if TestMode{
+        TV.Move(, , 180, )
+        ButtonEvaluateTests.Visible := true
+        CheckBoxV2E.Visible := true
+        ViewMenu.Check("View Tree")
+    }
+    else{
+        TV.Move(, , 0, )
+        ButtonEvaluateTests.Visible := false
+        CheckBoxV2E.Visible := false
+        ViewMenu.UnCheck("View Tree")
+    }
+    IniWrite(TestMode, "QuickConvertorV2.ini", "Convertor", "TestMode")
+    MyGui.GetPos(, , &Width, &Height)
+    Gui_Size(MyGui, 0, Width-14, Height - 60)
 }
 
 AddSubFoldersToTree(Folder, DirList, ParentItemID := 0,*){
@@ -617,7 +664,7 @@ TV_ItemSelect(thisCtrl, Item)  ; This function is called when a new item is sele
         V2Edit.Text := Convert(v1Text)
         V2ExpectedEdit.Text := FileRead(StrReplace(DirList[Item],".ah1",".ah2"))
         MyGui.GetPos(,, &Width,&Height)
-        Gui_Size(MyGui, 0, Width, Height-54)
+        Gui_Size(MyGui, 0, Width - 14, Height - 60)
         ; ControlSetText V1Edit, V1Edit
         ; MsgBox(v1Text)
     }
@@ -639,6 +686,15 @@ Gui_Size(thisGui, MinMax, Width, Height)  ; Expand/Shrink ListView and TreeView 
     ; Otherwise, the window has been resized or maximized. Resize the controls to match.
     TV.GetPos(,, &TV_W)
     TV.Move(,,, EditHeight)  ; -30 for StatusBar and margins.
+    if !TestMode{
+        TV_W := 0
+        ButtonEvaluateTests.Visible := false
+        CheckBoxV2E.Visible := false
+    }
+    else{
+        ButtonEvaluateTests.Visible := true
+        CheckBoxV2E.Visible := true
+    }
     V2ExpectedEdit.GetPos(,, &V2ExpectedEdit_W)
     
     TreeViewWidth := TV_W

@@ -3,10 +3,12 @@
 #Include ConvertFuncs.ahk
 #Include <_GuiCtlExt>
 
-global icons, TestMode, FontSize, ViewExpectedCode
+global icons, TestMode, FontSize, ViewExpectedCode, GuiWidth, GuiHeight
 
 TestMode := IniRead("QuickConvertorV2.ini", "Convertor", "TestMode", 0)
 ViewExpectedCode := IniRead("QuickConvertorV2.ini", "Convertor", "ViewExpectedCode", 0)
+GuiWidth := IniRead("QuickConvertorV2.ini", "Convertor", "GuiWidth", 800)
+GuiHeight := IniRead("QuickConvertorV2.ini", "Convertor", "GuiHeight", 500)
 FontSize := 10
 IniWrite(TestMode, "QuickConvertorV2.ini", "Convertor", "TestMode")
 IniWrite(ViewExpectedCode, "QuickConvertorV2.ini", "Convertor", "ViewExpectedCode")
@@ -14,7 +16,6 @@ IniWrite(ViewExpectedCode, "QuickConvertorV2.ini", "Convertor", "ViewExpectedCod
 FileTempScript := A_ScriptDir "\Tests\TempScript.ah1"
 TempV1Script := FileExist(FileTempScript) ? FileRead(FileTempScript) : ""
 GuiTest(TempV1Script)
-
 
 Return
 GuiTest(strV1Script:=""){
@@ -64,7 +65,7 @@ TV.OnEvent("ItemSelect", TV_ItemSelect)
 ButtonEvaluateTests := MyGui.Add("Button", "", "Evaluate Tests")
 ButtonEvaluateTests.StatusBar := "Evaluate tests again"
 ButtonEvaluateTests.OnEvent("Click", AddSubFoldersToTree.Bind(TreeRoot, DirList,"0"))
-CheckBoxViewSymbols := MyGui.Add("CheckBox", "yp x+50", "View Symbols")
+CheckBoxViewSymbols := MyGui.Add("CheckBox", "yp x+60", "Symbols")
 CheckBoxViewSymbols.StatusBar := "Display invisible symbols like spaces, tabs and linefeeds"
 CheckBoxViewSymbols.OnEvent("Click", ViewSymbols)
 V1Edit := MyGui.Add("Edit", "x280 y0 w600 vvCodeV1 +Multi +WantTab +0x100", strV1Script)  ; Add a fairly wide edit control at the top of the window.
@@ -121,6 +122,7 @@ ButtonCompVscV2E.StatusBar := "Compare V2 and Expected V2 code in VS Code"
 if !FileExist("C:\Users\" A_UserName "\AppData\Local\Programs\Microsoft VS Code\Code.exe"){
     ButtonCompVscV2E.Visible := 0
 }
+ButtonCompVscV2E.OnEvent("Click", CompVscV2E)
 CheckBoxV2E := MyGui.Add("CheckBox", "yp x+50 Checked", "Expected")
 CheckBoxV2E.Value := ViewExpectedCode
 
@@ -169,12 +171,11 @@ MyGui.MenuBar := Menus
 if ViewExpectedCode{
     ViewMenu.Check("View Expected Code")
 }
-
+MyGui.Opt("+MinSize450x200")
 ; Display the window. The OS will notify the script whenever the user performs an eligible action:
-MyGui.Show
+MyGui.Show("h" GuiHeight " w" GuiWidth)
 sleep(500)
 if TestMode {
-
     TestMode := !TestMode
     MenuTestMode('')
 }
@@ -183,7 +184,9 @@ if (strV1Script!=""){
     ButtonConvert(myGui)
 }
 OnMessage(0x0200, On_WM_MOUSEMOVE)
+
 Return
+
 }
 RunV1(*){
     CloseV1(myGui)
@@ -266,7 +269,6 @@ CompVscV2E(*){
         MenuShowSymols()
     }
     TempAhkFileV2 := A_MyDocuments "\testV2.ahk"
-    AhkV2Exe := A_ScriptDir "\AutoHotKey Exe\AutoHotkeyV2.exe"
     oSaved := MyGui.Submit(0)  ; Save the contents of named controls into an object.
     try {
         FileDelete TempAhkFileV2
@@ -274,7 +276,6 @@ CompVscV2E(*){
     FileAppend V2Edit.Text , TempAhkFileV2
     
     TempAhkFileV2E := A_MyDocuments "\testV2E.ahk"
-    AhkV1Exe :=  A_ScriptDir "\AutoHotKey Exe\AutoHotkeyV1.exe"
     oSaved := MyGui.Submit(0)  ; Save the contents of named controls into an object.
     try {
         FileDelete TempAhkFileV2E
@@ -688,6 +689,7 @@ Gui_Size(thisGui, MinMax, Width, Height)  ; Expand/Shrink ListView and TreeView 
     TV.Move(,,, EditHeight)  ; -30 for StatusBar and margins.
     if !TestMode{
         TV_W := 0
+        TV.Move(, , 0, )
         ButtonEvaluateTests.Visible := false
         CheckBoxV2E.Visible := false
     }
@@ -709,20 +711,20 @@ Gui_Size(thisGui, MinMax, Width, Height)  ; Expand/Shrink ListView and TreeView 
     V1Edit.Move(TreeViewWidth,,EditWith,EditHeight)
     V2Edit.Move(TreeViewWidth+EditWith,,EditWith,EditHeight)
     ButtonEvaluateTests.Move(,ButtonHeight)
-    CheckBoxViewSymbols.Move(TreeViewWidth+EditWith-180,EditHeight+6)
+    CheckBoxViewSymbols.Move(TreeViewWidth+EditWith-140,EditHeight+6)
     ButtonRunV1.Move(TreeViewWidth,ButtonHeight)
     ButtonCloseV1.Move(TreeViewWidth+28,ButtonHeight)
-    oButtonConvert.Move(TreeViewWidth+EditWith-80,ButtonHeight)
+    oButtonConvert.Move(TreeViewWidth+EditWith-60,ButtonHeight)
     ButtonRunV2.Move(TreeViewWidth+EditWith,ButtonHeight)
     ButtonCloseV2.Move(TreeViewWidth+EditWith+28,ButtonHeight)
     ButtonCompDiffV2.Move(TreeViewWidth+EditWith+56,ButtonHeight)
-    ButtonCompVscV2.Move(TreeViewWidth+EditWith+116,ButtonHeight)
+    ButtonCompVscV2.Move(TreeViewWidth+EditWith+84,ButtonHeight)
     if (V2ExpectedEdit_W){
         V2ExpectedEdit.Move(TreeViewWidth+EditWith*2,,EditWith,EditHeight)
         ButtonRunV2E.Move(TreeViewWidth+EditWith*2,ButtonHeight)
         ButtonCloseV2E.Move(TreeViewWidth+EditWith*2+28,ButtonHeight)
         ButtonCompDiffV2E.Move(TreeViewWidth+EditWith*2+56,ButtonHeight)
-        ButtonCompVscV2E.Move(TreeViewWidth+EditWith*2+116,ButtonHeight)
+        ButtonCompVscV2E.Move(TreeViewWidth+EditWith*2+84,ButtonHeight)
         ButtonRunV2E.Visible := 1
         ButtonCloseV2E.Visible := 1
         ButtonCompDiffV2E.Visible := 1
@@ -738,6 +740,8 @@ Gui_Size(thisGui, MinMax, Width, Height)  ; Expand/Shrink ListView and TreeView 
     CheckBoxV2E.Move(Width-100,EditHeight+6)
     ButtonValidateConversion.Move(Width-30,ButtonHeight)
     DllCall("LockWindowUpdate", "Uint",0)
+    IniWrite(Width, "QuickConvertorV2.ini", "Convertor", "GuiWidth")
+    IniWrite(Height+22, "QuickConvertorV2.ini", "Convertor", "GuiHeight")
 }
 
 On_WM_MOUSEMOVE(wparam, lparam, msg, hwnd){

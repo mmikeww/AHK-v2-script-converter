@@ -102,6 +102,8 @@ Convert(ScriptString)
       EnvGet,OutputVar,LogonServerT2E | {1} := EnvGet({2})
       EnvMult,var,valueCBE2E | {1} *= {2}
       EnvUpdate | SendMessage, `% WM_SETTINGCHANGE := 0x001A, 0, Environment,, `% "ahk_id " . HWND_BROADCAST := "0xFFFF"
+      Exit,ExitCode | Exit({1})
+      ExitApp,ExitCode | ExitApp({1})
       FileAppend,textT2E,fileT2E,encT2E | FileAppend({1}, {2}, {3})
       FileCopyDir,sourceT2E,destT2E,flagCBE2E | *_FileCopyDir
       FileCopy,sourceT2E,destT2E,OverwriteCBE2E | *_FileCopy
@@ -265,8 +267,8 @@ Convert(ScriptString)
       #HotString,Expression | #HotString {1}
       #If Expression | #HotIf {1}
       #IfTimeout,ExpressionCBE2E | #HotIfTimeout {1}
-      #Include,FileOrDirName | #Include {1}
-      #IncludeAgain,FileOrDirName | #IncludeAgain {1}
+      #Include,FileOrDirNameT2E | #Include {1}
+      #IncludeAgain,FileOrDirNameT2E | #IncludeAgain {1}
       #InputLevel,LevelCBE2E | #InputLevel {1}
       #IfWinActive,WinTitleT2E,WinTextT2E | *_HashtagIfWinActivate
       #IfWinExist,WinTitleT2E,WinTextT2E | #HotIf WinExist({1}, {2})

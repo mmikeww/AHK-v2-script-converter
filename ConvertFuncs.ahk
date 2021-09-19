@@ -228,6 +228,7 @@ Convert(ScriptString)
       StringUpper,OutputVar,InputVar,TT2E| *_StringUpper
       StringLower,OutputVar,InputVar,TT2E| *_StringLower
       StringReplace,OutputVar,InputVar,SearchTxtT2E,ReplTxtT2E,ReplAll | *_StringReplace
+      Suspend,ModeOn2True | *_SuspendV2
       SysGet,OutputVar,SubCommand,ValueCBE2E | *_SysGet
       ToolTip,txtT2E,xCBE2E,yCBE2E,whichCBE2E | ToolTip({1}, {2}, {3}, {4})
       TrayTip,TitleT2E,TextT2E,Seconds,OptionsT2E | TrayTip({1}, {2}, {4})
@@ -957,11 +958,12 @@ Convert(ScriptString)
          ; To add commands to be checked for, modify the list at the top of this file
          {
             CommandMatch := 0
-            FirstDelim := RegExMatch(Line, "\w[,\s]")
+            FirstDelim := RegExMatch(Line, "\w(\s*[,\s]\s*)",&Match)
+            
             if (FirstDelim > 0)
             {
                Command := Trim(SubStr(Line, 1, FirstDelim))
-               Params := SubStr(Line, FirstDelim + 2)
+               Params := SubStr(Line, FirstDelim + StrLen(Match[1])+1)
             } else
             {
                Command := Trim(SubStr(Line, 1))
@@ -975,11 +977,13 @@ Convert(ScriptString)
 
                ListDelim := RegExMatch(Part[1], "[,\s]")
                ListCommand := Trim(SubStr(Part[1], 1, ListDelim - 1))
+               
                If (ListCommand = Command)
                {
                   CommandMatch := 1
                   same_line_action := false
                   ListParams := RTrim(SubStr(Part[1], ListDelim + 1))
+                  
 
                   ListParam := Array()
                   Param := Array()	; Parameters in expression form
@@ -2977,6 +2981,16 @@ _StringSplit(p) {
    ;aListPseudoArray.Push(Trim(p[1]))
    aListPseudoArray.Push({name: Trim(p[1])})
    Out := Format("{1} := StrSplit({2},{3},{4})", p*)
+   Return RegExReplace(Out, "[\s\,]*\)$", ")")
+}
+_SuspendV2(p) {
+   ;V1 Suspend , Mode
+   
+   p[1] := p[1]="toggle" ? -1 : p[1]
+   if (p[1]="Permit"){
+      Return "#SuspendExempt"
+   }
+   Out := "Suspend(" Trim(p[1]) ")"
    Return RegExReplace(Out, "[\s\,]*\)$", ")")
 }
 

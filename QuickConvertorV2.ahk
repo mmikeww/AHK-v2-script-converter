@@ -1,7 +1,7 @@
 ﻿#SingleInstance Force
 
 #Include ConvertFuncs.ahk
-#INCLUDE <_GuiCtlExt>
+#Include <_GuiCtlExt>
 ; #Include ExecScript.ahk
 
 
@@ -45,7 +45,7 @@ SB.SetParts(300, 300)  ; Create three parts in the bar (the third part fills all
 ; Add folders and their subfolders to the tree. Display the status in case loading takes a long time:
 M := Gui("ToolWindow -SysMenu Disabled AlwaysOnTop", "Loading the tree..."), M.Show("w200 h0")
 
-; DirList := Map()
+;DirList := Map()
 DirList := AddSubFoldersToTree(TreeRoot, Map())
 
 M.Hide()
@@ -129,7 +129,7 @@ MyGui.OnEvent("Size", Gui_Size)
 ; MyGui.OnEvent("Escape", (*) => ExitApp())
 
 FileMenu := Menu()
-FileMenu.Add "Run tests", (*) => Run('"C:\Program Files\AutoHotkey V2\AutoHotkey64.exe" "' A_ScriptDir 'Tests\Tests.ahk"')
+FileMenu.Add "Run tests", (*) => Run('"' A_ScriptDir "\AutoHotKey Exe\AutoHotkeyV2.exe" '" "' A_ScriptDir 'Tests\Tests.ahk"')
 FileMenu.Add "Open test folder", (*) => Run(TreeRoot)
 FileMenu.Add()
 FileMenu.Add "E&xit", (*) => ExitApp()
@@ -167,7 +167,7 @@ RunV1(*){
         MenuShowSymols()
     }
     TempAhkFile := A_MyDocuments "\testV1.ahk"
-    AhkV1Exe :=  "C:\Program Files\AutoHotkey\AutoHotkey.exe"
+    AhkV1Exe :=  A_ScriptDir "\AutoHotKey Exe\AutoHotkeyV1.exe"
     oSaved := MyGui.Submit(0)  ; Save the contents of named controls into an object.
     try {
         FileDelete TempAhkFile
@@ -193,7 +193,7 @@ RunV2(*){
         MenuShowSymols()
     }
     TempAhkFile := A_MyDocuments "\testV2.ahk"
-    AhkV2Exe := "C:\Program Files\AutoHotkey V2\AutoHotkey64.exe"
+    AhkV2Exe := A_ScriptDir "\AutoHotKey Exe\AutoHotkeyV2.exe"
     oSaved := MyGui.Submit(0)  ; Save the contents of named controls into an object.
     try {
         FileDelete TempAhkFile
@@ -219,7 +219,7 @@ CompVscV2(*){
         MenuShowSymols()
     }
     TempAhkFileV2 := A_MyDocuments "\testV2.ahk"
-    AhkV2Exe := "C:\Program Files\AutoHotkey V2\AutoHotkey64.exe"
+    AhkV2Exe := A_ScriptDir "\AutoHotKey Exe\AutoHotkeyV2.exe"
     oSaved := MyGui.Submit(0)  ; Save the contents of named controls into an object.
     try {
         FileDelete TempAhkFileV2
@@ -227,7 +227,7 @@ CompVscV2(*){
     FileAppend V2Edit.text , TempAhkFileV2
     
     TempAhkFileV1 := A_MyDocuments "\testV1.ahk"
-    AhkV1Exe :=  "C:\Program Files\AutoHotkey\AutoHotkey.exe"
+    AhkV1Exe :=  A_ScriptDir "\AutoHotKey Exe\AutoHotkeyV1.exe"
     oSaved := MyGui.Submit(0)  ; Save the contents of named controls into an object.
     try {
         FileDelete TempAhkFileV1
@@ -242,7 +242,7 @@ CompVscV2E(*){
         MenuShowSymols()
     }
     TempAhkFileV2 := A_MyDocuments "\testV2.ahk"
-    AhkV2Exe := "C:\Program Files\AutoHotkey V2\AutoHotkey64.exe"
+    AhkV2Exe := A_ScriptDir "\AutoHotKey Exe\AutoHotkeyV2.exe"
     oSaved := MyGui.Submit(0)  ; Save the contents of named controls into an object.
     try {
         FileDelete TempAhkFileV2
@@ -250,7 +250,7 @@ CompVscV2E(*){
     FileAppend V2Edit.Text , TempAhkFileV2
     
     TempAhkFileV2E := A_MyDocuments "\testV2E.ahk"
-    AhkV1Exe :=  "C:\Program Files\AutoHotkey\AutoHotkey.exe"
+    AhkV1Exe :=  A_ScriptDir "\AutoHotKey Exe\AutoHotkeyV1.exe"
     oSaved := MyGui.Submit(0)  ; Save the contents of named controls into an object.
     try {
         FileDelete TempAhkFileV2E
@@ -324,7 +324,7 @@ RunV2E(*){
         MenuShowSymols()
     }
     TempAhkFile := A_MyDocuments "\testV2E.ahk"
-    AhkV2Exe := "C:\Program Files\AutoHotkey V2\AutoHotkey64.exe"
+    AhkV2Exe := A_ScriptDir "\AutoHotKey Exe\AutoHotkeyV2.exe"
     oSaved := MyGui.Submit(0)  ; Save the contents of named controls into an object.
     try {
         FileDelete TempAhkFile

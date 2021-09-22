@@ -3011,6 +3011,7 @@ _StringMid(p) {
       }
    }
 }
+
 _StringReplace(p) {
    ; v1
    ; StringReplace, OutputVar, InputVar, SearchText [, ReplaceText, ReplaceAll?]
@@ -3021,22 +3022,23 @@ _StringReplace(p) {
    comment .= Indentation "; and change the CaseSense param in StrReplace() if necessary`r`n"
 
    if IsEmpty(p[4]) && IsEmpty(p[5])
-      return comment Indentation . format("{1} := StrReplace({2}, {3},,,, 1)", p*)
+      Out := comment Indentation . format("{1} := StrReplace({2}, {3},,,, 1)", p*)
    else if IsEmpty(p[5])
-      return comment Indentation . format("{1} := StrReplace({2}, {3}, {4},,, 1)", p*)
+      Out := comment Indentation . format("{1} := StrReplace({2}, {3}, {4},,, 1)", p*)
    else
    {
       p5char1 := SubStr(p[5], 1, 1)
       ; MsgBox(p[5] "`n" p5char1)
 
       if (p[5] = "UseErrorLevel")	; UseErrorLevel also implies ReplaceAll
-         return comment Indentation . format("{1} := StrReplace({2}, {3}, {4},, &ErrorLevel)", p*)
+         Out := comment Indentation . format("{1} := StrReplace({2}, {3}, {4},, &ErrorLevel)", p*)
       else if (p5char1 = "1") || (StrUpper(p5char1) = "A")
       ; if the first char of the ReplaceAll param starts with '1' or 'A'
       ; then all of those imply 'replace all'
       ; https://github.com/Lexikos/AutoHotkey_L/blob/master/source/script2.cpp#L7033
-         return comment Indentation . format("{1} := StrReplace({2}, {3}, {4})", p*)
+         Out := comment Indentation . format("{1} := StrReplace({2}, {3}, {4})", p*)
    }
+   Return RegExReplace(Out, "[\s\,]*\)$", ")")
 }
 _StringSplit(p) {
    ;V1 StringSplit,OutputArray,InputVar,DelimitersT2E,OmitCharsT2E

@@ -171,6 +171,7 @@ Convert(ScriptString)
       MouseMove,XT2E,YT2E,SpeedT2E,RelativeT2E | MouseMove({1}, {2}, {3}, {4})
       OnExit,Func,AddRemove | *_OnExit
       OutputDebug,TextT2E | OutputDebug({1})
+      Pause,OnOffToggleOn2True,OperateOnUnderlyingThread  | *_Pause
       PixelSearch,OutputVarXV2VR,OutputVarYV2VR,X1T2E,Y1T2E,X2T2E,Y2T2E,ColorIDCBE2E,VariationT2E,ModeT2E | ErrorLevel := PixelSearch({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8})
       PixelGetColor,OutputVar,XT2E,YT2E,ModeT2E | {1} := PixelGetColor({2}, {3}, {4})
       PostMessage,Msg,wParam,lParam,ControlCBE2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | PostMessage({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8})
@@ -200,7 +201,8 @@ Convert(ScriptString)
       SendText,keysT2E | SendText({1})
       SendMode,ModeT2E | SendMode({1})
       SendInput,keysT2E | SendInput({1})
-      SendLevel, LevelT2E | SendLevel({1})
+      SendLevel,LevelT2E | SendLevel({1})
+      SendRaw,keys | *_SendRaw
       SetDefaultMouseSpeed, LevelT2E | SetDefaultMouseSpeed({1})
       SendMessage,Msg,wParamCBE2E,lParamCBE2E,ControlCBE2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E,TimeoutCBE2E | ErrorLevel := SendMessage({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9})
       SendPlay,keysT2E | SendPlay({1})
@@ -208,7 +210,7 @@ Convert(ScriptString)
       SendEvent,keysT2E | SendEvent({1})
       Shutdown, FlagCBE2E | Shutdown({1})
       Sleep,delayCBE2E | Sleep({1})
-      Sort,var,optionsT2E | {1} := Sort({1}, {2})
+      Sort,var,optionsT2E | *_Sort
       SoundBeep,FrequencyCBE2E,DurationCBE2E | SoundBeep({1}, {2})
       SoundGet,OutputVar,ComponentTypeT2E,ControlType,DeviceNumberT2E | *_SoundGet
       SoundPlay,FrequencyT2E,DurationCBE2E | SoundPlay({1}, {2})
@@ -943,6 +945,11 @@ Convert(ScriptString)
          PreLine .= Equation[1]
          Line := Equation[3]
       }
+
+      If RegExMatch(Line, "i)(^\s*)([a-z_][a-z_0-9]*)\s*\+=\s*(.*?)\s*,\s*(Seconds|Minutes|Hours|Days)(.*$)", &Equation) {
+         Line := Equation[1] Equation[2] " := DateAdd(" Equation[2] ", " Equation[3] ", '" Equation[4] "')" Equation[5]
+      }
+
 
       ; Convert Assiociated Arrays to Map Maybe not always wanted...
       If RegExMatch(Line, "i)^([\s]*([a-z_0-9]+)[\s]*):=\s*(\{[^;]*)", &Equation) {
@@ -2232,6 +2239,19 @@ _KeyWait(p) {
 _Loop(p) {
 
    line := ""
+   BracketEnd := ""
+   if RegExMatch(p[1], "(^.*?)(\s*{.*$)", &Match){
+      p[1] := Match[1]
+      BracketEnd := Match[2]
+   }
+   else if RegExMatch(p[2], "(^.*?)(\s*{.*$)", &Match) {
+   p[2] := Match[1]
+   BracketEnd := Match[2]
+   }
+   else if RegExMatch(p[3], "(^.*?)(\s*{.*$)", &Match) {
+      p[3] := Match[1]
+      BracketEnd := Match[2]
+   }
    if (InStr(p[1], "*") and InStr(p[1], "\")) {	; Automatically switching to Files loop
       IncludeFolders := p[2]
       Recurse := p[3]
@@ -2267,7 +2287,7 @@ _Loop(p) {
       Line := "Loop Parse" Line
       ; Line := format("Loop {1}, {2}, {3}, {4}",p[1], p[2], ToExp(p[3]), ToExp(p[4]))
       Line := RegExReplace(Line, "(?:,\s(?:`"`")?)*$", "")	; remove trailing ,\s and ,\s""
-      return Line
+      return Line BracketEnd
    } else if (p[1] = "Files")
    {
 
@@ -2283,10 +2303,11 @@ _Loop(p) {
       Line := p.Has(1) ? Trim(p[1]) Line : "" Line
       Line := "Loop " Line
       Line := RegExReplace(Line, "(?:,\s(?:`"`")?)*$", "")	; remove trailing ,\s and ,\s""
-      return Line
+      return Line BracketEnd
    } else {
+      
       Line := p[1] != "" ? "Loop " Trim(ToExp(p[1])) : "Loop"
-      return Line
+      return Line BracketEnd
    }
    ; Else no changes need to be made
 
@@ -2593,6 +2614,15 @@ _OnExit(p) {
    Return Format("OnExit({1}, {2})", p*)
 }
 
+_Pause(p) {
+   ;V1 : Pause , OnOffToggle, OperateOnUnderlyingThread
+   ; TODO handle OperateOnUnderlyingThread
+   if (p[1]=""){
+      p[1]=-1
+   }
+   Return Format("Pause({1})", p*)
+}
+
 _Process(p) {
    ; V1: Process,SubCommand,PIDOrName,Value
 
@@ -2660,6 +2690,24 @@ _SetTimer(p) {
       Out := format("SetTimer({1},{2},{3})", p*)
       aListLabelsToFunction.Push({label: p[1], parameters: ""})
    }
+
+   Return RegExReplace(Out, "[\s\,]*\)$", ")")
+}
+
+_SendRaw(p) {
+   p[1] := ParameterFormat("keysT2E","{Raw}" p[1]) 
+   Return "Send(" p[1] ")"
+}
+
+_Sort(p){
+   SortFunction := ""
+   if RegexMatch(p[2],"i)^(.*)\bF\s([a-z_][a-z_0-9]*)(.*)$",&Match){
+      SortFunction := Match[2]
+      p[2] := Match[1] Match[3]
+      ; TODO Adding * to 3th parameter of sortfunction
+   }
+   p[2] := p[2]="`"`""? "" : p[2]
+   Out := format("{1} := Sort({1}, {2}, " SortFunction ")", p*)
 
    Return RegExReplace(Out, "[\s\,]*\)$", ")")
 }
@@ -3571,7 +3619,7 @@ ParameterFormat(ParName, ParValue) {
    } else if (ParName ~= "i)On2True$")	; 'Text TO Quote Expression'
    {
       ParValue := RegexReplace(ParValue, "^%\s*(.*?)%?$", "$1")
-      ParValue := RegexReplace(RegexReplace(ParValue, "i)\bon\b", "true"), "i)\boff\b", "false")
+      ParValue := RegexReplace(RegexReplace(RegexReplace(ParValue, "i)\btoggle\b", "-1"), "i)\bon\b", "true"), "i)\boff\b", "false")
    }
 
    Return ParValue
@@ -3585,6 +3633,7 @@ ConvertPseudoArray(ScriptStringInput, ArrayName, NewName := "") {
       NewName := ArrayName
    }
    if InStr(ScriptStringInput, ArrayName) {	; InStr is faster than only Regex
+
       Loop {	; arrayName0 = arrayName.Length
          ScriptStringInput := RegExReplace(ScriptStringInput, "is)(^(|.*[^\w]))" ArrayName "0(([^\w].*|)$)", "$1" NewName ".Length$4", &OutputVarCount)
       } Until OutputVarCount = 0

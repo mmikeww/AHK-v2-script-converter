@@ -3632,8 +3632,10 @@ ConvertPseudoArray(ScriptStringInput, ArrayName, NewName := "") {
    if (NewName = "") {
       NewName := ArrayName
    }
-   if InStr(ScriptStringInput, ArrayName) {	; InStr is faster than only Regex
-
+   if RegexMatch(ScriptStringInput,"i)\b(local|global|static)\s"){
+      
+   }
+   else if InStr(ScriptStringInput, ArrayName) {	; InStr is faster than only Regex
       Loop {	; arrayName0 = arrayName.Length
          ScriptStringInput := RegExReplace(ScriptStringInput, "is)(^(|.*[^\w]))" ArrayName "0(([^\w].*|)$)", "$1" NewName ".Length$4", &OutputVarCount)
       } Until OutputVarCount = 0

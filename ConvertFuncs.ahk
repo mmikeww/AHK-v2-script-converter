@@ -795,11 +795,11 @@ Convert(ScriptString)
          ;                                  , val1: ToExp(Equation[4])
          ;                                  , otb: Equation[6] } )
          if RegExMatch(Equation[4], "^%") {
-            val1 := "`"iAD)(`" RegExReplace(RegExReplace(" ToExp(Equation[4]) ",`"[\\\.\*\?\+\[\{\|\(\)\^\$]`",`"\$0`"),`"\s*,\s*`",`"|`") `")`""
+            val1 := "`"^(?i:`" RegExReplace(RegExReplace(" ToExp(Equation[4]) ",`"[\\\.\*\?\+\[\{\|\(\)\^\$]`",`"\$0`"),`"\s*,\s*`",`"|`") `")$`""
          } else if RegExMatch(Equation[4], "^[^\\\.\*\?\+\[\{\|\(\)\^\$]*$") {
-            val1 := "`"iAD)(" RegExReplace(Equation[4], "\s*,\s*", "|") ")`""
+            val1 := "`"^(?i:" RegExReplace(Equation[4], "\s*,\s*", "|") ")$`""
          } else {
-            val1 := "`"iAD)(" RegExReplace(RegExReplace(Equation[4], "[\\\.\*\?\+\[\{\|\(\)\^\$]", "\$0"), "\s*,\s*", "|") ")`""
+            val1 := "`"^(?i:" RegExReplace(RegExReplace(Equation[4], "[\\\.\*\?\+\[\{\|\(\)\^\$]", "\$0"), "\s*,\s*", "|") ")$`""
          }
          PreLine .= Indentation . format("{1}if {3}({2} ~= {4}){5}"
             , Equation[1]	;else

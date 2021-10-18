@@ -1709,9 +1709,9 @@ _Gui(p) {
 
          }
       }
-      if RegExMatch(Var3, "i)\bhwnd[\w]*\b") {
-         ControlHwnd := RegExReplace(Var3, "i)^.*\bhwnd([\w]*)\b.*$", "$1")
-         Var3 := RegExReplace(Var3, "i)^(.*)\bhwnd([\w]*)\b(.*)$", "$1$3")
+      if RegExMatch(Var3, "i)\b\+?\bhwnd[\w]*\b") {
+         ControlHwnd := RegExReplace(Var3, "i)^.*\b\+?\bhwnd([\w]*)\b.*$", "$1")
+         Var3 := RegExReplace(Var3, "i)^(.*?)\s?\+?\bhwnd([\w]*)\b(.*)$", "$1$3")
          if (ControlObject = "") {
             ControlObject := InStr(ControlHwnd, SubStr(Var4, 1, 4)) ? "ogc" StrReplace(ControlHwnd, "hwnd") : "ogc" Var4 StrReplace(ControlHwnd, "hwnd")
          }

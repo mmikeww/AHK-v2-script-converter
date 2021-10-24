@@ -307,6 +307,7 @@ Convert(ScriptString)
       RegExMatch(Haystack, NeedleRegEx , OutputVarV2VR, StartingPos) | *_RegExMatch
       RegExReplace(Haystack,NeedleRegEx,Replacement,OutputVarCountV2VR,Limit,StartingPos) | RegExReplace({1}, {2}, {3}, {4}, {5}, {6})
       StrReplace(Haystack,Needle,ReplaceText,OutputVarCountV2VR,Limit) | StrReplace({1}, {2}, {3}, , {4}, {5})
+      RegisterCallback(FunctionName,Options,ParamCount,EventInfo) | CallbackCreate({1} , {2}, {3})
       LoadPicture(Filename,Options,ImageTypeV2VR) | LoadPicture({1},{2},{3})
       LV_Add(Options, Field*) | *_LV_Add
       LV_Delete(RowNumber) | *_LV_Delete

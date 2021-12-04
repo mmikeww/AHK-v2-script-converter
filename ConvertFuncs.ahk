@@ -214,30 +214,29 @@ Convert(ScriptString)
          oPar := V1ParSplit(oResult.Parameters)
          gFunctPar := oResult.Parameters
 
-         ConvertList := FunctionsToConvert
+         ConvertList := FunctionsToConvertM
          if RegExMatch(oResult.Pre, "\.$") {
-            ConvertList := MethodsToConvert
+            ConvertList := MethodsToConvertM
             ObjectName := RegexReplace(oResult.Pre, "i).*?([\w]*)\.$", "$1")
             If RegExMatch(ScriptString, "i)^(|.*[\n\r]+)([\s]*(\Q" ObjectName "\E)[\s]*):=\s*(\[[^;]*)") {	; Check if Object is an Array, not an V2 Object or Map
-               ConvertList := ArrayMethodsToConvert
+               ConvertList := ArrayMethodsToConvertM
             }
          }
-         Loop Parse, ConvertList, "`n", "`r"
+         for v1, v2 in ConvertList
          {
-            ListDelim := InStr(A_LoopField, "(")
-            ListFunction := Trim(SubStr(A_LoopField, 1, ListDelim - 1))
+            ListDelim := InStr(v1, "(")
+            ListFunction := Trim(SubStr(v1, 1, ListDelim - 1))
 
             If (ListFunction = oResult.func) {
                ;MsgBox(ListFunction)
-               ListParam := SubStr(A_LoopField, ListDelim + 1, InStr(A_LoopField, ")") - ListDelim - 1)
+               ListParam := SubStr(v1, ListDelim + 1, InStr(v1, ")") - ListDelim - 1)
                oListParam := StrSplit(ListParam, "`,", " ")
                ; Fix for when ListParam is empty
                if (ListParam = "") {
                   oListParam.Push("")
                }
-               Part := StrSplit(A_LoopField, "|")
-               Part[1] := trim(Part[1])
-               Part[2] := trim(Part[2])
+               v1 := trim(v1)
+               v2 := trim(v2)
                loop oPar.Length
                {
                   if (A_Index > 1 and InStr(oListParam[A_Index - 1], "*")) {
@@ -253,15 +252,15 @@ Convert(ScriptString)
                   }
                }
 
-               If (SubStr(Part[2], 1, 1) == "*")	; if using a special function
+               If (SubStr(v2, 1, 1) == "*")	; if using a special function
                {
-                  FuncName := SubStr(Part[2], 2)
+                  FuncName := SubStr(v2, 2)
 
                   FuncObj := %FuncName%	;// https://www.autohotkey.com/boards/viewtopic.php?p=382662#p382662
                   If FuncObj is Func
                      NewFunction := FuncObj(oPar)
                } Else {
-                  FormatString := Trim(Part[2])
+                  FormatString := Trim(v2)
                   NewFunction := Format(FormatString, oPar*)
                }
 
@@ -279,11 +278,10 @@ Convert(ScriptString)
       ;
       ; replace any renamed vars
       ; Known Error: converts also the text
-      Loop Parse, KeywordsToRename, "`n"
+      for v1, v2 in KeywordsToRenameM
       {
-         Part := StrSplit(A_LoopField, "|")
-         srchtxt := Trim(Part[1])
-         rplctxt := Trim(Part[2])
+         srchtxt := Trim(v1)
+         rplctxt := Trim(v2)
 
          if InStr(Line, srchtxt)
          {
@@ -649,19 +647,17 @@ Convert(ScriptString)
             }
             ; msgbox("Line=" Line "`nFirstDelim=" FirstDelim "`nCommand=" Command "`nParams=" Params)
             ; Now we format the parameters into their v2 equivilents
-            Loop Parse, CommandsToConvert, "`n"
+            for v1, v2 in CommandsToConvertM
             {
-               Part := StrSplit(A_LoopField, "|")
+               ListDelim := RegExMatch(v1, "[,\s]|$")
+               ListCommand := Trim(SubStr(v1, 1, ListDelim - 1))
 
-               ListDelim := RegExMatch(Part[1], "[,\s]")
-               ListCommand := Trim(SubStr(Part[1], 1, ListDelim - 1))
-               
                If (ListCommand = Command)
                {
                   CommandMatch := 1
                   same_line_action := false
-                  ListParams := RTrim(SubStr(Part[1], ListDelim + 1))
-                  
+                  ListParams := RTrim(SubStr(v1, ListDelim + 1))
+
 
                   ListParam := Array()
                   Param := Array()	; Parameters in expression form
@@ -796,10 +792,10 @@ Convert(ScriptString)
 
                   }
 
-                  Part[2] := Trim(Part[2])
-                  If (SubStr(Part[2], 1, 1) == "*")	; if using a special function
+                  v2 := Trim(v2)
+                  If (SubStr(v2, 1, 1) == "*")	; if using a special function
                   {
-                     FuncName := SubStr(Part[2], 2)
+                     FuncName := SubStr(v2, 2)
                      ;msgbox("FuncName=" FuncName)
                      FuncObj := %FuncName%	;// https://www.autohotkey.com/boards/viewtopic.php?p=382662#p382662
                      If FuncObj is Func
@@ -811,17 +807,17 @@ Convert(ScriptString)
                      ;    paramsstr := ""
                      ;    Loop Param.Length
                      ;       paramsstr .= "Param[" A_Index "]: " Param[A_Index] "`n"
-                     ;    msgbox("in else`nLine: " Line "`nPart[2]: " Part[2] "`n`nListParam.Length: " ListParam.Length "`nParam.Length: " Param.Length "`n`n" paramsstr)
+                     ;    msgbox("in else`nLine: " Line "`nv2: " v2 "`n`nListParam.Length: " ListParam.Length "`nParam.Length: " Param.Length "`n`n" paramsstr)
                      ; }
 
                      if (same_line_action) {
                         ; Error in this line, extra parameters should be: put on next line that needs to be converted, or converted in the line
-                        PreLine .= format(Part[2], Param*) . ","
+                        PreLine .= format(v2, Param*) . ","
                         Line := extra_params
                         Goto LabelRedoCommandReplacing
-                        ;Line := Indentation . format(Part[2], Param*) . "," extra_params
+                        ;Line := Indentation . format(v2, Param*) . "," extra_params
                      } else
-                        Line := Indentation . format(Part[2], Param*)
+                        Line := Indentation . format(v2, Param*)
 
                      ; msgbox("Line after format:`n`n" Line)
                      ; if empty trailing optional params caused the line to end with extra commas, remove them

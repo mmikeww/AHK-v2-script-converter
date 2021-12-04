@@ -4,6 +4,7 @@
 ; to do: strsplit (old command)
 ; requires should change the version :D
 
+#Include lib/ClassOrderedMap.ahk
 Convert(ScriptString)
 {
 

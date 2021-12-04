@@ -38,6 +38,7 @@ Convert(ScriptString)
    global mGuiCObject := map()                        	; Create a map to return the object of a control
    global NL_Func          := ""                      	; _Funcs can use this to add New Previous Line
    global EOLComment_Func  := ""                      	; _Funcs can use this to add comments at EOL
+   global grePostFuncMatch := False                   	; ... to know their regex matched
    global noSideEffect     := False                   	; ... to not change global variables
 
    global ListViewNameDefault
@@ -887,12 +888,15 @@ subLoopFunctions(ScriptString, Line, &retV2, &gotFunc) {
       }
       for v1, v2 in ConvertList
       {
+         grePostFuncMatch := False
          ListDelim := InStr(v1, "(")
          ListFunction := Trim(SubStr(v1, 1, ListDelim - 1))
+         rePostFunc := ""
 
          If (ListFunction = oResult.func) {
             ;MsgBox(ListFunction)
             ListParam := SubStr(v1, ListDelim + 1, InStr(v1, ")") - ListDelim - 1)
+            rePostFunc := SubStr(v1, InStr(v1,")")+1)
             oListParam := StrSplit(ListParam, "`,", " ")
             ; Fix for when ListParam is empty
             if (ListParam = "") {
@@ -917,6 +921,13 @@ subLoopFunctions(ScriptString, Line, &retV2, &gotFunc) {
 
             If (SubStr(v2, 1, 1) == "*")	; if using a special function
             {
+               If (rePostFunc != "")
+               {
+                  ; move post-function's regex match to _Func (it should return back if needed)
+                  RegExMatch(oResult.Post, rePostFunc, &grePostFuncMatch)
+                  oResult.Post := RegExReplace(oResult.Post, rePostFunc)
+               }
+
                FuncName := SubStr(v2, 2)
 
                FuncObj := %FuncName%	;// https://www.autohotkey.com/boards/viewtopic.php?p=382662#p382662

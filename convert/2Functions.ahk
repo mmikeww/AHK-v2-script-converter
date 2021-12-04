@@ -51,7 +51,7 @@ global FunctionsToConvertM := OrderedMap(
   , "OnMessage(MsgNumber, FunctionQ2T, MaxThreads)"    	, "OnMessage({1}, {2}, {3})"
   , "OnClipboardChange(FuncQ2T,AddRemove)"             	, "OnClipboardChange({1}, {2})"
   , "Asc(String)"                                      	, "Ord({1})"
-  , "VarSetCapacity(TargetVar,RequestedCapacity,FillByte)" , "*_VarSetCapacity"
+  , "VarSetCapacity(TargetVar,RequestedCapacity,FillByte)^(\s*[*+\-\/][\/]?)(\s*[.\d]{1,})(\s*[*+\-\/])?", "*_VarSetCapacity"
   )
 
 
@@ -311,9 +311,87 @@ _TV_SetImageList(p) {
   Return format("{2} := {1}.SetImageList({3})", TreeViewNameDefault)
 }
 
-_VarSterCapacity(p) {
-  if (p[3] = "") {
-    Return Format("VarSetStrCapacity(&{1}, {2})", p*)
+_VarSetCapacity(p) {
+  global grePostFuncMatch, NL_Func, EOLComment_Func, noSideEffect
+  if noSideEffect {
+    tmp1:="", tmp2:=""
+    lNL_Func        	:= &tmp1
+    lEOLComment_Func	:= &tmp2
+  } else {
+    lNL_Func        	:= &NL_Func
+    lEOLComment_Func	:= &EOLComment_Func
   }
-  Return Format("{1} := Buffer({2}, {3})", p*)
+  %lEOLComment_Func%:=""
+  reM := grePostFuncMatch
+  if        (p[3] != "") {
+    ; since even multiline continuation allows semicolon comments adding lEOLComment_Func shouldn't break anything, but if it does, add this hacky comment
+      ;`{3} + 0*StrLen("V1toV2: comment")`, or when you can't add a 0 (to a buffer)
+      ; p.Push("V1toV2: comment")
+      ; retStr := Format('RegExReplace("{1} := Buffer({2}, {3}) ``; {4}", " ``;.*$")', p*)
+    varA  	:= Format("{1}"                           , p*)
+    retStr	:= Format("VarSetStrCapacity(&{1}, {2})"  , p*)
+    %lEOLComment_Func% .= format("V1toV2: if '{1}' is a UTF-16 string, use '{2}'", varA, retStr)
+    if not reM {
+      retBuf	:= Format("{1} := Buffer({2}, {3})"     , p*)
+      dbgTT(3, "@_VarSetCapacity: 3 args, plain", Time:=3,id:=5,x:=-1,y:=-1)
+    } else {
+      if        reM.Count = 1 { ; just in case, min should be 2
+        p.Push(reM[])
+        retBuf	:= Format("({1} := Buffer({2}, {3})).Size{4}", p*)
+        dbgTT(3, "@_VarSetCapacity: 3 args, Regex 1 group", Time:=3,id:=5,x:=-1,y:=-1)
+      } else if reM.Count = 2 { ; one operator and a number, e.g. *0
+        ; op  := reM[1]
+        ; num := reM[2]
+        ; if Trim(op) = "//"
+        p.Push(reM[])
+        retBuf	:= Format("({1} := Buffer({2}, {3})).Size{4}", p*)
+        dbgTT(3, "@_VarSetCapacity: 3 args, Regex 2 groups", Time:=3,id:=5,x:=-1,y:=-1)
+      } else if reM.Count = 3 { ; op1, number, op2, e.g. *0+
+        op1 := reM[1]
+        num := reM[2]
+        op2 := reM[3]
+        if Trim(op1)="*" and Trim(num)="0" { ; move to the previous new line, remove regex matches
+          if %lNL_Func% {                       ; add a newline for multiple calls in a line
+            %lNL_Func%	.= "`r`n" ;;;;; but breaks other calls
+          }
+          %lEOLComment_Func% .= " NB! if this is part of a control flow block without {}, please enclose this and the next line in {}!"
+          p.Push(%lEOLComment_Func%)
+          %lNL_Func%	.= Format("{1} := Buffer({2}, {3}) `; {4}"   , p*)
+          ; DllCall("oleacc", "Ptr", VarSetCapacity(vC,8,0)*0 + &vC)
+          %lEOLComment_Func% := ""
+          retBuf	:= ""
+          dbgTT(3, "@_VarSetCapacity: 3 args, Regex 3 groups, NEWLINE", Time:=3,id:=5,x:=-1,y:=-1)
+        } else {
+          p.Push(reM[])
+          retBuf	:= Format("({1} := Buffer({2}, {3})).Size{4}", p*)
+          dbgTT(3, "@_VarSetCapacity: 3 args, Regex 3 groups", Time:=3,id:=5,x:=-1,y:=-1)
+        }
+      }
+    }
+    Return retBuf
+  } else if (p[3]  = "") {
+    dbgTT(3, "@_VarSetCapacity: 2 args", Time:=3,id:=5,x:=-1,y:=-1)
+    varA  	:= Format("{1}"                           , p*)
+    retBuf	:= Format("{1} := Buffer({2})"            , p*)
+    %lEOLComment_Func% .= format("V1toV2: if '{1}' is NOT a UTF-16 string, use '{2}'", varA, retBuf)
+    if not reM {
+      retStr	:= Format("VarSetStrCapacity(&{1}, {2})"  , p*)
+    } else {
+      p.Push(reM[])
+      retStr	:= Format("VarSetStrCapacity(&{1}, {2}){4}"  , p*)
+    }
+    Return retStr
+  } else {
+    dbgTT(3, "@_VarSetCapacity: fallback", Time:=3,id:=5,x:=-1,y:=-1)
+    varA  	:= Format("{1}", p*)
+    retStr	:= Format("VarSetStrCapacity(&{1}, {2})"        , p*)
+    %lEOLComment_Func% .= format("V1toV2: if '{1}' is a UTF-16 string, use '{2}'", varA, retStr)
+    if not reM {
+      retBuf	:= Format("{1} := Buffer({2}, {3})"           , p*)
+    } else {
+      p.Push(reM[])
+      retBuf	:= Format("({1} := Buffer({2}, {3}).Size){4}" , p*)
+    }
+    Return retBuf
+  }
 }

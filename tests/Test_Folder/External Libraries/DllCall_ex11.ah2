@@ -1,4 +1,4 @@
-Rect := Buffer(16, 0)  ; Set capacity to hold four 4-byte integers and initialize them all to zero.
+Rect := Buffer(16, 0)  ; Set capacity to hold four 4-byte integers and initialize them all to zero. ; V1toV2: if 'Rect' is a UTF-16 string, use 'VarSetStrCapacity(&Rect, 16)'
 NumPut("Int", A_ScreenWidth//2, Rect, 8)  ; The third integer in the structure is "rect.right".
 NumPut("Int", A_ScreenHeight//2, Rect, 12) ; The fourth integer in the structure is "rect.bottom".
 hDC := DllCall("GetDC", "Ptr", 0, "Ptr")  ; Pass zero to get the desktop's device context.

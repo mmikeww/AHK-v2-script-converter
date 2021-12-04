@@ -1,0 +1,55 @@
+﻿#Requires AutoHotKey v2.0-beta.1
+
+/* a list of all renamed functions, in this format:
+    , "OrigV1Function", "ReplacementV2Function"
+  (first comma is not needed for the first pair)
+  Similar to commands, parameters can be added
+  order of Is important do not change
+*/
+
+global FunctionsToConvertM := OrderedMap(
+    "ComObject(vt, value, Flags)"         	, "ComValue({1}, {2}, {3})"
+  , "ComObjCreate(CLSID , IID)"           	, "ComObject({1}, {2})"
+  , "DllCall(DllFunction,Type1,Arg1,val*)"	, "*_DllCall"
+  , "Func(FunctionNameQ2T)"               	, "{1}"
+  , "RegExMatch(Haystack, NeedleRegEx , OutputVarV2VR, StartingPos)"   , "*_RegExMatch"
+  , "RegExReplace(Haystack,NeedleRegEx,Replacement,OutputVarCountV2VR,Limit,StartingPos", "RegExReplace({1}, {2}, {3}, {4}, {5}, {6})"
+  , "StrReplace(Haystack,Needle,ReplaceText,OutputVarCountV2VR,Limit)" , "StrReplace({1}, {2}, {3}, , {4}, {5})"
+  , "RegisterCallback(FunctionNameQ2T,Options,ParamCount,EventInfo)"   , "CallbackCreate({1}, {2}, {3})"
+  , "LoadPicture(Filename,Options,ImageTypeV2VR)"      	, "LoadPicture({1},{2},{3})"
+  , "LV_Add(Options, Field*)"                          	, "*_LV_Add"
+  , "LV_Delete(RowNumber)"                             	, "*_LV_Delete"
+  , "LV_DeleteCol(ColumnNumber)"                       	, "*_LV_DeleteCol"
+  , "LV_GetCount(ColumnNumber)"                        	, "*_LV_GetCount"
+  , "LV_GetText(OutputVar, RowNumber, ColumnNumber)"   	, "*_LV_GetText"
+  , "LV_GetNext(StartingRowNumber, RowType)"           	, "*_LV_GetNext"
+  , "LV_InsertCol(ColumnNumber , Options, ColumnTitle)"	, "*_LV_InsertCol"
+  , "LV_Insert(RowNumber, Options, Field*)"            	, "*_LV_Insert"
+  , "LV_Modify(RowNumber, Options, Field*)"            	, "*_LV_Modify"
+  , "LV_ModifyCol(ColumnNumber, Options, ColumnTitle)" 	, "*_LV_ModifyCol"
+  , "LV_SetImageList(ImageListID, IconType)"           	, "*_LV_SetImageList"
+  , "TV_Add(Name,ParentItemID,Options)"                	, "*_TV_Add"
+  , "TV_Modify(ItemID,Options,NewName)"                	, "*_TV_Modify"
+  , "TV_Delete(ItemID)"                                	, "*_TV_Delete"
+  , "TV_GetSelection(ItemID)"                          	, "*_TV_GetSelection"
+  , "TV_GetParent(ItemID)"                             	, "*_TV_GetParent"
+  , "TV_GetPrev(ItemID)"                               	, "*_TV_GetPrev"
+  , "TV_GetNext(ItemID,ItemType)"                      	, "*_TV_GetNext"
+  , "TV_GetText(OutputVar,ItemID)"                     	, "*_TV_GetText"
+  , "TV_GetChild(ParentItemID)"                        	, "*_TV_GetChild"
+  , "TV_GetCount()"                                    	, "*_TV_GetCount"
+  , "TV_SetImageList(ImageListID,IconType)"            	, "*_TV_SetImageList"
+  , "SB_SetText(NewText,PartNumber,Style)"             	, "*_SB_SetText"
+  , "SB_SetParts(NewText,PartNumber,Style)"            	, "*_SB_SetParts"
+  , "SB_SetIcon(Filename,IconNumber,PartNumber)"       	, "*_SB_SetIcon"
+  , "MenuGetHandle(MenuNameQ2T)"                       	, "{1}.Handle"
+  , "MenuGetName(Handle)"                              	, "MenuFromHandle({1})"
+  , "NumGet(VarOrAddress,Offset,Type)"                 	, "*_NumGet"
+  , "NumPut(Number,VarOrAddress,Offset,Type)"          	, "*_NumPut"
+  , "Object(Array*)"                                   	, "*_Object"
+  , "OnError(FuncQ2T,AddRemove)"                       	, "OnError({1}, {2})"
+  , "OnMessage(MsgNumber, FunctionQ2T, MaxThreads)"    	, "OnMessage({1}, {2}, {3})"
+  , "OnClipboardChange(FuncQ2T,AddRemove)"             	, "OnClipboardChange({1}, {2})"
+  , "Asc(String)"                                      	, "Ord({1})"
+  , "VarSetCapacity(TargetVar,RequestedCapacity,FillByte)" , "*_VarSetCapacity"
+  )

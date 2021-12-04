@@ -17,6 +17,11 @@
 
 #Include lib/ClassOrderedMap.ahk
 
+#Include Convert/1Commands.ahk
+#Include Convert/2Functions.ahk
+#Include Convert/3Methods.ahk
+#Include Convert/4ArrayMethods.ahk
+#Include Convert/5Keywords.ahk
 ; =============================================================================
 ; Main Part of program
 ;   Many changes can be made without altering this

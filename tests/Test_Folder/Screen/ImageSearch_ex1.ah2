@@ -1,1 +1,1 @@
-ErrorLevel := ImageSearch(&FoundX, &FoundY, 40, 40, 300, 300, "C:\My Images\test.bmp")
+ErrorLevel := !ImageSearch(&FoundX, &FoundY, 40, 40, 300, 300, "C:\My Images\test.bmp")

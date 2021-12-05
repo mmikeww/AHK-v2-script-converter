@@ -172,8 +172,8 @@ Convert(ScriptString)
       OnExit,Func,AddRemove | *_OnExit
       OutputDebug,TextT2E | OutputDebug({1})
       Pause,OnOffToggleOn2True,OperateOnUnderlyingThread  | *_Pause
-      PixelSearch,OutputVarXV2VR,OutputVarYV2VR,X1T2E,Y1T2E,X2T2E,Y2T2E,ColorIDCBE2E,VariationT2E,ModeT2E | ErrorLevel := PixelSearch({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8})
       PixelGetColor,OutputVar,XT2E,YT2E,ModeT2E | {1} := PixelGetColor({2}, {3}, {4})
+      PixelSearch,OutputVarXV2VR,OutputVarYV2VR,X1CBE2E,Y1CBE2E,X2CBE2E,Y2CBE2E,ColorIDCBE2E,VariationCBE2E,ModeT2E | ErrorLevel := !PixelSearch({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9})
       PostMessage,Msg,wParam,lParam,ControlCBE2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | PostMessage({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8})
       Process,SubCommand,PIDOrNameT2E,ValueT2E | *_Process
       Progress, ProgressParam1,SubTextT2E,MainTextT2E,WinTitleT2E,FontNameT2E | *_Progress

@@ -4,6 +4,7 @@
 #Include <_GuiCtlExt>
 
 global icons, TestMode, FontSize, ViewExpectedCode, GuiWidth, GuiHeight
+   , TreeRoot := A_ScriptDir "\Tests\Test_Folder"
 
 TestMode := IniRead("QuickConvertorV2.ini", "Convertor", "TestMode", 0)
 ViewExpectedCode := IniRead("QuickConvertorV2.ini", "Convertor", "ViewExpectedCode", 0)
@@ -22,7 +23,6 @@ GuiTest(strV1Script:=""){
     global
 ; The following folder will be the root folder for the TreeView. Note that loading might take a long
 ; time if an entire drive such as C:\ is specified:
-TreeRoot := A_ScriptDir "\Tests\Test_Folder"
 TreeViewWidth := 280
 ListViewWidth := A_ScreenWidth/2 - TreeViewWidth - 30
 
@@ -62,9 +62,12 @@ M.Hide()
 
 ; Call TV_ItemSelect whenever a new item is selected:
 TV.OnEvent("ItemSelect", TV_ItemSelect)
-ButtonEvaluateTests := MyGui.Add("Button", "", "Evaluate Tests")
-ButtonEvaluateTests.StatusBar := "Evaluate tests again"
+ButtonEvaluateTests := MyGui.Add("Button", "", "Eval Tests")
+ButtonEvaluateTests.StatusBar := "Evaluate all the tests again"
 ButtonEvaluateTests.OnEvent("Click", AddSubFoldersToTree.Bind(TreeRoot, DirList,"0"))
+ButtonEvalSelected := MyGui.Add("Button", "", "Eval 1 test")
+ButtonEvalSelected.StatusBar := "Evaluate the one selected test again"
+ButtonEvalSelected.OnEvent("Click", EvalSelectedTest.Bind())
 CheckBoxViewSymbols := MyGui.Add("CheckBox", "yp x+60", "Symbols")
 CheckBoxViewSymbols.StatusBar := "Display invisible symbols like spaces, tabs and linefeeds"
 CheckBoxViewSymbols.OnEvent("Click", ViewSymbols)
@@ -566,10 +569,12 @@ MenuViewTree(*){
     if (TV_W>0){
         TV.Move(,,0,)
         ButtonEvaluateTests.Visible := false
+        ButtonEvalSelected.Visible  := false
     }
     else{
         TV.Move(,,180,)
         ButtonEvaluateTests.Visible := true
+        ButtonEvalSelected.Visible  := true
     }
     MyGui.GetPos(,, &Width,&Height)
     Gui_Size(MyGui, 0, Width - 14, Height - 60)
@@ -582,18 +587,71 @@ MenuTestMode(*){
     if TestMode{
         TV.Move(, , 180, )
         ButtonEvaluateTests.Visible := true
+        ButtonEvalSelected.Visible  := true
         CheckBoxV2E.Visible := true
         ViewMenu.Check("View Tree")
     }
     else{
         TV.Move(, , 0, )
         ButtonEvaluateTests.Visible := false
+        ButtonEvalSelected.Visible  := false
         CheckBoxV2E.Visible := false
         ViewMenu.UnCheck("View Tree")
     }
     IniWrite(TestMode, "QuickConvertorV2.ini", "Convertor", "TestMode")
     MyGui.GetPos(, , &Width, &Height)
     Gui_Size(MyGui, 0, Width-14, Height - 60)
+}
+EvalSelectedTest(thisCtrl, *) {
+    global Number_Tests, Number_Tests_Pass, TreeRoot
+
+    selItemID := TV.GetSelection()
+    parentPaths := Array()
+    parentItemID := 1
+    ItemID := selItemID
+    while parentItemID  != 0 {
+        parentItemID := TV.GetParent(ItemID)
+        ItemID       := parentItemID
+        if parentItemID != 0 {
+            parentPaths.InsertAt(1, TV.GetText(parentItemID))
+        }
+    }
+    if parentPaths.Length = 0 {
+      return
+    }
+    fullParentPath := TreeRoot
+    for fd in parentPaths {
+        fullParentPath .= "/" fd
+    }
+    file_v1_name := TV.GetText(selItemID)
+    file_v2_name := StrReplace(file_v1_name, ".ah1", ".ah2")
+    file_v1      := fullParentPath "/" file_v1_name
+    file_v2      := fullParentPath "/" file_v2_name
+
+    parentAttr  := FileExist(fullParentPath)
+    selItemAttr := FileExist(file_v1)
+    if (not parentAttr) or InStr(selItemAttr, "D") { ; return on subfolders
+        return
+    }
+
+    TV.Opt("-Redraw")
+    if FileExist(file_v1) and FileExist(file_v2){
+        TextV1 := FileRead(file_v1)
+        TextV2Expected := FileRead(file_v2)
+        TextV2Converted := Convert(TextV1)
+        ; Number_Tests++
+        if (TextV2Expected=TextV2Converted){
+            TV.Modify(selItemID, icons.pass)
+            Number_Tests_Pass++
+        }
+        else{
+            TV.Modify(selItemID, icons.fail)
+        }
+    }
+    TV_ItemSelect(thisCtrl, selItemID)
+    TV.Opt("+Redraw")
+    SB.SetText("Number of tests: " . Number_Tests . " ( " . Number_Tests - Number_Tests_Pass . " failed / " . Number_Tests_Pass . " passed)", 1)
+    return
 }
 
 AddSubFoldersToTree(Folder, DirList, ParentItemID := 0,*){
@@ -682,6 +740,7 @@ Gui_Size(thisGui, MinMax, Width, Height)  ; Expand/Shrink ListView and TreeView 
     Height := Height - 23 ; Compensate the statusbar
     EditHeight := Height-30
     ButtonHeight := EditHeight+3
+    ButtonWidth  := 70
     if MinMax = -1  ; The window has been minimized.  No action needed.
         return
     ; Otherwise, the window has been resized or maximized. Resize the controls to match.
@@ -691,10 +750,12 @@ Gui_Size(thisGui, MinMax, Width, Height)  ; Expand/Shrink ListView and TreeView 
         TV_W := 0
         TV.Move(, , 0, )
         ButtonEvaluateTests.Visible := false
+        ButtonEvalSelected.Visible  := false
         CheckBoxV2E.Visible := false
     }
     else{
         ButtonEvaluateTests.Visible := true
+        ButtonEvalSelected.Visible  := true
         CheckBoxV2E.Visible := true
     }
     V2ExpectedEdit.GetPos(,, &V2ExpectedEdit_W)
@@ -711,6 +772,7 @@ Gui_Size(thisGui, MinMax, Width, Height)  ; Expand/Shrink ListView and TreeView 
     V1Edit.Move(TreeViewWidth,,EditWith,EditHeight)
     V2Edit.Move(TreeViewWidth+EditWith,,EditWith,EditHeight)
     ButtonEvaluateTests.Move(,ButtonHeight)
+    ButtonEvalSelected.Move(ButtonWidth,ButtonHeight)
     CheckBoxViewSymbols.Move(TreeViewWidth+EditWith-140,EditHeight+6)
     ButtonRunV1.Move(TreeViewWidth,ButtonHeight)
     ButtonCloseV1.Move(TreeViewWidth+28,ButtonHeight)

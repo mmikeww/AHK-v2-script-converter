@@ -144,7 +144,7 @@ MyGui.OnEvent("Size", Gui_Size)
 ; MyGui.OnEvent("Escape", (*) => ExitApp())
 
 FileMenu := Menu()
-FileMenu.Add "Run tests", (*) => Run('"' A_ScriptDir "\AutoHotKey Exe\AutoHotkeyV2.exe" '" "' A_ScriptDir 'Tests\Tests.ahk"')
+FileMenu.Add "Run tests", (*) => Run('"' A_ScriptDir "\AutoHotKey Exe\AutoHotkeyV2.exe" '" "' TreeRoot '"')
 FileMenu.Add "Open test folder", (*) => Run(TreeRoot)
 FileMenu.Add()
 FileMenu.Add "E&xit", (*) => ExitApp()

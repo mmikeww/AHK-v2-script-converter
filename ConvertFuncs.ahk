@@ -166,18 +166,18 @@ Convert(ScriptString)
       Menu,MenuName,SubCommand,Value1,Value2,Value3,Value4 | *_Menu
       MsgBox,TextOrOptions,Title,Text,Timeout | *_MsgBox
       MouseGetPos,OutputVarXV2VR,OutputVarYV2VR,OutputVarWinV2VR,OutputVarControlV2VR,Flag | MouseGetPos({1}, {2}, {3}, {4}, {5})
-      MouseClick,WhichButtonT2E,XT2E,YT2E,ClickCountT2E,SpeedT2E,DownOrUpT2E,RelativeT2E | MouseClick({1}, {2}, {3}, {4}, {5}, {6}, {7})
-      MouseClickDrag,WhichButtonT2E,X1T2E,Y1T2E,X2T2E,Y2T2E,SpeedT2E,RelativeT2E | MouseClickDrag({1}, {2}, {3}, {4}, {5}, {6}, {7})
-      MouseMove,XT2E,YT2E,SpeedT2E,RelativeT2E | MouseMove({1}, {2}, {3}, {4})
+      MouseClick,WhichButtonT2E,XCBE2E,YCBE2E,ClickCountCBE2E,SpeedCBE2E,DownOrUpT2E,RelativeT2E | MouseClick({1}, {2}, {3}, {4}, {5}, {6}, {7})
+      MouseClickDrag,WhichButtonT2E,X1CBE2E,Y1CBE2E,X2CBE2E,Y2CBE2E,SpeedCBE2E,RelativeT2E | MouseClickDrag({1}, {2}, {3}, {4}, {5}, {6}, {7})
+      MouseMove,XCBE2E,YCBE2E,SpeedCBE2E,RelativeT2E | MouseMove({1}, {2}, {3}, {4})
       OnExit,Func,AddRemove | *_OnExit
       OutputDebug,TextT2E | OutputDebug({1})
       Pause,OnOffToggleOn2True,OperateOnUnderlyingThread  | *_Pause
-      PixelGetColor,OutputVar,XT2E,YT2E,ModeT2E | {1} := PixelGetColor({2}, {3}, {4})
+      PixelGetColor,OutputVar,XCBE2E,YCBE2E,ModeT2E | {1} := PixelGetColor({2}, {3}, {4})
       PixelSearch,OutputVarXV2VR,OutputVarYV2VR,X1CBE2E,Y1CBE2E,X2CBE2E,Y2CBE2E,ColorIDCBE2E,VariationCBE2E,ModeT2E | ErrorLevel := !PixelSearch({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9})
-      PostMessage,Msg,wParam,lParam,ControlCBE2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | PostMessage({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8})
+      PostMessage,MsgCBE2E,wParamCBE2E,lParamCBE2E,ControlT2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | PostMessage({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8})
       Process,SubCommand,PIDOrNameT2E,ValueT2E | *_Process
       Progress, ProgressParam1,SubTextT2E,MainTextT2E,WinTitleT2E,FontNameT2E | *_Progress
-      Random,OutputVar,MinT2E,MaxT2E | *_Random
+      Random,OutputVar,MinCBE2E,MaxCBE2E | *_Random
       RegRead,OutputVar,KeyName,ValueName,var4 | *_RegRead
       RegWrite,ValueTypeT2E,KeyNameT2E,var3T2E,var4T2E,var5T2E | *_RegWrite
       RegDelete,var1,var2,var3 | *_RegDelete
@@ -185,17 +185,17 @@ Convert(ScriptString)
       Run,TargetT2E,WorkingDirT2E,OptionsT2E,OutputVarPIDV2VR | *_Run
       RunWait,TargetT2E,WorkingDirT2E,OptionsT2E,OutputVarPIDV2VR | RunWait({1}, {2}, {3}, {4})
       SetCapsLockState, StateT2E | SetCapsLockState({1})
-      SetControlDelay,DelayT2QE | SetControlDelay({1})
+      SetControlDelay,DelayCBE2E | SetControlDelay({1})
       SetEnv,var,valueT2E | {1} := {2}
       SetNumLockState, StateT2E | SetNumLockState({1})
-      SetKeyDelay,DelayT2E,PressDurationT2E,PlayT2E | SetKeyDelay({1}, {2}, {3})
-      SetMouseDelay,DelayT2E,PlayT2E | SetMouseDelay({1}, {2})
+      SetKeyDelay,DelayCBE2E,PressDurationCBE2E,PlayT2E | SetKeyDelay({1}, {2}, {3})
+      SetMouseDelay,DelayCBE2E,PlayT2E | SetMouseDelay({1}, {2})
       SetRegView, RegViewT2E | SetRegView({1})
       SetScrollLockState, StateT2E | SetScrollLockState({1})
       SetStoreCapsLockMode,OnOffOn2True | SetStoreCapsLockMode({1})
       SetTimer,LabelCBE2E,PeriodOnOffDeleteCBE2E,PriorityCBE2E | *_SetTimer
       SetTitleMatchMode,MatchModeT2E | SetTitleMatchMode({1})
-      SetWinDelay,DelayT2QE | SetWinDelay({1})
+      SetWinDelay,DelayCBE2E | SetWinDelay({1})
       SetWorkingDir,DirNameT2E | SetWorkingDir({1})
       Send,keysT2E | Send({1})
       SendText,keysT2E | SendText({1})
@@ -204,7 +204,7 @@ Convert(ScriptString)
       SendLevel,LevelT2E | SendLevel({1})
       SendRaw,keys | *_SendRaw
       SetDefaultMouseSpeed, LevelT2E | SetDefaultMouseSpeed({1})
-      SendMessage,Msg,wParamCBE2E,lParamCBE2E,ControlCBE2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E,TimeoutCBE2E | ErrorLevel := SendMessage({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9})
+      SendMessage,MsgCBE2E,wParamCBE2E,lParamCBE2E,ControlT2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E,TimeoutCBE2E | ErrorLevel := SendMessage({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9})
       SendPlay,keysT2E | SendPlay({1})
       SendEvent,keysT2E | SendEvent({1})
       SendEvent,keysT2E | SendEvent({1})

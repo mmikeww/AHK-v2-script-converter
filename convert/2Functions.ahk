@@ -57,10 +57,34 @@ global FunctionsToConvertM := OrderedMap(
 
 _DllCall(p) {
   ParBuffer := ""
+  global noSideEffect
   loop p.Length
   {
-    if (p[A_Index] ~= "^&") {	; Remove the & parameter
+    NeedleRegEx := "(\*\s*0\s*\+\s*)(&)(\w*)" ; *0+&var split into 3 groups (*0+), (&), and (var)
+    if (p[A_Index] ~= "^&") {                       ; Remove the & parameter
       p[A_Index] := SubStr(p[A_Index], 2)
+    } else if RegExMatch(p[A_Index], NeedleRegEx) { ; even if it's behind a *0 var assignment preceding it
+      noSideEffect := 1
+      subLoopFunctions(ScriptString:=p[A_Index], Line:=p[A_Index], &v2:="", &gotFunc:=False)
+      noSideEffect := 0
+      if (commentPos:=InStr(v2,"`;")) {
+        v2 := SubStr(v2, 1, commentPos-1)
+      }
+      if RegExMatch(v2, "VarSetStrCapacity\(&") {   ; guard var in StrPtr if UTF-16 passed as "Ptr"
+        if p.Has(A_Index-1) and (p[A_Index-1] = '"Ptr"') {
+          p[A_Index] := RegExReplace(p[A_Index],      NeedleRegEx,"$1StrPtr($3)")
+          dbgTT(3, "@DllCall: 1StrPtr", Time:=3,id:=9)
+        } else {
+          p[A_Index] := RegExReplace(p[A_Index],      NeedleRegEx,"$1$3")
+          dbgTT(3, "@DllCall: 2NotPtr", Time:=3,id:=9)
+        }
+      } else if RegExMatch(v2, "Buffer\("){         ; leave only the variable,  _VarSetCapacity(p) should place the rest on a new line before this
+          p[A_Index] := RegExReplace(p[A_Index], ".*" NeedleRegEx,"$3")
+          dbgTT(3, "@DllCall: 3Buff", Time:=3,id:=9)
+      } else {
+          p[A_Index] := RegExReplace(p[A_Index],      NeedleRegEx,"$1$3")
+          dbgTT(3, "@DllCall: 4Else", Time:=3,id:=9)
+      }
     }
     if (A_Index != 1 and (InStr(p[A_Index - 1], "*`"") or InStr(p[A_Index - 1], "*`'") or InStr(p[A_Index - 1], "P`"") or InStr(p[A_Index - 1], "P`'"))) {
       p[A_Index] := "&" p[A_Index]
@@ -68,7 +92,7 @@ _DllCall(p) {
         p[A_Index] .= " := 0"
       }
     }
-    ParBuffer .= A_Index = 1 ? p[A_Index] : ", " p[A_Index]
+    ParBuffer .= A_Index=1 ? p[A_Index] : ", " p[A_Index]
   }
   Return "DllCall(" ParBuffer ")"
 }

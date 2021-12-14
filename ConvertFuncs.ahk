@@ -37,6 +37,7 @@ Convert(ScriptString)
    global mGuiCType   := map()                        	; Create a map to return the type of control
    global mGuiCObject := map()                        	; Create a map to return the object of a control
    global NL_Func          := ""                      	; _Funcs can use this to add New Previous Line
+   global EOLComment_Func  := ""                      	; _Funcs can use this to add comments at EOL
 
    global ListViewNameDefault
    global TreeViewNameDefault
@@ -811,8 +812,13 @@ Convert(ScriptString)
       if NL_Func {         ; add a newline if exists
          NL_Func .= "`r`n"
       }
-      ScriptOutput .= NL_Func . Line . EOLComment . "`r`n"
-      NL_Func:="" ; reset global variables
+      if EOLComment_Func {     ; prepend a `; comment symbol if missing
+         if SubStr(StrReplace(EOLComment_Func, A_Space), 1, 1) != "`;" {
+            EOLComment_Func := " `; " . EOLComment_Func
+         }
+      }
+      ScriptOutput .= NL_Func . Line . EOLComment . EOLComment_Func . "`r`n"
+      NL_Func:="", EOLComment_Func:="" ; reset global variables
       ; Output and NewInput should become arrays, NewInput is a copy of the Input, but with empty lines added for easier comparison.
       LastLine := Line
 

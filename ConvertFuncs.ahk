@@ -20,8 +20,8 @@ Convert(ScriptString)
    global ScriptStringsUsed := Array()	; Keeps an array of interesting strings used in the script
    ScriptStringsUsed.ErrorLevel := InStr(ScriptString, "ErrorLevel")
    ScriptStringsUsed.IfMsgBox := InStr(ScriptString, "IfMsgBox")
-   global aListPseudoArray := Array()	; list of strings that should be converted from pseudoArray to Array
-   global aListMatchObject := Array()	; list of strings that should be converted from Match Object V1 to Match Object V2
+   global aListPseudoArray := Array()     	; list of strings that should be converted from pseudoArray to Array
+   global aListMatchObject := Array()     	; list of strings that should be converted from Match Object V1 to Match Object V2
    global aListLabelsToFunction := Array()	; array of objects with the properties [label] and [parameters] that should be converted from label to Function
    global Orig_Line
    global Orig_Line_NoComment
@@ -33,9 +33,9 @@ Convert(ScriptString)
    global GuiList
    global GuiVList	; Used to list all variable names defined in a Gui
    global MenuList
-   global mAltLabel := GetAltLabelsMap(ScriptString)	; Create a map of labels who are identical
-   global mGuiCType := map()	; Create a map to return the type of control
-   global mGuiCObject := map()	; Create a map to return the object of a control
+   global mAltLabel   := GetAltLabelsMap(ScriptString)	; Create a map of labels who are identical
+   global mGuiCType   := map()                        	; Create a map to return the type of control
+   global mGuiCObject := map()                        	; Create a map to return the object of a control
    global grePostFuncMatch := False                   	; ... to know their regex matched
 
    global ListViewNameDefault
@@ -936,16 +936,16 @@ subLoopFunctions(ScriptString, Line, &retV2, &gotFunc) {
 ; =============================================================================
 ToExp(Text)
 {
-   static qu := '"'	; Constant for double quotes
+   static qu := '"' 	; Constant for double quotes
    static bt := "``"	; Constant for backtick to escape
    Text := Trim(Text, " `t")
 
-   If (Text = "")	; If text is empty
-      return (qu . qu)	; Two double quotes
+   If (Text = "")                      	; If text is empty
+      return (qu . qu)                 	; Two double quotes
    else if (SubStr(Text, 1, 2) = "`% ")	; if this param was a forced expression
-      return SubStr(Text, 3)	; then just return it without the %
+      return SubStr(Text, 3)           	; then just return it without the %
 
-   Text := StrReplace(Text, qu, bt . qu)	; first escape literal quotes
+   Text := StrReplace(Text, qu, bt . qu)  	; first escape literal quotes
    Text := StrReplace(Text, bt . ",", ",")	; then remove escape char for comma
    ;msgbox text=%text%
 
@@ -990,16 +990,16 @@ ToExp(Text)
 ; that is, a number will be turned into a quoted number.  3 -> "3"
 ToStringExpr(Text)
 {
-   static qu := '"'	; Constant for double quotes
+   static qu := '"' 	; Constant for double quotes
    static bt := "``"	; Constant for backtick to escape
    Text := Trim(Text, " `t")
 
-   If (Text = "")	; If text is empty
-      return (qu . qu)	; Two double quotes
+   If (Text = "")                      	; If text is empty
+      return (qu . qu)                 	; Two double quotes
    else if (SubStr(Text, 1, 2) = "`% ")	; if this param was a forced expression
-      return SubStr(Text, 3)	; then just return it without the %
+      return SubStr(Text, 3)           	; then just return it without the %
 
-   Text := StrReplace(Text, qu, bt . qu)	; first escape literal quotes
+   Text := StrReplace(Text, qu, bt . qu)  	; first escape literal quotes
    Text := StrReplace(Text, bt . ",", ",")	; then remove escape char for comma
    ;msgbox("text=" text)
 

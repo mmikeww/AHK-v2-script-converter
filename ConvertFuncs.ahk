@@ -36,6 +36,7 @@ Convert(ScriptString)
    global mAltLabel := GetAltLabelsMap(ScriptString)	; Create a map of labels who are identical
    global mGuiCType := map()	; Create a map to return the type of control
    global mGuiCObject := map()	; Create a map to return the object of a control
+   global grePostFuncMatch := False                   	; ... to know their regex matched
 
    global ListViewNameDefault
    global TreeViewNameDefault
@@ -201,79 +202,9 @@ Convert(ScriptString)
       }
 
       ; Loop the functions
-      loop {
-         oResult := V1ParSplitfunctions(Line, A_Index)
-
-         if (oResult.Found = 0) {
-            break
-         }
-         if (oResult.Hook_Status > 0) {
-            ; This means that the function dit not close, probably a continuation section
-            ;MsgBox("Hook_Status: " oResult.Hook_Status "line:" line)
-            break
-         }
-
-         oPar := V1ParSplit(oResult.Parameters)
-         gFunctPar := oResult.Parameters
-
-         ConvertList := FunctionsToConvertM
-         if RegExMatch(oResult.Pre, "\.$") {
-            ConvertList := MethodsToConvertM
-            ObjectName := RegexReplace(oResult.Pre, "i).*?([\w]*)\.$", "$1")
-            If RegExMatch(ScriptString, "i)^(|.*[\n\r]+)([\s]*(\Q" ObjectName "\E)[\s]*):=\s*(\[[^;]*)") {	; Check if Object is an Array, not an V2 Object or Map
-               ConvertList := ArrayMethodsToConvertM
-            }
-         }
-         for v1, v2 in ConvertList
-         {
-            ListDelim := InStr(v1, "(")
-            ListFunction := Trim(SubStr(v1, 1, ListDelim - 1))
-
-            If (ListFunction = oResult.func) {
-               ;MsgBox(ListFunction)
-               ListParam := SubStr(v1, ListDelim + 1, InStr(v1, ")") - ListDelim - 1)
-               oListParam := StrSplit(ListParam, "`,", " ")
-               ; Fix for when ListParam is empty
-               if (ListParam = "") {
-                  oListParam.Push("")
-               }
-               v1 := trim(v1)
-               v2 := trim(v2)
-               loop oPar.Length
-               {
-                  if (A_Index > 1 and InStr(oListParam[A_Index - 1], "*")) {
-                     oListParam.InSertAt(A_Index, oListParam[A_Index - 1])
-                  }
-                  ; Uses a function to format the parameters
-                  oPar[A_Index] := ParameterFormat(oListParam[A_Index], oPar[A_Index])
-               }
-               loop oListParam.Length
-               {
-                  if !oPar.Has(A_Index) {
-                     oPar.Push("")
-                  }
-               }
-
-               If (SubStr(v2, 1, 1) == "*")	; if using a special function
-               {
-                  FuncName := SubStr(v2, 2)
-
-                  FuncObj := %FuncName%	;// https://www.autohotkey.com/boards/viewtopic.php?p=382662#p382662
-                  If FuncObj is Func
-                     NewFunction := FuncObj(oPar)
-               } Else {
-                  FormatString := Trim(v2)
-                  NewFunction := Format(FormatString, oPar*)
-               }
-
-               ; Remove the empty variables
-               NewFunction := RegExReplace(NewFunction, "[\s\,]*\)$", ")")
-               ; MsgBox("found:" A_LoopField)
-               Line := oResult.Pre NewFunction oResult.Post
-            }
-         }
-         ; msgbox("[" oResult.Pre "]`n[" oResult.func "]`n[" oResult.Parameters "]`n[" oResult.Post "]`n[" oResult.Separator "]`n")
-         ; Line := oResult.Pre oResult.func "(" oResult.Parameters ")" oResult.Post
+      subLoopFunctions(ScriptString, Line, &LineFuncV2, &gotFunc:=False)
+      if gotFunc {
+         Line := LineFuncV2
       }
 
       ; -------------------------------------------------------------------------------
@@ -910,6 +841,93 @@ Convert(ScriptString)
    ScriptOutput := AddBracket(ScriptOutput)
 
    return ScriptOutput
+}
+
+; =================================================================================
+; Convert a v1 function in a single script line to v2
+;    Can be used from inside _Funcs for nested checks (e.g., function in a DllCall)
+;    Set noSideEffect to 1 to make some callable _Funcs to not change global vars
+; =================================================================================
+subLoopFunctions(ScriptString, Line, &retV2, &gotFunc) {
+   global gFunctPar, grePostFuncMatch
+   loop {
+      oResult := V1ParSplitfunctions(Line, A_Index)
+
+      if (oResult.Found = 0) {
+         break
+      }
+      if (oResult.Hook_Status > 0) {
+         ; This means that the function dit not close, probably a continuation section
+         ;MsgBox("Hook_Status: " oResult.Hook_Status "line:" line)
+         break
+      }
+
+      oPar := V1ParSplit(oResult.Parameters)
+      gFunctPar := oResult.Parameters
+
+      ConvertList := FunctionsToConvertM
+      if RegExMatch(oResult.Pre, "\.$") {
+         ConvertList := MethodsToConvertM
+         ObjectName := RegexReplace(oResult.Pre, "i).*?([\w]*)\.$", "$1")
+         If RegExMatch(ScriptString, "i)^(|.*[\n\r]+)([\s]*(\Q" ObjectName "\E)[\s]*):=\s*(\[[^;]*)") {	; Check if Object is an Array, not an V2 Object or Map
+            ConvertList := ArrayMethodsToConvertM
+         }
+      }
+      for v1, v2 in ConvertList
+      {
+         ListDelim := InStr(v1, "(")
+         ListFunction := Trim(SubStr(v1, 1, ListDelim - 1))
+
+         If (ListFunction = oResult.func) {
+            ;MsgBox(ListFunction)
+            ListParam := SubStr(v1, ListDelim + 1, InStr(v1, ")") - ListDelim - 1)
+            oListParam := StrSplit(ListParam, "`,", " ")
+            ; Fix for when ListParam is empty
+            if (ListParam = "") {
+               oListParam.Push("")
+            }
+            v1 := trim(v1)
+            v2 := trim(v2)
+            loop oPar.Length
+            {
+               if (A_Index > 1 and InStr(oListParam[A_Index - 1], "*")) {
+                  oListParam.InSertAt(A_Index, oListParam[A_Index - 1])
+               }
+               ; Uses a function to format the parameters
+               oPar[A_Index] := ParameterFormat(oListParam[A_Index], oPar[A_Index])
+            }
+            loop oListParam.Length
+            {
+               if !oPar.Has(A_Index) {
+                  oPar.Push("")
+               }
+            }
+
+            If (SubStr(v2, 1, 1) == "*")	; if using a special function
+            {
+               FuncName := SubStr(v2, 2)
+
+               FuncObj := %FuncName%	;// https://www.autohotkey.com/boards/viewtopic.php?p=382662#p382662
+               If FuncObj is Func {
+                  NewFunction := FuncObj(oPar)
+               }
+            } Else {
+               FormatString := Trim(v2)
+               NewFunction := Format(FormatString, oPar*)
+            }
+
+            ; Remove the empty variables
+            NewFunction := RegExReplace(NewFunction, "[\s\,]*\)$", ")")
+            ; MsgBox("found:" A_LoopField)
+            Line := oResult.Pre NewFunction oResult.Post
+
+            retV2 := Line
+            gotFunc:=True
+         }
+      }
+      ; msgbox("[" oResult.Pre "]`n[" oResult.func "]`n[" oResult.Parameters "]`n[" oResult.Post "]`n[" oResult.Separator "]`n")
+      ; Line := oResult.Pre oResult.func "(" oResult.Parameters ")" oResult.Post
+   }
 }
 
 ; =============================================================================

@@ -36,7 +36,7 @@ Convert(ScriptString)
    global mAltLabel   := GetAltLabelsMap(ScriptString)	; Create a map of labels who are identical
    global mGuiCType   := map()                        	; Create a map to return the type of control
    global mGuiCObject := map()                        	; Create a map to return the object of a control
-   global grePostFuncMatch := False                   	; ... to know their regex matched
+   global NL_Func          := ""                      	; _Funcs can use this to add New Previous Line
 
    global ListViewNameDefault
    global TreeViewNameDefault
@@ -808,7 +808,11 @@ Convert(ScriptString)
          Line := ConvertObjectMatch(Line, aListMatchObject[A_Index])
       }
 
-      ScriptOutput .= Line . EOLComment . "`r`n"
+      if NL_Func {         ; add a newline if exists
+         NL_Func .= "`r`n"
+      }
+      ScriptOutput .= NL_Func . Line . EOLComment . "`r`n"
+      NL_Func:="" ; reset global variables
       ; Output and NewInput should become arrays, NewInput is a copy of the Input, but with empty lines added for easier comparison.
       LastLine := Line
 

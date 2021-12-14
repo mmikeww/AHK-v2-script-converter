@@ -3,8 +3,10 @@
 
 ; to do: strsplit (old command)
 ; requires should change the version :D
+global dbg:=0
 
 #Include lib/ClassOrderedMap.ahk
+#Include lib/dbg.ahk
 
 #Include Convert/1Commands.ahk
 #Include Convert/2Functions.ahk

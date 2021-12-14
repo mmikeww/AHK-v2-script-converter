@@ -38,6 +38,7 @@ Convert(ScriptString)
    global mGuiCObject := map()                        	; Create a map to return the object of a control
    global NL_Func          := ""                      	; _Funcs can use this to add New Previous Line
    global EOLComment_Func  := ""                      	; _Funcs can use this to add comments at EOL
+   global noSideEffect     := False                   	; ... to not change global variables
 
    global ListViewNameDefault
    global TreeViewNameDefault
@@ -203,6 +204,7 @@ Convert(ScriptString)
       }
 
       ; Loop the functions
+      noSideEffect := False
       subLoopFunctions(ScriptString, Line, &LineFuncV2, &gotFunc:=False)
       if gotFunc {
          Line := LineFuncV2

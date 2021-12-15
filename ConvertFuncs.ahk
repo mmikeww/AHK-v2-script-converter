@@ -3,6 +3,16 @@
 
 ; to do: strsplit (old command)
 ; requires should change the version :D
+global dbg:=0
+
+#Include lib/ClassOrderedMap.ahk
+#Include lib/dbg.ahk
+
+#Include Convert/1Commands.ahk
+#Include Convert/2Functions.ahk
+#Include Convert/3Methods.ahk
+#Include Convert/4ArrayMethods.ahk
+#Include Convert/5Keywords.ahk
 
 Convert(ScriptString)
 {
@@ -10,8 +20,8 @@ Convert(ScriptString)
    global ScriptStringsUsed := Array()	; Keeps an array of interesting strings used in the script
    ScriptStringsUsed.ErrorLevel := InStr(ScriptString, "ErrorLevel")
    ScriptStringsUsed.IfMsgBox := InStr(ScriptString, "IfMsgBox")
-   global aListPseudoArray := Array()	; list of strings that should be converted from pseudoArray to Array
-   global aListMatchObject := Array()	; list of strings that should be converted from Match Object V1 to Match Object V2
+   global aListPseudoArray := Array()     	; list of strings that should be converted from pseudoArray to Array
+   global aListMatchObject := Array()     	; list of strings that should be converted from Match Object V1 to Match Object V2
    global aListLabelsToFunction := Array()	; array of objects with the properties [label] and [parameters] that should be converted from label to Function
    global Orig_Line
    global Orig_Line_NoComment
@@ -23,14 +33,24 @@ Convert(ScriptString)
    global GuiList
    global GuiVList	; Used to list all variable names defined in a Gui
    global MenuList
-   global mAltLabel := GetAltLabelsMap(ScriptString)	; Create a map of labels who are identical
-   global mGuiCType := map()	; Create a map to return the type of control
-   global mGuiCObject := map()	; Create a map to return the object of a control
+   global mAltLabel   := GetAltLabelsMap(ScriptString)	; Create a map of labels who are identical
+   global mGuiCType   := map()                        	; Create a map to return the type of control
+   global mGuiCObject := map()                        	; Create a map to return the object of a control
+   global NL_Func          := ""                      	; _Funcs can use this to add New Previous Line
+   global EOLComment_Func  := ""                      	; _Funcs can use this to add comments at EOL
+   global grePostFuncMatch := False                   	; ... to know their regex matched
+   global noSideEffect     := False                   	; ... to not change global variables
 
    global ListViewNameDefault
    global TreeViewNameDefault
    global StatusBarNameDefault
    global gFunctPar
+
+   global CommandsToConvertM
+   global FunctionsToConvertM
+   global MethodsToConvertM
+   global ArrayMethodsToConvertM
+   global KeywordsToRenameM
 
    GuiNameDefault := "myGui"
    ListViewNameDefault := "LV"
@@ -39,353 +59,6 @@ Convert(ScriptString)
    GuiList := "|"
    MenuList := "|"
    GuiVList := Map()
-
-   ;// Commands and How to convert them
-   ;// Specification format:
-   ;//          CommandName,Param1,Param2,etc | Replacement string format (see below)
-   ;// Param format:
-   ;//          - param names ending in "T2E" will convert a literal Text param TO an Expression
-   ;//              this would be used when converting a Command to a Func or otherwise needing an expr
-   ;//              such as      word -> "word"      or      %var% -> var
-   ;//              Changed: empty strings will return an emty string
-   ;//              like the 'value' param in those  `IfEqual, var, value`  commands
-   ;//          - param names ending in "T2QE" will convert a literal Text param TO an Quoted Expression
-   ;//              this would be used when converting a Command to a expr
-   ;//              This is the same as T2E, but will return an "" if empty.
-   ;//          - param names ending in "Q2T" will convert a Quoted Text param TO text
-   ;//              this would be used when converting a function variable that holds a label or function
-   ;//              "WM_LBUTTONDOWN" => WM_LBUTTONDOWN
-   ;//          - param names ending in "CBE2E" would convert parameters that 'Can Be an Expression TO an EXPR'
-   ;//              this would only be used if the conversion goes from Command to Func
-   ;//              we'd need to strip a preceeding "% " which was used to force an expr when it was unnecessary
-   ;//          - param names ending in "CBE2T" would convert parameters that 'Can Be an Expression TO literal TEXT'
-   ;//              this would be used if the conversion goes from Command to Command
-   ;//              because in v2, those command parameters can no longer optionally be an expression.
-   ;//              these will be wrapped in %%s, so   expr+1   is now    %expr+1%
-   ;//          - param names ending in "V2VR" would convert an output variable name to a v2 VarRef
-   ;//              basically it will just add an & at the start. so var -> &var
-   ;//          - param names ending in "On2True" would convert an OnOff Parameter name to a Mode
-   ;//              On => True
-   ;//              Off => False
-   ;//          - any other param name will not be converted
-   ;//              this means that the literal text of the parameter is unchanged
-   ;//              this would be used for InputVar/OutputVar params, or whenever you want the literal text preserved
-   ;// Replacement format:
-   ;//          - use {1} which corresponds to Param1, etc
-   ;//          - use asterisk * and a function name to call, for custom processing when the params dont directly match up
-   CommandsToConvert := "
-   (
-      BlockInput,OptionT2E | BlockInput({1})
-      DriveSpaceFree,OutputVar,PathT2E | {1} := DriveGetSpaceFree({2})
-      Click,keysT2E | Click({1})
-      ClipWait,Timeout,WaitForAnyData | Errorlevel := !ClipWait({1}, {2})
-      Control,SubCommand,ValueT2E,ControlT2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | *_Control
-      ControlClick,Control-or-PosT2E,WinTitleT2E,WinTextT2E,WhichButtonT2E,ClickCountT2E,OptionsT2E,ExcludeTitleT2E,ExcludeTextT2E | ControlClick({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8})
-      ControlFocus,ControlT2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | ControlFocus({1}, {2}, {3}, {4}, {5})
-      ControlGet,OutputVar,SubCommand,ValueT2E,ControlT2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | *_ControlGet
-      ControlGetFocus,OutputVar,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | *_ControlGetFocus
-      ControlGetPos,XV2VR,YV2VR,WidthV2VR,HeightV2VR,ControlT2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | ControlGetPos({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8})
-      ControlGetText,OutputVar,ControlT2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | {1} := ControlGetText({2}, {3}, {4}, {5}, {6})
-      ControlMove,ControlT2E,XCBE2E,YCBE2E,WidthCBE2E,HeightT2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | ControlMove({2}, {3}, {4}, {5}, {1}, {6}, {7}, {8}, {9})
-      ControlSend,ControlT2E,KeysT2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | ControlSend({2}, {1}, {3}, {4}, {5}, {6})
-      ControlSendRaw,ControlT2E,KeysT2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | ControlSendText({2}, {1}, {3}, {4}, {5}, {6})
-      ControlSetText,ControlT2E,NewTextT2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | ControlSetText({2}, {1}, {3}, {4}, {5}, {6})
-      CoordMode,TargetTypeT2E,RelativeToT2E | *_CoordMode
-      DetectHiddenText,ModeOn2True | DetectHiddenText({1})
-      DetectHiddenWindows,ModeOn2True | DetectHiddenWindows({1})
-      Drive,SubCommand,Value1,Value2 | *_Drive
-      DriveGet,OutputVar,SubCommand,ValueT2E | {1} := DriveGet{2}({3})
-      EnvAdd,var,valueCBE2E,TimeUnitsT2E | *_EnvAdd
-      EnvSet,EnvVarT2E,ValueT2E | EnvSet({1}, {2})
-      EnvSub,var,valueCBE2E,TimeUnitsT2E | *_EnvSub
-      EnvDiv,var,valueCBE2E | {1} /= {2}
-      EnvGet,OutputVar,LogonServerT2E | {1} := EnvGet({2})
-      EnvMult,var,valueCBE2E | {1} *= {2}
-      EnvUpdate | SendMessage, `% WM_SETTINGCHANGE := 0x001A, 0, Environment,, `% "ahk_id " . HWND_BROADCAST := "0xFFFF"
-      Exit,ExitCode | Exit({1})
-      ExitApp,ExitCode | ExitApp({1})
-      FileAppend,textT2E,fileT2E,encT2E | FileAppend({1}, {2}, {3})
-      FileCopyDir,sourceT2E,destT2E,flagCBE2E | *_FileCopyDir
-      FileCopy,sourceT2E,destT2E,OverwriteCBE2E | *_FileCopy
-      FileCreateDir,dirT2E | DirCreate({1})
-      FileCreateShortcut,TargetT2E,LinkFileT2E,WorkingDirT2E,ArgsT2E,DescriptionT2E,IconFileT2E,ShortcutKeyT2E,IconNumberT2E,RunStateT2E | FileCreateShortcut({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9})
-      FileDelete,dirT2E | FileDelete({1})
-      FileEncoding,FilePatternT2E | FileEncoding({1})
-      FileGetAttrib,OutputVar,FilenameT2E | {1} := FileGetAttrib({2})
-      FileGetSize,OutputVar,FilenameT2E,unitsT2E | {1} := FileGetSize({2}, {3})
-      FileGetTime,OutputVar,FilenameT2E,WhichTimeT2E | {1} := FileGetTime({2}, {3})
-      FileGetVersion,OutputVar,FilenameT2E | {1} := FileGetVersion({2})
-      FileGetShortcut,LinkFileT2E,OutTargetV2VR,OutDirV2VR,OutArgsV2VR,OutDescriptionV2VR,OutIconV2VR,OutIconNumV2VR,OutRunStateV2VR | FileGetShortcut({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8})
-      FileInstall,SourceT2E,DestT2E,OverwriteT2E | FileInstall({1}, {2}, {3})
-      FileMove,SourceT2E,DestPatternT2E,OverwriteT2E | FileMove({1}, {2}, {3})
-      FileMoveDir,SourceT2E,DestT2E,FlagT2E | DirMove({1}, {2}, {3})
-      FileRead,OutputVar,Filename | *_FileRead
-      FileReadLine,OutputVar,FilenameT2E,LineNumCBE2E | *_FileReadLine
-      FileRecycle,FilePatternT2E | FileRecycle({1})
-      FileRecycleEmpty,FilePatternT2E | FileRecycleEmpty({1})
-      FileRemoveDir,dirT2E,recurse | DirDelete({1}, {2})
-      FileSelectFile,var,opts,rootdirfile,prompt,filter | *_FileSelect
-      FileSelectFolder,var,startingdirT2E,opts,promptT2E | {1} := DirSelect({2}, {3}, {4})
-      FileSetAttrib,AttributesT2E,FilePatternT2E,OperateOnFolders,Recurse | *_FileSetAttrib
-      FileSetTime,YYYYMMDDHH24MISST2E,FilePatternT2E,WhichTimeT2E,OperateOnFolders,Recurse | *_FileSetTime
-      FormatTime,outVar,dateT2E,formatT2E | {1} := FormatTime({2}, {3})
-      GetKeyState,OutputVar,KeyNameT2E,ModeT2E | {1} := GetKeyState({2}, {3}) ? "D" : "U"
-      Gui,SubCommand,Value1,Value2,Value3 | *_Gui
-      GuiControl,SubCommand,ControlID,Value | *_GuiControl
-      GuiControlGet,OutputVar,SubCommand,ControlID,Value | *_GuiControlGet
-      Gosub,Label | *_Gosub
-      Goto,Label | Goto({1})
-      GroupActivate,GroupNameT2E,ModeT2E | GroupActivate({1}, {2})
-      GroupAdd,GroupNameT2E,WinTitleT2E,WinTextT2E,LabelT2E,ExcludeTitleT2E,ExcludeTextT2E | GroupAdd({1}, {2}, {3}, {4}, {5}, {6})
-      GroupClose,GroupNameT2E,ModeT2E | GroupClose({1}, {2})
-      GroupDeactivate,GroupNameT2E,ModeT2E | GroupDeactivate({1}, {2})
-      Hotkey,Var1,Var2CBE2E,Var3 | *_Hotkey
-      KeyWait,KeyNameT2E,OptionsT2E | *_KeyWait
-      IfEqual,var,valueT2QE | if ({1} = {2})
-      IfNotEqual,var,valueT2QE | if ({1} != {2})
-      IfGreater,var,valueT2QE | *_IfGreater
-      IfGreaterOrEqual,var,valueT2QE | *_IfGreaterOrEqual
-      IfLess,var,valueT2QE | *_IfLess
-      IfLessOrEqual,var,valueT2QE | *_IfLessOrEqual
-      IfInString,var,valueT2E | if InStr({1}, {2})
-      IfNotInString,var,valueT2E | if !InStr({1}, {2})
-      IfExist,fileT2E | if FileExist({1})
-      IfNotExist,fileT2E | if !FileExist({1})
-      IfWinExist,titleT2E,textT2E,excltitleT2E,excltextT2E | if WinExist({1}, {2}, {3}, {4})
-      IfWinNotExist,titleT2E,textT2E,excltitleT2E,excltextT2E | if !WinExist({1}, {2}, {3}, {4})
-      IfWinActive,titleT2E,textT2E,excltitleT2E,excltextT2E | if WinActive({1}, {2}, {3}, {4})
-      IfWinNotActive,titleT2E,textT2E,excltitleT2E,excltextT2E | if !WinActive({1}, {2}, {3}, {4})
-      ImageSearch,OutputVarXV2VR,OutputVarYV2VR,X1CBE2E,Y1CBE2E,X2CBE2E,Y2CBE2E,ImageFileT2E | ErrorLevel := !ImageSearch({1}, {2}, {3}, {4}, {5}, {6}, {7})
-      IniDelete,FilenameT2E,SectionT2E,KeyT2E | IniDelete({1}, {2}, {3})
-      IniRead,OutputVar,FilenameT2E,SectionT2E,KeyT2E,DefaultT2E | {1} := IniRead({2}, {3}, {4}, {5})
-      IniWrite,ValueT2E,FilenameT2E,SectionT2E,KeyT2E | IniWrite({1}, {2}, {3}, {4})
-      Input,OutputVar,OptionsT2E,EndKeysT2E,MatchListT2E | *_input
-      Inputbox,OutputVar,Title,Prompt,HIDE,Width,Height,X,Y,Locale,Timeout,Default | *_InputBox
-      ListLines, ModeOn2True | ListLines({1})
-      Loop,one,two,three,four | *_Loop
-      Menu,MenuName,SubCommand,Value1,Value2,Value3,Value4 | *_Menu
-      MsgBox,TextOrOptions,Title,Text,Timeout | *_MsgBox
-      MouseGetPos,OutputVarXV2VR,OutputVarYV2VR,OutputVarWinV2VR,OutputVarControlV2VR,Flag | MouseGetPos({1}, {2}, {3}, {4}, {5})
-      MouseClick,WhichButtonT2E,XCBE2E,YCBE2E,ClickCountCBE2E,SpeedCBE2E,DownOrUpT2E,RelativeT2E | MouseClick({1}, {2}, {3}, {4}, {5}, {6}, {7})
-      MouseClickDrag,WhichButtonT2E,X1CBE2E,Y1CBE2E,X2CBE2E,Y2CBE2E,SpeedCBE2E,RelativeT2E | MouseClickDrag({1}, {2}, {3}, {4}, {5}, {6}, {7})
-      MouseMove,XCBE2E,YCBE2E,SpeedCBE2E,RelativeT2E | MouseMove({1}, {2}, {3}, {4})
-      OnExit,Func,AddRemove | *_OnExit
-      OutputDebug,TextT2E | OutputDebug({1})
-      Pause,OnOffToggleOn2True,OperateOnUnderlyingThread  | *_Pause
-      PixelGetColor,OutputVar,XCBE2E,YCBE2E,ModeT2E | {1} := PixelGetColor({2}, {3}, {4})
-      PixelSearch,OutputVarXV2VR,OutputVarYV2VR,X1CBE2E,Y1CBE2E,X2CBE2E,Y2CBE2E,ColorIDCBE2E,VariationCBE2E,ModeT2E | ErrorLevel := !PixelSearch({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9})
-      PostMessage,MsgCBE2E,wParamCBE2E,lParamCBE2E,ControlT2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | PostMessage({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8})
-      Process,SubCommand,PIDOrNameT2E,ValueT2E | *_Process
-      Progress, ProgressParam1,SubTextT2E,MainTextT2E,WinTitleT2E,FontNameT2E | *_Progress
-      Random,OutputVar,MinCBE2E,MaxCBE2E | *_Random
-      RegRead,OutputVar,KeyName,ValueName,var4 | *_RegRead
-      RegWrite,ValueTypeT2E,KeyNameT2E,var3T2E,var4T2E,var5T2E | *_RegWrite
-      RegDelete,var1,var2,var3 | *_RegDelete
-      RunAs,UserT2E,PasswordT2E,DomainT2E | RunAs({1}, {2}, {3})
-      Run,TargetT2E,WorkingDirT2E,OptionsT2E,OutputVarPIDV2VR | *_Run
-      RunWait,TargetT2E,WorkingDirT2E,OptionsT2E,OutputVarPIDV2VR | RunWait({1}, {2}, {3}, {4})
-      SetCapsLockState, StateT2E | SetCapsLockState({1})
-      SetControlDelay,DelayCBE2E | SetControlDelay({1})
-      SetEnv,var,valueT2E | {1} := {2}
-      SetNumLockState, StateT2E | SetNumLockState({1})
-      SetKeyDelay,DelayCBE2E,PressDurationCBE2E,PlayT2E | SetKeyDelay({1}, {2}, {3})
-      SetMouseDelay,DelayCBE2E,PlayT2E | SetMouseDelay({1}, {2})
-      SetRegView, RegViewT2E | SetRegView({1})
-      SetScrollLockState, StateT2E | SetScrollLockState({1})
-      SetStoreCapsLockMode,OnOffOn2True | SetStoreCapsLockMode({1})
-      SetTimer,LabelCBE2E,PeriodOnOffDeleteCBE2E,PriorityCBE2E | *_SetTimer
-      SetTitleMatchMode,MatchModeT2E | SetTitleMatchMode({1})
-      SetWinDelay,DelayCBE2E | SetWinDelay({1})
-      SetWorkingDir,DirNameT2E | SetWorkingDir({1})
-      Send,keysT2E | Send({1})
-      SendText,keysT2E | SendText({1})
-      SendMode,ModeT2E | SendMode({1})
-      SendInput,keysT2E | SendInput({1})
-      SendLevel,LevelT2E | SendLevel({1})
-      SendRaw,keys | *_SendRaw
-      SetDefaultMouseSpeed, LevelT2E | SetDefaultMouseSpeed({1})
-      SendMessage,MsgCBE2E,wParamCBE2E,lParamCBE2E,ControlT2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E,TimeoutCBE2E | ErrorLevel := SendMessage({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9})
-      SendPlay,keysT2E | SendPlay({1})
-      SendEvent,keysT2E | SendEvent({1})
-      SendEvent,keysT2E | SendEvent({1})
-      Shutdown, FlagCBE2E | Shutdown({1})
-      Sleep,delayCBE2E | Sleep({1})
-      Sort,var,optionsT2E | *_Sort
-      SoundBeep,FrequencyCBE2E,DurationCBE2E | SoundBeep({1}, {2})
-      SoundGet,OutputVar,ComponentTypeT2E,ControlType,DeviceNumberT2E | *_SoundGet
-      SoundPlay,FrequencyT2E,DurationCBE2E | SoundPlay({1}, {2})
-      SoundSet,NewSetting,ComponentTypeT2E,ControlType,DeviceNumberT2E | *_SoundSet
-      SplashTextOn,Width,Height,TitleT2E,TextT2E | *_SplashTextOn
-      SplashTextOff | SplashTextGui.Destroy
-      SplashImage,ImageFileT2E,Options,SubTextT2E,MainTextT2E,WinTitleT2E,FontNameT2E | *_SplashImage
-      SplitPath,varCBE2E,filenameV2VR,dirV2VR,extV2VR,name_no_extV2VR,drvV2VR | SplitPath({1}, {2}, {3}, {4}, {5}, {6})
-      StatusBarGetText,Part,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | {1} := StatusBarGetText({2}, {3}, {4}, {5})
-      StatusBarWait,BarTextT2E,Timeout,Part,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E |  StatusBarWait({1}, {2}, {3}, {4}, {5}, {6})
-      StringCaseSense,param | ;REMOVED StringCaseSense, {1}
-      StringGetPos,OutputVar,InputVar,SearchTextT2E,SideT2E,OffsetCBE2E | *_StringGetPos
-      StringLen,OutputVar,InputVar | {1} := StrLen({2})
-      StringLeft,OutputVar,InputVar,CountCBE2E | {1} := SubStr({2}, 1, {3})
-      StringMid,OutputVar,InputVar,StartCharCBE2E,CountCBE2E,L_T2E | *_StringMid
-      StringRight,OutputVar,InputVar,CountCBE2E | {1} := SubStr({2}, -1*({3}))
-      StringSplit,OutputArray,InputVar,DelimitersT2E,OmitCharsT2E | *_StringSplit
-      StringTrimLeft,OutputVar,InputVar,CountCBE2E | {1} := SubStr({2}, ({3})+1)
-      StringTrimRight,OutputVar,InputVar,CountCBE2E | {1} := SubStr({2}, 1, -1*({3}))
-      StringUpper,OutputVar,InputVar,TT2E| *_StringUpper
-      StringLower,OutputVar,InputVar,TT2E| *_StringLower
-      StringReplace,OutputVar,InputVar,SearchTxtT2E,ReplTxtT2E,ReplAll | *_StringReplace
-      Suspend,ModeOn2True | *_SuspendV2
-      SysGet,OutputVar,SubCommand,ValueCBE2E | *_SysGet
-      ToolTip,txtT2E,xCBE2E,yCBE2E,whichCBE2E | ToolTip({1}, {2}, {3}, {4})
-      TrayTip,TitleT2E,TextT2E,Seconds,OptionsT2E | TrayTip({1}, {2}, {4})
-      Transform,OutputVar,SubCommand,Value1T2E,Value2T2E |  *_Transform
-      UrlDownloadToFile,URLT2E,FilenameT2E | Download({1},{2})
-      WinActivate,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | WinActivate({1}, {2}, {3}, {4})
-      WinActivateBottom,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | WinActivateBottom({1}, {2}, {3}, {4})
-      WinClose,WinTitleT2E,WinTextT2E,SecondsToWaitCBE2E,ExcludeTitleT2E,ExcludeTextT2E | WinClose({1}, {2}, {3}, {4}, {5})
-      WinGet,OutputVar,SubCommand,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | *_WinGet
-      WinGetActiveStats,TitleVar,WidthVar,HeightVar,XVar,YVar | *_WinGetActiveStats
-      WinGetActiveTitle,OutputVar | {1} := WinGetTitle("A")
-      WinGetClass,OutputVar,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | {1} := WinGetClass({2}, {3}, {4}, {5})
-      WinGetText,OutputVar,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | {1} := WinGetText({2}, {3}, {4}, {5})
-      WinGetTitle,OutputVar,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | {1} := WinGetTitle({2}, {3}, {4}, {5})
-      WinGetPos,XV2VR,YV2VR,WidthV2VR,HeightV2VR,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | WinGetPos({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8})
-      WinHide,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | WinHide({1}, {2}, {3}, {4})
-      WinKill,WinTitleT2E,WinTextT2E,SecondsToWaitCBE2E,ExcludeTitleT2E,ExcludeTextT2E | WinKill({1}, {2}, {3}, {4}, {5})
-      WinMaximize,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | WinMaximize({1}, {2}, {3}, {4})
-      WinMove,var1,var2,X,Y,Width,Height,ExcludeTitleT2E,ExcludeTextT2E | *_WinMove
-      WinMinimize,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | WinMinimize({1}, {2}, {3}, {4})
-      WinMenuSelectItem,WinTitleT2E,WinTextT2E,MenuT2E,SubMenu1T2E,SubMenu2T2E,SubMenu3T2E,SubMenu4T2E,SubMenu5T2E,SubMenu6T2E,ExcludeTitleT2E,ExcludeTextT2E | MenuSelect({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11})
-      WinSet,SubCommand,ValueT2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | *_WinSet
-      WinSetTitle,WinTitleT2E,WinTextT2E,NewTitleT2E,ExcludeTitleT2E,ExcludeTextT2E | *_WinSetTitle
-      WinRestore,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | WinRestore({1}, {2}, {3}, {4})
-      WinShow,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E | WinShow({1}, {2}, {3}, {4})
-      WinWait,WinTitleT2E,WinTextT2E,TimeoutCBE2E,ExcludeTitleT2E,ExcludeTextT2E | *_WinWait
-      WinWaitActive,WinTitleT2E,WinTextT2E,TimeoutCBE2E,ExcludeTitleT2E,ExcludeTextT2E | ErrorLevel := WinWaitActive({1}, {2}, {3}, {4}, {5}) , ErrorLevel := ErrorLevel = 0 ? 1 : 0
-      WinWaitNotActive,WinTitleT2E,WinTextT2E,TimeoutCBE2E,ExcludeTitleT2E,ExcludeTextT2E | ErrorLevel := WinWaitNotActive({1}, {2}, {3}, {4}, {5}) , ErrorLevel := ErrorLevel = 0 ? 1 : 0
-      WinWaitClose,WinTitleT2E,WinTextT2E,SecondsToWaitCBE2E,ExcludeTitleT2E,ExcludeTextT2E | ErrorLevel := WinWaitClose({1}, {2}, {3}, {4}, {5}) , ErrorLevel := ErrorLevel = 0 ? 1 : 0
-      #ClipboardTimeout, MillisecondsCBE2E | #ClipboardTimeout {1}
-      #ErrorStdOut,EncodingCBE2E | #ErrorStdOut {1}
-      #HotkeyInterval,MillisecondsCBE2E | A_HotkeyInterval := {1}
-      #HotkeyModifierTimeout,MillisecondsCBE2E | A_HotkeyModifierTimeout := {1}
-      #HotString,Expression | #HotString {1}
-      #If Expression | #HotIf {1}
-      #IfTimeout,ExpressionCBE2E | #HotIfTimeout {1}
-      #Include,FileOrDirNameT2E | #Include {1}
-      #IncludeAgain,FileOrDirNameT2E | #IncludeAgain {1}
-      #InputLevel,LevelCBE2E | #InputLevel {1}
-      #IfWinActive,WinTitleT2E,WinTextT2E | *_HashtagIfWinActivate
-      #IfWinExist,WinTitleT2E,WinTextT2E | #HotIf WinExist({1}, {2})
-      #IfWinNotActive,WinTitleT2E,WinTextT2E | #HotIf !WinActive({1}, {2})
-      #IfWinNotExist,WinTitleT2E,WinTextT2E | #HotIf !WinExist({1}, {2})
-      #InputLevel,LevelCBE2E | #InputLevel {1}
-      #InstallKeybdHook | InstallKeybdHook()
-      #InstallMouseHook | InstallMouseHook()
-      #KeyHistory,MaxEventsCBE2E | KeyHistory({1})
-      #MaxHotkeysPerInterval,ValueCBE2E | A_MaxHotkeysPerInterval := {1}
-      #MaxMem,Megabytes | #MaxMem {1}
-      #MaxThreads,ValueCBE2E | #MaxThreads {1}
-      #MaxThreadsBuffer,OnOffOn2True | #MaxThreadsBuffer {1}
-      #MaxThreadsPerHotkey,ValueCBE2E | #MaxThreadsPerHotkey {1}
-      #MenuMaskKey,KeyNameT2E | A_MenuMaskKey := {1}
-      #Persistent | Persistent
-      #Requires,AutoHotkey Version | #Requires Autohotkey v2.0-beta.1+
-      #SingleInstance, ForceIgnorePromptOff | #SingleInstance {1}
-      #UseHook,OnOffOn2True | #UseHook {1}
-      #Warn,WarningType,WarningMode | #Warn {1}, {2}
-   )"
-
-   ;// this is a list of all renamed functions, in this format:
-   ;//          OrigV1Function | ReplacementV2Function
-   ;//  Similar to commands, parameters can be added
-   ; order of Is important do not change
-   FunctionsToConvert := "
-   (
-      ComObject(vt, value, Flags) | ComValue({1}, {2}, {3})
-      ComObjCreate(CLSID , IID) | ComObject({1}, {2})
-      DllCall(DllFunction,Type1,Arg1,val*) | *_DllCall
-      Func(FunctionNameQ2T) | {1}
-      RegExMatch(Haystack, NeedleRegEx , OutputVarV2VR, StartingPos) | *_RegExMatch
-      RegExReplace(Haystack,NeedleRegEx,Replacement,OutputVarCountV2VR,Limit,StartingPos) | RegExReplace({1}, {2}, {3}, {4}, {5}, {6})
-      StrReplace(Haystack,Needle,ReplaceText,OutputVarCountV2VR,Limit) | StrReplace({1}, {2}, {3}, , {4}, {5})
-      RegisterCallback(FunctionNameQ2T,Options,ParamCount,EventInfo) | CallbackCreate({1}, {2}, {3})
-      LoadPicture(Filename,Options,ImageTypeV2VR) | LoadPicture({1},{2},{3})
-      LV_Add(Options, Field*) | *_LV_Add
-      LV_Delete(RowNumber) | *_LV_Delete
-      LV_DeleteCol(ColumnNumber) | *_LV_DeleteCol
-      LV_GetCount(ColumnNumber) | *_LV_GetCount
-      LV_GetText(OutputVar, RowNumber, ColumnNumber) | *_LV_GetText
-      LV_GetNext(StartingRowNumber, RowType) | *_LV_GetNext
-      LV_InsertCol(ColumnNumber , Options, ColumnTitle) | *_LV_InsertCol
-      LV_Insert(RowNumber, Options, Field*) | *_LV_Insert
-      LV_Modify(RowNumber, Options, Field*) | *_LV_Modify
-      LV_ModifyCol(ColumnNumber, Options, ColumnTitle) | *_LV_ModifyCol
-      LV_SetImageList(ImageListID, IconType) | *_LV_SetImageList
-      TV_Add(Name,ParentItemID,Options) | *_TV_Add
-      TV_Modify(ItemID,Options,NewName) | *_TV_Modify
-      TV_Delete(ItemID) | *_TV_Delete
-      TV_GetSelection(ItemID) | *_TV_GetSelection
-      TV_GetParent(ItemID) | *_TV_GetParent
-      TV_GetPrev(ItemID) | *_TV_GetPrev
-      TV_GetNext(ItemID,ItemType) | *_TV_GetNext
-      TV_GetText(OutputVar,ItemID) | *_TV_GetText
-      TV_GetChild(ParentItemID) | *_TV_GetChild
-      TV_GetCount() | *_TV_GetCount
-      TV_SetImageList(ImageListID,IconType) | *_TV_SetImageList
-      SB_SetText(NewText,PartNumber,Style) | *_SB_SetText
-      SB_SetParts(NewText,PartNumber,Style) | *_SB_SetParts
-      SB_SetIcon(Filename,IconNumber,PartNumber) | *_SB_SetIcon
-      MenuGetHandle(MenuNameQ2T) | {1}.Handle
-      MenuGetName(Handle) | MenuFromHandle({1})
-      NumGet(VarOrAddress,Offset,Type) | *_NumGet
-      NumPut(Number,VarOrAddress,Offset,Type) | *_NumPut
-      Object(Array*) | *_Object
-      OnError(FuncQ2T,AddRemove) | OnError({1}, {2})
-      OnMessage(MsgNumber, FunctionQ2T, MaxThreads) | OnMessage({1}, {2}, {3})
-      OnClipboardChange(FuncQ2T,AddRemove) | OnClipboardChange({1}, {2})
-      Asc(String) | Ord({1})
-      VarSetCapacity(TargetVar,RequestedCapacity,FillByte) | *_VarSterCapacity
-   )"
-
-   ;// this is a list of all renamed Methods, in this format:
-   ;// a method has the syntax object.method(Par1, Par2)
-   ;//          OrigV1Method | ReplacementV2Method
-   ;//  Similar to commands, parameters can be added
-   ;// !!! we split the lists of Arrays and objects, as Haskey needs only to be replaced for arrays
-   MethodsToConvert := "
-   (
-      Count() | Count
-      length() | Length
-   )"
-
-   ;// this is a list of all renamed Array Methods, in this format:
-   ;// a method has the syntax Array.method(Par1, Par2)
-   ;//          OrigV1Method | ReplacementV2Method
-   ;//  Similar to commands, parameters can be added
-   ArrayMethodsToConvert := "
-   (
-      length() | Length
-      HasKey(Key) | Has({1})
-   )"
-
-   ;// this is a list of all renamed variables , in this format:
-   ;//          OrigWord | ReplacementWord
-   ;//
-   ;// functions should include the parentheses
-   ;//
-   ;// important: the order matters. the first 2 in the list could cause a mistake if not ordered properly
-   KeywordsToRename := "
-   (
-      A_LoopFileFullPath | A_LoopFilePath
-      A_LoopFileLongPath | A_LoopFileFullPath
-      ComSpec | A_ComSpec
-      Clipboard | A_Clipboard
-      ClipboardAll | ClipboardAll()
-      ComObjParameter() | ComObject()
-      A_isUnicode | 1
-      A_LoopRegKey "\" A_LoopRegSubKey | A_LoopRegKey
-      A_LoopRegKey . "\" . A_LoopRegSubKey | A_LoopRegKey
-      %A_LoopRegKey%\%A_LoopRegSubKey% | %A_LoopRegKey%
-   )"
 
    ;Directives := "#Warn UseUnsetLocal`r`n#Warn UseUnsetGlobal"
    ; Splashtexton and Splashtextoff is removed, but alternative gui code is available
@@ -532,91 +205,20 @@ Convert(ScriptString)
       }
 
       ; Loop the functions
-      loop {
-         oResult := V1ParSplitfunctions(Line, A_Index)
-
-         if (oResult.Found = 0) {
-            break
-         }
-         if (oResult.Hook_Status > 0) {
-            ; This means that the function dit not close, probably a continuation section
-            ;MsgBox("Hook_Status: " oResult.Hook_Status "line:" line)
-            break
-         }
-
-         oPar := V1ParSplit(oResult.Parameters)
-         gFunctPar := oResult.Parameters
-
-         ConvertList := FunctionsToConvert
-         if RegExMatch(oResult.Pre, "\.$") {
-            ConvertList := MethodsToConvert
-            ObjectName := RegexReplace(oResult.Pre, "i).*?([\w]*)\.$", "$1")
-            If RegExMatch(ScriptString, "i)^(|.*[\n\r]+)([\s]*(\Q" ObjectName "\E)[\s]*):=\s*(\[[^;]*)") {	; Check if Object is an Array, not an V2 Object or Map
-               ConvertList := ArrayMethodsToConvert
-            }
-         }
-         Loop Parse, ConvertList, "`n", "`r"
-         {
-            ListDelim := InStr(A_LoopField, "(")
-            ListFunction := Trim(SubStr(A_LoopField, 1, ListDelim - 1))
-
-            If (ListFunction = oResult.func) {
-               ;MsgBox(ListFunction)
-               ListParam := SubStr(A_LoopField, ListDelim + 1, InStr(A_LoopField, ")") - ListDelim - 1)
-               oListParam := StrSplit(ListParam, "`,", " ")
-               ; Fix for when ListParam is empty
-               if (ListParam = "") {
-                  oListParam.Push("")
-               }
-               Part := StrSplit(A_LoopField, "|")
-               Part[1] := trim(Part[1])
-               Part[2] := trim(Part[2])
-               loop oPar.Length
-               {
-                  if (A_Index > 1 and InStr(oListParam[A_Index - 1], "*")) {
-                     oListParam.InSertAt(A_Index, oListParam[A_Index - 1])
-                  }
-                  ; Uses a function to format the parameters
-                  oPar[A_Index] := ParameterFormat(oListParam[A_Index], oPar[A_Index])
-               }
-               loop oListParam.Length
-               {
-                  if !oPar.Has(A_Index) {
-                     oPar.Push("")
-                  }
-               }
-
-               If (SubStr(Part[2], 1, 1) == "*")	; if using a special function
-               {
-                  FuncName := SubStr(Part[2], 2)
-
-                  FuncObj := %FuncName%	;// https://www.autohotkey.com/boards/viewtopic.php?p=382662#p382662
-                  If FuncObj is Func
-                     NewFunction := FuncObj(oPar)
-               } Else {
-                  FormatString := Trim(Part[2])
-                  NewFunction := Format(FormatString, oPar*)
-               }
-
-               ; Remove the empty variables
-               NewFunction := RegExReplace(NewFunction, "[\s\,]*\)$", ")")
-               ; MsgBox("found:" A_LoopField)
-               Line := oResult.Pre NewFunction oResult.Post
-            }
-         }
-         ; msgbox("[" oResult.Pre "]`n[" oResult.func "]`n[" oResult.Parameters "]`n[" oResult.Post "]`n[" oResult.Separator "]`n")
-         ; Line := oResult.Pre oResult.func "(" oResult.Parameters ")" oResult.Post
+      noSideEffect := False
+      subLoopFunctions(ScriptString, Line, &LineFuncV2, &gotFunc:=False)
+      if gotFunc {
+         Line := LineFuncV2
       }
 
       ; -------------------------------------------------------------------------------
       ;
       ; replace any renamed vars
       ; Known Error: converts also the text
-      Loop Parse, KeywordsToRename, "`n"
+      for v1, v2 in KeywordsToRenameM
       {
-         Part := StrSplit(A_LoopField, "|")
-         srchtxt := Trim(Part[1])
-         rplctxt := Trim(Part[2])
+         srchtxt := Trim(v1)
+         rplctxt := Trim(v2)
 
          if InStr(Line, srchtxt)
          {
@@ -982,19 +584,17 @@ Convert(ScriptString)
             }
             ; msgbox("Line=" Line "`nFirstDelim=" FirstDelim "`nCommand=" Command "`nParams=" Params)
             ; Now we format the parameters into their v2 equivilents
-            Loop Parse, CommandsToConvert, "`n"
+            for v1, v2 in CommandsToConvertM
             {
-               Part := StrSplit(A_LoopField, "|")
+               ListDelim := RegExMatch(v1, "[,\s]|$")
+               ListCommand := Trim(SubStr(v1, 1, ListDelim - 1))
 
-               ListDelim := RegExMatch(Part[1], "[,\s]")
-               ListCommand := Trim(SubStr(Part[1], 1, ListDelim - 1))
-               
                If (ListCommand = Command)
                {
                   CommandMatch := 1
                   same_line_action := false
-                  ListParams := RTrim(SubStr(Part[1], ListDelim + 1))
-                  
+                  ListParams := RTrim(SubStr(v1, ListDelim + 1))
+
 
                   ListParam := Array()
                   Param := Array()	; Parameters in expression form
@@ -1129,10 +729,10 @@ Convert(ScriptString)
 
                   }
 
-                  Part[2] := Trim(Part[2])
-                  If (SubStr(Part[2], 1, 1) == "*")	; if using a special function
+                  v2 := Trim(v2)
+                  If (SubStr(v2, 1, 1) == "*")	; if using a special function
                   {
-                     FuncName := SubStr(Part[2], 2)
+                     FuncName := SubStr(v2, 2)
                      ;msgbox("FuncName=" FuncName)
                      FuncObj := %FuncName%	;// https://www.autohotkey.com/boards/viewtopic.php?p=382662#p382662
                      If FuncObj is Func
@@ -1144,17 +744,17 @@ Convert(ScriptString)
                      ;    paramsstr := ""
                      ;    Loop Param.Length
                      ;       paramsstr .= "Param[" A_Index "]: " Param[A_Index] "`n"
-                     ;    msgbox("in else`nLine: " Line "`nPart[2]: " Part[2] "`n`nListParam.Length: " ListParam.Length "`nParam.Length: " Param.Length "`n`n" paramsstr)
+                     ;    msgbox("in else`nLine: " Line "`nv2: " v2 "`n`nListParam.Length: " ListParam.Length "`nParam.Length: " Param.Length "`n`n" paramsstr)
                      ; }
 
                      if (same_line_action) {
                         ; Error in this line, extra parameters should be: put on next line that needs to be converted, or converted in the line
-                        PreLine .= format(Part[2], Param*) . ","
+                        PreLine .= format(v2, Param*) . ","
                         Line := extra_params
                         Goto LabelRedoCommandReplacing
-                        ;Line := Indentation . format(Part[2], Param*) . "," extra_params
+                        ;Line := Indentation . format(v2, Param*) . "," extra_params
                      } else
-                        Line := Indentation . format(Part[2], Param*)
+                        Line := Indentation . format(v2, Param*)
 
                      ; msgbox("Line after format:`n`n" Line)
                      ; if empty trailing optional params caused the line to end with extra commas, remove them
@@ -1212,7 +812,16 @@ Convert(ScriptString)
          Line := ConvertObjectMatch(Line, aListMatchObject[A_Index])
       }
 
-      ScriptOutput .= Line . EOLComment . "`r`n"
+      if NL_Func {         ; add a newline if exists
+         NL_Func .= "`r`n"
+      }
+      if EOLComment_Func {     ; prepend a `; comment symbol if missing
+         if SubStr(StrReplace(EOLComment_Func, A_Space), 1, 1) != "`;" {
+            EOLComment_Func := " `; " . EOLComment_Func
+         }
+      }
+      ScriptOutput .= NL_Func . Line . EOLComment . EOLComment_Func . "`r`n"
+      NL_Func:="", EOLComment_Func:="" ; reset global variables
       ; Output and NewInput should become arrays, NewInput is a copy of the Input, but with empty lines added for easier comparison.
       LastLine := Line
 
@@ -1247,22 +856,119 @@ Convert(ScriptString)
    return ScriptOutput
 }
 
+; =================================================================================
+; Convert a v1 function in a single script line to v2
+;    Can be used from inside _Funcs for nested checks (e.g., function in a DllCall)
+;    Set noSideEffect to 1 to make some callable _Funcs to not change global vars
+; =================================================================================
+subLoopFunctions(ScriptString, Line, &retV2, &gotFunc) {
+   global gFunctPar, grePostFuncMatch
+   loop {
+      oResult := V1ParSplitfunctions(Line, A_Index)
+
+      if (oResult.Found = 0) {
+         break
+      }
+      if (oResult.Hook_Status > 0) {
+         ; This means that the function dit not close, probably a continuation section
+         ;MsgBox("Hook_Status: " oResult.Hook_Status "line:" line)
+         break
+      }
+
+      oPar := V1ParSplit(oResult.Parameters)
+      gFunctPar := oResult.Parameters
+
+      ConvertList := FunctionsToConvertM
+      if RegExMatch(oResult.Pre, "\.$") {
+         ConvertList := MethodsToConvertM
+         ObjectName := RegexReplace(oResult.Pre, "i).*?([\w]*)\.$", "$1")
+         If RegExMatch(ScriptString, "i)^(|.*[\n\r]+)([\s]*(\Q" ObjectName "\E)[\s]*):=\s*(\[[^;]*)") {	; Check if Object is an Array, not an V2 Object or Map
+            ConvertList := ArrayMethodsToConvertM
+         }
+      }
+      for v1, v2 in ConvertList
+      {
+         grePostFuncMatch := False
+         ListDelim := InStr(v1, "(")
+         ListFunction := Trim(SubStr(v1, 1, ListDelim - 1))
+         rePostFunc := ""
+
+         If (ListFunction = oResult.func) {
+            ;MsgBox(ListFunction)
+            ListParam := SubStr(v1, ListDelim + 1, InStr(v1, ")") - ListDelim - 1)
+            rePostFunc := SubStr(v1, InStr(v1,")")+1)
+            oListParam := StrSplit(ListParam, "`,", " ")
+            ; Fix for when ListParam is empty
+            if (ListParam = "") {
+               oListParam.Push("")
+            }
+            v1 := trim(v1)
+            v2 := trim(v2)
+            loop oPar.Length
+            {
+               if (A_Index > 1 and InStr(oListParam[A_Index - 1], "*")) {
+                  oListParam.InSertAt(A_Index, oListParam[A_Index - 1])
+               }
+               ; Uses a function to format the parameters
+               oPar[A_Index] := ParameterFormat(oListParam[A_Index], oPar[A_Index])
+            }
+            loop oListParam.Length
+            {
+               if !oPar.Has(A_Index) {
+                  oPar.Push("")
+               }
+            }
+
+            If (SubStr(v2, 1, 1) == "*")	; if using a special function
+            {
+               If (rePostFunc != "")
+               {
+                  ; move post-function's regex match to _Func (it should return back if needed)
+                  RegExMatch(oResult.Post, rePostFunc, &grePostFuncMatch)
+                  oResult.Post := RegExReplace(oResult.Post, rePostFunc)
+               }
+
+               FuncName := SubStr(v2, 2)
+
+               FuncObj := %FuncName%	;// https://www.autohotkey.com/boards/viewtopic.php?p=382662#p382662
+               If FuncObj is Func {
+                  NewFunction := FuncObj(oPar)
+               }
+            } Else {
+               FormatString := Trim(v2)
+               NewFunction := Format(FormatString, oPar*)
+            }
+
+            ; Remove the empty variables
+            NewFunction := RegExReplace(NewFunction, "[\s\,]*\)$", ")")
+            ; MsgBox("found:" A_LoopField)
+            Line := oResult.Pre NewFunction oResult.Post
+
+            retV2 := Line
+            gotFunc:=True
+         }
+      }
+      ; msgbox("[" oResult.Pre "]`n[" oResult.func "]`n[" oResult.Parameters "]`n[" oResult.Post "]`n[" oResult.Separator "]`n")
+      ; Line := oResult.Pre oResult.func "(" oResult.Parameters ")" oResult.Post
+   }
+}
+
 ; =============================================================================
 ; Convert traditional statements to expressions
 ;    Don't pass whole commands, instead pass one parameter at a time
 ; =============================================================================
 ToExp(Text)
 {
-   static qu := '"'	; Constant for double quotes
+   static qu := '"' 	; Constant for double quotes
    static bt := "``"	; Constant for backtick to escape
    Text := Trim(Text, " `t")
 
-   If (Text = "")	; If text is empty
-      return (qu . qu)	; Two double quotes
+   If (Text = "")                      	; If text is empty
+      return (qu . qu)                 	; Two double quotes
    else if (SubStr(Text, 1, 2) = "`% ")	; if this param was a forced expression
-      return SubStr(Text, 3)	; then just return it without the %
+      return SubStr(Text, 3)           	; then just return it without the %
 
-   Text := StrReplace(Text, qu, bt . qu)	; first escape literal quotes
+   Text := StrReplace(Text, qu, bt . qu)  	; first escape literal quotes
    Text := StrReplace(Text, bt . ",", ",")	; then remove escape char for comma
    ;msgbox text=%text%
 
@@ -1307,16 +1013,16 @@ ToExp(Text)
 ; that is, a number will be turned into a quoted number.  3 -> "3"
 ToStringExpr(Text)
 {
-   static qu := '"'	; Constant for double quotes
+   static qu := '"' 	; Constant for double quotes
    static bt := "``"	; Constant for backtick to escape
    Text := Trim(Text, " `t")
 
-   If (Text = "")	; If text is empty
-      return (qu . qu)	; Two double quotes
+   If (Text = "")                      	; If text is empty
+      return (qu . qu)                 	; Two double quotes
    else if (SubStr(Text, 1, 2) = "`% ")	; if this param was a forced expression
-      return SubStr(Text, 3)	; then just return it without the %
+      return SubStr(Text, 3)           	; then just return it without the %
 
-   Text := StrReplace(Text, qu, bt . qu)	; first escape literal quotes
+   Text := StrReplace(Text, qu, bt . qu)  	; first escape literal quotes
    Text := StrReplace(Text, bt . ",", ",")	; then remove escape char for comma
    ;msgbox("text=" text)
 
@@ -1473,24 +1179,6 @@ _CoordMode(p) {
    p[2] := StrReplace(P[2], "Relative", "Window")
    Out := Format("CoordMode({1}, {2})", p*)
    Return RegExReplace(Out, "[\s\,]*\)$", ")")
-}
-
-_DllCall(p) {
-   ParBuffer := ""
-   loop p.Length
-   {
-      if (p[A_Index] ~= "^&") {	; Remove the & parameter
-         p[A_Index] := SubStr(p[A_Index], 2)
-      }
-      if (A_Index != 1 and (InStr(p[A_Index - 1], "*`"") or InStr(p[A_Index - 1], "*`'") or InStr(p[A_Index - 1], "P`"") or InStr(p[A_Index - 1], "P`'"))) {
-         p[A_Index] := "&" p[A_Index]
-         if (!InStr(p[A_Index], ":=")) {
-            p[A_Index] .= " := 0"
-         }
-      }
-      ParBuffer .= A_Index = 1 ? p[A_Index] : ", " p[A_Index]
-   }
-   Return "DllCall(" ParBuffer ")"
 }
 
 _Drive(p) {
@@ -2314,69 +2002,6 @@ _Loop(p) {
 
 }
 
-_LV_Add(p) {
-   global ListviewNameDefault
-   Out := ListviewNameDefault ".Add("
-   loop p.Length
-   {
-      Out .= p[A_Index] ", "
-   }
-   Out .= ")"
-   ; Out := format("{1}.Add({2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}, {16}, {17})", ListviewNameDefault, p*)
-   Return RegExReplace(Out, "[\s\,]*\)$", ")")
-}
-_LV_Delete(p) {
-   global ListviewNameDefault
-   Return format("{1}.Delete({2})", ListviewNameDefault, p*)
-}
-_LV_DeleteCol(p) {
-   global ListviewNameDefault
-   Return format("{1}.DeleteCol({2})", ListviewNameDefault, p*)
-}
-_LV_GetCount(p) {
-   global ListviewNameDefault
-   Return format("{1}.GetCount({2})", ListviewNameDefault, p*)
-}
-_LV_GetText(p) {
-   global ListviewNameDefault
-   Return format("{2} := {1}.GetText({3})", ListviewNameDefault, p*)
-}
-_LV_GetNext(p) {
-   global ListviewNameDefault
-   Return format("{1}.GetNext({2},{3})", ListviewNameDefault, p*)
-}
-_LV_InsertCol(p) {
-   global ListviewNameDefault
-   Return format("{1}.InsertCol({2}, {3}, {4})", ListviewNameDefault, p*)
-}
-_LV_Insert(p) {
-   global ListviewNameDefault
-   Out := ListviewNameDefault ".Insert("
-   loop p.Length
-   {
-      Out .= p[A_Index] ", "
-   }
-   Out .= ")"
-   Return RegExReplace(Out, "[\s\,]*\)$", ")")
-}
-_LV_Modify(p) {
-   global ListviewNameDefault
-   Out := ListviewNameDefault ".Modify("
-   loop p.Length
-   {
-      Out .= p[A_Index] ", "
-   }
-   Out .= ")"
-   Return RegExReplace(Out, "[\s\,]*\)$", ")")
-}
-_LV_ModifyCol(p) {
-   global ListviewNameDefault
-   Return format("{1}.ModifyCol({2}, {3}, {4})", ListviewNameDefault, p*)
-}
-_LV_SetImageList(p) {
-   global ListviewNameDefault
-   Return format("{1}.SetImageList({2}, {3})", ListviewNameDefault, p*)
-}
 
 _MsgBox(p) {
    global O_Index
@@ -2512,99 +2137,6 @@ _Menu(p) {
    return LineResult
 }
 
-_NumGet(p) {
-   ;V1: NumGet(VarOrAddress , Offset := 0, Type := "UPtr")
-   ;V2: NumGet(Source, Offset, Type)
-   if (p[2] = "" and p[3] = "") {
-      p[2] := '"UPtr"'
-   }
-   Out := "NumGet(" P[1] ", " p[2] ", " p[3] ")"
-   Return RegExReplace(Out, "[\s\,]*\)$", ")")
-}
-
-_NumPut(p) {
-   ;V1 NumPut(Number,VarOrAddress,Offset,Type)
-   ;V2 NumPut Type, Number, Type2, Number2, ... Target , Offset
-   ; This should work to unwind the NumPut labyrinth
-   p[1] := StrReplace(StrReplace(p[1], "`r"), "`n")
-   p[2] := StrReplace(StrReplace(p[2], "`r"), "`n")
-   p[3] := StrReplace(StrReplace(p[3], "`r"), "`n")
-   p[4] := StrReplace(StrReplace(p[4], "`r"), "`n")
-   if InStr(p[2], "Numput(") {
-      ParBuffer := ""
-      loop {
-         p[1] := Trim(p[1])
-         p[2] := Trim(p[2])
-         p[3] := Trim(p[3])
-         p[4] := Trim(p[4])
-         Number := p[1]
-         VarOrAddress := p[2]
-         if (p[4] = "") {
-            if (P[3] = "") {
-               OffSet := ""
-               Type := "`"UPtr`""
-            } else if (IsInteger(p[3])) {
-               OffSet := p[3]
-               Type := "`"UPtr`""
-            } else {
-               OffSet := ""
-               Type := p[3]
-            }
-         } else {	;
-            OffSet := p[3]
-            Type := p[4]
-         }
-         NextParameters := RegExReplace(VarOrAddress, "is)^\s*Numput\((.*)\)\s*$", "$1", &OutputVarCount)
-         if (OutputVarCount = 0) {
-            break
-         }
-
-         ParBuffer := Type ", " Number ", `r`n" Indentation "   " ParBuffer
-
-         p := V1ParSplit(NextParameters)
-         loop 4 - p.Length {
-            p.Push("")
-         }
-      }
-      Out := "NumPut(" ParBuffer VarOrAddress ", " OffSet ")"
-   } else {
-      p[1] := Trim(p[1])
-      p[2] := Trim(p[2])
-      p[3] := Trim(p[3])
-      p[4] := Trim(p[4])
-      Number := p[1]
-      VarOrAddress := p[2]
-      if (p[4] = "") {
-         if (P[3] = "") {
-            OffSet := ""
-            Type := "`"UPtr`""
-         } else if (IsInteger(p[3])) {
-            OffSet := p[3]
-            Type := "`"UPtr`""
-         } else {
-            OffSet := ""
-            Type := p[3]
-         }
-      } else {	;
-         OffSet := p[3]
-         Type := p[4]
-      }
-      Out := "NumPut(" Type ", " Number ", " VarOrAddress ", " OffSet ")"
-   }
-   Return RegExReplace(Out, "[\s\,]*\)$", ")")
-}
-
-_Object(p) {
-   Parameters := ""
-   Function := p.Has(2) ? "Map" : "Object"	; If parameters are used, a map object is intended
-   Loop p.Length
-   {
-      Parameters .= Parameters = "" ? p[A_Index] : ", " p[A_Index]
-   }
-   ; Should we convert used statements as mapname.test to mapname["test"]?
-   Return Function "(" Parameters ")"
-}
-
 _OnExit(p) {
    ;V1 OnExit,Func,AddRemove
    if RegexMatch(Orig_ScriptString, "\n(\s*)" p[1] ":\s") {
@@ -2642,46 +2174,6 @@ _Process(p) {
    }
 
    Return RegExReplace(Out, "[\s\,]*\)$", ")")
-}
-
-_RegExMatch(p) {
-   global aListPseudoArray
-   ; V1: FoundPos := RegExMatch(Haystack, NeedleRegEx , OutputVar, StartingPos := 1)
-   ; V2: FoundPos := RegExMatch(Haystack, NeedleRegEx , &OutputVar, StartingPos := 1)
-
-   if (p[3] != "") {
-      OutputVar := SubStr(Trim(p[3]), 2)	; Remove the &
-      if RegexMatch(P[2], "^[^(]*O[^(]*\)") {
-         ; Object Match
-         aListMatchObject.Push(OutputVar)
-
-         P[2] := RegExReplace(P[2], "(^[^(]*)O([^(]*\).*$)", "$1$2")	; Remove the "O from the options"
-      } else if RegexMatch(P[2], "^\(.*\)") {
-         ; aListPseudoArray.Push(OutputVar)
-         aListPseudoArray.Push({name: OutputVar})
-      } else {
-
-         ; beneath the line, we sould write : Indentation OutputVar " := " OutputVar "[]"
-         ; aListPseudoArray.Push(OutputVar)
-         aListPseudoArray.Push({name: OutputVar})
-
-      }
-   }
-   Out := Format("RegExMatch({1}, {2}, {3}, {4})", p*)
-   Return RegExReplace(Out, "[\s\,]*\)$", ")")
-}
-
-_SB_SetText(p) {
-   global StatusBarNameDefault
-   Return format("{1}.SetText({2}, {3}, {4})", StatusBarNameDefault, p*)
-}
-_SB_SetParts(p) {
-   global StatusBarNameDefault, gFunctPar
-   Return format("{1}.SetParts({2})", StatusBarNameDefault, gFunctPar)
-}
-_SB_SetIcon(p) {
-   global StatusBarNameDefault, gFunctPar
-   Return format("{1}.SetIcon({2})", StatusBarNameDefault, gFunctPar)
 }
 
 _SetTimer(p) {
@@ -3109,57 +2601,6 @@ _Transform(p) {
       Return format("{1} := {3}>>{4}", p*)
    }
    Return format("; Removed : Transform({1}, {2}, {3}, {4})", p*)
-}
-_TV_Add(p) {
-   global TreeViewNameDefault
-   Return format("{1}.Add({2}, {3}, {4})", TreeViewNameDefault, p*)
-}
-_TV_Modify(p) {
-   global TreeViewNameDefault
-   Return format("{1}.Modify({2}, {3}, {4})", TreeViewNameDefault, p*)
-}
-_TV_Delete(p) {
-   global TreeViewNameDefault
-   Return format("{1}.Delete({2})", TreeViewNameDefault, p*)
-}
-_TV_GetSelection(p) {
-   global TreeViewNameDefault
-   Return format("{1}.GetSelection({2})", TreeViewNameDefault, p*)
-}
-_TV_GetParent(p) {
-   global TreeViewNameDefault
-   Return format("{1}.GetParent({2})", TreeViewNameDefault, p*)
-}
-_TV_GetChild(p) {
-   global TreeViewNameDefault
-   Return format("{1}.GetChild({2})", TreeViewNameDefault, p*)
-}
-_TV_GetPrev(p) {
-   global TreeViewNameDefault
-   Return format("{1}.GetPrev({2})", TreeViewNameDefault, p*)
-}
-_TV_GetNext(p) {
-   global TreeViewNameDefault
-   Return format("{1}.GetNext({2}, {3})", TreeViewNameDefault, p*)
-}
-_TV_GetText(p) {
-   global TreeViewNameDefault
-   Return format("{2} := {1}.GetText({3})", TreeViewNameDefault, p*)
-}
-_TV_GetCount(p) {
-   global TreeViewNameDefault
-   Return format("{1}.GetCount()", TreeViewNameDefault)
-}
-_TV_SetImageList(p) {
-   global TreeViewNameDefault
-   Return format("{2} := {1}.SetImageList({3})", TreeViewNameDefault)
-}
-
-_VarSterCapacity(p) {
-   if (p[3] = "") {
-      Return Format("VarSetStrCapacity(&{1}, {2})", p*)
-   }
-   Return Format("{1} := Buffer({2}, {3})", p*)
 }
 
 _WinGetActiveStats(p) {

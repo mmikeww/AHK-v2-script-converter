@@ -1,0 +1,10 @@
+vTarget := Buffer(RequestedCapacity, FillByte) ; V1toV2: if 'vTarget' is a UTF-16 string, use 'VarSetStrCapacity(&vTarget, RequestedCapacity)' NB! if this is part of a control flow block without {}, please enclose this and the next line in {}!
+
+(vTarget := Buffer(RequestedCapacity, FillByte)).Size * 1 ; V1toV2: if 'vTarget' is a UTF-16 string, use 'VarSetStrCapacity(&vTarget, RequestedCapacity)'
+(vTarget := Buffer(RequestedCapacity, FillByte)).Size + 1 ; V1toV2: if 'vTarget' is a UTF-16 string, use 'VarSetStrCapacity(&vTarget, RequestedCapacity)'
+(vTarget := Buffer(RequestedCapacity, FillByte)).Size - 0.1 ; V1toV2: if 'vTarget' is a UTF-16 string, use 'VarSetStrCapacity(&vTarget, RequestedCapacity)'
+(vTarget := Buffer(RequestedCapacity, FillByte)).Size / 1 ; V1toV2: if 'vTarget' is a UTF-16 string, use 'VarSetStrCapacity(&vTarget, RequestedCapacity)'
+(vTarget := Buffer(RequestedCapacity, FillByte)).Size // 4 ; V1toV2: if 'vTarget' is a UTF-16 string, use 'VarSetStrCapacity(&vTarget, RequestedCapacity)'
+(vTarget := Buffer(RequestedCapacity, FillByte)).Size*.5 ; V1toV2: if 'vTarget' is a UTF-16 string, use 'VarSetStrCapacity(&vTarget, RequestedCapacity)'
+(vTarget := Buffer(RequestedCapacity, FillByte)).Size+0 ; V1toV2: if 'vTarget' is a UTF-16 string, use 'VarSetStrCapacity(&vTarget, RequestedCapacity)'
+(vTarget := Buffer(RequestedCapacity, FillByte)).Size-0.1 ; V1toV2: if 'vTarget' is a UTF-16 string, use 'VarSetStrCapacity(&vTarget, RequestedCapacity)'

@@ -1,0 +1,1 @@
+VarSetCapacity(vTarget , RequestedCapacity, FillByte)

@@ -13,7 +13,7 @@ global FunctionsToConvertM := OrderedMap(
   , "DllCall(DllFunction,Type1,Arg1,val*)"	, "*_DllCall"
   , "Func(FunctionNameQ2T)"               	, "{1}"
   , "RegExMatch(Haystack, NeedleRegEx , OutputVarV2VR, StartingPos)"   , "*_RegExMatch"
-  , "RegExReplace(Haystack,NeedleRegEx,Replacement,OutputVarCountV2VR,Limit,StartingPos", "RegExReplace({1}, {2}, {3}, {4}, {5}, {6})"
+  , "RegExReplace(Haystack,NeedleRegEx,Replacement,OutputVarCountV2VR,Limit,StartingPos)", "RegExReplace({1}, {2}, {3}, {4}, {5}, {6})"
   , "StrReplace(Haystack,Needle,ReplaceText,OutputVarCountV2VR,Limit)" , "StrReplace({1}, {2}, {3}, , {4}, {5})"
   , "RegisterCallback(FunctionNameQ2T,Options,ParamCount,EventInfo)"   , "CallbackCreate({1}, {2}, {3})"
   , "LoadPicture(Filename,Options,ImageTypeV2VR)"      	, "LoadPicture({1},{2},{3})"

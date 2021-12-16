@@ -684,6 +684,9 @@ AddSubFoldersToTree(Folder, DirList, ParentItemID := 0,*){
                     ;MsgBox("[" TextV2Expected "]`n`n[" TextV2Converted "]")
                     ItemID := TV.Add(A_LoopFileName, ParentItemID, icons.fail)
                     TV.Modify(ParentItemID, "Expand")
+                    ParentItemID_ := ParentItemID
+                    while (ParentItemID_ := TV.GetParent(ParentItemID_))
+                        TV.Modify(ParentItemID_, "Expand")
                 }
                 
             }

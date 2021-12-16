@@ -144,7 +144,7 @@ MyGui.OnEvent("Size", Gui_Size)
 ; MyGui.OnEvent("Escape", (*) => ExitApp())
 
 FileMenu := Menu()
-FileMenu.Add "Run tests", (*) => Run('"' A_ScriptDir "\AutoHotKey Exe\AutoHotkeyV2.exe" '" "' A_ScriptDir 'Tests\Tests.ahk"')
+FileMenu.Add "Run tests", (*) => Run('"' A_ScriptDir "\AutoHotKey Exe\AutoHotkeyV2.exe" '" "' TreeRoot '"')
 FileMenu.Add "Open test folder", (*) => Run(TreeRoot)
 FileMenu.Add()
 FileMenu.Add "E&xit", (*) => ExitApp()
@@ -684,6 +684,9 @@ AddSubFoldersToTree(Folder, DirList, ParentItemID := 0,*){
                     ;MsgBox("[" TextV2Expected "]`n`n[" TextV2Converted "]")
                     ItemID := TV.Add(A_LoopFileName, ParentItemID, icons.fail)
                     TV.Modify(ParentItemID, "Expand")
+                    ParentItemID_ := ParentItemID
+                    while (ParentItemID_ := TV.GetParent(ParentItemID_))
+                        TV.Modify(ParentItemID_, "Expand")
                 }
                 
             }

@@ -53,6 +53,7 @@ global CommandsToConvertM := OrderedMap(
   , "ControlSendRaw,ControlT2E,KeysT2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E"    , "ControlSendText({2}, {1}, {3}, {4}, {5}, {6})"
   , "ControlSetText,ControlT2E,NewTextT2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E" , "ControlSetText({2}, {1}, {3}, {4}, {5}, {6})"
   , "CoordMode,TargetTypeT2E,RelativeToT2E"    	, "*_CoordMode"
+  , "Critical,OnOffNumericT2E"                 	, "Critical({1})" ; The use of On2True is discouraged and unnecessary.
   , "DetectHiddenText,ModeOn2True"             	, "DetectHiddenText({1})"
   , "DetectHiddenWindows,ModeOn2True"          	, "DetectHiddenWindows({1})"
   , "Drive,SubCommand,Value1,Value2"           	, "*_Drive"

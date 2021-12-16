@@ -27,6 +27,6 @@ return
 
 GuiClose(*)  ; Indicate that the script should exit automatically when the window is closed.
 { ; V1toV2: Added bracket
-ExitApp
+ExitApp()
 
 } ; Added bracket in the end

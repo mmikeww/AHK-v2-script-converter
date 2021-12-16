@@ -1,1 +1,1 @@
-^!s::Suspend  ; Ctrl+Alt+S
+^!s::Suspend()  ; Ctrl+Alt+S

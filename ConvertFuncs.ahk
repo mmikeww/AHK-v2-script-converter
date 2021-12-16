@@ -1918,11 +1918,11 @@ _InputBox(oPar) {
 _KeyWait(p) {
    ; Errorlevel is not set in V2
    if ScriptStringsUsed.ErrorLevel {
-      out := Format("ErrorLevel := KeyWait({1}, {2})", p*)
+      out := Format("ErrorLevel := !KeyWait({1}, {2})", p*)
    } else {
       out := Format("KeyWait({1}, {2})", p*)
    }
-   Return out := RegExReplace(Out, "[\s\,]*\)", ")")
+   Return RegExReplace(Out, "[\s\,]*\)$", ")")
 }
 
 _Loop(p) {

@@ -3048,15 +3048,13 @@ ParameterFormat(ParName, ParValue) {
       if ((SubStr(ParValue, 1, 1) = "`"") && (SubStr(ParValue, -1) = "`""))	;  var already wrapped in Quotes
          || ((SubStr(ParValue, 1, 1) = "`'") && (SubStr(ParValue, -1) = "`'"))	;  var already wrapped in Quotes
       ParValue := SubStr(ParValue, 2, StrLen(ParValue) - 2)
-   }
-   if (ParName ~= "T2E$")	; 'Text TO Expression'
+   } else if (ParName ~= "T2E$")	; 'Text TO Expression'
    {
       if (SubStr(ParValue, 1, 2) = "% ") {
          ParValue := SubStr(ParValue, 3)
       } else {
          ParValue := ParValue != "" ? ToExp(ParValue) : ""
       }
-
    } else if (ParName ~= "T2QE$")	; 'Text TO Quote Expression'
    {
       ParValue := ToExp(ParValue)
@@ -3064,6 +3062,15 @@ ParameterFormat(ParName, ParValue) {
    {
       ParValue := RegexReplace(ParValue, "^%\s*(.*?)%?$", "$1")
       ParValue := RegexReplace(RegexReplace(RegexReplace(ParValue, "i)\btoggle\b", "-1"), "i)\bon\b", "true"), "i)\boff\b", "false")
+   } else if (ParName ~= "i)^StartingPos$")	; Only parameters with this name. Found at InStr, SubStr, RegExMatch and RegExReplace.
+   {
+      if (ParValue != "") {
+         if (IsNumber(ParValue)) {
+            ParValue := ParValue<1 ? ParValue-1 : ParValue
+         } else {
+            ParValue := "(" ParValue ")<1 ? (" ParValue ")-1 : (" ParValue ")"
+         }
+      }
    }
 
    Return ParValue

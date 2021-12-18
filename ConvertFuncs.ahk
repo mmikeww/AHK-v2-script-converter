@@ -879,11 +879,30 @@ subLoopFunctions(ScriptString, Line, &retV2, &gotFunc) {
       gFunctPar := oResult.Parameters
 
       ConvertList := FunctionsToConvertM
-      if RegExMatch(oResult.Pre, "\.$") {
-         ConvertList := MethodsToConvertM
-         ObjectName := RegexReplace(oResult.Pre, "i).*?([\w]*)\.$", "$1")
-         If RegExMatch(ScriptString, "i)^(|.*[\n\r]+)([\s]*(\Q" ObjectName "\E)[\s]*):=\s*(\[[^;]*)") {	; Check if Object is an Array, not an V2 Object or Map
+      if RegExMatch(oResult.Pre, "(\w+)\.$", &Match) {
+         ObjectName := Match[1]
+         If RegExMatch(ScriptString, "i)(?<!\w)(\Q" ObjectName "\E)\s*:=\s*(\[|(Array|StrSplit)\()") { ; Type Array().
             ConvertList := ArrayMethodsToConvertM
+         } else If RegExMatch(ScriptString, "i)(?<!\w)(\Q" ObjectName "\E)\s*:=\s*(\{|(Object)\()") { ; Type Object().
+            ConvertList := MethodsToConvertM
+         } else If RegExMatch(ScriptString, "i)(?<!\w)(\Q" ObjectName "\E)\s*:=\s*(new\s+|(FileOpen|Func|ObjBindMethod|\w*\.Bind)\()") { ; Type instance of class.
+            ConvertList := [] ; Unspecified conversion patterns.
+         } else If RegExMatch(ScriptString, "i)(?<!\w)class\s(\Q" ObjectName "\E)(?!\w)") { ; Type Class.
+            ConvertList := [] ; Unspecified conversion patterns.
+         } else {
+            ConvertList := MethodsToConvertM
+            Loop aListMatchObject.Length {
+               if (ObjectName = aListMatchObject[A_Index]) {
+                  ConvertList := [] ; Conversions handled elsewhere.
+                  Break
+               }
+            }
+            Loop aListPseudoArray.Length {
+               if (ObjectName = aListPseudoArray[A_Index]) {
+                  ConvertList := [] ; Conversions handled elsewhere.
+                  Break
+               }
+            }
          }
       }
       for v1, v2 in ConvertList

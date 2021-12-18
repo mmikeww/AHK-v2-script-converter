@@ -804,12 +804,14 @@ Convert(ScriptString)
 
       ; Correction PseudoArray to Array
       Loop aListPseudoArray.Length {
-         Line := ConvertPseudoArray(Line, aListPseudoArray[A_Index].name, aListPseudoArray[A_Index].HasOwnProp("newname") ? aListPseudoArray[A_Index].newname : "")
+         if (InStr(Line, aListPseudoArray[A_Index].name))
+            Line := ConvertPseudoArray(Line, aListPseudoArray[A_Index])
       }
 
-      ; Correction PseudoArray to Array
+      ; Correction MatchObject to Array
       Loop aListMatchObject.Length {
-         Line := ConvertObjectMatch(Line, aListMatchObject[A_Index])
+         if (InStr(Line, aListMatchObject[A_Index]))
+            Line := ConvertMatchObject(Line, aListMatchObject[A_Index])
       }
 
       if NL_Func {         ; add a newline if exists
@@ -3097,26 +3099,25 @@ ParameterFormat(ParName, ParValue) {
 
 ;//  Example array123 => array[123]
 ;//  Example array%A_index% => array[A_index]
+;//  Special cases in RegExMatch   => {OutVar: OutVar[0],     OutVar0: ""           }
+;//  Special cases in StringSplit  => {OutVar: "",            OutVar0: OutVar.Length}
+;//  Special cases in WinGet(List) => {OutVar: OutVar.Length, OutVar0: ""           }
 ;// Converts PseudoArray to Array
-ConvertPseudoArray(ScriptStringInput, ArrayName, NewName := "") {
-   if (NewName = "") {
-      NewName := ArrayName
-   }
+ConvertPseudoArray(ScriptStringInput, PseudoArrayName) {
+   ; The caller does a fast InStr before calling.
+   ArrayName := PseudoArrayName.name
+   NewName := PseudoArrayName.HasOwnProp("newname") ? PseudoArrayName.newname : ArrayName
    if RegexMatch(ScriptStringInput,"i)\b(local|global|static)\s"){
-      
-   }
-   else if InStr(ScriptStringInput, ArrayName) {	; InStr is faster than only Regex
-      Loop {	; arrayName0 = arrayName.Length
-         ScriptStringInput := RegExReplace(ScriptStringInput, "is)(^(|.*[^\w]))" ArrayName "0(([^\w].*|)$)", "$1" NewName ".Length$4", &OutputVarCount)
-      } Until OutputVarCount = 0
-      Loop {
-         ScriptStringInput := RegExReplace(ScriptStringInput, "is)(^(|.*[^\w]))" ArrayName "(%(\w+)%|(\d+))(([^\w].*|)$)", "$1" NewName "[$4$5]$6", &OutputVarCount)
-      } Until OutputVarCount = 0
-      if (NewName != ArrayName) {
-         Loop {
-            ScriptStringInput := RegExReplace(ScriptStringInput, "is)(^(|.*[^\w]))" ArrayName "(\[(.*)$)", "$1" NewName "[$3", &OutputVarCount)
-         } Until OutputVarCount = 0
-      }
+      ; Expecting situations like "local x,v0,v1" to end up as "local x,v".
+      ScriptStringInput := RegExReplace(ScriptStringInput, "is)(\b" ArrayName ")(\w*\s*,\s*(?1)\w*)+", NewName)
+   } else if PseudoArrayName.HasOwnProp("selfprop") {
+      ; Treated indepently from the regular cases for more flexibility on RegExMatch's P mode.
+      ; In combined cases, this one should be pushed before the general case for selfprop to take preference over ".Length".
+      ScriptStringInput := RegExReplace(ScriptStringInput, "is)(?<!\w|&)" ArrayName "0?(?!\w|%|\.|\[|\s*:=)", NewName . PseudoArrayName.selfprop)
+   } else {
+      ScriptStringInput := RegExReplace(ScriptStringInput, "is)(?<!\w|&)" ArrayName "0?(?!\w|%|\.|\[|\s*:=)", NewName ".Length")
+      ScriptStringInput := RegExReplace(ScriptStringInput, "is)(?<!\w|&)" ArrayName "(%([a-z0-9_]+)%|(\d+)\b)", NewName "[$2$3]")
+      ScriptStringInput := RegExReplace(ScriptStringInput, "is)(?<!\w|&)" ArrayName "(\w+)\b", NewName '["$1"]')
    }
    Return ScriptStringInput
 }
@@ -3124,16 +3125,16 @@ ConvertPseudoArray(ScriptStringInput, ArrayName, NewName := "") {
 ;//  Example ObjectMatch.Value(N) => ObjectMatch[N]
 ;//  Example ObjectMatch.Len(N) => ObjectMatch.Len[N]
 ;//  Example ObjectMatch.Mark() => ObjectMatch.Mark
+;//  Special case ObjectMatch.Name(N) => ObjectMatch.Name(N)
+;//  Special case ObjectMatch.Name => ObjectMatch["Name"]
 ;// Converts Object Match V1 to Object Match V2
-ConvertObjectMatch(ScriptStringInput, ObjectMatchName) {
-   if InStr(ScriptStringInput, ObjectMatchName) {	; InStr is faster than only Regex
-      Loop {	; arrayName0 = arrayName.Length
-         ScriptStringInput := RegExReplace(ScriptStringInput, "is)(^(|.*[^\w])" ObjectMatchName ").Value\((.*?)\)(([^\w].*|)$)", "$1[$3]$4", &OutputVarCount)
-      } Until OutputVarCount = 0
-      Loop {	; arrayName0 = arrayName.Length
-         ScriptStringInput := RegExReplace(ScriptStringInput, "is)(^(|.*[^\w])" ObjectMatchName ").(Mark|Count)\(\)(([^\w].*|)$)", "$1.$3$4", &OutputVarCount)
-      } Until OutputVarCount = 0
-   }
+ConvertMatchObject(ScriptStringInput, ObjectMatchName) {
+   ; The caller does a fast InStr before calling.
+   ; We try to catch group-names before methods turn into properties.
+   ; ScriptStringInput := RegExReplace(ScriptStringInput, "is)(?<!\w|&)(" ObjectMatchName ")\.(\d+)\b", '$1[$2]') ; Matter of preference.
+   ScriptStringInput := RegExReplace(ScriptStringInput, "is)(?<!\w|&)(" ObjectMatchName ")\.(?=\w*[a-z_])(\w+)(?!\w|\()", '$1["$2"]')
+   ScriptStringInput := RegExReplace(ScriptStringInput, "is)(?<!\w|&)(" ObjectMatchName ")\.(Value)\((.*?)\)", "$1[$3]")
+   ScriptStringInput := RegExReplace(ScriptStringInput, "is)(?<!\w|&)(" ObjectMatchName ")\.(Mark|Count)\(\)", "$1.$2")
    Return ScriptStringInput
 }
 

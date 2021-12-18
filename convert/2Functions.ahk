@@ -13,7 +13,7 @@ global FunctionsToConvertM := OrderedMap(
   , "DllCall(DllFunction,Type1,Arg1,val*)"	, "*_DllCall"
   , "Func(FunctionNameQ2T)"               	, "{1}"
   , "InStr(Haystack,Needle,CaseSensitive,StartingPos,Occurrence)"      , "InStr({1}, {2}, {3}, {4}, {5})"
-  , "RegExMatch(Haystack, NeedleRegEx , OutputVarV2VR, StartingPos)"   , "*_RegExMatch"
+  , "RegExMatch(Haystack, NeedleRegEx, OutputVar, StartingPos)"        , "*_RegExMatch"
   , "RegExReplace(Haystack,NeedleRegEx,Replacement,OutputVarCountV2VR,Limit,StartingPos)", "RegExReplace({1}, {2}, {3}, {4}, {5}, {6})"
   , "StrReplace(Haystack,Needle,ReplaceText,OutputVarCountV2VR,Limit)" , "StrReplace({1}, {2}, {3}, , {4}, {5})"
   , "SubStr(String, StartingPos, Length)"                              , "SubStr({1}, {2}, {3})"
@@ -253,29 +253,45 @@ _Object(p) {
 }
 
 _RegExMatch(p) {
-  global aListPseudoArray
+  global aListMatchObject, aListPseudoArray
   ; V1: FoundPos := RegExMatch(Haystack, NeedleRegEx , OutputVar, StartingPos := 1)
   ; V2: FoundPos := RegExMatch(Haystack, NeedleRegEx , &OutputVar, StartingPos := 1)
 
   if (p[3] != "") {
-    OutputVar := SubStr(Trim(p[3]), 2)  ; Remove the &
-    if RegexMatch(P[2], "^[^(]*O[^(]*\)") {
-      ; Object Match
+    OutputVar := p[3]
+    Out := ""
+    if RegExMatch(P[2], '^"([^"(])*O([^"(])*\)(.*)$', &Match) {
+      ; Mode 3 (match object)
+      ; v1OutputVar.Value(1) -> v2OutputVar[1]
+      ; The v1 methods Count and Mark are properties in v2.
+      P[2] := ( Match[1] || Match[2] ? '"' Match[1] Match[2] ")" : '"' ) . Match[3] ; Remove the "O" from the options
       aListMatchObject.Push(OutputVar)
-
-      P[2] := RegExReplace(P[2], "(^[^(]*)O([^(]*\).*$)", "$1$2") ; Remove the "O from the options"
-    } else if RegexMatch(P[2], "^\(.*\)") {
-      ; aListPseudoArray.Push(OutputVar)
+    } else if RegExMatch(P[2], '^"([^"(])*P([^"(])*\)(.*)$', &Match) {
+      ; Mode 2 (position-and-length)
+      ; v1OutputVar -> v2OutputVar.Len
+      ; v1OutputVarPos1 -> v2OutputVar.Pos[1]
+      ; v1OutputVarLen1 -> v2OutputVar.Len[1]
+      P[2] := ( Match[1] || Match[2] ? '"' Match[1] Match[2] ")" : '"' ) . Match[3] ; Remove the "P" from the options
+      aListPseudoArray.Push({name: OutputVar "Len", newname: OutputVar ".Len"})
+      aListPseudoArray.Push({name: OutputVar "Pos", newname: OutputVar ".Pos"})
+      aListPseudoArray.Push({name: OutputVar, selfprop: ".Len"}) ; Important to be after *Pos and *Len.
+    } else if RegExMatch(P[2], 'i)^"[a-z``]*\)') ; Explicit options.
+      || RegExMatch(P[2], 'i)^"[^"]*[^a-z``]') { ; Explicit no options.
+      ; Mode 1 (Default)
+      ; v1OutputVar -> v2OutputVar[0]
+      ; v1OutputVar1 -> v2OutputVar[1]
+      aListPseudoArray.Push({name: OutputVar, selfprop: "[0]"}) ; Important to be before general case.
       aListPseudoArray.Push({name: OutputVar})
-    } else {
-
-      ; beneath the line, we sould write : Indentation OutputVar " := " OutputVar "[]"
-      ; aListPseudoArray.Push(OutputVar)
+    } else { 
+      ; Unknown mode. Unclear options, possibly variables obscuring the parameter.
+      ; Treat as default mode?... The unhandled options O and P will make v2 throw anyway.
+      aListPseudoArray.Push({name: OutputVar, selfprop: "[0]"}) ; Important to be before general case.
       aListPseudoArray.Push({name: OutputVar})
-
     }
+    Out .= Format("RegExMatch({1}, {2}, &{3}, {4})", p*)
+  } else {
+    Out := Format("RegExMatch({1}, {2}, , {4})", p*)
   }
-  Out := Format("RegExMatch({1}, {2}, {3}, {4})", p*)
   Return RegExReplace(Out, "[\s\,]*\)$", ")")
 }
 

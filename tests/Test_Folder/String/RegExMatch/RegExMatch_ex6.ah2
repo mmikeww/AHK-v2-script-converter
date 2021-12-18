@@ -1,0 +1,2 @@
+FoundPos := RegExMatch("Michiganroad 72", "(.*) (?<nr>\d+)", &SubPat)  ; The starting "O)" turns SubPat into an object.
+MsgBox(SubPat.Count ": " SubPat[1] " " SubPat.Name(2) "=" SubPat["nr"])  ; Displays "2: Michiganroad nr=72"

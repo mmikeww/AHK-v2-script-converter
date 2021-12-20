@@ -1,0 +1,5 @@
+MsgBox % RegExMatch("xxxabc123xyz", "abc.*xyz")
+MsgBox % RegExMatch("abc123123", "123$")
+MsgBox % RegExMatch("abc123", "i)^ABC")
+MsgBox % RegExMatch("abcXYZ123", "abc(.*)123", SubPat)
+MsgBox % RegExMatch("abc123abc456", "abc\d+",, 2)

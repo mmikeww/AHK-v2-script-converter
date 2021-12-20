@@ -8,7 +8,7 @@ Loop Parse, Colors, ",|;"
     ; Calculate the position of the delimiter at the end of this field.
     Position += StrLen(A_LoopField) + 1
     ; Retrieve the delimiter found by the parsing loop.
-    Delimiter := SubStr(Colors, Position, 1)
+    Delimiter := SubStr(Colors, (Position)<1 ? (Position)-1 : (Position), 1)
 
     MsgBox("Field: " A_LoopField "`nDelimiter: " Delimiter)
 }

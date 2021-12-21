@@ -82,8 +82,6 @@ Convert(ScriptString)
       AutoTrim
    )"
 
-   ;SubStrFunction := "`r`n`r`n; This function may be removed if StartingPos is always > 0.`r`nCheckStartingPos(p) {`r`n   Return, p - (p <= 0)`r`n}`r`n`r`n"
-
    ScriptOutput := ""
    InCommentBlock := false
    InCont := 0
@@ -228,11 +226,6 @@ Convert(ScriptString)
       }
 
       Orig_Line_NoComment := Line
-
-      ; -------------------------------------------------------------------------------
-      ;
-      ;else If InStr(Line, "SendMode") && InStr(Line, "Input")
-      ;Skip := true
 
       ; -------------------------------------------------------------------------------
       ;
@@ -738,14 +731,6 @@ Convert(ScriptString)
                         Line := Indentation . FuncObj(Param)
                   } else	; else just using the replacement defined at the top
                   {
-                     ; if (Command = "FileAppend")
-                     ; {
-                     ;    paramsstr := ""
-                     ;    Loop Param.Length
-                     ;       paramsstr .= "Param[" A_Index "]: " Param[A_Index] "`n"
-                     ;    msgbox("in else`nLine: " Line "`nv2: " v2 "`n`nListParam.Length: " ListParam.Length "`nParam.Length: " Param.Length "`n`n" paramsstr)
-                     ; }
-
                      if (same_line_action) {
                         ; Error in this line, extra parameters should be: put on next line that needs to be converted, or converted in the line
                         PreLine .= format(v2, Param*) . ","
@@ -778,13 +763,6 @@ Convert(ScriptString)
                Skip := true
             }
          }
-
-         ; TEMPORARY
-         ;If !FoundSubStr && !InCommentBlock && InStr(Line, "SubStr")
-         ;{
-         ;FoundSubStr := true
-         ;Line .= " `; WARNING: SubStr conversion may change in the near future"
-         ;}
 
          ; Put the directives after the first non-comment line
          ;If !FoundNonComment && !InCommentBlock && A_Index != 1 && FirstChar != ";" && FirstTwo != "*/"

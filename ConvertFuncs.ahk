@@ -29,6 +29,7 @@ Convert(ScriptString)
    global oScriptString	; array of all the lines
    global O_Index := 0	; current index of the lines
    global Indentation
+   global SingleIndent := RegExMatch(ScriptString, "(^|[\r\n])( +|\t)", &SingleIndent) ? SingleIndent[2] : "    " ; First spaces or single tab found.
    global GuiNameDefault
    global GuiList
    global GuiVList	; Used to list all variable names defined in a Gui
@@ -684,6 +685,7 @@ Convert(ScriptString)
                      if RegExMatch(Command, "i)^(?:" if_cmds_allowing_sameline_action ")$")
                      {
                         same_line_action := true
+                        extra_params := LTrim(extra_params)
                      }
 
                      ; 2. could be this:
@@ -732,21 +734,21 @@ Convert(ScriptString)
                         Line := Indentation . FuncObj(Param)
                   } else	; else just using the replacement defined at the top
                   {
-                     if (same_line_action) {
-                        ; Error in this line, extra parameters should be: put on next line that needs to be converted, or converted in the line
-                        PreLine .= format(v2, Param*) . ","
-                        Line := extra_params
-                        Goto LabelRedoCommandReplacing
-                        ;Line := Indentation . format(v2, Param*) . "," extra_params
-                     } else
-                        Line := Indentation . format(v2, Param*)
-
+                     Line := Indentation . format(v2, Param*)
                      ; msgbox("Line after format:`n`n" Line)
+
                      ; if empty trailing optional params caused the line to end with extra commas, remove them
                      if SubStr(LTrim(Line), 1, 1) = "#"
                         Line := RegExReplace(Line, "[\s\,]*$", "")
                      else
                         Line := RegExReplace(Line, "[\s\,]*\)$", ")")
+                  }
+
+                  if (same_line_action) {
+                     PreLine .= Line "`r`n"
+                     Line := extra_params
+                     Indentation .= SingleIndent
+                     Goto LabelRedoCommandReplacing
                   }
 
                   break ; Command just found and processed.

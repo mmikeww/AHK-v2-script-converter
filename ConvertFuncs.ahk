@@ -743,10 +743,10 @@ Convert(ScriptString)
 
                      ; msgbox("Line after format:`n`n" Line)
                      ; if empty trailing optional params caused the line to end with extra commas, remove them
-                     if SubStr(Line, -1) = ")"
-                        Line := RegExReplace(Line, '(?:, "?"?)*\)$', "") . ")"
+                     if SubStr(LTrim(Line), 1, 1) = "#"
+                        Line := RegExReplace(Line, "[\s\,]*$", "")
                      else
-                        Line := RegExReplace(Line, "(?:,\s)*$", "")
+                        Line := RegExReplace(Line, "[\s\,]*\)$", ")")
                   }
 
                   break ; Command just found and processed.

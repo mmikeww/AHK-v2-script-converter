@@ -62,7 +62,7 @@ global CommandsToConvertM := OrderedMap(
   , "EnvSet,EnvVarT2E,ValueT2E"                	, "EnvSet({1}, {2})"
   , "EnvSub,var,valueCBE2E,TimeUnitsT2E"       	, "*_EnvSub"
   , "EnvDiv,var,valueCBE2E"                    	, "{1} /= {2}"
-  , "EnvGet,OutputVar,LogonServerT2E"          	, "{1} := EnvGet({2})"
+  , "EnvGet,OutputVar,EnvVarNameT2E"           	, "{1} := EnvGet({2})"
   , "EnvMult,var,valueCBE2E"                   	, "{1} *= {2}"
   , "EnvUpdate"                                	, 'SendMessage, `% WM_SETTINGCHANGE := 0x001A, 0, Environment,, `% "ahk_id " . HWND_BROADCAST := "0xFFFF"'
   , "Exit,ExitCode"                            	, "Exit({1})"

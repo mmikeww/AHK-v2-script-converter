@@ -542,10 +542,11 @@ Convert(ScriptString)
          Line := Equation[3]
       }
 
-      If RegExMatch(Line, "i)(^\s*)([a-z_][a-z_0-9]*)\s*\+=\s*(.*?)\s*,\s*(Seconds|Minutes|Hours|Days)(.*$)", &Equation) {
-         Line := Equation[1] Equation[2] " := DateAdd(" Equation[2] ", " Equation[3] ", '" Equation[4] "')" Equation[5]
+      If RegExMatch(Line, "i)(^\s*)([a-z_][a-z_0-9]*)\s*\+=\s*(.*?)\s*,\s*([SMHD]\w*)(.*$)", &Equation) {
+         Line := Equation[1] Equation[2] " := DateAdd(" Equation[2] ", " ParameterFormat("ValueCBE2E", Equation[3]) ", '" Equation[4] "')" Equation[5]
+      } else If RegExMatch(Line, "i)(^\s*)([a-z_][a-z_0-9]*)\s*\-=\s*(.*?)\s*,\s*([SMHD]\w*)(.*$)", &Equation) {
+         Line := Equation[1] Equation[2] " := DateDiff(" Equation[2] ", " ParameterFormat("ValueCBE2E", Equation[3]) ", '" Equation[4] "')" Equation[5]
       }
-
 
       ; Convert Assiociated Arrays to Map Maybe not always wanted...
       If RegExMatch(Line, "i)^([\s]*([a-z_0-9]+)[\s]*):=\s*(\{[^;]*)", &Equation) {

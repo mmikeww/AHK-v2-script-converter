@@ -2062,6 +2062,7 @@ _MsgBox(p) {
 _Menu(p) {
    global Orig_Line_NoComment
    global MenuList
+   global Indentation
    MenuLine := Orig_Line_NoComment
    LineResult := ""
    menuNameLine := RegExReplace(MenuLine, "i)^\s*Menu\s*[,\s]\s*([^,]*).*$", "$1", &RegExCount1)
@@ -2103,9 +2104,9 @@ _Menu(p) {
       menuList .= menuNameLine "|"
 
       if (menuNameLine = "Tray") {
-         LineResult .= menuNameLine ":= A_TrayMenu`r`n"
+         LineResult .= menuNameLine ":= A_TrayMenu`r`n" Indentation
       } else {
-         LineResult .= menuNameLine " := Menu()`r`n"
+         LineResult .= menuNameLine " := Menu()`r`n" Indentation
       }
    }
 

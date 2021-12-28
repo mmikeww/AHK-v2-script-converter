@@ -583,8 +583,10 @@ Convert(ScriptString)
                Params := ""
             }
             ; msgbox("Line=" Line "`nFirstDelim=" FirstDelim "`nCommand=" Command "`nParams=" Params)
+
             ; Now we format the parameters into their v2 equivilents
-            for v1, v2 in CommandsToConvertM
+            if (Command~="i)^#?[a-z]+$")
+               for v1, v2 in CommandsToConvertM
             {
                ListDelim := RegExMatch(v1, "[,\s]|$")
                ListCommand := Trim(SubStr(v1, 1, ListDelim - 1))
@@ -874,6 +876,9 @@ subLoopFunctions(ScriptString, Line, &retV2, &gotFunc) {
          ; This means that the function dit not close, probably a continuation section
          ;MsgBox("Hook_Status: " oResult.Hook_Status "line:" line)
          break
+      }
+      if (oResult.Func = "") {
+         continue ; Not a function only parenthesis
       }
 
       oPar := V1ParSplit(oResult.Parameters)

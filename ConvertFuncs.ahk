@@ -595,7 +595,6 @@ Convert(ScriptString)
                   same_line_action := false
                   ListParams := RTrim(SubStr(v1, ListDelim + 1))
 
-
                   ListParam := Array()
                   Param := Array()	; Parameters in expression form
                   Loop Parse, ListParams, ","
@@ -652,7 +651,6 @@ Convert(ScriptString)
                         }
                         ContSect .= LineContSect "`r`n"
                      }
-
                   }
 
                   ; Params := StrReplace(Params, "``,", "ESCAPED_COMMª_PLA¢E_HOLDER")     ; ugly hack
@@ -726,7 +724,6 @@ Convert(ScriptString)
                      }
                      ; uses a function to format the parameters
                      Param[A_Index] := ParameterFormat(ListParam[A_Index], Param[A_Index])
-
                   }
 
                   v2 := Trim(v2)
@@ -763,6 +760,8 @@ Convert(ScriptString)
                      else
                         Line := RegExReplace(Line, "(?:,\s)*$", "")
                   }
+
+                  break ; Command just found and processed.
                }
             }
          }
@@ -967,6 +966,8 @@ subLoopFunctions(ScriptString, Line, &retV2, &gotFunc) {
 
             retV2 := Line
             gotFunc:=True
+
+            break ; Function/Method just found and processed.
          }
       }
       ; msgbox("[" oResult.Pre "]`n[" oResult.func "]`n[" oResult.Parameters "]`n[" oResult.Post "]`n[" oResult.Separator "]`n")

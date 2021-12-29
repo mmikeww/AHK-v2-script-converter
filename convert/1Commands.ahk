@@ -62,7 +62,7 @@ global CommandsToConvertM := OrderedMap(
   , "EnvSet,EnvVarT2E,ValueT2E"                	, "EnvSet({1}, {2})"
   , "EnvSub,var,valueCBE2E,TimeUnitsT2E"       	, "*_EnvSub"
   , "EnvDiv,var,valueCBE2E"                    	, "{1} /= {2}"
-  , "EnvGet,OutputVar,LogonServerT2E"          	, "{1} := EnvGet({2})"
+  , "EnvGet,OutputVar,EnvVarNameT2E"           	, "{1} := EnvGet({2})"
   , "EnvMult,var,valueCBE2E"                   	, "{1} *= {2}"
   , "EnvUpdate"                                	, 'SendMessage, `% WM_SETTINGCHANGE := 0x001A, 0, Environment,, `% "ahk_id " . HWND_BROADCAST := "0xFFFF"'
   , "Exit,ExitCode"                            	, "Exit({1})"
@@ -215,8 +215,8 @@ global CommandsToConvertM := OrderedMap(
   , "WinHide,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E"                   	, "WinHide({1}, {2}, {3}, {4})"
   , "WinKill,WinTitleT2E,WinTextT2E,SecondsToWaitCBE2E,ExcludeTitleT2E,ExcludeTextT2E"	, "WinKill({1}, {2}, {3}, {4}, {5})"
   , "WinMaximize,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E"               	, "WinMaximize({1}, {2}, {3}, {4})"
-  , "WinMove,var1,var2,X,Y,Width,Height,ExcludeTitleT2E,ExcludeTextT2E"               	, "*_WinMove"
   , "WinMinimize,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E"               	, "WinMinimize({1}, {2}, {3}, {4})"
+  , "WinMove,val1,val2,XCBE2E,YCBE2E,WidthCBE2E,HeightCBE2E,ExcludeTitleT2E,ExcludeTextT2E"	, "*_WinMove"
   , "WinMenuSelectItem,WinTitleT2E,WinTextT2E,MenuT2E,SubMenu1T2E,SubMenu2T2E,SubMenu3T2E,SubMenu4T2E,SubMenu5T2E,SubMenu6T2E,ExcludeTitleT2E,ExcludeTextT2E" , "MenuSelect({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11})"
   , "WinSet,SubCommand,ValueT2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E"     	, "*_WinSet"
   , "WinSetTitle,WinTitleT2E,WinTextT2E,NewTitleT2E,ExcludeTitleT2E,ExcludeTextT2E"        	, "*_WinSetTitle"

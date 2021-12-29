@@ -1,2 +1,2 @@
-#HotIf 
+#HotIf
 Esc::ExitApp()

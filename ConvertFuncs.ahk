@@ -29,6 +29,7 @@ Convert(ScriptString)
    global oScriptString	; array of all the lines
    global O_Index := 0	; current index of the lines
    global Indentation
+   global SingleIndent := RegExMatch(ScriptString, "(^|[\r\n])( +|\t)", &SingleIndent) ? SingleIndent[2] : "    " ; First spaces or single tab found.
    global GuiNameDefault
    global GuiList
    global GuiVList	; Used to list all variable names defined in a Gui
@@ -81,8 +82,6 @@ Convert(ScriptString)
       A_FormatFloat
       AutoTrim
    )"
-
-   ;SubStrFunction := "`r`n`r`n; This function may be removed if StartingPos is always > 0.`r`nCheckStartingPos(p) {`r`n   Return, p - (p <= 0)`r`n}`r`n`r`n"
 
    ScriptOutput := ""
    InCommentBlock := false
@@ -228,11 +227,6 @@ Convert(ScriptString)
       }
 
       Orig_Line_NoComment := Line
-
-      ; -------------------------------------------------------------------------------
-      ;
-      ;else If InStr(Line, "SendMode") && InStr(Line, "Input")
-      ;Skip := true
 
       ; -------------------------------------------------------------------------------
       ;
@@ -549,10 +543,11 @@ Convert(ScriptString)
          Line := Equation[3]
       }
 
-      If RegExMatch(Line, "i)(^\s*)([a-z_][a-z_0-9]*)\s*\+=\s*(.*?)\s*,\s*(Seconds|Minutes|Hours|Days)(.*$)", &Equation) {
-         Line := Equation[1] Equation[2] " := DateAdd(" Equation[2] ", " Equation[3] ", '" Equation[4] "')" Equation[5]
+      If RegExMatch(Line, "i)(^\s*)([a-z_][a-z_0-9]*)\s*\+=\s*(.*?)\s*,\s*([SMHD]\w*)(.*$)", &Equation) {
+         Line := Equation[1] Equation[2] " := DateAdd(" Equation[2] ", " ParameterFormat("ValueCBE2E", Equation[3]) ", '" Equation[4] "')" Equation[5]
+      } else If RegExMatch(Line, "i)(^\s*)([a-z_][a-z_0-9]*)\s*\-=\s*(.*?)\s*,\s*([SMHD]\w*)(.*$)", &Equation) {
+         Line := Equation[1] Equation[2] " := DateDiff(" Equation[2] ", " ParameterFormat("ValueCBE2E", Equation[3]) ", '" Equation[4] "')" Equation[5]
       }
-
 
       ; Convert Assiociated Arrays to Map Maybe not always wanted...
       If RegExMatch(Line, "i)^([\s]*([a-z_0-9]+)[\s]*):=\s*(\{[^;]*)", &Equation) {
@@ -583,8 +578,10 @@ Convert(ScriptString)
                Params := ""
             }
             ; msgbox("Line=" Line "`nFirstDelim=" FirstDelim "`nCommand=" Command "`nParams=" Params)
+
             ; Now we format the parameters into their v2 equivilents
-            for v1, v2 in CommandsToConvertM
+            if (Command~="i)^#?[a-z]+$")
+               for v1, v2 in CommandsToConvertM
             {
                ListDelim := RegExMatch(v1, "[,\s]|$")
                ListCommand := Trim(SubStr(v1, 1, ListDelim - 1))
@@ -594,7 +591,6 @@ Convert(ScriptString)
                   CommandMatch := 1
                   same_line_action := false
                   ListParams := RTrim(SubStr(v1, ListDelim + 1))
-
 
                   ListParam := Array()
                   Param := Array()	; Parameters in expression form
@@ -652,7 +648,6 @@ Convert(ScriptString)
                         }
                         ContSect .= LineContSect "`r`n"
                      }
-
                   }
 
                   ; Params := StrReplace(Params, "``,", "ESCAPED_COMMª_PLA¢E_HOLDER")     ; ugly hack
@@ -690,6 +685,7 @@ Convert(ScriptString)
                      if RegExMatch(Command, "i)^(?:" if_cmds_allowing_sameline_action ")$")
                      {
                         same_line_action := true
+                        extra_params := LTrim(extra_params)
                      }
 
                      ; 2. could be this:
@@ -726,7 +722,6 @@ Convert(ScriptString)
                      }
                      ; uses a function to format the parameters
                      Param[A_Index] := ParameterFormat(ListParam[A_Index], Param[A_Index])
-
                   }
 
                   v2 := Trim(v2)
@@ -739,30 +734,24 @@ Convert(ScriptString)
                         Line := Indentation . FuncObj(Param)
                   } else	; else just using the replacement defined at the top
                   {
-                     ; if (Command = "FileAppend")
-                     ; {
-                     ;    paramsstr := ""
-                     ;    Loop Param.Length
-                     ;       paramsstr .= "Param[" A_Index "]: " Param[A_Index] "`n"
-                     ;    msgbox("in else`nLine: " Line "`nv2: " v2 "`n`nListParam.Length: " ListParam.Length "`nParam.Length: " Param.Length "`n`n" paramsstr)
-                     ; }
-
-                     if (same_line_action) {
-                        ; Error in this line, extra parameters should be: put on next line that needs to be converted, or converted in the line
-                        PreLine .= format(v2, Param*) . ","
-                        Line := extra_params
-                        Goto LabelRedoCommandReplacing
-                        ;Line := Indentation . format(v2, Param*) . "," extra_params
-                     } else
-                        Line := Indentation . format(v2, Param*)
-
+                     Line := Indentation . format(v2, Param*)
                      ; msgbox("Line after format:`n`n" Line)
+
                      ; if empty trailing optional params caused the line to end with extra commas, remove them
-                     if SubStr(Line, -1) = ")"
-                        Line := RegExReplace(Line, '(?:, "?"?)*\)$', "") . ")"
+                     if SubStr(LTrim(Line), 1, 1) = "#"
+                        Line := RegExReplace(Line, "[\s\,]*$", "")
                      else
-                        Line := RegExReplace(Line, "(?:,\s)*$", "")
+                        Line := RegExReplace(Line, "[\s\,]*\)$", ")")
                   }
+
+                  if (same_line_action) {
+                     PreLine .= Line "`r`n"
+                     Line := extra_params
+                     Indentation .= SingleIndent
+                     Goto LabelRedoCommandReplacing
+                  }
+
+                  break ; Command just found and processed.
                }
             }
          }
@@ -777,13 +766,6 @@ Convert(ScriptString)
                Skip := true
             }
          }
-
-         ; TEMPORARY
-         ;If !FoundSubStr && !InCommentBlock && InStr(Line, "SubStr")
-         ;{
-         ;FoundSubStr := true
-         ;Line .= " `; WARNING: SubStr conversion may change in the near future"
-         ;}
 
          ; Put the directives after the first non-comment line
          ;If !FoundNonComment && !InCommentBlock && A_Index != 1 && FirstChar != ";" && FirstTwo != "*/"
@@ -876,6 +858,9 @@ subLoopFunctions(ScriptString, Line, &retV2, &gotFunc) {
          ;MsgBox("Hook_Status: " oResult.Hook_Status "line:" line)
          break
       }
+      if (oResult.Func = "") {
+         continue ; Not a function only parenthesis
+      }
 
       oPar := V1ParSplit(oResult.Parameters)
       gFunctPar := oResult.Parameters
@@ -967,6 +952,8 @@ subLoopFunctions(ScriptString, Line, &retV2, &gotFunc) {
 
             retV2 := Line
             gotFunc:=True
+
+            break ; Function/Method just found and processed.
          }
       }
       ; msgbox("[" oResult.Pre "]`n[" oResult.func "]`n[" oResult.Parameters "]`n[" oResult.Post "]`n[" oResult.Separator "]`n")
@@ -2078,6 +2065,7 @@ _MsgBox(p) {
 _Menu(p) {
    global Orig_Line_NoComment
    global MenuList
+   global Indentation
    MenuLine := Orig_Line_NoComment
    LineResult := ""
    menuNameLine := RegExReplace(MenuLine, "i)^\s*Menu\s*[,\s]\s*([^,]*).*$", "$1", &RegExCount1)
@@ -2119,9 +2107,9 @@ _Menu(p) {
       menuList .= menuNameLine "|"
 
       if (menuNameLine = "Tray") {
-         LineResult .= menuNameLine ":= A_TrayMenu`r`n"
+         LineResult .= menuNameLine ":= A_TrayMenu`r`n" Indentation
       } else {
-         LineResult .= menuNameLine " := Menu()`r`n"
+         LineResult .= menuNameLine " := Menu()`r`n" Indentation
       }
    }
 
@@ -2659,11 +2647,12 @@ _WinMove(p) {
    ;V1 : WinMove, X, Y
    ;V2 : WinMove X, Y , Width, Height, WinTitle, WinText, ExcludeTitle, ExcludeText
    if (p[3] = "" and p[4] = "") {
-
+      p[1] := ParameterFormat("XCBE2E", p[1])
+      p[2] := ParameterFormat("YCBE2E", p[2])
       Out := Format("WinMove({1}, {2})", p*)
    } else {
-      p[1] := ToExp(p[1])
-      p[2] := ToExp(p[2])
+      p[1] := ParameterFormat("WinTitleT2E", p[1])
+      p[2] := ParameterFormat("WinTextT2E", p[2])
       Out := Format("WinMove({3}, {4}, {5}, {6}, {1}, {2}, {7}, {8})", p*)
    }
    Return RegExReplace(Out, "[\s\,]*\)$", ")")

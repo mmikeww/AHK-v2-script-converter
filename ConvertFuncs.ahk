@@ -804,6 +804,9 @@ Convert(ScriptString)
             Line := ConvertMatchObject(Line, aListMatchObject[A_Index])
       }
 
+      ; VerCompare when using A_AhkVersion.
+      Line := RegExReplace(Line, 'i)\b(A_AhkVersion)(\s*[!=<>]+\s*)"?(\d[\w\-\.]*)"?', 'VerCompare($1, "$3")${2}0')
+
       if NL_Func {         ; add a newline if exists
          NL_Func .= "`r`n"
       }

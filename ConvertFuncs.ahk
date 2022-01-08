@@ -126,19 +126,19 @@ Convert(ScriptString)
       PreLine := ""
 
       if RegExMatch(Line, "^\s*(.*[^\s]::).*$") {
-         LineNoHotkey := RegExReplace(Line, "(^\s*).+::(.*$)", "$1$2")
+         LineNoHotkey := RegExReplace(Line, "(^\s*).+::(.*$)", "$2")
          if (LineNoHotkey != "") {
-            PreLine := RegExReplace(Line, "^\s*(.+::).*$", "$1")
+            PreLine .= RegExReplace(Line, "^(\s*.+::).*$", "$1")
             Line := LineNoHotkey
-            Orig_Line := RegExReplace(Line, "(^\s*).+::(.*$)", "$1$2")
+            Orig_Line := Line
          }
       }
       if RegExMatch(Line, "^\s*({\s*).*$") {
-         LineNoHotkey := RegExReplace(Line, "(^\s*)({\s*)(.*$)", "$1$3")
+         LineNoHotkey := RegExReplace(Line, "(^\s*)({\s*)(.*$)", "$3")
          if (LineNoHotkey != "") {
-            PreLine := PreLine RegExReplace(Line, "(^\s*)({\s*)(.*$)", "$1$2")
+            PreLine .= RegExReplace(Line, "(^\s*)({\s*)(.*$)", "$1$2")
             Line := LineNoHotkey
-            Orig_Line := RegExReplace(Line, "(^\s*)({\s*)(.*$)", "$3")
+            Orig_Line := Line
          }
       }
       if RegExMatch(Line, "i)^\s*(}?\s*(Try|Else)\s*[\s{]\s*).*$") {
@@ -146,7 +146,7 @@ Convert(ScriptString)
          if (LineNoHotkey != "") {
             PreLine .= RegExReplace(Line, "i)(^\s*)(}?\s*(Try|Else)\s*[\s{]\s*)(.*$)", "$1$2")
             Line := LineNoHotkey
-            Orig_Line := RegExReplace(Line, "i)(^\s*)(}?\s*(Try|Else)\s*[\s{]\s*)(.*$)", "$4")
+            Orig_Line := Line
          }
       }
 

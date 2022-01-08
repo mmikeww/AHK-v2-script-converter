@@ -566,7 +566,7 @@ Convert(ScriptString)
          ; To add commands to be checked for, modify the list at the top of this file
          {
             CommandMatch := 0
-            FirstDelim := RegExMatch(Line, "\w(\s*[,\s]\s*)",&Match)
+            FirstDelim := RegExMatch(Line, "\w([ \t]*[, \t])", &Match) ; doesn't use \s to not consume line jumps
             
             if (FirstDelim > 0)
             {
@@ -594,18 +594,14 @@ Convert(ScriptString)
 
                   ListParam := Array()
                   Param := Array()	; Parameters in expression form
+                  Param.Extra := {}	; To attach helpful info that can be read by custom functions
                   Loop Parse, ListParams, ","
                      ListParam.Push(A_LoopField)
 
                   oParam := V1ParSplit(Params)
 
                   Loop oParam.Length
-                  {
-                     if (A_Index <= ListParam.Length)
-                        Param.Push(LTrim(oParam[A_index]))	; trim leading spaces off each param
-                     else
-                        Param.Push(oParam[A_index])
-                  }
+                     Param.Push(oParam[A_index])
 
                   ; Checks for continuation section
                   if (oScriptString.Length > O_Index and (SubStr(Trim(oScriptString[O_Index + 1]), 1, 1) = "(" or RegExMatch(Trim(oScriptString[O_Index + 1]), "i)^\s*\((?:\s*(?(?<=\s)(?!;)|(?<=\())(\bJoin\S*|[^\s)]+))*(?<!:)(?:\s+;.*)?$"))) {
@@ -634,21 +630,24 @@ Convert(ScriptString)
                            } else
                               EOLComment2 := ""
 
+                           Params .= "`r`n" LineContSect
+
                            oParam2 := V1ParSplit(LineContSect)
                            Param[Param.Length] := ContSect oParam2[1]
 
                            Loop oParam2.Length - 1
-                           {
-                              if (oParam.Length + 1 <= ListParam.Length)
-                                 Param.Push(LTrim(oParam2[A_index + 1]))	; trim leading spaces off each param
-                              else
-                                 Param.Push(oParam2[A_index + 1])
-                           }
+                              Param.Push(oParam2[A_index + 1])
+
                            break
                         }
                         ContSect .= LineContSect "`r`n"
+                        Params .= "`r`n" LineContSect
                      }
                   }
+
+                  ; save a copy of some data before formating
+                  Param.Extra.OrigArr := Param.Clone()
+                  Param.Extra.OrigStr := Params
 
                   ; Params := StrReplace(Params, "``,", "ESCAPED_COMMª_PLA¢E_HOLDER")     ; ugly hack
                   ; Loop Parse, Params, ","
@@ -721,6 +720,7 @@ Convert(ScriptString)
                         ListParam.InsertAt(A_Index, ListParam[A_Index - 1])
                      }
                      ; uses a function to format the parameters
+                     ; trimming is also being handled here
                      Param[A_Index] := ParameterFormat(ListParam[A_Index], Param[A_Index])
                   }
 
@@ -2012,9 +2012,6 @@ _Loop(p) {
 
 
 _MsgBox(p) {
-   global O_Index
-   global Orig_Line_NoComment
-   global oScriptString	; array of all the lines
    global ScriptStringsUsed
    ; v1
    ; MsgBox, Text (1-parameter method)
@@ -2022,38 +2019,27 @@ _MsgBox(p) {
    ; v2
    ; Result := MsgBox(Text, Title, Options)
    Check_IfMsgBox()
-   if RegExMatch(p[1], "i)^\dx?\d*\s*") {
-      text := ""
-      title := ""
+   if RegExMatch(p[1], "i)^(0x)?\d*\s*$") && (p.Extra.OrigArr.Length > 1) {
       options := p[1]
-      if (p[3] = "") {
-         ContSection := Convert_GetContSect()
-         if (ContSection != "") {
-            LastParIndex := p.Length
-            text := "`"`r`n" RegExReplace(ContSection, "s)^(.*\n\s*\))[^\n]*$", "$1") "`"`r`n"
-            Timeout := RegExReplace(ContSection, "s)^.*\n\s*\)\s*,\s*(\d*)\s*$", "$1", &RegExCount)
-            ; delete the empty parameter
-            if (RegExCount) {
-               options .= " T" Timeout
-            }
-            title := ToExp(p[2])
-         }
-      } else if (isNumber(p[p.Length]) and p.Length > 3) {
-         text := ToExp(RegExReplace(Orig_Line_NoComment, "i)MsgBox\s*,?[^,]*,[^,]*,(.*),.*?$", "$1"))
-         options .= " T" p[p.Length]
+      if ( p.Length = 4 && (IsEmpty(p[4]) || IsNumber(p[4])) ) {
+         text := ToExp(p[3])
+         if (!IsEmpty(p[4]))
+            options .= " T" p[4]
          title := ToExp(p[2])
       } else {
-         text := ToExp(RegExReplace(Orig_Line_NoComment, "i)MsgBox\s*,?[^,]*,[^,]*,(.*)$", "$1"))
+         text := ""
+         loop p.Extra.OrigArr.Length - 2
+            text .= "," p.Extra.OrigArr[A_Index + 2]
+         text := ToExp(SubStr(text, 2))
+         title := ToExp(p[2])
       }
       Out := format("MsgBox({1}, {2}, {3})", text, title, ToExp(options))
       if ScriptStringsUsed.IfMsgBox {
          Out := "msgResult := " Out
       }
       return Out
-   } else if RegExMatch(p[1], "i)^\s*.*") {
-      if !InStr(p[1],"`n"){
-         p[1] := RegExReplace(Orig_Line_NoComment, "i)MsgBox\s*,?(.*)$", "$1")
-      }
+   } else {
+      p[1] := p.Extra.OrigStr
       Out := format("MsgBox({1})", p[1] = "" ? "" : ToExp(p[1]))
       if ScriptStringsUsed.IfMsgBox {
          Out := "msgResult := " Out

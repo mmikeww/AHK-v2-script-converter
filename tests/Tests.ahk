@@ -5384,7 +5384,7 @@ MsgBox, 4, , This is the 3-parameter method. Commas (,) do not need to be escape
       
       expected := "
          (Join`r`n
-MsgBox("This is the 3-parameter method. Commas (,) do not need to be escaped.", , 4)
+MsgBox("This is the 3-parameter method. Commas (,) do not need to be escaped.", "", 4)
          )"
       
       ; if (this.test_exec = true) {
@@ -5600,7 +5600,7 @@ Loop, parse, clipboard, ``n, ``r
          (Join`r`n
 Loop parse, A_Clipboard, "``n", "``r"
 {
-    msgResult := MsgBox("File number " A_Index " is " A_LoopField ".``n``nContinue?", , 4)
+    msgResult := MsgBox("File number " A_Index " is " A_LoopField ".``n``nContinue?", "", 4)
     if (msgResult = "No"){
        break
     }

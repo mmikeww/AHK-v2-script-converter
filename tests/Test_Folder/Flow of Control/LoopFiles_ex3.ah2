@@ -6,7 +6,7 @@ Loop Parse, FileList, "`n"
 {
     if (A_LoopField = "")  ; Ignore the blank item at the end of the list.
         continue
-    msgResult := MsgBox("File number " A_Index " is " A_LoopField ".  Continue?", , 4)
+    msgResult := MsgBox("File number " A_Index " is " A_LoopField ".  Continue?", "", 4)
     if (msgResult = "No")
         break
 }

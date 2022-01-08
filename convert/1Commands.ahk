@@ -111,6 +111,7 @@ global CommandsToConvertM := OrderedMap(
   , "IfLess,var,valueT2QE"                                    	, "*_IfLess"
   , "IfLessOrEqual,var,valueT2QE"                             	, "*_IfLessOrEqual"
   , "IfInString,var,valueT2E"                                 	, "if InStr({1}, {2})"
+  , "IfMsgBox,ButtonNameT2E"                                  	, "if (msgResult = {1})"
   , "IfNotInString,var,valueT2E"                              	, "if !InStr({1}, {2})"
   , "IfExist,fileT2E"                                         	, "if FileExist({1})"
   , "IfNotExist,fileT2E"                                      	, "if !FileExist({1})"

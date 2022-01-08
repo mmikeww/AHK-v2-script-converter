@@ -19,7 +19,6 @@ Convert(ScriptString)
 
    global ScriptStringsUsed := Array()	; Keeps an array of interesting strings used in the script
    ScriptStringsUsed.ErrorLevel := InStr(ScriptString, "ErrorLevel")
-   ScriptStringsUsed.IfMsgBox := InStr(ScriptString, "IfMsgBox")
    global aListPseudoArray := Array()     	; list of strings that should be converted from pseudoArray to Array
    global aListMatchObject := Array()     	; list of strings that should be converted from Match Object V1 to Match Object V2
    global aListLabelsToFunction := Array()	; array of objects with the properties [label] and [parameters] that should be converted from label to Function
@@ -680,7 +679,7 @@ Convert(ScriptString)
                      ;    such as  `IfEqual, x, 1, Sleep, 1`
                      ;    in which case we need to append these extra params later
                      if_cmds_allowing_sameline_action := "IfEqual|IfNotEqual|IfGreater|IfGreaterOrEqual|"
-                        . "IfLess|IfLessOrEqual|IfInString|IfNotInString"
+                        . "IfLess|IfLessOrEqual|IfInString|IfNotInString|IfMsgBox"
                      if RegExMatch(Command, "i)^(?:" if_cmds_allowing_sameline_action ")$")
                      {
                         same_line_action := true
@@ -746,8 +745,8 @@ Convert(ScriptString)
 
                   if (same_line_action) {
                      PreLine .= Line "`r`n"
-                     Line := extra_params
                      Indentation .= SingleIndent
+                     Line := Indentation . extra_params
                      Goto LabelRedoCommandReplacing
                   }
 
@@ -2012,7 +2011,6 @@ _Loop(p) {
 
 
 _MsgBox(p) {
-   global ScriptStringsUsed
    ; v1
    ; MsgBox, Text (1-parameter method)
    ; MsgBox [, Options, Title, Text, Timeout]
@@ -2034,14 +2032,14 @@ _MsgBox(p) {
          title := ToExp(p[2])
       }
       Out := format("MsgBox({1}, {2}, {3})", text, title, ToExp(options))
-      if ScriptStringsUsed.IfMsgBox {
+      if Check_IfMsgBox() {
          Out := "msgResult := " Out
       }
       return Out
    } else {
       p[1] := p.Extra.OrigStr
       Out := format("MsgBox({1})", p[1] = "" ? "" : ToExp(p[1]))
-      if ScriptStringsUsed.IfMsgBox {
+      if Check_IfMsgBox() {
          Out := "msgResult := " Out
       }
       return Out
@@ -2768,10 +2766,9 @@ Check_IfMsgBox() {
    ; Go further in the lines to get the next continuation section
    global oScriptString	; array of all the lines
    global O_Index	; current index of the lines
-   global Indentation
    ; get Temporary index
    T_Index := O_Index
-   result := ""
+   found := false
 
    loop {
       T_Index++
@@ -2779,16 +2776,14 @@ Check_IfMsgBox() {
          break
       }
       LineContSect := oScriptString[T_Index]
-      FirstChar := SubStr(Trim(LineContSect), 1, 1)
       if (RegExMatch(LineContSect, "i)^(.*?)\bifMsgBox\s*[,\s]\s*(\w*)(.*)")) {
-         if RegExMatch(LineContSect, "i)^(.*?)\bifMsgBox\s*[,\s]\s*(\w*)\s*,\s*([^\s{]*)$") {
-            oScriptString[T_Index] := RegExReplace(LineContSect, "i)^(.*?)\bifMsgBox\s*[,\s]\s*(\w*)\s*,\s*([^\s{]*)$", "$1if (msgResult = " ToExp("$2") "){`r`n" Indentation "   $3`r`n" Indentation "}")
-         } else {
-            oScriptString[T_Index] := RegExReplace(LineContSect, "i)^(.*?)\bifMsgBox\s*[,\s]\s*(\w*)(.*)", "$1if (msgResult = " ToExp("$2") ")$3")
-         }
+         found := true
+         break
+      } else if (RegExMatch(LineContSect, "i)^\s*MsgBox([,\s]|$)")) {
+         break
       }
    }
-   return
+   return found
 }
 
 ; --------------------------------------------------------------------

@@ -1903,23 +1903,29 @@ _InputBox(oPar) {
    }
    if (x != "") {
       Options .= Options != "" ? " " : ""
-      Options .= "h"
+      Options .= "x"
       Options .= IsNumber(x) ? x : "`" " x " `""
    }
    if (y != "") {
       Options .= Options != "" ? " " : ""
-      Options .= "h"
+      Options .= "y"
       Options .= IsNumber(y) ? y : "`" " y " `""
+   }
+   if (Timeout != "") {
+      Options .= Options != "" ? " " : ""
+      Options .= "t"
+      Options .= IsNumber(Timeout) ? Timeout : "`" " Timeout " `""
    }
    Options := Options = "" ? "" : "`"" Options "`""
 
+   Out := format("IB := InputBox({1}, {3}, {4}, {5})", parameters, OutputVar, Title, Options, Default)
+   Out := RegExReplace(Out, "[\s\,]*\)$", ")")
+   Out .= ", " OutputVar " := IB.Value"
    if ScriptStringsUsed.ErrorLevel {
-      Line := format("IB := InputBox({1}, {3}, {4}, {5}), {2} := IB.Value , ErrorLevel := IB.Result=`"OK`" ? 0 : IB.Result=`"CANCEL`" ? 1 : IB.Result=`"Timeout`" ? 2 : `"ERROR`"", parameters, OutputVar, Title, Options, Default)
-   } else {
-      Line := format("IB := InputBox({1}, {3}, {4}, {5}), {2} := IB.Value", parameters, OutputVar, Title, Options, Default)
+      Out .= ', ErrorLevel := IB.Result="OK" ? 0 : IB.Result="CANCEL" ? 1 : IB.Result="Timeout" ? 2 : "ERROR"'
    }
 
-   Return out := RegExReplace(Line, "[\s\,]*\)", ")")
+   Return Out
 }
 
 _KeyWait(p) {

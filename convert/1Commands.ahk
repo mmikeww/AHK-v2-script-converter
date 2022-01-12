@@ -199,6 +199,7 @@ global CommandsToConvertM := OrderedMap(
   , "StringReplace,OutputVar,InputVar,SearchTxtT2E,ReplTxtT2E,ReplAll"                           	, "*_StringReplace"
   , "Suspend,ModeOn2True"                                                                        	, "*_SuspendV2"
   , "SysGet,OutputVar,SubCommand,ValueCBE2E"                                                     	, "*_SysGet"
+  , "Thread,SubCommandT2E,Value1CBE2E,Value2CBE2E"                                               	, "Thread({1}, {2}, {3})"
   , "ToolTip,txtT2E,xCBE2E,yCBE2E,whichCBE2E"                                                    	, "ToolTip({1}, {2}, {3}, {4})"
   , "TrayTip,TitleT2E,TextT2E,Seconds,OptionsT2E"                                                	, "TrayTip({1}, {2}, {4})"
   , "Transform,OutputVar,SubCommand,Value1T2E,Value2T2E"                                         	, " *_Transform"

@@ -247,7 +247,6 @@ global CommandsToConvertM := OrderedMap(
   , "#InstallMouseHook"                                                                    	, "InstallMouseHook()"
   , "#KeyHistory,MaxEventsCBE2E"                                                           	, "KeyHistory({1})"
   , "#MaxHotkeysPerInterval,ValueCBE2E"                                                    	, "A_MaxHotkeysPerInterval := {1}"
-  , "#MaxMem,Megabytes"                                                                    	, "#MaxMem {1}"
   , "#MaxThreads,ValueCBE2E"                                                               	, "#MaxThreads {1}"
   , "#MaxThreadsBuffer,OnOffOn2True"                                                       	, "#MaxThreadsBuffer {1}"
   , "#MaxThreadsPerHotkey,ValueCBE2E"                                                      	, "#MaxThreadsPerHotkey {1}"

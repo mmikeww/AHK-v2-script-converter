@@ -549,9 +549,9 @@ Convert(ScriptString)
       }
 
       ; Convert Assiociated Arrays to Map Maybe not always wanted...
-      If RegExMatch(Line, "i)^([\s]*([a-z_0-9]+)[\s]*):=\s*(\{[^;]*)", &Equation) {
+      If RegExMatch(Line, "i)^(\s*)((global|local|static)\s+)?([a-z_0-9]+)(\s*:=\s*)(\{[^;]*)", &Equation) {
          ; Only convert to a map if for in statement is used for it
-         if RegExMatch(ScriptString, "is).*for\s[\s,a-z0-9_]*\sin\s" Equation[2] "[^\.].*") {
+         if RegExMatch(ScriptString, "is).*for\s[\s,a-z0-9_]*\sin\s" Equation[4] "[^\.].*") {
             Line := AssArr2Map(Line)
          }
       }
@@ -3135,13 +3135,15 @@ AssArr2Map(ScriptString) {
       Key := RegExReplace(ScriptString, "is)(^.*?)\{\s*([^\s:]+?)\s*:\s*([^\,}]*)\s*(.*)", "$2")
       Value := RegExReplace(ScriptString, "is)(^.*?)\{\s*([^\s:]+?)\s*:\s*([^\,}]*)\s*(.*)", "$3")
       ScriptStringBegin := RegExReplace(ScriptString, "is)(^.*?)\{\s*([^\s:]+?)\s*:\s*([^\,}]*)\s*(.*)", "$1")
-      ScriptString1 := ScriptStringBegin "map(" ToExp(Key) ", " Value
+      Key := (InStr(Key, '"')) ? Key : ToExp(Key)
+      ScriptString1 := ScriptStringBegin "map(" Key ", " Value
       ScriptStringRest := RegExReplace(ScriptString, "is)(^.*?)\{\s*([^\s:]+?)\s*:\s*([^\,}]*)\s*(.*$)", "$4")
       loop {
          if RegExMatch(ScriptStringRest, "is)^\s*,\s*[^\s:]+?\s*:\s*([^\},]*)\s*.*") {
             Key := RegExReplace(ScriptStringRest, "is)^\s*,\s*([^\s:]+?)\s*:\s*([^\},]*)\s*(.*)", "$1")
             Value := RegExReplace(ScriptStringRest, "is)^\s*,\s*([^\s:]+?)\s*:\s*([^\},]*)\s*(.*)", "$2")
-            ScriptString1 .= ", " ToExp(Key) ", " Value
+            Key := (InStr(Key, '"')) ? Key : ToExp(Key)
+            ScriptString1 .= ", " Key ", " Value
             ScriptStringRest := RegExReplace(ScriptStringRest, "is)^\s*,\s*([^\s:]+?)\s*:\s*([^\},]*)\s*(.*$)", "$3")
          } else {
             if RegExMatch(ScriptStringRest, "is)^\s*(\})\s*.*") {
@@ -3151,6 +3153,8 @@ AssArr2Map(ScriptString) {
          }
       }
       ScriptString := ScriptString1 ScriptStringRest
+   } else {
+      ScriptString := RegExReplace(ScriptString, "(\w+\s*:=\s*)\{\}", "$1map()")
    }
    return ScriptString
 }

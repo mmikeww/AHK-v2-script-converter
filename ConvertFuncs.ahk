@@ -757,6 +757,7 @@ Convert(ScriptString)
 
          ; Remove lines we can't use
       If CommandMatch = 0 && !InCommentBlock
+      {
          Loop Parse, Remove, "`n", "`r"
          {
             If InStr(Orig_Line, A_LoopField)
@@ -765,6 +766,10 @@ Convert(ScriptString)
                Skip := true
             }
          }
+
+         if (Line ~= "^\s*(local)\s*$")	; only force-local
+            Skip := true
+      }
 
          ; Put the directives after the first non-comment line
          ;If !FoundNonComment && !InCommentBlock && A_Index != 1 && FirstChar != ";" && FirstTwo != "*/"

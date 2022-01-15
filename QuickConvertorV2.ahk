@@ -7,11 +7,13 @@ global icons, TestMode, FontSize, ViewExpectedCode, GuiWidth, GuiHeight
    , TreeRoot := A_ScriptDir "\Tests\Test_Folder"
 
 TestMode := IniRead("QuickConvertorV2.ini", "Convertor", "TestMode", 0)
+TreeViewWidth := IniRead("QuickConvertorV2.ini", "Convertor", "TreeViewWidth", 280)
 ViewExpectedCode := IniRead("QuickConvertorV2.ini", "Convertor", "ViewExpectedCode", 0)
 GuiWidth := IniRead("QuickConvertorV2.ini", "Convertor", "GuiWidth", 800)
 GuiHeight := IniRead("QuickConvertorV2.ini", "Convertor", "GuiHeight", 500)
 FontSize := 10
 IniWrite(TestMode, "QuickConvertorV2.ini", "Convertor", "TestMode")
+IniWrite(TreeViewWidth, "QuickConvertorV2.ini", "Convertor", "TreeViewWidth")
 IniWrite(ViewExpectedCode, "QuickConvertorV2.ini", "Convertor", "ViewExpectedCode")
 
 FileTempScript := A_ScriptDir "\Tests\TempScript.ah1"
@@ -23,7 +25,6 @@ GuiTest(strV1Script:=""){
     global
 ; The following folder will be the root folder for the TreeView. Note that loading might take a long
 ; time if an entire drive such as C:\ is specified:
-TreeViewWidth := 280
 ListViewWidth := A_ScreenWidth/2 - TreeViewWidth - 30
 
 ; Create the MyGui window and display the source directory (TreeRoot) in the title bar:
@@ -41,7 +42,7 @@ IL_Add(ImageListID,"shell32.dll",1)     ;Icon6    ;Blank
 icons := {folder: "Icon1", fail: "Icon2", issue: "Icon3", pass: "Icon4", detail: "Icon5", blank: "Icon6"}
 
 ; Create a TreeView and a ListView side-by-side to behave like Windows Explorer:
-TV := MyGui.Add("TreeView", "r20 w180 ImageList" ImageListID)
+TV := MyGui.Add("TreeView", "r20 w" TreeViewWidth " ImageList" ImageListID)
 ; LV := MyGui.Add("ListView", "r20 w" ListViewWidth " x+10", ["Name","Modified"])
 
 ; Create a Status Bar to give info about the number of files and their total size:
@@ -572,7 +573,7 @@ MenuViewTree(*){
         ButtonEvalSelected.Visible  := false
     }
     else{
-        TV.Move(,,180,)
+        TV.Move(,,TreeViewWidth,)
         ButtonEvaluateTests.Visible := true
         ButtonEvalSelected.Visible  := true
     }
@@ -585,7 +586,7 @@ MenuTestMode(*){
     SettingsMenu.ToggleCheck("Testmode")
     TestMode := !TestMode
     if TestMode{
-        TV.Move(, , 180, )
+        TV.Move(, , TreeViewWidth, )
         ButtonEvaluateTests.Visible := true
         ButtonEvalSelected.Visible  := true
         CheckBoxV2E.Visible := true

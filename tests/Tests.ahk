@@ -3543,7 +3543,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
                                  ; StrReplace() is not case sensitive
                                  ; check for StringCaseSense in v1 source script
                                  ; and change the CaseSense param in StrReplace() if necessary
-                                 NewStr := StrReplace(OldStr, A_Space, )
+                                 NewStr := StrReplace(OldStr, A_Space)
                                  FileAppend(NewStr, "*")
          )"
       ; first test that our expected code actually produces the same results in v2

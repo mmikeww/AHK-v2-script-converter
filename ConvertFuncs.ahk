@@ -163,7 +163,8 @@ Convert(ScriptString)
       ; skip comment blocks with one statement
       ;
       else if (FirstTwo == "/*") {
-
+         line .= EOLComment ; done here because of the upcoming "continue"
+         EOLComment := ""
          loop {
             O_Index++
             if (oScriptString.Length < O_Index) {

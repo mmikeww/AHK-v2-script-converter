@@ -886,7 +886,7 @@ subLoopFunctions(ScriptString, Line, &retV2, &gotFunc) {
                }
             }
             Loop aListPseudoArray.Length {
-               if (ObjectName = aListPseudoArray[A_Index]) {
+               if (ObjectName = aListPseudoArray[A_Index].name) {
                   ConvertList := [] ; Conversions handled elsewhere.
                   Break
                }

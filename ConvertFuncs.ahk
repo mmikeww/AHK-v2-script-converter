@@ -467,6 +467,9 @@ Convert(ScriptString)
          && !(MatchFunc[1] ~= "i)(if|while)")	; skip if(expr) and while(expr) when no space before paren
       ; this regex matches anything inside the parentheses () for both func definitions, and func calls :(
       {
+         ; Changing the ByRef parameters to & signs.
+         Line := RegExReplace(Line, "i)(\bByRef\s+)", "&")
+
          AllParams := MatchFunc[2]
          ;msgbox, % "function line`n`nLine:`n" Line "`n`nAllParams:`n" AllParams
 
@@ -826,13 +829,6 @@ Convert(ScriptString)
       ;ScriptOutput :=  RegExReplace(ScriptOutput, "is)^(.*\n[\s\t]*)(OnClipboardChange:)(.*)$" , "$1ClipChanged:$3")
       ScriptOutput := "OnClipboardChange(ClipChanged)`r`n" ConvertLabel2Func(ScriptOutput, "OnClipboardChange", "Type", "ClipChanged", [{NeedleRegEx: "i)^(.*)\b\QA_EventInfo\E\b(.*)$", Replacement: "$1Type$2"}])
    }
-
-   ; Changing the ByRef parameters to & signs.
-   ScriptOutput := RegExReplace(ScriptOutput, "i)(\bByRef\s*)", "&")
-
-   ; The following will be uncommented at a a later time
-   ;If FoundSubStr
-   ;   Output.Write(SubStrFunction)
 
    ; trim the very last newline that we add to every line (a few code lines above)
    if (SubStr(ScriptOutput, -2) = "`r`n")

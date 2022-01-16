@@ -4,7 +4,10 @@
 #Include <_GuiCtlExt>
 
 global icons, TestMode, FontSize, ViewExpectedCode, GuiWidth, GuiHeight
-   , TreeRoot := A_ScriptDir "\Tests\Test_Folder"
+
+; The following folder will be the root folder for the TreeView. Note that loading might take a long
+; time if an entire drive such as C:\ is specified:
+global TreeRoot := A_ScriptDir "\Tests\Test_Folder"
 
 TestMode := IniRead("QuickConvertorV2.ini", "Convertor", "TestMode", 0)
 TreeViewWidth := IniRead("QuickConvertorV2.ini", "Convertor", "TreeViewWidth", 280)
@@ -23,8 +26,6 @@ GuiTest(TempV1Script)
 Return
 GuiTest(strV1Script:=""){
     global
-; The following folder will be the root folder for the TreeView. Note that loading might take a long
-; time if an entire drive such as C:\ is specified:
 ListViewWidth := A_ScreenWidth/2 - TreeViewWidth - 30
 
 ; Create the MyGui window and display the source directory (TreeRoot) in the title bar:
@@ -145,7 +146,7 @@ MyGui.OnEvent("Size", Gui_Size)
 ; MyGui.OnEvent("Escape", (*) => ExitApp())
 
 FileMenu := Menu()
-FileMenu.Add "Run tests", (*) => Run('"' A_ScriptDir "\AutoHotKey Exe\AutoHotkeyV2.exe" '" "' TreeRoot '"')
+FileMenu.Add "Run Yunit tests", (*) => Run('"' A_ScriptDir "\AutoHotKey Exe\AutoHotkeyV2.exe" '" "' A_ScriptDir '\Tests\Tests.ahk"')
 FileMenu.Add "Open test folder", (*) => Run(TreeRoot)
 FileMenu.Add()
 FileMenu.Add "E&xit", (*) => ExitApp()

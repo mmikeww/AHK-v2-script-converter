@@ -163,7 +163,8 @@ Convert(ScriptString)
       ; skip comment blocks with one statement
       ;
       else if (FirstTwo == "/*") {
-
+         line .= EOLComment ; done here because of the upcoming "continue"
+         EOLComment := ""
          loop {
             O_Index++
             if (oScriptString.Length < O_Index) {
@@ -467,6 +468,9 @@ Convert(ScriptString)
          && !(MatchFunc[1] ~= "i)(if|while)")	; skip if(expr) and while(expr) when no space before paren
       ; this regex matches anything inside the parentheses () for both func definitions, and func calls :(
       {
+         ; Changing the ByRef parameters to & signs.
+         Line := RegExReplace(Line, "i)(\bByRef\s+)", "&")
+
          AllParams := MatchFunc[2]
          ;msgbox, % "function line`n`nLine:`n" Line "`n`nAllParams:`n" AllParams
 
@@ -549,9 +553,9 @@ Convert(ScriptString)
       }
 
       ; Convert Assiociated Arrays to Map Maybe not always wanted...
-      If RegExMatch(Line, "i)^([\s]*([a-z_0-9]+)[\s]*):=\s*(\{[^;]*)", &Equation) {
+      If RegExMatch(Line, "i)^(\s*)((global|local|static)\s+)?([a-z_0-9]+)(\s*:=\s*)(\{[^;]*)", &Equation) {
          ; Only convert to a map if for in statement is used for it
-         if RegExMatch(ScriptString, "is).*for\s[\s,a-z0-9_]*\sin\s" Equation[2] "[^\.].*") {
+         if RegExMatch(ScriptString, "is).*for\s[\s,a-z0-9_]*\sin\s" Equation[4] "[^\.].*") {
             Line := AssArr2Map(Line)
          }
       }
@@ -757,6 +761,7 @@ Convert(ScriptString)
 
          ; Remove lines we can't use
       If CommandMatch = 0 && !InCommentBlock
+      {
          Loop Parse, Remove, "`n", "`r"
          {
             If InStr(Orig_Line, A_LoopField)
@@ -765,6 +770,10 @@ Convert(ScriptString)
                Skip := true
             }
          }
+
+         if (Line ~= "^\s*(local)\s*$")	; only force-local
+            Skip := true
+      }
 
          ; Put the directives after the first non-comment line
          ;If !FoundNonComment && !InCommentBlock && A_Index != 1 && FirstChar != ";" && FirstTwo != "*/"
@@ -795,6 +804,9 @@ Convert(ScriptString)
             Line := ConvertMatchObject(Line, aListMatchObject[A_Index])
       }
 
+      ; VerCompare when using A_AhkVersion.
+      Line := RegExReplace(Line, 'i)\b(A_AhkVersion)(\s*[!=<>]+\s*)"?(\d[\w\-\.]*)"?', 'VerCompare($1, "$3")${2}0')
+
       if NL_Func {         ; add a newline if exists
          NL_Func .= "`r`n"
       }
@@ -821,13 +833,6 @@ Convert(ScriptString)
       ;ScriptOutput :=  RegExReplace(ScriptOutput, "is)^(.*\n[\s\t]*)(OnClipboardChange:)(.*)$" , "$1ClipChanged:$3")
       ScriptOutput := "OnClipboardChange(ClipChanged)`r`n" ConvertLabel2Func(ScriptOutput, "OnClipboardChange", "Type", "ClipChanged", [{NeedleRegEx: "i)^(.*)\b\QA_EventInfo\E\b(.*)$", Replacement: "$1Type$2"}])
    }
-
-   ; Changing the ByRef parameters to & signs.
-   ScriptOutput := RegExReplace(ScriptOutput, "i)(\bByRef\s*)", "&")
-
-   ; The following will be uncommented at a a later time
-   ;If FoundSubStr
-   ;   Output.Write(SubStrFunction)
 
    ; trim the very last newline that we add to every line (a few code lines above)
    if (SubStr(ScriptOutput, -2) = "`r`n")
@@ -884,7 +889,7 @@ subLoopFunctions(ScriptString, Line, &retV2, &gotFunc) {
                }
             }
             Loop aListPseudoArray.Length {
-               if (ObjectName = aListPseudoArray[A_Index]) {
+               if (ObjectName = aListPseudoArray[A_Index].name) {
                   ConvertList := [] ; Conversions handled elsewhere.
                   Break
                }
@@ -3135,13 +3140,15 @@ AssArr2Map(ScriptString) {
       Key := RegExReplace(ScriptString, "is)(^.*?)\{\s*([^\s:]+?)\s*:\s*([^\,}]*)\s*(.*)", "$2")
       Value := RegExReplace(ScriptString, "is)(^.*?)\{\s*([^\s:]+?)\s*:\s*([^\,}]*)\s*(.*)", "$3")
       ScriptStringBegin := RegExReplace(ScriptString, "is)(^.*?)\{\s*([^\s:]+?)\s*:\s*([^\,}]*)\s*(.*)", "$1")
-      ScriptString1 := ScriptStringBegin "map(" ToExp(Key) ", " Value
+      Key := (InStr(Key, '"')) ? Key : ToExp(Key)
+      ScriptString1 := ScriptStringBegin "map(" Key ", " Value
       ScriptStringRest := RegExReplace(ScriptString, "is)(^.*?)\{\s*([^\s:]+?)\s*:\s*([^\,}]*)\s*(.*$)", "$4")
       loop {
          if RegExMatch(ScriptStringRest, "is)^\s*,\s*[^\s:]+?\s*:\s*([^\},]*)\s*.*") {
             Key := RegExReplace(ScriptStringRest, "is)^\s*,\s*([^\s:]+?)\s*:\s*([^\},]*)\s*(.*)", "$1")
             Value := RegExReplace(ScriptStringRest, "is)^\s*,\s*([^\s:]+?)\s*:\s*([^\},]*)\s*(.*)", "$2")
-            ScriptString1 .= ", " ToExp(Key) ", " Value
+            Key := (InStr(Key, '"')) ? Key : ToExp(Key)
+            ScriptString1 .= ", " Key ", " Value
             ScriptStringRest := RegExReplace(ScriptStringRest, "is)^\s*,\s*([^\s:]+?)\s*:\s*([^\},]*)\s*(.*$)", "$3")
          } else {
             if RegExMatch(ScriptStringRest, "is)^\s*(\})\s*.*") {
@@ -3151,6 +3158,8 @@ AssArr2Map(ScriptString) {
          }
       }
       ScriptString := ScriptString1 ScriptStringRest
+   } else {
+      ScriptString := RegExReplace(ScriptString, "(\w+\s*:=\s*)\{\}", "$1map()")
    }
    return ScriptString
 }

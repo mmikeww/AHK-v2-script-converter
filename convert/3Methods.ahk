@@ -5,10 +5,11 @@
     , "OrigV1Method", "ReplacementV2Method"
   (first comma is not needed for the first pair)
   Similar to commands, parameters can be added
-  !!! we split the lists of Arrays and objects, as Haskey needs only to be replaced for arrays
+  !!! we split the lists of Arrays and objects, as Count needs only to be replaced for maps
 */
 
 global MethodsToConvertM := OrderedMap(
     "Count()" 	, "Count"
+  , "HasKey(Key)"	, "Has({1})"
   , "length()"	, "Length"
   )

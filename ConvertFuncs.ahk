@@ -3294,12 +3294,12 @@ AddBracket(ScriptString) {
       }
       if (RegExMatch(Line, "i)^(\s*;).*") or RegExMatch(Line, "i)^(\s*)$")) {	; comment or empty
          ; Do noting
-      } else if (RegExMatch(Line, "i)^\s*[\s\n\r\t]*((:[\s\*\?BCKOPRSIETXZ0-9]*:|)[^;\n\r\{}\[\=:]+?\:\:).*") > 0) {	; Hotkey or string
+      } else if (RegExMatch(Line, "i)^\s*[\s\n\r\t]*((:[\s\*\?BCKOPRSIETXZ0-9]*:|)[^;\n\r\{}\[\:]+?\:\:).*") > 0) {	; Hotkey or string
          if (HotkeyPointer = 1) {
             Result .= "} `; V1toV2: Added Bracket before hotkey or Hotstring`r`n"
             HotkeyPointer := 0
          }
-         if (RegExMatch(Line, "i)^\s*[\s\n\r\t]*((:[\s\*\?BCKOPRSIETXZ0-9]*:|)[^;\n\r\{}\[\=:]+?\:\:\s*[^\s;].+)") > 0) {
+         if (RegExMatch(Line, "i)^\s*[\s\n\r\t]*((:[\s\*\?BCKOPRSIETXZ0-9]*:|)[^;\n\r\{}\[\:]+?\:\:\s*[^\s;].+)") > 0) {
             ; oneline detected do noting
          } else {
             ; Hotkey detected start searching for start
@@ -3334,7 +3334,7 @@ AddBracket(ScriptString) {
          if (RegExMatch(RestString, "is)^[\s\n\r\t]*((:[\s\*\?BCKOPRSIETXZ0-9]*:|)[^;\n\r\{}\[\]\=:]+?\:\:).*") > 0) {	; Hotkey or string
             Result .= "} `; V1toV2: Added Bracket before hotkey or Hotstring`r`n"
             HotkeyPointer := 0
-         } else if (RegExMatch(RestString, "is)^[\s\n\r\t]*((:[\s\*\?BCKOPRSIETXZ0-9]*:|)[^;\n\r\s\{}\[\=:]+?\:\:?\s).*") > 0 and RegExMatch(oScriptString[A_Index - 1], "is)^[\s\n\r\t]*(return|exit|exitapp).*") > 0) {	; Label
+         } else if (RegExMatch(RestString, "is)^[\s\n\r\t]*((:[\s\*\?BCKOPRSIETXZ0-9]*:|)[^;\n\r\s\{}\[\:]+?\:\:?\s).*") > 0 and RegExMatch(oScriptString[A_Index - 1], "is)^[\s\n\r\t]*(return|exit|exitapp).*") > 0) {	; Label
             Result .= "} `; V1toV2: Added Bracket before label`r`n"
             HotkeyPointer := 0
          } else if (RegExMatch(RestString, "is)^[\s\n\r\t]*(`;[^\r\n]*|)([\s\n\r\t]*)$") > 0 and RegExMatch(oScriptString[A_Index - 1], "is)^[\s\n\r\t]*(return|exit|exitapp).*") > 0) {	; Label

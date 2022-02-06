@@ -166,6 +166,9 @@ _NumGet(p) {
   if (p[2] = "" and p[3] = "") {
     p[2] := '"UPtr"'
   }
+  if (p[3] = "" and InStr(p[2],"A_PtrSize")) {
+    p[3] := '"UPtr"'
+  }  
   Out := "NumGet(" P[1] ", " p[2] ", " p[3] ")"
   Return RegExReplace(Out, "[\s\,]*\)$", ")")
 }

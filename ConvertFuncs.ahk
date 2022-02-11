@@ -153,6 +153,12 @@ Convert(ScriptString)
       If RegExMatch(Line, "i)^(.*)(else|for|if|loop|return|while)(\s*,\s*|\s+)(.*)$", &Equation) {
           Line := Equation[1] Equation[2] " " Equation[4]
       }
+      
+      ; Handle return % var -> return var
+      If RegExMatch(Line, "i)^(.*)(return)(\s+%\s*\s+)(.*)$", &Equation) {
+         Line := Equation[1] Equation[2] " " Equation[4]
+      }
+      
       ; -------------------------------------------------------------------------------
       ;
       ; skip empty lines or comment lines

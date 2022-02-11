@@ -1,4 +1,4 @@
-﻿#Requires AutoHotKey v2.0-beta.1
+#Requires AutoHotKey v2.0-beta.3
 
 /* Commands and How to convert them
   Specification format:
@@ -225,9 +225,9 @@ global CommandsToConvertM := OrderedMap(
   , "WinRestore,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E"                     	, "WinRestore({1}, {2}, {3}, {4})"
   , "WinShow,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E"                        	, "WinShow({1}, {2}, {3}, {4})"
   , "WinWait,WinTitleT2E,WinTextT2E,TimeoutCBE2E,ExcludeTitleT2E,ExcludeTextT2E"           	, "*_WinWait"
-  , "WinWaitActive,WinTitleT2E,WinTextT2E,TimeoutCBE2E,ExcludeTitleT2E,ExcludeTextT2E"     	, "ErrorLevel := WinWaitActive({1}, {2}, {3}, {4}, {5}) , ErrorLevel := ErrorLevel = 0 ? 1 : 0"
-  , "WinWaitNotActive,WinTitleT2E,WinTextT2E,TimeoutCBE2E,ExcludeTitleT2E,ExcludeTextT2E"  	, "ErrorLevel := WinWaitNotActive({1}, {2}, {3}, {4}, {5}) , ErrorLevel := ErrorLevel = 0 ? 1 : 0"
-  , "WinWaitClose,WinTitleT2E,WinTextT2E,SecondsToWaitCBE2E,ExcludeTitleT2E,ExcludeTextT2E"	, "ErrorLevel := WinWaitClose({1}, {2}, {3}, {4}, {5}) , ErrorLevel := ErrorLevel = 0 ? 1 : 0"
+  , "WinWaitActive,WinTitleT2E,WinTextT2E,TimeoutCBE2E,ExcludeTitleT2E,ExcludeTextT2E"     	, "*_WinWaitActive"
+  , "WinWaitNotActive,WinTitleT2E,WinTextT2E,TimeoutCBE2E,ExcludeTitleT2E,ExcludeTextT2E"  	, "*_WinWaitNotActive"
+  , "WinWaitClose,WinTitleT2E,WinTextT2E,SecondsToWaitCBE2E,ExcludeTitleT2E,ExcludeTextT2E"	, "*_WinWaitClose"
   , "#ClipboardTimeout, MillisecondsCBE2E"                                                 	, "#ClipboardTimeout {1}"
   , "#ErrorStdOut,EncodingCBE2E"                                                           	, "#ErrorStdOut {1}"
   , "#HotkeyInterval,MillisecondsCBE2E"                                                    	, "A_HotkeyInterval := {1}"

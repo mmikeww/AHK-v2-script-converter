@@ -1,4 +1,4 @@
-﻿#SingleInstance Force
+#SingleInstance Force
 
 #Include ConvertFuncs.ahk
 #Include <_GuiCtlExt>
@@ -677,9 +677,9 @@ AddSubFoldersToTree(Folder, DirList, ParentItemID := 0,*){
         else If InStr(A_LoopFileFullPath,".ah1"){
             FileFullPathV2Expected := StrReplace(A_LoopFileFullPath, ".ah1", ".ah2")
             if FileExist(FileFullPathV2Expected){
-                TextV1 := FileRead(A_LoopFileFullPath)
-                TextV2Expected := FileRead(StrReplace(A_LoopFileFullPath, ".ah1", ".ah2"))
-                TextV2Converted := Convert(TextV1)
+                TextV1 := StrReplace(StrReplace(FileRead(A_LoopFileFullPath), "`r`n", "`n"), "`n", "`r`n")
+                TextV2Expected := StrReplace(StrReplace(FileRead(StrReplace(A_LoopFileFullPath, ".ah1", ".ah2")), "`r`n", "`n"), "`n", "`r`n")
+                TextV2Converted := StrReplace(StrReplace(Convert(TextV1), "`r`n", "`n"), "`n", "`r`n")
                 Number_Tests++
                 if (TextV2Expected=TextV2Converted){
                     ItemID := TV.Add(A_LoopFileName, ParentItemID, icons.pass)
@@ -726,10 +726,10 @@ TV_ItemSelect(thisCtrl, Item)  ; This function is called when a new item is sele
     ; LV.Opt("+Redraw")
     ; 
     if InStr(DirList[Item],".ah1"){
-        v1Text := FileRead(DirList[Item])
+        v1Text := StrReplace(StrReplace(FileRead(DirList[Item]),"`r`n","`n"), "`n", "`r`n")
         V1Edit.Text := v1Text
         V2Edit.Text := Convert(v1Text)
-        V2ExpectedEdit.Text := FileRead(StrReplace(DirList[Item],".ah1",".ah2"))
+        V2ExpectedEdit.Text := StrReplace(StrReplace(FileRead(StrReplace(DirList[Item],".ah1",".ah2")), "`r`n", "`n"), "`n", "`r`n")
         MyGui.GetPos(,, &Width,&Height)
         Gui_Size(MyGui, 0, Width - 14, Height - 60)
         ; ControlSetText V1Edit, V1Edit

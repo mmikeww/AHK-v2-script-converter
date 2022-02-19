@@ -15,6 +15,7 @@
 ; Uses format.ahk
 ; =============================================================================
 
+global dbg:=0
 #Include lib/ClassOrderedMap.ahk
 
 #Include Convert/1Commands.ahk

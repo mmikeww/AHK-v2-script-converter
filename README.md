@@ -33,7 +33,7 @@ The converter is not complete. That is, it does not detect all things that need 
 2. Converting Gui is becoming better, the only big issue is the handling of the g-labels, the methods are completely different.
 
 # Contributing
-There is a lot of work to do and many commands and functions that still need to be changd. There are also many edge cases when trying to parse script code and convert it. Of course, whenever making changes to the code, you should be constantly running the unit tests to confirm that things are still working. Simply run the `tests\Tests.exe` file and pray for green.  
+There is a lot of work to do and many commands and functions that still need to be changed. There are also many edge cases when trying to parse script code and convert it. Of course, whenever making changes to the code, you should be constantly running the unit tests to confirm that things are still working. Simply run the `tests\Tests.exe` file and pray for green.  
 
 Here are a few ways you can help:
 

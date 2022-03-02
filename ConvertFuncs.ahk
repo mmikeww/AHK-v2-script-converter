@@ -2074,10 +2074,61 @@ _Menu(p) {
    MenuLine := Orig_Line_NoComment
    LineResult := ""
    menuNameLine := RegExReplace(MenuLine, "i)^\s*Menu\s*[,\s]\s*([^,]*).*$", "$1", &RegExCount1)
-   Var2 := RegExReplace(MenuLine, "i)^\s*Menu\s*[,\s]\s*([^,]*)\s*,\s*([^,]*).*", "$2", &RegExCount2)
-   Var3 := RegExReplace(MenuLine, "i)^\s*Menu\s*[,\s]\s*([^,]*),\s*([^,]*)\s*,\s*([^,]*).*$", "$3", &RegExCount3)
-   Var4 := RegExReplace(MenuLine, "i)^\s*Menu\s*[,\s]\s*([^,]*),\s*([^,]*)\s*,\s*([^,]*),\s*:?([^;,]*).*", "$4", &RegExCount4)
-   Var5 := RegExReplace(MenuLine, "i)^\s*Menu\s*[,\s]\s*([^,]*),\s*([^,]*)\s*,\s*([^,]*),\s*:?([^;,]*)\s*,\s*([^,]*).*", "$5", &RegExCount5)
+   ; e.g.: Menu, Tray, Add, % func_arg3(nested_arg3a, nested_arg3b), % func_arg4(nested_arg4a, nested_arg4b), % func_arg5(nested_arg5a, nested_arg5b)
+   Var2 := RegExReplace(MenuLine, "
+      (
+      ix)                  # case insensitive, extended mode to ignore space and comments
+      ^\s*Menu\s*[,\s]\s*  #
+      ([^,]*) \s* ,   \s*  # arg1 Tray {group $1}
+      ([^,]*)              # arg2 Add  {group $2}
+      .*                   #
+      )"
+      , "$2", &RegExCount2) ; =Add
+   Var3 := RegExReplace(MenuLine, "
+      (
+      ix)                   #
+      ^\s*Menu \s*[,\s]\s*  #
+      ([^,] *)     ,   \s*  # arg1 Tray {group $1}
+      ([^,] *) \s* ,   \s*  # arg2 Add  {group $2}
+      ([^,(]*  \(?          # % func_arg3(nested_arg3a, nested_arg3b) {group $3 start
+         (?(?<=\()[^)]*\))  #   nested function conditional, if matched ( then match everything up to and including the )
+         [^,]*)             #   group $3 end}
+      .*$                   #
+      )"
+      , "$3", &RegExCount3) ; =% func_arg3(nested_arg3a, nested_arg3b)
+   Var4 := RegExReplace(MenuLine, "
+      (
+      ix)                    	#
+      ^\s*Menu \s*[,\s]\s*   	#
+      ([^,] *)     ,   \s*   	# arg1 Tray {group $1}
+      ([^,] *) \s* ,   \s*   	# arg2 Add  {group $2}
+      ([^,(]*  \(?           	# % func_arg3(nested_arg3a, nested_arg3b) {group $3 start
+         (?(?<=\()[^)]*\))   	#   nested function conditional
+         [^,]*)    ,?  \s* :?	#   group $3 end}
+      ([^;,(]*  \(?          	# % func_arg4(nested_arg4a, nested_arg4b) {group $4 start
+         (?(?<=\()[^)]*\))   	#   nested function conditional
+         [^,]*)              	#   group $4 end}
+       .*$                   	#
+      )"
+      , "$4", &RegExCount4) ; =% func_arg4(nested_arg4a, nested_arg4b)
+   Var5 := RegExReplace(MenuLine, "
+      (
+      ix)                    	#
+      ^\s*Menu \s*[,\s]\s*   	#
+      ([^,] *)     ,   \s*   	# arg1 Tray {group $1}
+      ([^,] *) \s* ,   \s*   	# arg2 Add  {group $2}
+      ([^,(]*  \(?           	# % func_arg3(nested_arg3a, nested_arg3b) {group $3 start
+         (?(?<=\()[^)]*\))   	#   nested function conditional
+         [^,]*)    ,?  \s* :?	#   group $3 end}
+      ([^;,(]*  \(?          	# % func_arg4(nested_arg4a, nested_arg4b) {group $4 start
+         (?(?<=\()[^)]*\))   	#   nested function conditional
+         [^,]*)\s* ,?  \s*   	#   group $4 end}
+      ([^;,(]*  \(?          	# % func_arg5(nested_arg5a, nested_arg5b) {group $5 start
+         (?(?<=\()[^)]*\))   	#   nested function conditional
+         [^,] *)             	#    group $5 end}
+      .*$                    	#
+      )"
+      , "$5", &RegExCount5) ; =% func_arg5(nested_arg5a, nested_arg5b)
    menuNameLine := Trim(menuNameLine)
    Var2 := Trim(Var2)
    Var3 := Trim(Var3)
@@ -2136,13 +2187,19 @@ _Menu(p) {
          } else if RegexMatch(Orig_ScriptString, "\n(\s*)" Var4 ":\s") {
             aListLabelsToFunction.Push({label: Var4, parameters: "A_ThisMenuItem, A_ThisMenuItemPos, MyMenu", NewFunctionName: FunctionName})
          }
-         LineResult .= ", " FunctionName
+         if Var4 != "" {
+            LineResult .= ", " FunctionName
+         }
       } else {
-         LineResult .= ", " ToStringExpr(Var4)
+         if Var4 != "" {
+            LineResult .= ", " ToStringExpr(Var4)
+         }
       }
    }
    if (RegExCount5) {
-      LineResult .= ", " ToStringExpr(Var5)
+      if Var5 != "" {
+         LineResult .= ", " ToStringExpr(Var5)
+      }
    }
    if (RegExCount1) {
       LineResult .= ")"

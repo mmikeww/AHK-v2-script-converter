@@ -77,7 +77,7 @@ V1Edit := MyGui.Add("Edit", "x280 y0 w600 vvCodeV1 +Multi +WantTab +0x100", strV
 V1Edit.OnEvent("Change",Edit_Change)
 
 ButtonRunV1 := MyGui.AddPicButton("w24 h24", "mmcndmgr.dll","icon33 h23")
-ButtonRunV1.StatusBar := "Run the converted V2 code"
+ButtonRunV1.StatusBar := "Run the converted V1 code"
 ButtonRunV1.OnEvent("Click", RunV1)
 
 ButtonCloseV1 := MyGui.AddPicButton("w24 h24 x+10 yp", "mmcndmgr.dll","icon62 h23")

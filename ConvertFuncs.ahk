@@ -2156,15 +2156,21 @@ _Menu(p) {
       Var4 := Var3
       RegExCount4 := RegExCount3
    }
-   if (Var2 = "Icon") {
-      Var2 := "SetIcon"
-   }
+   
    if !InStr(menuList, "|" menuNameLine "|") {
       menuList .= menuNameLine "|"
-
+      
       if (menuNameLine = "Tray") {
          if (Var2 = "Tip") {
             Return LineResult .= "A_IconTip := " ToStringExpr(Var3)
+         }
+         else if (Var2 = "Icon"){
+               Var2 := "SetIcon"
+               LineResult .= "TraySetIcon(" ToStringExpr(Var3) 
+               LineResult .= Var4 ? "," ToStringExpr(Var4) : ""
+               LineResult .= Var5 ? "," ToStringExpr(Var5) : ""
+               LineResult .= ")"
+               Return LineResult
          }
          LineResult .= menuNameLine ":= A_TrayMenu`r`n" Indentation
       } else {

@@ -2163,6 +2163,9 @@ _Menu(p) {
       menuList .= menuNameLine "|"
 
       if (menuNameLine = "Tray") {
+         if (Var2 = "Tip") {
+            Return LineResult .= "A_IconTip := " ToStringExpr(Var3)
+         }
          LineResult .= menuNameLine ":= A_TrayMenu`r`n" Indentation
       } else {
          LineResult .= menuNameLine " := Menu()`r`n" Indentation

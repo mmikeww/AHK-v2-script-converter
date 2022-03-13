@@ -109,6 +109,10 @@ _DllCall(p) {
   global noSideEffect
   loop p.Length
   {
+    if (p[A_Index] ~= "i)^U?(Str|AStr|WStr|Int64|Int|Short|Char|Float|Double|Ptr)P?\*?$"){
+      ; Correction of old v1 DllCalls who forget to quote the types
+      p[A_Index] := '"' p[A_Index] '"'
+    }
     NeedleRegEx := "(\*\s*0\s*\+\s*)(&)(\w*)" ; *0+&var split into 3 groups (*0+), (&), and (var)
     if (p[A_Index] ~= "^&") {                       ; Remove the & parameter
       p[A_Index] := SubStr(p[A_Index], 2)

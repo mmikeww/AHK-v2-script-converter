@@ -138,7 +138,8 @@ _DllCall(p) {
     if (A_Index != 1 and (InStr(p[A_Index - 1], "*`"") or InStr(p[A_Index - 1], "*`'") or InStr(p[A_Index - 1], "P`"") or InStr(p[A_Index - 1], "P`'"))) {
       p[A_Index] := "&" p[A_Index]
       if (!InStr(p[A_Index], ":=")) {
-        p[A_Index] .= " := 0"
+        ; Disabled for now because of issue #54, but this can result in undefined variables...
+        ; p[A_Index] .= " := 0"
       }
     }
     ParBuffer .= A_Index=1 ? p[A_Index] : ", " p[A_Index]

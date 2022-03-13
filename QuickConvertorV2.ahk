@@ -180,6 +180,7 @@ if ViewExpectedCode{
     ViewMenu.Check("View Expected Code")
 }
 MyGui.Opt("+MinSize450x200")
+MyGui.OnEvent("DropFiles",Gui_DropFiles)
 ; Display the window. The OS will notify the script whenever the user performs an eligible action:
 MyGui.Show("h" GuiHeight " w" GuiWidth)
 sleep(500)
@@ -950,6 +951,10 @@ gui_AhkHelp(SearchString,Version:="V2"){
     WBGui_Size(thisGui, MinMax, Width, Height){
         ogcActiveXWBC.Move(,,Width,Height) ; Gives an error Webbrowser has no method named move
     }
+}
+
+Gui_DropFiles(GuiObj, GuiCtrlObj, FileArray, X, Y) {
+    V1Edit.Text := StrReplace(StrReplace(FileRead(FileArray[1]), "`r`n", "`n"), "`n", "`r`n")
 }
 
 

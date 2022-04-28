@@ -139,7 +139,7 @@ _DllCall(p) {
           dbgTT(3, "@DllCall: 4Else", Time:=3,id:=9)
       }
     }
-    if (A_Index != 1 and (InStr(p[A_Index - 1], "*`"") or InStr(p[A_Index - 1], "*`'") or InStr(p[A_Index - 1], "P`"") or InStr(p[A_Index - 1], "P`'"))) {
+    if (((A_Index !=1) and (mod(A_Index, 2) = 1)) and (InStr(p[A_Index - 1], "*`"") or InStr(p[A_Index - 1], "*`'") or InStr(p[A_Index - 1], "P`"") or InStr(p[A_Index - 1], "P`'"))) {
       p[A_Index] := "&" p[A_Index]
       if (!InStr(p[A_Index], ":=")) {
         ; Disabled for now because of issue #54, but this can result in undefined variables...

@@ -290,6 +290,8 @@ global CommandsToConvertM := OrderedMap(
     "SendText({1})"
   , "SendMode,ModeT2E" ,
     "SendMode({1})"
+  , "SendMessage,MsgCBE2E,wParamCBE2E,lParamCBE2E,ControlT2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E,TimeoutCBE2E" ,
+    "*_SendMessage"
   , "SendInput,keysT2E" ,
     "SendInput({1})"
   , "SendLevel,LevelT2E" ,
@@ -475,3 +477,21 @@ global CommandsToConvertM := OrderedMap(
   , "#Warn,WarningType,WarningMode" ,
     "#Warn {1}, {2}"
   )
+  
+  _SendMessage(p){
+   if (p[3] ~= "^&.*"){
+      p[3] := SubStr(p[3],2)
+      Out := format('if (type(' p[3] ')="Buffer"){ `;V1toV2 If statement may be removed depending on type parameter`n`r' Indentation '   ErrorLevel := SendMessage({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9})', p*)
+      Out := RegExReplace(Out, "[\s\,]*\)$", ")")
+      Out .= format('`n`r' Indentation '} else{`n`r' Indentation '   ErrorLevel := SendMessage({1}, {2}, StrPtr({3}), {4}, {5}, {6}, {7}, {8}, {9})', p*)
+      Out := RegExReplace(Out, "[\s\,]*\)$", ")")
+      Out .= '`n`r' Indentation "}"
+      return Out
+   }
+   if (p[3] ~= "^`".*") {
+      p[3] := 'StrPtr(' p[3] ')'
+   }
+   
+   Out := format("ErrorLevel := SendMessage({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9})", p*)
+   Return RegExReplace(Out, "[\s\,]*\)$", ")")
+}

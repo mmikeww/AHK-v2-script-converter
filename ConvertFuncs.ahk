@@ -1168,6 +1168,8 @@ _ControlGet(p) {
       Out := format("{1} := EditGetLine({3}, {4}, {5}, {6}, {7}, {8})", p*)
    } else if (p[2] = "Selected") {
       Out := format("{1} := EditGetSelectedText({4}, {5}, {6}, {7}, {8})", p*)
+   } else if (p[2] = "Hwnd") {
+      Out := format("{1} := ControlGet{2}({4}, {5}, {6}, {7}, {8})", p*)
    } else {
       Out := format("{1} := ControlGet{2}({3}, {4}, {5}, {6}, {7}, {8})", p*)
    }

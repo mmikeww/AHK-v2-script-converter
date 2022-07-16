@@ -300,8 +300,6 @@ global CommandsToConvertM := OrderedMap(
     "*_SendRaw"
   , "SetDefaultMouseSpeed, LevelT2E" ,
     "SetDefaultMouseSpeed({1})"
-  , "SendMessage,MsgCBE2E,wParamCBE2E,lParamCBE2E,ControlT2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E,TimeoutCBE2E" ,
-    "ErrorLevel := SendMessage({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9})"
   , "SendPlay,keysT2E" ,
     "SendPlay({1})"
   , "SendEvent,keysT2E" ,

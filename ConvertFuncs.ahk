@@ -2269,15 +2269,6 @@ _SetTimer(p) {
    Return RegExReplace(Out, "[\s\,]*\)$", ")")
 }
 
-_SendMessage(p) {
-      if ScriptStringsUsed.ErrorLevel {
-         Out := Format("ErrorLevel := SendMessage({1},{2},{3},{4},{5},{6},{7},{8},{9})", p*)
-      } else {
-         Out := Format("SendMessage({1},{2},{3},{4},{5},{6},{7},{8},{9})", p*)
-      }
-   Return RegExReplace(Out, "[\s\,]*\)$", ")")
-}
-
 _SendRaw(p) {
    p[1] := ParameterFormat("keysT2E","{Raw}" p[1]) 
    Return "Send(" p[1] ")"

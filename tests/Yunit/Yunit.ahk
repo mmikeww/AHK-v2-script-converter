@@ -81,7 +81,7 @@ class Yunit
         catch
             Message := "FAIL"
         if (!Value)
-            throw Error(Message, -2)
+            throw Error(Message, -1)
     }
     
     CompareValues(v1, v2)

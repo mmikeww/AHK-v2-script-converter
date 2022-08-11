@@ -1,5 +1,5 @@
 Run("mspaint.exe")
-ErrorLevel := WinWaitActive("ahk_class MSPaintApp", , 2, , ) , ErrorLevel := ErrorLevel = 0 ? 1 : 0
+ErrorLevel := WinWaitActive("ahk_class MSPaintApp", , 2) , ErrorLevel := ErrorLevel = 0 ? 1 : 0
 if ErrorLevel
     return
 MouseClickDrag("L", 150, 250, 150, 150)

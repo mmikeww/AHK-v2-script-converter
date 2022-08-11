@@ -304,7 +304,6 @@ class ConvertTests
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
-   /*
    Continuation_NewlinePreceding()
    {
       input_script := "
@@ -335,6 +334,7 @@ class ConvertTests
       ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
+   /*
    Continuation_CommandParam()
    {
       input_script := "
@@ -823,7 +823,6 @@ class ConvertTests
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
-   /*
    IfEqual_SameLineAction()
    {
       input_script := "
@@ -835,7 +834,8 @@ class ConvertTests
       expected := "
          (Join`r`n
                                  var := "value"
-                                 if (var = "value"), FileGetSize, size, %A_ScriptDir%\Tests.ahk
+                                 if (var = "value")
+                                     size := FileGetSize(A_ScriptDir "\Tests.ahk")
                                  FileAppend(size, "*")
          )"
       ; first test that our expected code actually produces the same results in v2
@@ -850,7 +850,6 @@ class ConvertTests
       ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
-   */
 
    IfEqual_CommandThenMultipleSpaces()
    {
@@ -4240,7 +4239,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
-   /*
    IfInString_SameLineAction()
    {
       input_script := "
@@ -4252,7 +4250,8 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       expected := "
          (Join`r`n
                                  Haystack := "z.y.x.w"
-                                 if InStr(Haystack, "y.x",, mouse_btns := SysGet(43)
+                                 if InStr(Haystack, "y.x")
+                                     mouse_btns := SysGet(43)
                                  FileAppend(mouse_btns, "*")
          )"
       ; first test that our expected code actually produces the same results in v2
@@ -4267,7 +4266,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
-   */
 
    IfInString_block()
    {

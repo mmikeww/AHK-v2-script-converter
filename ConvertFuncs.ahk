@@ -593,8 +593,7 @@ Convert(ScriptString)
             ; msgbox("Line=" Line "`nFirstDelim=" FirstDelim "`nCommand=" Command "`nParams=" Params)
 
             ; Now we format the parameters into their v2 equivilents
-            if (Command~="i)^#?[a-z]+$")
-               for v1, v2 in CommandsToConvertM
+            if (Command~="i)^#?[a-z]+$" and FindCommandDefinitions(Command, &v1, &v2))
             {
                ListDelim := RegExMatch(v1, "[,\s]|$")
                ListCommand := Trim(SubStr(v1, 1, ListDelim - 1))
@@ -692,19 +691,28 @@ Convert(ScriptString)
                      ; 1. could be because of IfCommand with a same line action
                      ;    such as  `IfEqual, x, 1, Sleep, 1`
                      ;    in which case we need to append these extra params later
+                     same_line_action := false
                      if_cmds_allowing_sameline_action := "IfEqual|IfNotEqual|IfGreater|IfGreaterOrEqual|"
                         . "IfLess|IfLessOrEqual|IfInString|IfNotInString|IfMsgBox"
                      if RegExMatch(Command, "i)^(?:" if_cmds_allowing_sameline_action ")$")
                      {
-                        same_line_action := true
-                        extra_params := LTrim(extra_params)
+                        if RegExMatch(extra_params, "^\s*(\w+)([\s,]|$)", &next_word)
+                        {
+                           next_word := next_word[1]
+                           if (next_word ~= "i)^(break|continue|return|throw)$")
+                              same_line_action := true
+                           else
+                              same_line_action := FindCommandDefinitions(next_word)
+                        }
+                        if (same_line_action)
+                           extra_params := LTrim(extra_params)
                      }
 
                      ; 2. could be this:
                      ;       "Commas that appear within the last parameter of a command do not need
                      ;        to be escaped because the program knows to treat them literally."
                      ;    from:   https://autohotkey.com/docs/commands/_EscapeChar.htm
-                     else if (ListParam.Length != 0)
+                     if (not same_line_action and ListParam.Length != 0)
                      {
                         Param[ListParam.Length] .= "," extra_params
                         ;msgbox, % "Line:`n" Line "`n`nCommand=" Command "`nparam_num_diff=" param_num_diff "`nListParam.Length=" ListParam.Length "`nParam[ListParam.Length]=" Param[ListParam.Length] "`nextra_params=" extra_params
@@ -763,8 +771,6 @@ Convert(ScriptString)
                      Line := Indentation . extra_params
                      Goto LabelRedoCommandReplacing
                   }
-
-                  break ; Command just found and processed.
                }
             }
          }

@@ -962,14 +962,7 @@ class ConvertTests
       ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
-/*
-THESE FOLLOWING TWO TESTS DON'T WORK
-FOR THE IFCOMMANDS THAT ALLOW A SAME LINE ACTION.
-WE INSTEAD GIVE PRECEDENCE TO THE SAME LINE ACTION
-AND THEREFORE CANNOT SUPPORT THE UNESCAPED COMMAS.
-I THINK THE ONLY WAY TO SUPPORT BOTH WOULD BE TO CHECK IF
-THE NEXT WORD AFTER THE COMMA IS A COMMAND NAME
-WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
+
    IfEqual_EscapedCommaNotNeededInLastParam()
    {
       ; "Commas that appear within the last parameter of a command do not need to be escaped because 
@@ -986,7 +979,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n
                                  var := ","
                                  if (var = ",")
-                                    FileAppend("var is a comma", "*", "")
+                                    FileAppend("var is a comma", "*")
          )"
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
@@ -1000,6 +993,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
+
    IfEqual_EscapedCommaNotNeededMidString()
    {
       ; "Commas that appear within the last parameter of a command do not need to be escaped because 
@@ -1030,7 +1024,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
-*/
+
    IfNotEqual()
    {
       input_script := "

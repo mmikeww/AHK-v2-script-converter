@@ -1,1 +1,1 @@
-ListHotkeys
+ListHotkeys()

@@ -53,8 +53,8 @@ class OrderedMap extends Map {
 
       return RemovedValue
     }
-    catch KeyError as Err
-      throw KeyError(Err.Message, -1, Err.Extra)
+    catch Error as Err
+      throw Error(Err.Message, -1, Err.Extra)
   }
 
   Set(KVPairs*) {

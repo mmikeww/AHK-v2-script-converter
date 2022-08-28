@@ -2005,8 +2005,8 @@ _Loop(p) {
       Line := Line != "" ? ", " Line : ""
       Line := p.Has(3) ? Trim(ToExp(p[3])) Line : "" Line
       Line := Line != "" ? ", " Line : ""
-      if (Substr(Trim(p[2]), 1, 1) = "%") {
-         p[2] := "ParseVar := " Substr(Trim(p[2]), 2)
+      if (Substr(Trim(p[2]), 1, 2) = "% ") {
+         p[2] := Substr(Trim(p[2]), 3)
       }
       Line := ", " Trim(p[2]) Line
       Line := "Loop Parse" Line

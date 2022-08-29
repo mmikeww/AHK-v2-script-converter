@@ -2593,7 +2593,7 @@ _StringReplace(p) {
    ; StringReplace, OutputVar, InputVar, SearchText [, ReplaceText, ReplaceAll?]
    ; v2
    ; ReplacedStr := StrReplace(Haystack, Needle [, ReplaceText, CaseSense, OutputVarCount, Limit])
-   global Indentation
+   global Indentation, SingleIndent
    comment := "; StrReplace() is not case sensitive`r`n" Indentation "; check for StringCaseSense in v1 source script`r`n"
    comment .= Indentation "; and change the CaseSense param in StrReplace() if necessary`r`n"
 
@@ -2613,6 +2613,13 @@ _StringReplace(p) {
       ; then all of those imply 'replace all'
       ; https://github.com/Lexikos/AutoHotkey_L/blob/master/source/script2.cpp#L7033
          Out := comment Indentation . format("{1} := StrReplace({2}, {3}, {4})", p*)
+      else
+      {
+         Out := comment Indentation . "if (not " ToExp(p[5]) ")"
+         Out .= "`r`n" . Indentation . SingleIndent . format("{1} := StrReplace({2}, {3}, {4},,, 1)", p*)
+         Out .= "`r`n" . Indentation . "else"
+         Out .= "`r`n" . Indentation . SingleIndent . format("{1} := StrReplace({2}, {3}, {4},, &ErrorLevel)", p*)
+      }
    }
    Return RegExReplace(Out, "[\s\,]*\)$", ")")
 }

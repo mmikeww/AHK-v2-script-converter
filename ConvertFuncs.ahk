@@ -115,6 +115,10 @@ Convert(ScriptString)
          EOLComment := EOLComment[1]
          Line := RegExReplace(Line, "(\s+`;.*)$", "")
          ;msgbox, % "Line:`n" Line "`n`nEOLComment:`n" EOLComment
+      } else if (FirstChar == ";")
+      {
+         EOLComment := Line
+         Line := ""
       } else
          EOLComment := ""
 
@@ -129,7 +133,6 @@ Convert(ScriptString)
          if (LineNoHotkey != "") {
             PreLine .= RegExReplace(Line, "^(\s*.+::).*$", "$1")
             Line := LineNoHotkey
-            Orig_Line := Line
          }
       }
       if RegExMatch(Line, "^\s*({\s*).*$") {
@@ -137,7 +140,6 @@ Convert(ScriptString)
          if (LineNoHotkey != "") {
             PreLine .= RegExReplace(Line, "(^\s*)({\s*)(.*$)", "$1$2")
             Line := LineNoHotkey
-            Orig_Line := Line
          }
       }
       if RegExMatch(Line, "i)^\s*(}?\s*(Try|Else)\s*[\s{]\s*).*$") {
@@ -145,9 +147,10 @@ Convert(ScriptString)
          if (LineNoHotkey != "") {
             PreLine .= RegExReplace(Line, "i)(^\s*)(}?\s*(Try|Else)\s*[\s{]\s*)(.*$)", "$1$2")
             Line := LineNoHotkey
-            Orig_Line := Line
          }
       }
+
+      Orig_Line := Line
 
       ; Remove comma after flow commands
       If RegExMatch(Line, "i)^(.*)(else|for|if|loop|return|while)(\s*,\s*|\s+)(.*)$", &Equation) {
@@ -157,15 +160,6 @@ Convert(ScriptString)
       ; Handle return % var -> return var
       If RegExMatch(Line, "i)^(.*)(return)(\s+%\s*\s+)(.*)$", &Equation) {
          Line := Equation[1] Equation[2] " " Equation[4]
-      }
-      
-      ; -------------------------------------------------------------------------------
-      ;
-      ; skip empty lines or comment lines
-      ;
-      If (Trim(Line) == "") || (FirstChar == ";")
-      {
-         ; Do nothing, but we still want to add the line to the output file
       }
 
       ; -------------------------------------------------------------------------------

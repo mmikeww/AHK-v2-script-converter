@@ -2137,37 +2137,9 @@ _Menu(p) {
       .*$                    	#
       )"
       , "$5", &RegExCount5) ; =% func_arg5(nested_arg5a, nested_arg5b)
-   menuNameLine := Trim(menuNameLine)
-   Var2 := Trim(Var2)
-   Var3 := Trim(Var3)
-   Var4 := Trim(Var4)
-   DebugWindow(menuList "`r`n")
-   if (Var2 = "Default") {
-      return menuNameLine ".Default := " ToExp(Var3)
-   }
-   if (Var2 = "NoDefault") {
-      return menuNameLine ".Default := `"`""
-   }
-   if (Var2 = "Standard") {
-      return menuNameLine ".AddStandard()"
-   }
-   if (Var2 = "NoStandard") {
-      ; maybe keep track of added items, if menu is new, just Delete everything
-      return menuNameLine ".Delete() `; V1toV2: not 100% replacement of NoStandard, Only if NoStandard is used at the beginning"
-      ; alternative line:
-      ; return menuNameLine ".Delete(`"&Open`")`r`n" indentation menuNameLine ".Delete(`"&Help`")`r`n" indentation menuNameLine ".Delete(`"&Window Spy`")`r`n" indentation menuNameLine ".Delete(`"&Reload Script`")`r`n" indentation menuNameLine ".Delete(`"&Edit Script`")`r`n" indentation menuNameLine ".Delete(`"&Suspend Hotkeys`")`r`n" indentation menuNameLine ".Delete(`"&Pause Script`")`r`n" indentation menuNameLine ".Delete(`"E&xit`")`r`n"
-   }
-   if (Var2 = "DeleteAll") {
-      return menuNameLine ".Delete()"
-   }
-   if (Var2 = "Add" and RegExCount3 and !RegExCount4) {
-      Var4 := Var3
-      RegExCount4 := RegExCount3
-   }
-   
+
+   menuNameLine := Trim(menuNameLine)   
    if !InStr(menuList, "|" menuNameLine "|") {
-      menuList .= menuNameLine "|"
-      
       if (menuNameLine = "Tray") {
          if (Var2 = "Tip") {
             Return LineResult .= "A_IconTip := " ToStringExpr(Var3)
@@ -2184,9 +2156,38 @@ _Menu(p) {
       } else {
          LineResult .= menuNameLine " := Menu()`r`n" Indentation
       }
+
+      menuList .= menuNameLine "|"
    }
 
    LineResult .= menuNameLine "."
+
+   Var2 := Trim(Var2)
+   Var3 := Trim(Var3)
+   Var4 := Trim(Var4)
+   DebugWindow(menuList "`r`n")
+   if (Var2 = "Default") {
+      return LineResult "Default := " ToExp(Var3)
+   }
+   if (Var2 = "NoDefault") {
+      return LineResult "Default := `"`""
+   }
+   if (Var2 = "Standard") {
+      return LineResult "AddStandard()"
+   }
+   if (Var2 = "NoStandard") {
+      ; maybe keep track of added items, if menu is new, just Delete everything
+      return LineResult "Delete() `; V1toV2: not 100% replacement of NoStandard, Only if NoStandard is used at the beginning"
+      ; alternative line:
+      ; return menuNameLine ".Delete(`"&Open`")`r`n" indentation menuNameLine ".Delete(`"&Help`")`r`n" indentation menuNameLine ".Delete(`"&Window Spy`")`r`n" indentation menuNameLine ".Delete(`"&Reload Script`")`r`n" indentation menuNameLine ".Delete(`"&Edit Script`")`r`n" indentation menuNameLine ".Delete(`"&Suspend Hotkeys`")`r`n" indentation menuNameLine ".Delete(`"&Pause Script`")`r`n" indentation menuNameLine ".Delete(`"E&xit`")`r`n"
+   }
+   if (Var2 = "DeleteAll") {
+      return LineResult "Delete()"
+   }
+   if (Var2 = "Add" and RegExCount3 and !RegExCount4) {
+      Var4 := Var3
+      RegExCount4 := RegExCount3
+   }
 
    if (RegExCount2) {
       LineResult .= Var2 "("

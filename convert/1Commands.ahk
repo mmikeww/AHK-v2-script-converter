@@ -214,7 +214,7 @@ global CommandsToConvertM := OrderedMap(
     "IniWrite({1}, {2}, {3}, {4})"
   , "Input,OutputVar,OptionsT2E,EndKeysT2E,MatchListT2E" ,
     "*_input"
-  , "Inputbox,OutputVar,Title,Prompt,HIDE,Width,Height,X,Y,Locale,Timeout,Default" ,
+  , "Inputbox,OutputVar,Title,Prompt,HIDE,WidthCBE2E,HeightCBE2E,XCBE2E,YCBE2E,Locale,TimeoutCBE2E,Default" ,
     "*_InputBox"
   , "ListHotkeys" ,
     "ListHotkeys()"

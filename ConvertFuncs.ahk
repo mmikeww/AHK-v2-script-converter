@@ -3134,7 +3134,9 @@ ParameterFormat(ParName, ParValue) {
    {
       if ((SubStr(ParValue, 1, 1) = "`"") && (SubStr(ParValue, -1) = "`""))	;  var already wrapped in Quotes
          || ((SubStr(ParValue, 1, 1) = "`'") && (SubStr(ParValue, -1) = "`'"))	;  var already wrapped in Quotes
-      ParValue := SubStr(ParValue, 2, StrLen(ParValue) - 2)
+         ParValue := SubStr(ParValue, 2, StrLen(ParValue) - 2)
+      else
+         ParValue := "%" ParValue "%"
    } else if (ParName ~= "T2E$")	; 'Text TO Expression'
    {
       if (SubStr(ParValue, 1, 2) = "% ") {

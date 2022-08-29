@@ -3184,8 +3184,8 @@ ConvertPseudoArray(ScriptStringInput, PseudoArrayName) {
       ScriptStringInput := RegExReplace(ScriptStringInput, "is)(?<!\w|&)" ArrayName "0?(?!\w|%|\.|\[|\s*:=)", NewName . PseudoArrayName.selfprop)
    } else {
       ScriptStringInput := RegExReplace(ScriptStringInput, "is)(?<!\w|&)" ArrayName "0?(?!\w|%|\.|\[|\s*:=)", NewName ".Length")
-      ScriptStringInput := RegExReplace(ScriptStringInput, "is)(?<!\w|&)" ArrayName "(%([a-z0-9_]+)%|(\d+)\b)", NewName "[$2$3]")
-      ScriptStringInput := RegExReplace(ScriptStringInput, "is)(?<!\w|&)" ArrayName "(\w+)\b", NewName '["$1"]')
+      ScriptStringInput := RegExReplace(ScriptStringInput, "is)(?<!\w|&)" ArrayName "(%(\w+)%|(\d+)\b)", NewName "[$2$3]")
+      ScriptStringInput := RegExReplace(ScriptStringInput, "is)(?<!\w|&)" ArrayName "(\w+)(?!\w|%|\.|\[|\s*:=)", NewName '["$1"]')
    }
    Return ScriptStringInput
 }

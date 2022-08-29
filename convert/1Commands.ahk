@@ -80,6 +80,8 @@ global CommandsToConvertM := OrderedMap(
     "*_Drive"
   , "DriveGet,OutputVar,SubCommand,ValueT2E" ,
     "{1} := DriveGet{2}({3})"
+  , "Edit" ,
+    "Edit()"
   , "EnvAdd,var,valueCBE2E,TimeUnitsT2E" ,
     "*_EnvAdd"
   , "EnvSet,EnvVarT2E,ValueT2E" ,
@@ -212,10 +214,14 @@ global CommandsToConvertM := OrderedMap(
     "IniWrite({1}, {2}, {3}, {4})"
   , "Input,OutputVar,OptionsT2E,EndKeysT2E,MatchListT2E" ,
     "*_input"
-  , "Inputbox,OutputVar,Title,Prompt,HIDE,Width,Height,X,Y,Locale,Timeout,Default" ,
+  , "Inputbox,OutputVar,Title,Prompt,HIDE,WidthCBE2E,HeightCBE2E,XCBE2E,YCBE2E,Locale,TimeoutCBE2E,Default" ,
     "*_InputBox"
+  , "ListHotkeys" ,
+    "ListHotkeys()"
   , "ListLines, ModeOn2True" ,
     "ListLines({1})"
+  , "ListVars" ,
+    "ListVars()"
   , "Loop,one,two,three,four" ,
     "*_Loop"
   , "Menu,MenuName,SubCommand,Value1,Value2,Value3,Value4" ,
@@ -252,6 +258,8 @@ global CommandsToConvertM := OrderedMap(
     "*_RegWrite"
   , "RegDelete,var1,var2,var3" ,
     "*_RegDelete"
+  , "Reload" ,
+    "Reload()"
   , "RunAs,UserT2E,PasswordT2E,DomainT2E" ,
     "RunAs({1}, {2}, {3})"
   , "Run,TargetT2E,WorkingDirT2E,OptionsT2E,OutputVarPIDV2VR" ,
@@ -475,7 +483,18 @@ global CommandsToConvertM := OrderedMap(
   , "#Warn,WarningType,WarningMode" ,
     "#Warn {1}, {2}"
   )
-  
+
+  FindCommandDefinitions(Command, &v1:=unset, &v2:=unset) {
+    for v1_, v2_ in CommandsToConvertM {
+      if (v1_ ~= "i)^\s*\Q" Command "\E\s*(,|$)") {
+        v1 := v1_
+        v2 := v2_
+        return true
+      }
+    }
+    return false
+  }
+
   _SendMessage(p){
    if (p[3] ~= "^&.*"){
       p[3] := SubStr(p[3],2)

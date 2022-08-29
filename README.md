@@ -22,7 +22,7 @@ However, this project is way more ambitious that I originally thought, and __it 
 2. Choose your input `scriptfile.ahk` written for AHK v1.  
    The converted script will be named `scriptfile_v2new.ahk` in the same directory
 3. Look over the Visual Diff to manually inspect the changes
-![screenshot](https://github.com/mmikeww/AHK-v2-script-converter/blob/master/screenshot.jpg)
+![screenshot](https://github.com/mmikeww/AHK-v2-script-converter/blob/master/images/screenshot.jpg)
 
 ## Note
 The `v2converter.exe` file (as well as the `tests\Tests.exe` file) is simply a renamed copy of the `AutoHotkey32-v2.0-beta.1.exe` interpreter file. The interpreter alone does nothing without passing a script to it. But here, we take advantage of the [default scriptfile feature](https://lexikos.github.io/v2/docs/Scripts.htm#defaultfile) where the v2converter.exe file will look for a file named v2converter.ahk and automatically run it. You can make changes to the .ahk file and then just run the .exe. The reason for doing this is because most people will still have AHK v1 installed and associated with `*.ahk` files. So it would be inconvenient to run this converter without some workarounds. Likewise, the `diff\VisualDiff.exe` file is just a renamed `AutoHotkeyU32-v1.1.24.02.exe`

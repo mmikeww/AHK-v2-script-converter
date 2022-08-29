@@ -115,6 +115,10 @@ Convert(ScriptString)
          EOLComment := EOLComment[1]
          Line := RegExReplace(Line, "(\s+`;.*)$", "")
          ;msgbox, % "Line:`n" Line "`n`nEOLComment:`n" EOLComment
+      } else if (FirstChar == ";")
+      {
+         EOLComment := Line
+         Line := ""
       } else
          EOLComment := ""
 
@@ -129,7 +133,6 @@ Convert(ScriptString)
          if (LineNoHotkey != "") {
             PreLine .= RegExReplace(Line, "^(\s*.+::).*$", "$1")
             Line := LineNoHotkey
-            Orig_Line := Line
          }
       }
       if RegExMatch(Line, "^\s*({\s*).*$") {
@@ -137,7 +140,6 @@ Convert(ScriptString)
          if (LineNoHotkey != "") {
             PreLine .= RegExReplace(Line, "(^\s*)({\s*)(.*$)", "$1$2")
             Line := LineNoHotkey
-            Orig_Line := Line
          }
       }
       if RegExMatch(Line, "i)^\s*(}?\s*(Try|Else)\s*[\s{]\s*).*$") {
@@ -145,9 +147,10 @@ Convert(ScriptString)
          if (LineNoHotkey != "") {
             PreLine .= RegExReplace(Line, "i)(^\s*)(}?\s*(Try|Else)\s*[\s{]\s*)(.*$)", "$1$2")
             Line := LineNoHotkey
-            Orig_Line := Line
          }
       }
+
+      Orig_Line := Line
 
       ; Remove comma after flow commands
       If RegExMatch(Line, "i)^(.*)(else|for|if|loop|return|while)(\s*,\s*|\s+)(.*)$", &Equation) {
@@ -157,15 +160,6 @@ Convert(ScriptString)
       ; Handle return % var -> return var
       If RegExMatch(Line, "i)^(.*)(return)(\s+%\s*\s+)(.*)$", &Equation) {
          Line := Equation[1] Equation[2] " " Equation[4]
-      }
-      
-      ; -------------------------------------------------------------------------------
-      ;
-      ; skip empty lines or comment lines
-      ;
-      If (Trim(Line) == "") || (FirstChar == ";")
-      {
-         ; Do nothing, but we still want to add the line to the output file
       }
 
       ; -------------------------------------------------------------------------------
@@ -593,8 +587,7 @@ Convert(ScriptString)
             ; msgbox("Line=" Line "`nFirstDelim=" FirstDelim "`nCommand=" Command "`nParams=" Params)
 
             ; Now we format the parameters into their v2 equivilents
-            if (Command~="i)^#?[a-z]+$")
-               for v1, v2 in CommandsToConvertM
+            if (Command~="i)^#?[a-z]+$" and FindCommandDefinitions(Command, &v1, &v2))
             {
                ListDelim := RegExMatch(v1, "[,\s]|$")
                ListCommand := Trim(SubStr(v1, 1, ListDelim - 1))
@@ -692,19 +685,28 @@ Convert(ScriptString)
                      ; 1. could be because of IfCommand with a same line action
                      ;    such as  `IfEqual, x, 1, Sleep, 1`
                      ;    in which case we need to append these extra params later
+                     same_line_action := false
                      if_cmds_allowing_sameline_action := "IfEqual|IfNotEqual|IfGreater|IfGreaterOrEqual|"
                         . "IfLess|IfLessOrEqual|IfInString|IfNotInString|IfMsgBox"
                      if RegExMatch(Command, "i)^(?:" if_cmds_allowing_sameline_action ")$")
                      {
-                        same_line_action := true
-                        extra_params := LTrim(extra_params)
+                        if RegExMatch(extra_params, "^\s*(\w+)([\s,]|$)", &next_word)
+                        {
+                           next_word := next_word[1]
+                           if (next_word ~= "i)^(break|continue|return|throw)$")
+                              same_line_action := true
+                           else
+                              same_line_action := FindCommandDefinitions(next_word)
+                        }
+                        if (same_line_action)
+                           extra_params := LTrim(extra_params)
                      }
 
                      ; 2. could be this:
                      ;       "Commas that appear within the last parameter of a command do not need
                      ;        to be escaped because the program knows to treat them literally."
                      ;    from:   https://autohotkey.com/docs/commands/_EscapeChar.htm
-                     else if (ListParam.Length != 0)
+                     if (not same_line_action and ListParam.Length != 0)
                      {
                         Param[ListParam.Length] .= "," extra_params
                         ;msgbox, % "Line:`n" Line "`n`nCommand=" Command "`nparam_num_diff=" param_num_diff "`nListParam.Length=" ListParam.Length "`nParam[ListParam.Length]=" Param[ListParam.Length] "`nextra_params=" extra_params
@@ -763,8 +765,6 @@ Convert(ScriptString)
                      Line := Indentation . extra_params
                      Goto LabelRedoCommandReplacing
                   }
-
-                  break ; Command just found and processed.
                }
             }
          }
@@ -1999,8 +1999,8 @@ _Loop(p) {
       Line := Line != "" ? ", " Line : ""
       Line := p.Has(3) ? Trim(ToExp(p[3])) Line : "" Line
       Line := Line != "" ? ", " Line : ""
-      if (Substr(Trim(p[2]), 1, 1) = "%") {
-         p[2] := "ParseVar := " Substr(Trim(p[2]), 2)
+      if (Substr(Trim(p[2]), 1, 2) = "% ") {
+         p[2] := Substr(Trim(p[2]), 3)
       }
       Line := ", " Trim(p[2]) Line
       Line := "Loop Parse" Line
@@ -2131,37 +2131,9 @@ _Menu(p) {
       .*$                    	#
       )"
       , "$5", &RegExCount5) ; =% func_arg5(nested_arg5a, nested_arg5b)
-   menuNameLine := Trim(menuNameLine)
-   Var2 := Trim(Var2)
-   Var3 := Trim(Var3)
-   Var4 := Trim(Var4)
-   DebugWindow(menuList "`r`n")
-   if (Var2 = "Default") {
-      return menuNameLine ".Default := " ToExp(Var3)
-   }
-   if (Var2 = "NoDefault") {
-      return menuNameLine ".Default := `"`""
-   }
-   if (Var2 = "Standard") {
-      return menuNameLine ".AddStandard()"
-   }
-   if (Var2 = "NoStandard") {
-      ; maybe keep track of added items, if menu is new, just Delete everything
-      return menuNameLine ".Delete() `; V1toV2: not 100% replacement of NoStandard, Only if NoStandard is used at the beginning"
-      ; alternative line:
-      ; return menuNameLine ".Delete(`"&Open`")`r`n" indentation menuNameLine ".Delete(`"&Help`")`r`n" indentation menuNameLine ".Delete(`"&Window Spy`")`r`n" indentation menuNameLine ".Delete(`"&Reload Script`")`r`n" indentation menuNameLine ".Delete(`"&Edit Script`")`r`n" indentation menuNameLine ".Delete(`"&Suspend Hotkeys`")`r`n" indentation menuNameLine ".Delete(`"&Pause Script`")`r`n" indentation menuNameLine ".Delete(`"E&xit`")`r`n"
-   }
-   if (Var2 = "DeleteAll") {
-      return menuNameLine ".Delete()"
-   }
-   if (Var2 = "Add" and RegExCount3 and !RegExCount4) {
-      Var4 := Var3
-      RegExCount4 := RegExCount3
-   }
-   
+
+   menuNameLine := Trim(menuNameLine)   
    if !InStr(menuList, "|" menuNameLine "|") {
-      menuList .= menuNameLine "|"
-      
       if (menuNameLine = "Tray") {
          if (Var2 = "Tip") {
             Return LineResult .= "A_IconTip := " ToStringExpr(Var3)
@@ -2178,9 +2150,38 @@ _Menu(p) {
       } else {
          LineResult .= menuNameLine " := Menu()`r`n" Indentation
       }
+
+      menuList .= menuNameLine "|"
    }
 
    LineResult .= menuNameLine "."
+
+   Var2 := Trim(Var2)
+   Var3 := Trim(Var3)
+   Var4 := Trim(Var4)
+   DebugWindow(menuList "`r`n")
+   if (Var2 = "Default") {
+      return LineResult "Default := " ToExp(Var3)
+   }
+   if (Var2 = "NoDefault") {
+      return LineResult "Default := `"`""
+   }
+   if (Var2 = "Standard") {
+      return LineResult "AddStandard()"
+   }
+   if (Var2 = "NoStandard") {
+      ; maybe keep track of added items, if menu is new, just Delete everything
+      return LineResult "Delete() `; V1toV2: not 100% replacement of NoStandard, Only if NoStandard is used at the beginning"
+      ; alternative line:
+      ; return menuNameLine ".Delete(`"&Open`")`r`n" indentation menuNameLine ".Delete(`"&Help`")`r`n" indentation menuNameLine ".Delete(`"&Window Spy`")`r`n" indentation menuNameLine ".Delete(`"&Reload Script`")`r`n" indentation menuNameLine ".Delete(`"&Edit Script`")`r`n" indentation menuNameLine ".Delete(`"&Suspend Hotkeys`")`r`n" indentation menuNameLine ".Delete(`"&Pause Script`")`r`n" indentation menuNameLine ".Delete(`"E&xit`")`r`n"
+   }
+   if (Var2 = "DeleteAll") {
+      return LineResult "Delete()"
+   }
+   if (Var2 = "Add" and RegExCount3 and !RegExCount4) {
+      Var4 := Var3
+      RegExCount4 := RegExCount3
+   }
 
    if (RegExCount2) {
       LineResult .= Var2 "("
@@ -2592,7 +2593,7 @@ _StringReplace(p) {
    ; StringReplace, OutputVar, InputVar, SearchText [, ReplaceText, ReplaceAll?]
    ; v2
    ; ReplacedStr := StrReplace(Haystack, Needle [, ReplaceText, CaseSense, OutputVarCount, Limit])
-   global Indentation
+   global Indentation, SingleIndent
    comment := "; StrReplace() is not case sensitive`r`n" Indentation "; check for StringCaseSense in v1 source script`r`n"
    comment .= Indentation "; and change the CaseSense param in StrReplace() if necessary`r`n"
 
@@ -2612,6 +2613,13 @@ _StringReplace(p) {
       ; then all of those imply 'replace all'
       ; https://github.com/Lexikos/AutoHotkey_L/blob/master/source/script2.cpp#L7033
          Out := comment Indentation . format("{1} := StrReplace({2}, {3}, {4})", p*)
+      else
+      {
+         Out := comment Indentation . "if (not " ToExp(p[5]) ")"
+         Out .= "`r`n" . Indentation . SingleIndent . format("{1} := StrReplace({2}, {3}, {4},,, 1)", p*)
+         Out .= "`r`n" . Indentation . "else"
+         Out .= "`r`n" . Indentation . SingleIndent . format("{1} := StrReplace({2}, {3}, {4},, &ErrorLevel)", p*)
+      }
    }
    Return RegExReplace(Out, "[\s\,]*\)$", ")")
 }
@@ -3127,7 +3135,9 @@ ParameterFormat(ParName, ParValue) {
    {
       if ((SubStr(ParValue, 1, 1) = "`"") && (SubStr(ParValue, -1) = "`""))	;  var already wrapped in Quotes
          || ((SubStr(ParValue, 1, 1) = "`'") && (SubStr(ParValue, -1) = "`'"))	;  var already wrapped in Quotes
-      ParValue := SubStr(ParValue, 2, StrLen(ParValue) - 2)
+         ParValue := SubStr(ParValue, 2, StrLen(ParValue) - 2)
+      else
+         ParValue := "%" ParValue "%"
    } else if (ParName ~= "T2E$")	; 'Text TO Expression'
    {
       if (SubStr(ParValue, 1, 2) = "% ") {
@@ -3175,8 +3185,8 @@ ConvertPseudoArray(ScriptStringInput, PseudoArrayName) {
       ScriptStringInput := RegExReplace(ScriptStringInput, "is)(?<!\w|&)" ArrayName "0?(?!\w|%|\.|\[|\s*:=)", NewName . PseudoArrayName.selfprop)
    } else {
       ScriptStringInput := RegExReplace(ScriptStringInput, "is)(?<!\w|&)" ArrayName "0?(?!\w|%|\.|\[|\s*:=)", NewName ".Length")
-      ScriptStringInput := RegExReplace(ScriptStringInput, "is)(?<!\w|&)" ArrayName "(%([a-z0-9_]+)%|(\d+)\b)", NewName "[$2$3]")
-      ScriptStringInput := RegExReplace(ScriptStringInput, "is)(?<!\w|&)" ArrayName "(\w+)\b", NewName '["$1"]')
+      ScriptStringInput := RegExReplace(ScriptStringInput, "is)(?<!\w|&)" ArrayName "(%(\w+)%|(\d+)\b)", NewName "[$2$3]")
+      ScriptStringInput := RegExReplace(ScriptStringInput, "is)(?<!\w|&)" ArrayName "(\w+)(?!\w|%|\.|\[|\s*:=)", NewName '["$1"]')
    }
    Return ScriptStringInput
 }

@@ -304,7 +304,6 @@ class ConvertTests
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
-   /*
    Continuation_NewlinePreceding()
    {
       input_script := "
@@ -335,6 +334,7 @@ class ConvertTests
       ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
+   /*
    Continuation_CommandParam()
    {
       input_script := "
@@ -823,7 +823,6 @@ class ConvertTests
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
-   /*
    IfEqual_SameLineAction()
    {
       input_script := "
@@ -835,7 +834,8 @@ class ConvertTests
       expected := "
          (Join`r`n
                                  var := "value"
-                                 if (var = "value"), FileGetSize, size, %A_ScriptDir%\Tests.ahk
+                                 if (var = "value")
+                                     size := FileGetSize(A_ScriptDir "\Tests.ahk")
                                  FileAppend(size, "*")
          )"
       ; first test that our expected code actually produces the same results in v2
@@ -850,7 +850,6 @@ class ConvertTests
       ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
-   */
 
    IfEqual_CommandThenMultipleSpaces()
    {
@@ -963,14 +962,7 @@ class ConvertTests
       ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
-/*
-THESE FOLLOWING TWO TESTS DON'T WORK
-FOR THE IFCOMMANDS THAT ALLOW A SAME LINE ACTION.
-WE INSTEAD GIVE PRECEDENCE TO THE SAME LINE ACTION
-AND THEREFORE CANNOT SUPPORT THE UNESCAPED COMMAS.
-I THINK THE ONLY WAY TO SUPPORT BOTH WOULD BE TO CHECK IF
-THE NEXT WORD AFTER THE COMMA IS A COMMAND NAME
-WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
+
    IfEqual_EscapedCommaNotNeededInLastParam()
    {
       ; "Commas that appear within the last parameter of a command do not need to be escaped because 
@@ -987,7 +979,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
          (Join`r`n
                                  var := ","
                                  if (var = ",")
-                                    FileAppend("var is a comma", "*", "")
+                                    FileAppend("var is a comma", "*")
          )"
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {
@@ -1001,6 +993,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
+
    IfEqual_EscapedCommaNotNeededMidString()
    {
       ; "Commas that appear within the last parameter of a command do not need to be escaped because 
@@ -1031,7 +1024,7 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
-*/
+
    IfNotEqual()
    {
       input_script := "
@@ -4240,7 +4233,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
-   /*
    IfInString_SameLineAction()
    {
       input_script := "
@@ -4252,7 +4244,8 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       expected := "
          (Join`r`n
                                  Haystack := "z.y.x.w"
-                                 if InStr(Haystack, "y.x",, mouse_btns := SysGet(43)
+                                 if InStr(Haystack, "y.x")
+                                     mouse_btns := SysGet(43)
                                  FileAppend(mouse_btns, "*")
          )"
       ; first test that our expected code actually produces the same results in v2
@@ -4267,7 +4260,6 @@ WHICH WOULD MEAN WE'D NEED THE FULL COMMAND LIST.
       ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
-   */
 
    IfInString_block()
    {

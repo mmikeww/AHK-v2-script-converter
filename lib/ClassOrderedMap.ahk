@@ -85,6 +85,9 @@ class OrderedMap extends Map {
         val := this[key]
         return true
       }
+      else{
+        return false
+      }
     }
 
     return keyValEnum

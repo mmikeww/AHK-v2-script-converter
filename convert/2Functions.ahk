@@ -327,8 +327,8 @@ _RegExMatch(p) {
       ; v1OutputVarPos1 -> v2OutputVar.Pos[1]
       ; v1OutputVarLen1 -> v2OutputVar.Len[1]
       P[2] := ( Match[1] || Match[2] ? '"' Match[1] Match[2] ")" : '"' ) . Match[3] ; Remove the "P" from the options
-      aListPseudoArray.Push({name: OutputVar "Len", newname: OutputVar ".Len"})
-      aListPseudoArray.Push({name: OutputVar "Pos", newname: OutputVar ".Pos"})
+      aListPseudoArray.Push({name: OutputVar "Len", newname: OutputVar ".Len", namedregex: true})
+      aListPseudoArray.Push({name: OutputVar "Pos", newname: OutputVar ".Pos", namedregex: true})
       aListPseudoArray.Push({name: OutputVar, selfprop: ".Len"}) ; Important to be after *Pos and *Len.
     } else if RegExMatch(P[2], 'i)^"[a-z``]*\)') ; Explicit options.
       || RegExMatch(P[2], 'i)^"[^"]*[^a-z``]') { ; Explicit no options.
@@ -336,12 +336,12 @@ _RegExMatch(p) {
       ; v1OutputVar -> v2OutputVar[0]
       ; v1OutputVar1 -> v2OutputVar[1]
       aListPseudoArray.Push({name: OutputVar, selfprop: "[0]"}) ; Important to be before general case.
-      aListPseudoArray.Push({name: OutputVar})
+      aListPseudoArray.Push({name: OutputVar, namedregex: true})
     } else { 
       ; Unknown mode. Unclear options, possibly variables obscuring the parameter.
       ; Treat as default mode?... The unhandled options O and P will make v2 throw anyway.
       aListPseudoArray.Push({name: OutputVar, selfprop: "[0]"}) ; Important to be before general case.
-      aListPseudoArray.Push({name: OutputVar})
+      aListPseudoArray.Push({name: OutputVar, namedregex: true})
     }
     Out .= Format("RegExMatch({1}, {2}, &{3}, {4})", p*)
   } else {

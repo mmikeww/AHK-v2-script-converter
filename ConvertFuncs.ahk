@@ -3186,7 +3186,13 @@ ConvertPseudoArray(ScriptStringInput, PseudoArrayName) {
    } else {
       ScriptStringInput := RegExReplace(ScriptStringInput, "is)(?<!\w|&)" ArrayName "0?(?!\w|%|\.|\[|\s*:=)", NewName ".Length")
       ScriptStringInput := RegExReplace(ScriptStringInput, "is)(?<!\w|&)" ArrayName "(%(\w+)%|(\d+)\b)", NewName "[$2$3]")
-      ScriptStringInput := RegExReplace(ScriptStringInput, "is)(?<!\w|&)" ArrayName "(\w+)(?!\w|%|\.|\[|\s*:=)", NewName '["$1"]')
+      
+      if PseudoArrayName.HasOwnProp("namedregex") {
+         ; RegExMatch variable conversion is handled here because it shares a lot of similarity with PseudoArrays.
+         ; But some exceptions are needed for named subpatterns, which can cause replacements that are too broad.
+         ; If this replacement is still problematic in the future, it might need to be put behind some option or be disabled.
+         ScriptStringInput := RegExReplace(ScriptStringInput, "is)(?<!\w|&)" ArrayName "(\w+)(?!\w|%|\.|\[|\s*:=)", NewName '["$1"]')
+      }
    }
    Return ScriptStringInput
 }

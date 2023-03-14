@@ -102,7 +102,7 @@
          For args in A_Args
          {
             MyMsg .= "A_Args[" . A_Index . "]:" . A_Args[A_Index] . "`n`n"
-         ]
+         }
          MyMsg := "At least one of the above passed commandline parameters is invalid.`n"
          MyMsg .= "  Please make sure the parameters are correct and try again.`n"
          MyMsg .= "  Will exit due to parameter error: Error 48"

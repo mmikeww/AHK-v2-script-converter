@@ -1,4 +1,4 @@
-#Requires AutoHotKey v2.0-beta.3
+#Requires AutoHotKey v2.0
 
 /* Commands and How to convert them
   Specification format:
@@ -475,7 +475,7 @@ global CommandsToConvertM := OrderedMap(
   , "#Persistent" ,
     "Persistent"
   , "#Requires,AutoHotkey Version" ,
-    "#Requires Autohotkey v2.0-beta.1+"
+    "#Requires Autohotkey v2.0"
   , "#SingleInstance, ForceIgnorePromptOff" ,
     "#SingleInstance {1}"
   , "#UseHook,OnOffOn2True" ,
@@ -508,7 +508,7 @@ global CommandsToConvertM := OrderedMap(
    if (p[3] ~= "^`".*") {
       p[3] := 'StrPtr(' p[3] ')'
    }
-   
+
    Out := format("ErrorLevel := SendMessage({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9})", p*)
    Return RegExReplace(Out, "[\s\,]*\)$", ")")
 }

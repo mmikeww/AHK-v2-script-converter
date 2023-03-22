@@ -2439,7 +2439,6 @@ _Progress(p) {
 _Random(p) {
    ; v1: Random, OutputVar, Min, Max
    if (p[1] = "") {
-      ; Old V1 syntax RegRead, ValueType, RootKey, SubKey , ValueName, Value
       Return "; REMOVED Random reseed"
    }
    Out := format("{1} := Random({2}, {3})", p*)
@@ -2458,6 +2457,7 @@ _RegRead(p) {
       p[3] := ToExp(p[3])
    }
    p[3] := p[3] = "`"`"" ? "" : p[3]
+   p[2] := p[2] = "`"`"" ? "" : p[2]
    Out := format("{1} := RegRead({2}, {3})", p*)
    Return RegExReplace(Out, "[\s\,]*\)$", ")")
 }

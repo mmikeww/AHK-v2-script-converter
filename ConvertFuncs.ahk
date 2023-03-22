@@ -305,6 +305,10 @@ Convert(ScriptString)
          ; msgbox("assignment regex`norigLine: " Line "`norig_left=" Equation[1] "`norig_right=" Equation[2] "`nconv_right=" ToStringExpr(Equation[2]))
          Line := RTrim(Equation[1]) . " := " . ToStringExpr(Equation[2])	; regex above keeps the indentation already
       }
+      Else If RegExMatch(Line, "i)^([\s]*[a-z_][a-z_0-9]*[\s]*):=([\s\t]*)$", &Equation) ; var := should become var := ""
+      {
+         Line := RTrim(Equation[1]) . ' := ""' . Equation[2]
+      }
 
       ; -------------------------------------------------------------------------------
       ;

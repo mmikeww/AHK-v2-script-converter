@@ -3433,6 +3433,7 @@ AddBracket(ScriptString) {
          HotkeyStart := 0
       }
       if (HotkeyPointer = 1) {
+
          if (RegExMatch(RestString, "is)^[\s\n\r\t]*((:[\s\*\?BCKOPRSIETXZ0-9]*:|)[^;\n\r\{}\[\]\=:]+?\:\:).*") > 0) {	; Hotkey or string
             Result .= "} `; V1toV2: Added Bracket before hotkey or Hotstring`r`n"
             HotkeyPointer := 0
@@ -3440,6 +3441,9 @@ AddBracket(ScriptString) {
             Result .= "} `; V1toV2: Added Bracket before label`r`n"
             HotkeyPointer := 0
          } else if (RegExMatch(RestString, "is)^[\s\n\r\t]*(`;[^\r\n]*|)([\s\n\r\t]*)$") > 0 and RegExMatch(oScriptString[A_Index - 1], "is)^[\s\n\r\t]*(return|exit|exitapp).*") > 0) {	; Label
+            Result .= "} `; V1toV2: Added bracket in the end`r`n"
+            HotkeyPointer := 0
+         } else if (RegExMatch(RestString, "is)^[\s\n\r\t]*(#hotif).*") > 0){ ; #Hotif statement
             Result .= "} `; V1toV2: Added bracket in the end`r`n"
             HotkeyPointer := 0
          }

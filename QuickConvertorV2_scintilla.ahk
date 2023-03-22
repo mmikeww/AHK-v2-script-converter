@@ -1,32 +1,556 @@
-#SingleInstance Force
-#Requires AutoHotKey v2.0-beta.3
-#Include ConvertFuncs.ahk
-#Include <Scintilla>
-#Include <_GuiCtlExt>
-(Scintilla) ; Init class, or simply #INCLUDE the extension-lib at the top.
-global icons, TestMode, FontSize, ViewExpectedCode, GuiWidth, GuiHeight
+{ ;FILE_NAME:  QuickConverterV2_scintilla.ahk - v2 - Converts AutoHotkey v1.1 to v2.0 uses Scintilla editor function
+  ; REWUIRES: AutoHotkey v2.0+
+  ; Language:       English
+  ; Platform:       Windows11
+  ; Author:         mmikeww
+  ; Function: Converts AutoHotkey v1.1 scripts to v2.0 scripts (A work in progress)
+  ;
+  ; Usage:  1. Run this script  Requires AHK v2+
+  ;         2a. Select AHK code in another script and press XButton1 to convert it - OR -
+  ;         2b. Paste AHK code into the first Edit box and press the convert button (Green arrow).
+  ;
+  ; NOTES: 1. When the cursor is on a function in the Edit box, press F1 to search the function in the documentation.
+  ;        2. You can run and close the V1 and V2 code with the play buttons.
+  ;        3. There is a "Compare VSC" button to see better compare the difference between the v1 and v2 scripts.
+  ;        4. When working on ConvertFuncs.ahk, please set TestMode on in the Gui Menu Settings.
+  ;             In Test Mode all the confirmed tests will be checked if the result stays the same.
+  ;             You can save tests easily in Test Mode by ????
+  ;        5. When you find errors or mistakes in the conversion, please open an issue here:
+  ;             https://github.com/mmikeww/AHK-v2-script-converter/issues
+}
+{ ;CHANGES: ##### MIKE THESE ARE THE CHANGES I MADE: #####
+  ; 1. I reformated the program to an easy to read foldable structure
+  ; 2. I added headers to program and moved pre-main code to these headers
+  ; 3. In VARIABLES: I modified the IniRead and IniWrite statements.
+  ; 4. Under HOTKEYS: I added an exit script and added IniWrite statements to save current configuration on exit.
+  ; 5. In MAIN PROGRAM: I added a switch case to deal with a command line option to input a file name
+  ; REQUESTS:
+  ; 1. I haven't found the place to add a reference to the exit function in your code.  Can you do that for me?
+  ; 2. I also haven't figured out how to shut down the scintilla editor panes this causes an error with my hotkey exit
+}
+{ ;REFERENCES:  Report issues here: https://github.com/mmikeww/AHK-v2-script-converter/issues
+  ;  1. The original v2 script converter by Frankie - https://www.autohotkey.com/board/topic/65333-v2-script-converter/
+}
+{ ;DIRECTIVES AND SETTINGS:#SingleInstance Force
+    #Requires AutoHotKey v2.0
+    #SingleInstance
+}
+{ ;INCLUDES:
+    #Include ConvertFuncs.ahk
+    #Include <Scintilla>
+    #Include <_GuiCtlExt>
+    (Scintilla) ; Init class, or simply #INCLUDE the extension-lib at the top.
+}
+{ ;VARIABLES:
+    global icons, TestMode, FontSize, ViewExpectedCode, GuiWidth, GuiHeight
 
-; The following folder will be the root folder for the TreeView. Note that loading might take a long
-; time if an entire drive such as C:\ is specified:
-global TreeRoot := A_ScriptDir "\Tests\Test_Folder"
+    ; TreeRoot will be the root folder for the TreeView.
+    ;   Note: Loading might take a long time if an entire drive such as C:\ is specified.
+    global TreeRoot := A_ScriptDir "\Tests\Test_Folder"
 
-TestMode := IniRead("QuickConvertorV2.ini", "Convertor", "TestMode", 0)
-TreeViewWidth := IniRead("QuickConvertorV2.ini", "Convertor", "TreeViewWidth", 280)
-ViewExpectedCode := IniRead("QuickConvertorV2.ini", "Convertor", "ViewExpectedCode", 0)
-GuiWidth := IniRead("QuickConvertorV2.ini", "Convertor", "GuiWidth", 800)
-GuiHeight := IniRead("QuickConvertorV2.ini", "Convertor", "GuiHeight", 500)
-FontSize := 10
-IniWrite(TestMode, "QuickConvertorV2.ini", "Convertor", "TestMode")
-IniWrite(TreeViewWidth, "QuickConvertorV2.ini", "Convertor", "TreeViewWidth")
-IniWrite(ViewExpectedCode, "QuickConvertorV2.ini", "Convertor", "ViewExpectedCode")
+    ;READ INI VARIABLES WITH DEFAULTS
+    IniFile := "QuickConvertorV2.ini"
+    Section := "Convertor"
+    FontSize          := IniRead(IniFile, Section, "FontSize", 10)
+    GuiHeight         := IniRead(IniFile, Section, "GuiHeight", 500)
+    GuiWidth          := IniRead(IniFile, Section, "GuiWidth", 800)
+    TestMode          := IniRead(IniFile, Section, "TestMode", 0)
+    TreeViewWidth     := IniRead(IniFile, Section, "TreeViewWidth", 280)
+    ViewExpectedCode  := IniRead(IniFile, Section, "ViewExpectedCode", 0)
 
-FileTempScript := A_ScriptDir "\Tests\TempScript.ah1"
-TempV1Script := FileExist(FileTempScript) ? FileRead(FileTempScript) : ""
-GuiTest(TempV1Script)
+    ;WRITE BACK VARIABLES SO THAT DEFAULTS ARE SAVED TO INI (Seems like this should be moved to exit routine SEE Esc::)
+    IniWrite(TestMode,           IniFile, Section, "FontSize")
+    IniWrite(TreeViewWidth,      IniFile, Section, "GuiHeight")
+    IniWrite(ViewExpectedCode,   IniFile, Section, "GuiWidth")
+    IniWrite(TestMode,           IniFile, Section, "TestMode")
+    IniWrite(TreeViewWidth,      IniFile, Section, "TreeViewWidth")
+    IniWrite(ViewExpectedCode,   IniFile, Section, "ViewExpectedCode")
+}
+{ ;*** MAIN PROGRAM - BEGINS HERE **************************************************************************************
+  ;USE SWITCH CASE TO DEAL WITH COMMAND LINE ARGUMENTS
+  switch A_Args.Length
+  {
+    case 0:  ;IF NO ARGUMENTS THEN LOOK UP SOURCE FILE AND USE DEFAULT OUTPUT FILE
+    {
+       FileTempScript := A_ScriptDir "\Tests\TempScript.ah1"
+    }
+    case 1: ;IF ONE ARGUMENT THEN ASSUME THE ARUGMENT IS THE SOURCE FILE (FN) AND USE DEFAULT OUTPUT FILE
+    {
+       FileTempScript := A_Args[1]
+    }
+    default: ;INCORRECT NUMBER OF ARGUMENTS SUPPLIED -> ERROR
+    {
+      MyMsg := "ERROR: Wrong number of arguments provided.`n"
+      Loop A_Args.Length
+      {
+        MyMsg .= "Arg[" . A_Index . "]:" . A_Args[1] . "`n"
+      }
+      MsgBox MyMsg
+      ExitApp
+    }
+  }
+  FileTempScript := A_ScriptDir "\Tests\TempScript.ah1"
+  TempV1Script := FileExist(FileTempScript) ? FileRead(FileTempScript) : ""
+  GuiTest(TempV1Script)
+  Return
+} ;*** MAIN PROGRAM - ENDS HERE ****************************************************************************************
+;*****************
+;*** FUNCITONS ***
+;*****************
+AddSubFoldersToTree(Folder, DirList, ParentItemID := 0,*)
+{
+    if (ParentItemID="0"){
+        global Number_Tests := 0
+        global Number_Tests_Pass := 0
+        TV.Delete()
+    }
+    TV.Opt("-Redraw")
+    ; This function adds to the TreeView all subfolders in the specified folder
+    ; and saves their paths associated with an ID into an object for later use.
+    ; It also calls itself recursively to gather nested folders to any depth.
+    Loop Files, Folder "\*.*", "DF"  ; Retrieve all of Folder's sub-folders.
+    {
+        If InStr( FileExist(A_LoopFileFullPath ), "D" ){
+            ItemID := TV.Add(A_LoopFileName, ParentItemID, icons.Folder)
+        }
+        else If InStr(A_LoopFileFullPath,".ah1"){
+            FileFullPathV2Expected := StrReplace(A_LoopFileFullPath, ".ah1", ".ah2")
+            if FileExist(FileFullPathV2Expected){
+                TextV1 := StrReplace(StrReplace(FileRead(A_LoopFileFullPath), "`r`n", "`n"), "`n", "`r`n")
+                TextV2Expected := StrReplace(StrReplace(FileRead(StrReplace(A_LoopFileFullPath, ".ah1", ".ah2")), "`r`n", "`n"), "`n", "`r`n")
+                TextV2Converted := StrReplace(StrReplace(Convert(TextV1), "`r`n", "`n"), "`n", "`r`n")
+                Number_Tests++
+                if (TextV2Expected=TextV2Converted){
+                    ItemID := TV.Add(A_LoopFileName, ParentItemID, icons.pass)
+                    Number_Tests_Pass++
+                }
+                else{
+                    ;MsgBox("[" TextV2Expected "]`n`n[" TextV2Converted "]")
+                    ItemID := TV.Add(A_LoopFileName, ParentItemID, icons.fail)
+                    TV.Modify(ParentItemID, "Expand")
+                    ParentItemID_ := ParentItemID
+                    while (ParentItemID_ := TV.GetParent(ParentItemID_))
+                        TV.Modify(ParentItemID_, "Expand")
+                }
 
-Return
+            }
+            else{
+                ItemID := TV.Add(A_LoopFileName, ParentItemID, icons.blank)
+            }
 
-GuiTest(strV1Script:=""){
+        }
+        else{
+            continue
+        }
+        DirList[ItemID] := A_LoopFilePath
+        DirList[A_LoopFilePath] := ItemID
+        DirList := AddSubFoldersToTree(A_LoopFilePath, DirList, ItemID)
+    }
+    TV.Opt("+Redraw")
+    SB.SetText("Number of tests: " . Number_Tests . " ( " . Number_Tests - Number_Tests_Pass . " failed / " . Number_Tests_Pass . " passed)", 1)
+    return DirList
+}
+ButtonConvert(*)
+{
+    if (CheckBoxViewSymbols.Value){
+        MenuShowSymols()
+    }
+    V2Edit.Text := Convert(V1Edit.Text)
+}
+ButtonGenerateTest(*)
+{
+
+    if (CheckBoxViewSymbols.Value){
+        MenuShowSymols()
+    }
+    input_script := V1Edit.Text
+    expected_script := V2Edit.Text
+    if (expected_script= "" or input_script =""){
+        SB.SetText("No text was found.", 3)
+        Return
+    }
+    if (TV.GetSelection()!=0){
+        SelectedText := DirList[TV.GetSelection()]
+    }
+    Else{
+        SelectedText := A_ScriptDir "\tests\Test_Folder"
+    }
+
+    if Instr(SelectedText,".ah1"){
+        if (FileRead(SelectedText) = V1Edit.text){
+            msgResult := MsgBox("Do You want to overwrite the existing test?", , 308)
+            if (msgResult="YES"){
+                if FileExist(StrReplace(SelectedText,".ah1",".ah2")){
+                    FileDelete(StrReplace(SelectedText,".ah1",".ah2"))
+                }
+                FileAppend(expected_script,StrReplace(SelectedText,".ah1",".ah2"))
+                SB.SetText("Test is saved.", 3)
+                TV.Modify(TV.GetSelection(), icons.pass)
+            }
+            else{
+                SB.SetText("Aborted.", 3)
+            }
+            Return
+        }
+    }
+    SplitPath(SelectedText, &name, &dir, &ext, &name_no_ext, &drive)
+    DirNewNoExt := ext="" ? dir "\" name : dir
+    IDParent := ext="" ? TV.GetSelection() : TV.GetParent(TV.GetSelection())
+    SplitPath(DirNewNoExt, &nameFolder)
+
+    Loop {
+        if !FileExist(DirNewNoExt "\" nameFolder "_test" A_Index ".ah1"){
+            NameSuggested := nameFolder "_test" A_Index ".ah1"
+            break
+        }
+    }
+    SelectedFile := FileSelect("S 8", DirNewNoExt "\" NameSuggested , "Save the validated test", "(*.ah1)")
+    if (SelectedFile!=""){
+        if !InStr(SelectedFile,".ah1"){
+            SelectedFile .= ".ah1"
+        }
+        if FileExist(SelectedFile){
+            msgResult := MsgBox("Do you want to override the existing test?", , 4132)
+            if (msgResult = "No"){
+                SB.SetText("Aborted saving test.", 3)
+                Return
+            }
+            FileDelete(SelectedFile)
+            if FileExist(StrReplace(SelectedFile,".ah1",".ah2")){
+                FileDelete(StrReplace(SelectedFile,".ah1",".ah2"))
+            }
+        }
+
+        FileAppend(input_script,SelectedFile)
+        FileAppend(expected_script,StrReplace(SelectedFile,".ah1",".ah2"))
+        V2ExpectedEdit.Text := V2Edit.Text
+        SB.SetText("Test is saved.", 3)
+        SplitPath(SelectedFile, &OutFileName, &OutDir)
+
+        ItemID := TV.Add(OutFileName, IDParent, icons.pass)
+        DirList[ItemID] := A_LoopFilePath
+        DirList[A_LoopFilePath] := ItemID
+    }
+
+}
+CloseV1(*)
+{
+    TempAhkFile := A_MyDocuments "\testV1.ahk"
+    DetectHiddenWindows(1)
+    if WinExist(TempAhkFile . " ahk_class AutoHotkey"){
+        WinClose(TempAhkFile . " ahk_class AutoHotkey")
+    }
+    if WinExist("testV1.ahk"){
+        WinClose()
+    }
+    ButtonCloseV1.Opt("+Disabled")
+}
+CloseV2(*)
+{
+    TempAhkFile := A_MyDocuments "\testV2.ahk"
+    DetectHiddenWindows(1)
+    if WinExist(TempAhkFile . " ahk_class AutoHotkey"){
+        WinClose(TempAhkFile . " ahk_class AutoHotkey")
+    }
+    if WinExist("testV2.ahk"){
+        WinClose()
+    }
+    ButtonCloseV2.Opt("+Disabled")
+}
+CloseV2E(*)
+{
+    TempAhkFile := A_MyDocuments "\testV2E.ahk"
+    DetectHiddenWindows(1)
+    if WinExist(TempAhkFile . " ahk_class AutoHotkey"){
+        WinClose(TempAhkFile . " ahk_class AutoHotkey")
+    }
+    ButtonCloseV2E.Opt("+Disabled")
+}
+CompDiffV2(*)
+{
+    if (CheckBoxViewSymbols.Value){
+        MenuShowSymols()
+    }
+    TempAhkFileV2 := A_MyDocuments "\testV2.ahk"
+    oSaved := MyGui.Submit(0)  ; Save the contents of named controls into an object.
+    try {
+        FileDelete TempAhkFileV2
+    }
+    FileAppend V2Edit.text , TempAhkFileV2
+
+    TempAhkFileV1 := A_MyDocuments "\testV1.ahk"
+    oSaved := MyGui.Submit(0)  ; Save the contents of named controls into an object.
+    try {
+        FileDelete TempAhkFileV1
+    }
+    FileAppend V1Edit.Text, TempAhkFileV1
+
+   RunWait('"' A_ScriptDir '\diff\VisualDiff.exe" "' A_ScriptDir '\diff\VisualDiff.ahk" "' . TempAhkFileV1 . '" "' . TempAhkFileV2 . '"')
+
+    Return
+}
+CompDiffV2E(*)
+{
+    if (CheckBoxViewSymbols.Value){
+        MenuShowSymols()
+    }
+    TempAhkFileV2 := A_MyDocuments "\testV2.ahk"
+    oSaved := MyGui.Submit(0)  ; Save the contents of named controls into an object.
+    try {
+        FileDelete TempAhkFileV2
+    }
+    FileAppend V2Edit.text , TempAhkFileV2
+
+    TempAhkFileV2E := A_MyDocuments "\testV2E.ahk"
+    oSaved := MyGui.Submit(0)  ; Save the contents of named controls into an object.
+    try {
+        FileDelete TempAhkFileV2E
+    }
+    FileAppend V2ExpectedEdit.Text, TempAhkFileV2E
+
+   RunWait('"' A_ScriptDir '\diff\VisualDiff.exe" "' A_ScriptDir '\diff\VisualDiff.ahk" "' . TempAhkFileV2E . '" "' . TempAhkFileV2 . '"')
+
+    Return
+}
+CompVscV2(*)
+{
+    if (CheckBoxViewSymbols.Value){
+        MenuShowSymols()
+    }
+    TempAhkFileV2 := A_MyDocuments "\testV2.ahk"
+    AhkV2Exe := A_ScriptDir "\AutoHotKey Exe\AutoHotkeyV2.exe"
+    oSaved := MyGui.Submit(0)  ; Save the contents of named controls into an object.
+    try {
+        FileDelete TempAhkFileV2
+    }
+    FileAppend V2Edit.text , TempAhkFileV2
+
+    TempAhkFileV1 := A_MyDocuments "\testV1.ahk"
+    AhkV1Exe :=  A_ScriptDir "\AutoHotKey Exe\AutoHotkeyV1.exe"
+    oSaved := MyGui.Submit(0)  ; Save the contents of named controls into an object.
+    try {
+        FileDelete TempAhkFileV1
+    }
+    FileAppend V1Edit.Text, TempAhkFileV1
+    Run "C:\Users\" A_UserName "\AppData\Local\Programs\Microsoft VS Code\Code.exe -d `"" TempAhkFileV1 "`" `"" TempAhkFileV2 "`""
+    Return
+}
+CompVscV2E(*)
+{
+    if (CheckBoxViewSymbols.Value){
+        MenuShowSymols()
+    }
+    TempAhkFileV2 := A_MyDocuments "\testV2.ahk"
+    oSaved := MyGui.Submit(0)  ; Save the contents of named controls into an object.
+    try {
+        FileDelete TempAhkFileV2
+    }
+    FileAppend V2Edit.Text , TempAhkFileV2
+
+    TempAhkFileV2E := A_MyDocuments "\testV2E.ahk"
+    oSaved := MyGui.Submit(0)  ; Save the contents of named controls into an object.
+    try {
+        FileDelete TempAhkFileV2E
+    }
+    FileAppend V2ExpectedEdit.Text, TempAhkFileV2E
+    Run "C:\Users\" A_UserName "\AppData\Local\Programs\Microsoft VS Code\Code.exe -d `"" TempAhkFileV2E "`" `"" TempAhkFileV2 "`""
+    Return
+}
+Edit_Change(*)
+{
+    GuiCtrlObj := MyGui.FocusedCtrl
+    if IsObject(GuiCtrlObj){
+        CurrentCol := EditGetCurrentCol(GuiCtrlObj)
+	    CurrentLine := EditGetCurrentLine(GuiCtrlObj)
+        PreText := GuiCtrlObj.Name="vCodeV1" ? "Autohotkey V1" : GuiCtrlObj.Name="vCodeV2" ? "Autohotkey V2" : GuiCtrlObj.Name="vCodeV2Expected" ? "Autohotkey V2 (Expected)" : ""
+        if (PreText !=""){
+	    SB.SetText(PreText ", Ln " CurrentLine ",  Col " CurrentCol , 2)
+        }
+    }
+}
+EvalSelectedTest(thisCtrl, *)
+{
+    global Number_Tests, Number_Tests_Pass, TreeRoot
+
+    selItemID := TV.GetSelection()
+    parentPaths := Array()
+    parentItemID := 1
+    ItemID := selItemID
+    while parentItemID  != 0 {
+        parentItemID := TV.GetParent(ItemID)
+        ItemID       := parentItemID
+        if parentItemID != 0 {
+            parentPaths.InsertAt(1, TV.GetText(parentItemID))
+        }
+    }
+    if parentPaths.Length = 0 {
+      return
+    }
+    fullParentPath := TreeRoot
+    for fd in parentPaths {
+        fullParentPath .= "/" fd
+    }
+    file_v1_name := TV.GetText(selItemID)
+    file_v2_name := StrReplace(file_v1_name, ".ah1", ".ah2")
+    file_v1      := fullParentPath "/" file_v1_name
+    file_v2      := fullParentPath "/" file_v2_name
+
+    parentAttr  := FileExist(fullParentPath)
+    selItemAttr := FileExist(file_v1)
+    if (not parentAttr) or InStr(selItemAttr, "D") { ; return on subfolders
+        return
+    }
+
+    TV.Opt("-Redraw")
+    if FileExist(file_v1) and FileExist(file_v2){
+        TextV1 := FileRead(file_v1)
+        TextV2Expected := FileRead(file_v2)
+        TextV2Converted := Convert(TextV1)
+        ; Number_Tests++
+        if (TextV2Expected=TextV2Converted){
+            TV.Modify(selItemID, icons.pass)
+            Number_Tests_Pass++
+        }
+        else{
+            TV.Modify(selItemID, icons.fail)
+        }
+    }
+    TV_ItemSelect(thisCtrl, selItemID)
+    TV.Opt("+Redraw")
+    SB.SetText("Number of tests: " . Number_Tests . " ( " . Number_Tests - Number_Tests_Pass . " failed / " . Number_Tests_Pass . " passed)", 1)
+    return
+}
+gui_AhkHelp(SearchString,Version:="V2")
+{
+    if !isSet(Url){
+        WBGui := Gui()
+        WBGui.Opt("+Resize")
+        WBGui.MarginX := "0", WBGui.MarginY := "0"
+        global Url,WB,WBGui
+        WBGui.Title := "AutoHotKey Help"
+        ogcActiveXWBC := WBGui.Add("ActiveX", "xm w980 h640 vIE", "Shell.Explorer")
+        WB := ogcActiveXWBC.Value
+        WBGui.OnEvent("Size", WBGui_Size)
+    }
+
+    if (Version="V1"){
+        URLSearch := "https://www.autohotkey.com/docs/search.htm?q="
+    }
+    else{
+        URLSearch := "https://lexikos.github.io/v2/docs/search.htm?q="
+    }
+    URL := URLSearch SearchString "&m=2"
+
+    WB.Navigate(URL)
+    FuncObj := gui_KeyDown.Bind(WB)
+    OnMessage(0x100, FuncObj, 2)
+    WBGui.Show()
+
+    WBGui_Size(thisGui, MinMax, Width, Height){
+        ogcActiveXWBC.Move(,,Width,Height) ; Gives an error Webbrowser has no method named move
+    }
+}
+Gui_DropFiles(GuiObj, GuiCtrlObj, FileArray, X, Y)
+{
+    V1Edit.Text := StrReplace(StrReplace(FileRead(FileArray[1]), "`r`n", "`n"), "`n", "`r`n")
+}
+gui_KeyDown(wb, wParam, lParam, nMsg, hWnd)
+{
+	; if (Chr(wParam) ~= "[BD-UW-Z]" || wParam = 0x74) ; Disable Ctrl+O/L/F/N and F5.
+		; return
+	WBGui.Opt("+OwnDialogs") ; For threadless callbacks which interrupt this.
+	pipa := ComObjQuery(wb, "{00000117-0000-0000-C000-000000000046}")
+    NumPut(
+        'Ptr', hWnd,
+        'Ptr', nMsg,
+        'Ptr', wParam,
+        'Ptr', lParam,
+        'UInt', A_EventInfo,
+    	kMsg := Buffer(48)
+    )
+    DllCall('GetCursorPos', 'Ptr', kMsg.Ptr + (4 * A_PtrSize) + 4)
+
+	Loop 2
+    ComCall(5, pipa, 'Ptr', kMsg)
+    ; Loop to work around an odd tabbing issue (it's as if there
+    ; is a non-existent element at the end of the tab order).
+	until wParam != 9 || wb.Document.activeElement != ""
+	; S_OK: the message was translated to an accelerator.
+	return 0
+}
+Gui_Size(thisGui, MinMax, Width, Height)  ; Expand/Shrink ListView and TreeView in response to the user's resizing.
+{
+    DllCall("LockWindowUpdate", "Uint",myGui.Hwnd)
+    Height := Height - 23 ; Compensate the statusbar
+    EditHeight := Height-30
+    ButtonHeight := EditHeight+3
+    ButtonWidth  := 70
+    if MinMax = -1  ; The window has been minimized.  No action needed.
+        return
+    ; Otherwise, the window has been resized or maximized. Resize the controls to match.
+    TV.GetPos(,, &TV_W)
+    TV.Move(,,, EditHeight)  ; -30 for StatusBar and margins.
+    if !TestMode{
+        TV_W := 0
+        TV.Move(, , 0, )
+        ButtonEvaluateTests.Visible := false
+        ButtonEvalSelected.Visible  := false
+        CheckBoxV2E.Visible := false
+    }
+    else{
+        ButtonEvaluateTests.Visible := true
+        ButtonEvalSelected.Visible  := true
+        CheckBoxV2E.Visible := true
+    }
+    V2ExpectedEdit.GetPos(,, &V2ExpectedEdit_W)
+
+    TreeViewWidth := TV_W
+    if (V2ExpectedEdit_W>0 and V2ExpectedEdit.Text!=""){
+        NumberEdits := 3
+    }
+    else{
+        NumberEdits := 2
+    }
+    EditWith := (Width-TreeViewWidth)/NumberEdits
+
+    V1Edit.Move(TreeViewWidth,,EditWith,EditHeight)
+    V2Edit.Move(TreeViewWidth+EditWith,,EditWith,EditHeight)
+    ButtonEvaluateTests.Move(,ButtonHeight)
+    ButtonEvalSelected.Move(ButtonWidth,ButtonHeight)
+    CheckBoxViewSymbols.Move(TreeViewWidth+EditWith-140,EditHeight+6)
+    ButtonRunV1.Move(TreeViewWidth,ButtonHeight)
+    ButtonCloseV1.Move(TreeViewWidth+28,ButtonHeight)
+    oButtonConvert.Move(TreeViewWidth+EditWith-60,ButtonHeight)
+    ButtonRunV2.Move(TreeViewWidth+EditWith,ButtonHeight)
+    ButtonCloseV2.Move(TreeViewWidth+EditWith+28,ButtonHeight)
+    ButtonCompDiffV2.Move(TreeViewWidth+EditWith+56,ButtonHeight)
+    ButtonCompVscV2.Move(TreeViewWidth+EditWith+84,ButtonHeight)
+    if (V2ExpectedEdit_W){
+        V2ExpectedEdit.Move(TreeViewWidth+EditWith*2,,EditWith,EditHeight)
+        ButtonRunV2E.Move(TreeViewWidth+EditWith*2,ButtonHeight)
+        ButtonCloseV2E.Move(TreeViewWidth+EditWith*2+28,ButtonHeight)
+        ButtonCompDiffV2E.Move(TreeViewWidth+EditWith*2+56,ButtonHeight)
+        ButtonCompVscV2E.Move(TreeViewWidth+EditWith*2+84,ButtonHeight)
+        ButtonRunV2E.Visible := 1
+        ButtonCloseV2E.Visible := 1
+        ButtonCompDiffV2E.Visible := 1
+        ButtonCompVscV2E.Visible := 1
+    }
+    else{
+        ButtonRunV2E.Visible := 0
+        ButtonCloseV2E.Visible := 0
+        ButtonCompDiffV2E.Visible := 0
+        ButtonCompVscV2E.Visible := 0
+    }
+
+    CheckBoxV2E.Move(Width-100,EditHeight+6)
+    ButtonValidateConversion.Move(Width-30,ButtonHeight)
+    DllCall("LockWindowUpdate", "Uint",0)
+    IniWrite(Width, "QuickConvertorV2.ini", "Convertor", "GuiWidth")
+    IniWrite(Height+22, "QuickConvertorV2.ini", "Convertor", "GuiHeight")
+}
+GuiTest(strV1Script:="")
+{
     global
 ListViewWidth := A_ScreenWidth/2 - TreeViewWidth - 30
 
@@ -224,7 +748,8 @@ OnMessage(0x0200, On_WM_MOUSEMOVE)
 Return
 
 }
-RunV1(*){
+RunV1(*)
+{
     CloseV1(myGui)
     if (CheckBoxViewSymbols.Value){
         MenuShowSymols()
@@ -239,18 +764,8 @@ RunV1(*){
     Run AhkV1Exe " " TempAhkFile
     ButtonCloseV1.Opt("-Disabled")
 }
-CloseV1(*){
-    TempAhkFile := A_MyDocuments "\testV1.ahk"
-    DetectHiddenWindows(1)
-    if WinExist(TempAhkFile . " ahk_class AutoHotkey"){
-        WinClose(TempAhkFile . " ahk_class AutoHotkey")
-    }
-    if WinExist("testV1.ahk"){
-        WinClose()
-    }
-    ButtonCloseV1.Opt("+Disabled")
-}
-RunV2(*){
+RunV2(*)
+{
     CloseV2(myGui)
     if (CheckBoxViewSymbols.Value){
         MenuShowSymols()
@@ -266,121 +781,8 @@ RunV2(*){
     Run AhkV2Exe " " TempAhkFile
     ButtonCloseV2.Opt("-Disabled")
 }
-CloseV2(*){
-    TempAhkFile := A_MyDocuments "\testV2.ahk"
-    DetectHiddenWindows(1)
-    if WinExist(TempAhkFile . " ahk_class AutoHotkey"){
-        WinClose(TempAhkFile . " ahk_class AutoHotkey")
-    }
-    if WinExist("testV2.ahk"){
-        WinClose()
-    }
-    ButtonCloseV2.Opt("+Disabled")
-}
-
-CompVscV2(*){
-    if (CheckBoxViewSymbols.Value){
-        MenuShowSymols()
-    }
-    TempAhkFileV2 := A_MyDocuments "\testV2.ahk"
-    AhkV2Exe := A_ScriptDir "\AutoHotKey Exe\AutoHotkeyV2.exe"
-    oSaved := MyGui.Submit(0)  ; Save the contents of named controls into an object.
-    try {
-        FileDelete TempAhkFileV2
-    }
-    FileAppend V2Edit.text , TempAhkFileV2
-    
-    TempAhkFileV1 := A_MyDocuments "\testV1.ahk"
-    AhkV1Exe :=  A_ScriptDir "\AutoHotKey Exe\AutoHotkeyV1.exe"
-    oSaved := MyGui.Submit(0)  ; Save the contents of named controls into an object.
-    try {
-        FileDelete TempAhkFileV1
-    }
-    FileAppend V1Edit.Text, TempAhkFileV1
-    Run "C:\Users\" A_UserName "\AppData\Local\Programs\Microsoft VS Code\Code.exe -d `"" TempAhkFileV1 "`" `"" TempAhkFileV2 "`""
-    Return
-}
-
-CompVscV2E(*){
-    if (CheckBoxViewSymbols.Value){
-        MenuShowSymols()
-    }
-    TempAhkFileV2 := A_MyDocuments "\testV2.ahk"
-    oSaved := MyGui.Submit(0)  ; Save the contents of named controls into an object.
-    try {
-        FileDelete TempAhkFileV2
-    }
-    FileAppend V2Edit.Text , TempAhkFileV2
-    
-    TempAhkFileV2E := A_MyDocuments "\testV2E.ahk"
-    oSaved := MyGui.Submit(0)  ; Save the contents of named controls into an object.
-    try {
-        FileDelete TempAhkFileV2E
-    }
-    FileAppend V2ExpectedEdit.Text, TempAhkFileV2E
-    Run "C:\Users\" A_UserName "\AppData\Local\Programs\Microsoft VS Code\Code.exe -d `"" TempAhkFileV2E "`" `"" TempAhkFileV2 "`""
-    Return
-}
-
-CompDiffV2(*){
-    if (CheckBoxViewSymbols.Value){
-        MenuShowSymols()
-    }
-    TempAhkFileV2 := A_MyDocuments "\testV2.ahk"
-    oSaved := MyGui.Submit(0)  ; Save the contents of named controls into an object.
-    try {
-        FileDelete TempAhkFileV2
-    }
-    FileAppend V2Edit.text , TempAhkFileV2
-    
-    TempAhkFileV1 := A_MyDocuments "\testV1.ahk"
-    oSaved := MyGui.Submit(0)  ; Save the contents of named controls into an object.
-    try {
-        FileDelete TempAhkFileV1
-    }
-    FileAppend V1Edit.Text, TempAhkFileV1
-
-   RunWait('"' A_ScriptDir '\diff\VisualDiff.exe" "' A_ScriptDir '\diff\VisualDiff.ahk" "' . TempAhkFileV1 . '" "' . TempAhkFileV2 . '"')
-
-    Return
-}
-
-CompDiffV2E(*){
-    if (CheckBoxViewSymbols.Value){
-        MenuShowSymols()
-    }
-    TempAhkFileV2 := A_MyDocuments "\testV2.ahk"
-    oSaved := MyGui.Submit(0)  ; Save the contents of named controls into an object.
-    try {
-        FileDelete TempAhkFileV2
-    }
-    FileAppend V2Edit.text , TempAhkFileV2
-    
-    TempAhkFileV2E := A_MyDocuments "\testV2E.ahk"
-    oSaved := MyGui.Submit(0)  ; Save the contents of named controls into an object.
-    try {
-        FileDelete TempAhkFileV2E
-    }
-    FileAppend V2ExpectedEdit.Text, TempAhkFileV2E
-
-   RunWait('"' A_ScriptDir '\diff\VisualDiff.exe" "' A_ScriptDir '\diff\VisualDiff.ahk" "' . TempAhkFileV2E . '" "' . TempAhkFileV2 . '"')
-
-    Return
-}
-
-Edit_Change(*){
-    GuiCtrlObj := MyGui.FocusedCtrl
-    if IsObject(GuiCtrlObj){
-        CurrentCol := EditGetCurrentCol(GuiCtrlObj)
-	    CurrentLine := EditGetCurrentLine(GuiCtrlObj)
-        PreText := GuiCtrlObj.Name="vCodeV1" ? "Autohotkey V1" : GuiCtrlObj.Name="vCodeV2" ? "Autohotkey V2" : GuiCtrlObj.Name="vCodeV2Expected" ? "Autohotkey V2 (Expected)" : ""
-        if (PreText !=""){
-	    SB.SetText(PreText ", Ln " CurrentLine ",  Col " CurrentCol , 2)
-        }
-    }
-}
-
-RunV2E(*){
+RunV2E(*)
+{
     CloseV2E(myGui)
     if (CheckBoxViewSymbols.Value){
         MenuShowSymols()
@@ -395,123 +797,12 @@ RunV2E(*){
     Run AhkV2Exe " " TempAhkFile
     ButtonCloseV2E.Opt("-Disabled")
 }
-
-CloseV2E(*){
-    TempAhkFile := A_MyDocuments "\testV2E.ahk"
-    DetectHiddenWindows(1)
-    if WinExist(TempAhkFile . " ahk_class AutoHotkey"){
-        WinClose(TempAhkFile . " ahk_class AutoHotkey")
-    }
-    ButtonCloseV2E.Opt("+Disabled")
-}
-ButtonConvert(*){
-    if (CheckBoxViewSymbols.Value){
-        MenuShowSymols()
-    }
-    V2Edit.Text := Convert(V1Edit.Text)
-}
-
-MenuShowSymols(*){
-    ViewMenu.ToggleCheck("Show Symols")
-    CheckBoxViewSymbols.Value := !CheckBoxViewSymbols.Value
-    ViewSymbols()
-}
-
-ViewSymbols(*){
-    ViewMenu.ToggleCheck("Show Symols")
-    if (CheckBoxViewSymbols.Value){
-        V1Edit.Value := StrReplace(StrReplace(StrReplace(StrReplace(V1Edit.Text,"`r","\r`r"),"`n","\n`n")," ","·"),"`t","→")
-        V2Edit.Value := StrReplace(StrReplace(StrReplace(StrReplace(V2Edit.Text,"`r","\r`r"),"`n","\n`n")," ","·"),"`t","→")
-        V2ExpectedEdit.Value := StrReplace(StrReplace(StrReplace(StrReplace(V2ExpectedEdit.Text,"`r","\r`r"),"`n","\n`n")," ","·"),"`t","→")
-    }
-    else{
-        V1Edit.Value := StrReplace(StrReplace(StrReplace(StrReplace(V1Edit.Text,"\r`r","`r"),"\n`r`n","`n"),"·"," "),"→","`t",)
-        V2Edit.Value := StrReplace(StrReplace(StrReplace(StrReplace(V2Edit.Text,"\r`r","`r"),"\n`r`n","`n"),"·"," "),"→","`t",)
-        V2ExpectedEdit.Value := StrReplace(StrReplace(StrReplace(StrReplace(V2ExpectedEdit.Text,"\r`r","`r"),"\n`r`n","`n"),"·"," "),"→","`t",)
-    }
-}
-
-ButtonGenerateTest(*){
-    
-    if (CheckBoxViewSymbols.Value){
-        MenuShowSymols()
-    }
-    input_script := V1Edit.Text
-    expected_script := V2Edit.Text
-    if (expected_script= "" or input_script =""){
-        SB.SetText("No text was found.", 3)
-        Return
-    }
-    if (TV.GetSelection()!=0){
-        SelectedText := DirList[TV.GetSelection()]
-    }
-    Else{
-        SelectedText := A_ScriptDir "\tests\Test_Folder"
-    }
-    
-    if Instr(SelectedText,".ah1"){
-        if (FileRead(SelectedText) = V1Edit.text){
-            msgResult := MsgBox("Do You want to overwrite the existing test?", , 308)
-            if (msgResult="YES"){
-                if FileExist(StrReplace(SelectedText,".ah1",".ah2")){
-                    FileDelete(StrReplace(SelectedText,".ah1",".ah2"))
-                }
-                FileAppend(expected_script,StrReplace(SelectedText,".ah1",".ah2"))
-                SB.SetText("Test is saved.", 3)
-                TV.Modify(TV.GetSelection(), icons.pass)
-            }
-            else{
-                SB.SetText("Aborted.", 3)
-            }
-            Return
-        }
-    }
-    SplitPath(SelectedText, &name, &dir, &ext, &name_no_ext, &drive)
-    DirNewNoExt := ext="" ? dir "\" name : dir 
-    IDParent := ext="" ? TV.GetSelection() : TV.GetParent(TV.GetSelection()) 
-    SplitPath(DirNewNoExt, &nameFolder)
-
-    Loop {
-        if !FileExist(DirNewNoExt "\" nameFolder "_test" A_Index ".ah1"){
-            NameSuggested := nameFolder "_test" A_Index ".ah1"
-            break
-        }
-    }
-    SelectedFile := FileSelect("S 8", DirNewNoExt "\" NameSuggested , "Save the validated test", "(*.ah1)")
-    if (SelectedFile!=""){
-        if !InStr(SelectedFile,".ah1"){
-            SelectedFile .= ".ah1"
-        }
-        if FileExist(SelectedFile){
-            msgResult := MsgBox("Do you want to override the existing test?", , 4132)
-            if (msgResult = "No"){
-                SB.SetText("Aborted saving test.", 3)
-                Return
-            }
-            FileDelete(SelectedFile)
-            if FileExist(StrReplace(SelectedFile,".ah1",".ah2")){
-                FileDelete(StrReplace(SelectedFile,".ah1",".ah2"))
-            }
-        }
-        
-        FileAppend(input_script,SelectedFile)
-        FileAppend(expected_script,StrReplace(SelectedFile,".ah1",".ah2"))
-        V2ExpectedEdit.Text := V2Edit.Text
-        SB.SetText("Test is saved.", 3)
-        SplitPath(SelectedFile, &OutFileName, &OutDir)
-        
-        ItemID := TV.Add(OutFileName, IDParent, icons.pass)
-        DirList[ItemID] := A_LoopFilePath
-        DirList[A_LoopFilePath] := ItemID
-    }
-
-}
-
-MenuCommandHelp(*){
+MenuCommandHelp(*)
+{
     ogcFocused := MyGui.FocusedCtrl
     Type := ogcFocused.Type
     if (Type="Edit"){
-        
+
         count := EditGetCurrentLine(ogcFocused)
         text := EditGetLine(count, ogcFocused)
         count := EditGetCurrentCol(ogcFocused)
@@ -519,7 +810,7 @@ MenuCommandHelp(*){
         PreString := RegExReplace(SubStr(text,1,count-1), ".*?([^,，\s\.\t`"\(\)`']*$)", "$1")
         PostString := RegExReplace(SubStr(text,count), "(^[^,，\s,\.\t`"\(\)`']*).*", "$1")
         word := PreString PostString
-        
+
         if !isSet(Url){
             WBGui := Gui()
             WBGui.Opt("+Resize")
@@ -530,7 +821,7 @@ MenuCommandHelp(*){
             WB := ogcActiveXWBC.Value
             WBGui.OnEvent("Size", WBGui_Size)
         }
-        
+
         if InStr(ogcFocused.Name,"V1"){
             URLSearch := "https://www.autohotkey.com/docs/search.htm?q="
         }
@@ -538,10 +829,10 @@ MenuCommandHelp(*){
             URLSearch := "https://lexikos.github.io/v2/docs/search.htm?q="
         }
         URL := URLSearch word "&m=2"
-        
+
         WB.Navigate(URL)
         FuncObj := gui_KeyDown.Bind(WB)
-        OnMessage(0x100, FuncObj, 2) 
+        OnMessage(0x100, FuncObj, 2)
         WBGui.Show()
 
         WBGui_Size(thisGui, MinMax, Width, Height){
@@ -549,72 +840,14 @@ MenuCommandHelp(*){
         }
     }
 }
-
-MenuZoomIn(*){
-    global FontSize
-    FontSize := FontSize +1
-    if (FontSize>71){
-        FontSize := 71
-    }
-    V1Edit.SetFont("s" FontSize)
-    V2Edit.SetFont("s" FontSize)
-    ; SB.SetText(" " (FontSize)*10 "%" , 3)
-    sleep(10)
+MenuShowSymols(*)
+{
+    ViewMenu.ToggleCheck("Show Symols")
+    CheckBoxViewSymbols.Value := !CheckBoxViewSymbols.Value
+    ViewSymbols()
 }
-
-MenuZoomOut(*){
-    global FontSize
-    FontSize := FontSize -1
-    if (FontSize=0){
-        FontSize := 1
-    }
-    V1Edit.SetFont("s" FontSize)
-    V2Edit.SetFont("s" FontSize)
-    ; SB.SetText(" " (FontSize)*10 "%" , 3)
-    sleep(10)
-}
-
-MenuViewExpected(*){
-    CheckBoxV2E.Value := !CheckBoxV2E.Value
-    IniWrite(CheckBoxV2E.Value, "QuickConvertorV2.ini", "Convertor", "ViewExpectedCode")
-    ViewV2E(myGui)
-    MyGui.GetPos(,, &Width,&Height)
-    Gui_Size(MyGui, 0, Width - 14, Height - 60)
-}
-
-ViewV2E(*){
-    ViewMenu.ToggleCheck("View Expected Code")
-    V2ExpectedEdit.GetPos(,, &V2ExpectedEdit_W)
-    MyGui.GetPos(&X,, &Width,&Height)
-    if (!CheckBoxV2E.Value){
-        V2ExpectedEdit.Move(,,0,)
-        WinMove(, , Width+3,,MyGui)
-    }
-    else{
-        V2ExpectedEdit.Move(,,180,)
-        WinMove(, , Width-3,,MyGui)
-    }
-    IniWrite(CheckBoxV2E.Value, "QuickConvertorV2.ini", "Convertor", "ViewExpectedCode")
-}
-
-MenuViewTree(*){
-    ViewMenu.ToggleCheck("View Tree")
-    TV.GetPos(,, &TV_W)
-    if (TV_W>0){
-        TV.Move(,,0,)
-        ButtonEvaluateTests.Visible := false
-        ButtonEvalSelected.Visible  := false
-    }
-    else{
-        TV.Move(,,TreeViewWidth,)
-        ButtonEvaluateTests.Visible := true
-        ButtonEvalSelected.Visible  := true
-    }
-    MyGui.GetPos(,, &Width,&Height)
-    Gui_Size(MyGui, 0, Width - 14, Height - 60)
-}
-
-MenuTestMode(*){
+MenuTestMode(*)
+{
     global
     SettingsMenu.ToggleCheck("Testmode")
     TestMode := !TestMode
@@ -636,214 +869,57 @@ MenuTestMode(*){
     MyGui.GetPos(, , &Width, &Height)
     Gui_Size(MyGui, 0, Width-14, Height - 60)
 }
-EvalSelectedTest(thisCtrl, *) {
-    global Number_Tests, Number_Tests_Pass, TreeRoot
-
-    selItemID := TV.GetSelection()
-    parentPaths := Array()
-    parentItemID := 1
-    ItemID := selItemID
-    while parentItemID  != 0 {
-        parentItemID := TV.GetParent(ItemID)
-        ItemID       := parentItemID
-        if parentItemID != 0 {
-            parentPaths.InsertAt(1, TV.GetText(parentItemID))
-        }
-    }
-    if parentPaths.Length = 0 {
-      return
-    }
-    fullParentPath := TreeRoot
-    for fd in parentPaths {
-        fullParentPath .= "/" fd
-    }
-    file_v1_name := TV.GetText(selItemID)
-    file_v2_name := StrReplace(file_v1_name, ".ah1", ".ah2")
-    file_v1      := fullParentPath "/" file_v1_name
-    file_v2      := fullParentPath "/" file_v2_name
-
-    parentAttr  := FileExist(fullParentPath)
-    selItemAttr := FileExist(file_v1)
-    if (not parentAttr) or InStr(selItemAttr, "D") { ; return on subfolders
-        return
-    }
-
-    TV.Opt("-Redraw")
-    if FileExist(file_v1) and FileExist(file_v2){
-        TextV1 := FileRead(file_v1)
-        TextV2Expected := FileRead(file_v2)
-        TextV2Converted := Convert(TextV1)
-        ; Number_Tests++
-        if (TextV2Expected=TextV2Converted){
-            TV.Modify(selItemID, icons.pass)
-            Number_Tests_Pass++
-        }
-        else{
-            TV.Modify(selItemID, icons.fail)
-        }
-    }
-    TV_ItemSelect(thisCtrl, selItemID)
-    TV.Opt("+Redraw")
-    SB.SetText("Number of tests: " . Number_Tests . " ( " . Number_Tests - Number_Tests_Pass . " failed / " . Number_Tests_Pass . " passed)", 1)
-    return
-}
-
-AddSubFoldersToTree(Folder, DirList, ParentItemID := 0,*){
-    if (ParentItemID="0"){
-        global Number_Tests := 0
-        global Number_Tests_Pass := 0
-        TV.Delete()
-    }
-    TV.Opt("-Redraw")
-    ; This function adds to the TreeView all subfolders in the specified folder
-    ; and saves their paths associated with an ID into an object for later use.
-    ; It also calls itself recursively to gather nested folders to any depth.
-    Loop Files, Folder "\*.*", "DF"  ; Retrieve all of Folder's sub-folders.
-    {
-        If InStr( FileExist(A_LoopFileFullPath ), "D" ){
-            ItemID := TV.Add(A_LoopFileName, ParentItemID, icons.Folder)
-        }
-        else If InStr(A_LoopFileFullPath,".ah1"){
-            FileFullPathV2Expected := StrReplace(A_LoopFileFullPath, ".ah1", ".ah2")
-            if FileExist(FileFullPathV2Expected){
-                TextV1 := StrReplace(StrReplace(FileRead(A_LoopFileFullPath), "`r`n", "`n"), "`n", "`r`n")
-                TextV2Expected := StrReplace(StrReplace(FileRead(StrReplace(A_LoopFileFullPath, ".ah1", ".ah2")), "`r`n", "`n"), "`n", "`r`n")
-                TextV2Converted := StrReplace(StrReplace(Convert(TextV1), "`r`n", "`n"), "`n", "`r`n")
-                Number_Tests++
-                if (TextV2Expected=TextV2Converted){
-                    ItemID := TV.Add(A_LoopFileName, ParentItemID, icons.pass)
-                    Number_Tests_Pass++
-                }
-                else{
-                    ;MsgBox("[" TextV2Expected "]`n`n[" TextV2Converted "]")
-                    ItemID := TV.Add(A_LoopFileName, ParentItemID, icons.fail)
-                    TV.Modify(ParentItemID, "Expand")
-                    ParentItemID_ := ParentItemID
-                    while (ParentItemID_ := TV.GetParent(ParentItemID_))
-                        TV.Modify(ParentItemID_, "Expand")
-                }
-                
-            }
-            else{
-                ItemID := TV.Add(A_LoopFileName, ParentItemID, icons.blank)
-            }
-            
-        }
-        else{
-            continue
-        }
-        DirList[ItemID] := A_LoopFilePath
-        DirList[A_LoopFilePath] := ItemID
-        DirList := AddSubFoldersToTree(A_LoopFilePath, DirList, ItemID)
-    }
-    TV.Opt("+Redraw")
-    SB.SetText("Number of tests: " . Number_Tests . " ( " . Number_Tests - Number_Tests_Pass . " failed / " . Number_Tests_Pass . " passed)", 1)
-    return DirList
-}
-
-TV_ItemSelect(thisCtrl, Item)  ; This function is called when a new item is selected.
+MenuViewExpected(*)
 {
-    ; Put the files into the ListView:
-    ; LV.Delete  ; Clear all rows.
-    ; LV.Opt("-Redraw")  ; Improve performance by disabling redrawing during load.
-    ; TotalSize := 0  ; Init prior to loop below.
-    ; Loop Files, DirList[Item] "\*.*"  ; For simplicity, omit folders so that only files are shown in the ListView.
-    ; {
-    ;     LV.Add(, A_LoopFileName, A_LoopFileTimeModified)
-    ;     TotalSize += A_LoopFileSize
-    ; }
-    ; LV.Opt("+Redraw")
-    ; 
-    if InStr(DirList[Item],".ah1"){
-        v1Text := StrReplace(StrReplace(FileRead(DirList[Item]),"`r`n","`n"), "`n", "`r`n")
-        V1Edit.Text := v1Text
-        V2Edit.Text := Convert(v1Text)
-        V2ExpectedEdit.Text := StrReplace(StrReplace(FileRead(StrReplace(DirList[Item],".ah1",".ah2")), "`r`n", "`n"), "`n", "`r`n")
-        MyGui.GetPos(,, &Width,&Height)
-        Gui_Size(MyGui, 0, Width - 14, Height - 60)
-        ; ControlSetText V1Edit, V1Edit
-        ; MsgBox(v1Text)
-    }
-      
-    ; Update the three parts of the status bar to show info about the currently selected folder:
-    ; SB.SetText( " ", 1)
-    ; SB.SetText(Round(TotalSize / 1024, 1) " KB", 2)
-    ; SB.SetText(DirList[Item], 3)
+    CheckBoxV2E.Value := !CheckBoxV2E.Value
+    IniWrite(CheckBoxV2E.Value, "QuickConvertorV2.ini", "Convertor", "ViewExpectedCode")
+    ViewV2E(myGui)
+    MyGui.GetPos(,, &Width,&Height)
+    Gui_Size(MyGui, 0, Width - 14, Height - 60)
 }
-
-Gui_Size(thisGui, MinMax, Width, Height)  ; Expand/Shrink ListView and TreeView in response to the user's resizing.
+MenuViewTree(*)
 {
-    DllCall("LockWindowUpdate", "Uint",myGui.Hwnd)
-    Height := Height - 23 ; Compensate the statusbar
-    EditHeight := Height-30
-    ButtonHeight := EditHeight+3
-    ButtonWidth  := 70
-    if MinMax = -1  ; The window has been minimized.  No action needed.
-        return
-    ; Otherwise, the window has been resized or maximized. Resize the controls to match.
+    ViewMenu.ToggleCheck("View Tree")
     TV.GetPos(,, &TV_W)
-    TV.Move(,,, EditHeight)  ; -30 for StatusBar and margins.
-    if !TestMode{
-        TV_W := 0
-        TV.Move(, , 0, )
+    if (TV_W>0){
+        TV.Move(,,0,)
         ButtonEvaluateTests.Visible := false
         ButtonEvalSelected.Visible  := false
-        CheckBoxV2E.Visible := false
     }
     else{
+        TV.Move(,,TreeViewWidth,)
         ButtonEvaluateTests.Visible := true
         ButtonEvalSelected.Visible  := true
-        CheckBoxV2E.Visible := true
     }
-    V2ExpectedEdit.GetPos(,, &V2ExpectedEdit_W)
-    
-    TreeViewWidth := TV_W
-    if (V2ExpectedEdit_W>0 and V2ExpectedEdit.Text!=""){
-        NumberEdits := 3
-    }
-    else{
-        NumberEdits := 2
-    }
-    EditWith := (Width-TreeViewWidth)/NumberEdits
-
-    V1Edit.Move(TreeViewWidth,,EditWith,EditHeight)
-    V2Edit.Move(TreeViewWidth+EditWith,,EditWith,EditHeight)
-    ButtonEvaluateTests.Move(,ButtonHeight)
-    ButtonEvalSelected.Move(ButtonWidth,ButtonHeight)
-    CheckBoxViewSymbols.Move(TreeViewWidth+EditWith-140,EditHeight+6)
-    ButtonRunV1.Move(TreeViewWidth,ButtonHeight)
-    ButtonCloseV1.Move(TreeViewWidth+28,ButtonHeight)
-    oButtonConvert.Move(TreeViewWidth+EditWith-60,ButtonHeight)
-    ButtonRunV2.Move(TreeViewWidth+EditWith,ButtonHeight)
-    ButtonCloseV2.Move(TreeViewWidth+EditWith+28,ButtonHeight)
-    ButtonCompDiffV2.Move(TreeViewWidth+EditWith+56,ButtonHeight)
-    ButtonCompVscV2.Move(TreeViewWidth+EditWith+84,ButtonHeight)
-    if (V2ExpectedEdit_W){
-        V2ExpectedEdit.Move(TreeViewWidth+EditWith*2,,EditWith,EditHeight)
-        ButtonRunV2E.Move(TreeViewWidth+EditWith*2,ButtonHeight)
-        ButtonCloseV2E.Move(TreeViewWidth+EditWith*2+28,ButtonHeight)
-        ButtonCompDiffV2E.Move(TreeViewWidth+EditWith*2+56,ButtonHeight)
-        ButtonCompVscV2E.Move(TreeViewWidth+EditWith*2+84,ButtonHeight)
-        ButtonRunV2E.Visible := 1
-        ButtonCloseV2E.Visible := 1
-        ButtonCompDiffV2E.Visible := 1
-        ButtonCompVscV2E.Visible := 1
-    }
-    else{
-        ButtonRunV2E.Visible := 0
-        ButtonCloseV2E.Visible := 0
-        ButtonCompDiffV2E.Visible := 0
-        ButtonCompVscV2E.Visible := 0
-    }
-    
-    CheckBoxV2E.Move(Width-100,EditHeight+6)
-    ButtonValidateConversion.Move(Width-30,ButtonHeight)
-    DllCall("LockWindowUpdate", "Uint",0)
-    IniWrite(Width, "QuickConvertorV2.ini", "Convertor", "GuiWidth")
-    IniWrite(Height+22, "QuickConvertorV2.ini", "Convertor", "GuiHeight")
+    MyGui.GetPos(,, &Width,&Height)
+    Gui_Size(MyGui, 0, Width - 14, Height - 60)
 }
-
-On_WM_MOUSEMOVE(wparam, lparam, msg, hwnd){
+MenuZoomIn(*)
+{
+    global FontSize
+    FontSize := FontSize +1
+    if (FontSize>71){
+        FontSize := 71
+    }
+    V1Edit.SetFont("s" FontSize)
+    V2Edit.SetFont("s" FontSize)
+    ; SB.SetText(" " (FontSize)*10 "%" , 3)
+    sleep(10)
+}
+MenuZoomOut(*)
+{
+    global FontSize
+    FontSize := FontSize -1
+    if (FontSize=0){
+        FontSize := 1
+    }
+    V1Edit.SetFont("s" FontSize)
+    V2Edit.SetFont("s" FontSize)
+    ; SB.SetText(" " (FontSize)*10 "%" , 3)
+    sleep(10)
+}
+On_WM_MOUSEMOVE(wparam, lparam, msg, hwnd)
+{
     static PrevHwnd := 0
     if (Hwnd != PrevHwnd){
         Text := ""
@@ -853,246 +929,10 @@ On_WM_MOUSEMOVE(wparam, lparam, msg, hwnd){
             SB.SetText(StatusbarText , 3)
         }
         PrevHwnd := Hwnd
-    } 
+    }
 }
-
-; Quick conversion of selected string of script/ or selected filefile
-XButton1::
+Scintilla_SetAHKV2(ctl)
 {
-    ClipSaved := ClipboardAll()   ; Save the entire clipboard to a variable of your choice.
-    A_Clipboard := ""
-    Send "^c"
-    if !WinExist("Quick Convertor V2"){
-       GuiTest()
-    }
-
-    if !ClipWait(3){
-        DebugWindow( "error`n",Clear:=0)
-        return
-    }
-
-    Clipboard1 := A_Clipboard
-    A_Clipboard := ClipSaved   ; Restore the original clipboard. Note the use of A_Clipboard (not ClipboardAll).
-    ClipSaved := ""  ; Free the memory in case the clipboard was very large.
-
-    ; in case a script is selected
-    if FileExist(Clipboard1){
-        Clipboard1 := FileRead(Clipboard1)
-    }
-    
-    V1Edit.Text := Clipboard1
-    V2ExpectedEdit.Text := ""
-   ButtonConvert(myGui)
-   WinActivate(myGui)
-}
-
-; Search for help
-^XButton1::
-{
-    ClipSaved := ClipboardAll()
-    A_Clipboard := ""
-    Send "^c"
-    if !ClipWait(3){
-        DebugWindow( "error`n",Clear:=0)
-        return
-    }
-    gui_AhkHelp(A_Clipboard)
-    A_Clipboard := ClipSaved
-}
-
-; Reload convertor
-XButton2::{
-
-    if WinActive("ahk_exe code.exe"){
-        Title := WinGetTitle("ahk_exe code.exe")
-        File := RegExReplace(Title, "^.*? - (.*) - .*$","$1")
-        MyMenu := Menu()
-        MyMenu.Add("Run", (*) => Run(File))
-        MyMenu.Show()
-
-    }
-    else{
-        FileTempScript := A_ScriptDir "\Tests\TempScript.ah1"
-        if (FileExist(FileTempScript)) {
-            FileDelete(FileTempScript)
-        }
-        FileAppend(V1Edit.Text, FileTempScript)
-        Reload
-    }
-    
-}
-
-; Keep track of charet position
-~LButton::
-{
-    if WinActive("testV2.ahk"){
-        ErrorText := WinGetText("testV2.ahk")
-        Line := RegexReplace(WinGetText("testV2.ahk"),"s).*Error at line (\d*)\..*","$1",&RegexCount)
-        if (RegexCount){
-            LineCount := EditGetLineCount(V2Edit)
-            if (Line>LineCount){
-                return ; The line number is beyond the total number of lines
-            }
-            else{
-                FoundPos := InStr(V2Edit.Text, "`n", , , Line-1)
-                WinActivate myGui
-                ControlFocus(V2Edit)
-                SendMessage(0xB1, FoundPos, FoundPos+1,,V2Edit)
-                Sleep(300)
-                SendInput("{Right}{Left}")
-            }
-        }
-    }
-
-    Sleep(100)
-    Edit_Change()
-}
-
-; Use Fi to search for help in the correct version. 
-#HotIf WinActive(MyGui)
-F1::{
-    MenuCommandHelp()
-    return
-}
-
-gui_KeyDown(wb, wParam, lParam, nMsg, hWnd) {
-	; if (Chr(wParam) ~= "[BD-UW-Z]" || wParam = 0x74) ; Disable Ctrl+O/L/F/N and F5.
-		; return
-	WBGui.Opt("+OwnDialogs") ; For threadless callbacks which interrupt this.
-	pipa := ComObjQuery(wb, "{00000117-0000-0000-C000-000000000046}")
-    NumPut(
-        'Ptr', hWnd, 
-        'Ptr', nMsg, 
-        'Ptr', wParam, 
-        'Ptr', lParam, 
-        'UInt', A_EventInfo,
-    	kMsg := Buffer(48)
-    )
-    DllCall('GetCursorPos', 'Ptr', kMsg.Ptr + (4 * A_PtrSize) + 4)
-
-	Loop 2
-    ComCall(5, pipa, 'Ptr', kMsg)
-    ; Loop to work around an odd tabbing issue (it's as if there
-    ; is a non-existent element at the end of the tab order).
-	until wParam != 9 || wb.Document.activeElement != ""
-	; S_OK: the message was translated to an accelerator.
-	return 0
-}
-
-gui_AhkHelp(SearchString,Version:="V2"){
-    if !isSet(Url){
-        WBGui := Gui()
-        WBGui.Opt("+Resize")
-        WBGui.MarginX := "0", WBGui.MarginY := "0"
-        global Url,WB,WBGui
-        WBGui.Title := "AutoHotKey Help"
-        ogcActiveXWBC := WBGui.Add("ActiveX", "xm w980 h640 vIE", "Shell.Explorer")
-        WB := ogcActiveXWBC.Value
-        WBGui.OnEvent("Size", WBGui_Size)
-    }
-    
-    if (Version="V1"){
-        URLSearch := "https://www.autohotkey.com/docs/search.htm?q="
-    }
-    else{
-        URLSearch := "https://lexikos.github.io/v2/docs/search.htm?q="
-    }
-    URL := URLSearch SearchString "&m=2"
-    
-    WB.Navigate(URL)
-    FuncObj := gui_KeyDown.Bind(WB)
-    OnMessage(0x100, FuncObj, 2) 
-    WBGui.Show()
-
-    WBGui_Size(thisGui, MinMax, Width, Height){
-        ogcActiveXWBC.Move(,,Width,Height) ; Gives an error Webbrowser has no method named move
-    }
-}
-
-Gui_DropFiles(GuiObj, GuiCtrlObj, FileArray, X, Y) {
-    V1Edit.Text := StrReplace(StrReplace(FileRead(FileArray[1]), "`r`n", "`n"), "`n", "`r`n")
-}
-
-Scintilla_SetThemeColor(ctl, Theme := "Light") {
-    ; Light theme
-    if (Theme = "Light") {
-        ctl.cust.Caret.LineBack := 0xF6F9FC	; active line (with caret)
-        ctl.cust.Editor.Back := 0xFDFDFD
-
-        ctl.cust.Editor.Fore := 0x000000
-        ctl.cust.Editor.Font := "Consolas"
-        ctl.cust.Editor.Size := 10
-
-        ctl.Style.ClearAll()	; apply style 32
-
-        ctl.cust.Margin.Back := 0xF0F0F0
-        ctl.cust.Margin.Fore := 0x000000
-
-        ctl.cust.Caret.Fore := 0x00FF00
-        ctl.cust.Selection.Back := 0x398FFB
-        ctl.cust.Selection.ForeColor := 0xFFFFFF
-
-        ctl.cust.Brace.Fore := 0x5F6364	; basic brace color
-        ctl.cust.BraceH.Fore := 0x00FF00	; brace color highlight
-        ctl.cust.BraceHBad.Fore := 0xFF0000	; brace color bad light
-        ctl.cust.Punct.Fore := 0xA57F5B
-        ctl.cust.String1.Fore := 0x329C1B	; "" double quoted text
-        ctl.cust.String2.Fore := 0x329C1B	; '' single quoted text
-
-        ctl.cust.Comment1.Fore := 0x7D8B98	; keeping comment color same
-        ctl.cust.Comment2.Fore := 0x7D8B98	; keeping comment color same
-        ctl.cust.Number.Fore := 0xC72A31
-
-        ctl.cust.kw1.Fore := 0x329C1B	; flow - set keyword list colors, kw1 - kw8
-        ctl.cust.kw2.Fore := 0x1049BF	; funcion
-        ctl.cust.kw2.Bold := true	; funcion
-        ctl.cust.kw3.Fore := 0x2390B6	; method
-        ctl.cust.kw3.Bold := true	; funcion
-        ctl.cust.kw4.Fore := 0x3F8CD4	; prop
-        ctl.cust.kw5.Fore := 0xC72A31	; vars
-
-        ctl.cust.kw6.Fore := 0xEC9821	; directives
-        ctl.cust.kw7.Fore := 0x2390B6	; var decl
-    } else if (Theme = "Dark") {
-        ; vsCode dark
-        ctl.cust.Caret.LineBack := 0x252526	; active line (with caret)
-        ctl.cust.Editor.Back := 0x252526
-
-        ctl.cust.Editor.Fore := 0xAAAAAA
-        ctl.cust.Editor.Fore := 0x9EDCFD
-        ctl.cust.Editor.Font := "Consolas"
-        ctl.cust.Editor.Size := 10
-
-        ctl.Style.ClearAll()	; apply style 32
-
-        ctl.cust.Margin.Back := 0x252526
-        ctl.cust.Margin.Fore := 0xAAAAAA
-
-        ctl.cust.Caret.Fore := 0x00FF00
-        ctl.cust.Selection.Back := 0x3A3D41
-
-        ctl.cust.Brace.Fore := 0xFECA30	; basic brace color
-        ctl.cust.BraceH.Fore := 0x00FF00	; brace color highlight
-        ctl.cust.BraceHBad.Fore := 0xFF0000	; brace color bad light
-        ctl.cust.Punct.Fore := 0xC8D4D4
-        ctl.cust.String1.Fore := 0xCD917A
-        ctl.cust.String2.Fore := 0x9EDCFD
-
-        ctl.cust.Comment1.Fore := 0x6B9958	; keeping comment color same
-        ctl.cust.Comment2.Fore := 0x6B9958	; keeping comment color same
-        ctl.cust.Number.Fore := 0xB5CEA9
-
-        ctl.cust.kw1.Fore := 0xc94969	; flow - red - set keyword list colors, kw1 - kw8
-        ctl.cust.kw2.Fore := 0x52C9A3	; funcion - blue
-        ctl.cust.kw3.Fore := 0xC1CCAD	; method - light green
-        ctl.cust.kw4.Fore := 0x3F8CD4	; prop - green ish
-        ctl.cust.kw5.Fore := 0x599DD4	; vars - blueish
-        ctl.cust.kw6.Fore := 0xC486BF	; directives - blueish
-        ctl.cust.kw7.Fore := 0x127782	; var decl
-    }
-}
-
-Scintilla_SetAHKV2(ctl) {
     ctl.CaseSense := false	; turn off case sense (for AHK), do this before setting keywords
     kw1 := "Else If Continue Critical Break Goto Return Loop Read Reg Parse Files Switch Try Catch Finally Throw Until While For Exit ExitApp OnError OnExit Reload Suspend Thread"
 
@@ -1176,4 +1016,248 @@ Scintilla_SetAHKV2(ctl) {
     ; set to 0 after loading a document.
     ; ======================================================================
     ctl.loading := 1
+}
+Scintilla_SetThemeColor(ctl, Theme := "Light")
+{
+    ; Light theme
+    if (Theme = "Light") {
+        ctl.cust.Caret.LineBack := 0xF6F9FC	; active line (with caret)
+        ctl.cust.Editor.Back := 0xFDFDFD
+
+        ctl.cust.Editor.Fore := 0x000000
+        ctl.cust.Editor.Font := "Consolas"
+        ctl.cust.Editor.Size := 10
+
+        ctl.Style.ClearAll()	; apply style 32
+
+        ctl.cust.Margin.Back := 0xF0F0F0
+        ctl.cust.Margin.Fore := 0x000000
+
+        ctl.cust.Caret.Fore := 0x00FF00
+        ctl.cust.Selection.Back := 0x398FFB
+        ctl.cust.Selection.ForeColor := 0xFFFFFF
+
+        ctl.cust.Brace.Fore := 0x5F6364	; basic brace color
+        ctl.cust.BraceH.Fore := 0x00FF00	; brace color highlight
+        ctl.cust.BraceHBad.Fore := 0xFF0000	; brace color bad light
+        ctl.cust.Punct.Fore := 0xA57F5B
+        ctl.cust.String1.Fore := 0x329C1B	; "" double quoted text
+        ctl.cust.String2.Fore := 0x329C1B	; '' single quoted text
+
+        ctl.cust.Comment1.Fore := 0x7D8B98	; keeping comment color same
+        ctl.cust.Comment2.Fore := 0x7D8B98	; keeping comment color same
+        ctl.cust.Number.Fore := 0xC72A31
+
+        ctl.cust.kw1.Fore := 0x329C1B	; flow - set keyword list colors, kw1 - kw8
+        ctl.cust.kw2.Fore := 0x1049BF	; funcion
+        ctl.cust.kw2.Bold := true	; funcion
+        ctl.cust.kw3.Fore := 0x2390B6	; method
+        ctl.cust.kw3.Bold := true	; funcion
+        ctl.cust.kw4.Fore := 0x3F8CD4	; prop
+        ctl.cust.kw5.Fore := 0xC72A31	; vars
+
+        ctl.cust.kw6.Fore := 0xEC9821	; directives
+        ctl.cust.kw7.Fore := 0x2390B6	; var decl
+    } else if (Theme = "Dark") {
+        ; vsCode dark
+        ctl.cust.Caret.LineBack := 0x252526	; active line (with caret)
+        ctl.cust.Editor.Back := 0x252526
+
+        ctl.cust.Editor.Fore := 0xAAAAAA
+        ctl.cust.Editor.Fore := 0x9EDCFD
+        ctl.cust.Editor.Font := "Consolas"
+        ctl.cust.Editor.Size := 10
+
+        ctl.Style.ClearAll()	; apply style 32
+
+        ctl.cust.Margin.Back := 0x252526
+        ctl.cust.Margin.Fore := 0xAAAAAA
+
+        ctl.cust.Caret.Fore := 0x00FF00
+        ctl.cust.Selection.Back := 0x3A3D41
+
+        ctl.cust.Brace.Fore := 0xFECA30	; basic brace color
+        ctl.cust.BraceH.Fore := 0x00FF00	; brace color highlight
+        ctl.cust.BraceHBad.Fore := 0xFF0000	; brace color bad light
+        ctl.cust.Punct.Fore := 0xC8D4D4
+        ctl.cust.String1.Fore := 0xCD917A
+        ctl.cust.String2.Fore := 0x9EDCFD
+
+        ctl.cust.Comment1.Fore := 0x6B9958	; keeping comment color same
+        ctl.cust.Comment2.Fore := 0x6B9958	; keeping comment color same
+        ctl.cust.Number.Fore := 0xB5CEA9
+
+        ctl.cust.kw1.Fore := 0xc94969	; flow - red - set keyword list colors, kw1 - kw8
+        ctl.cust.kw2.Fore := 0x52C9A3	; funcion - blue
+        ctl.cust.kw3.Fore := 0xC1CCAD	; method - light green
+        ctl.cust.kw4.Fore := 0x3F8CD4	; prop - green ish
+        ctl.cust.kw5.Fore := 0x599DD4	; vars - blueish
+        ctl.cust.kw6.Fore := 0xC486BF	; directives - blueish
+        ctl.cust.kw7.Fore := 0x127782	; var decl
+    }
+}
+TV_ItemSelect(thisCtrl, Item)  ; This function is called when a new item is selected.
+{
+    ; Put the files into the ListView:
+    ; LV.Delete  ; Clear all rows.
+    ; LV.Opt("-Redraw")  ; Improve performance by disabling redrawing during load.
+    ; TotalSize := 0  ; Init prior to loop below.
+    ; Loop Files, DirList[Item] "\*.*"  ; For simplicity, omit folders so that only files are shown in the ListView.
+    ; {
+    ;     LV.Add(, A_LoopFileName, A_LoopFileTimeModified)
+    ;     TotalSize += A_LoopFileSize
+    ; }
+    ; LV.Opt("+Redraw")
+    ;
+    if InStr(DirList[Item],".ah1"){
+        v1Text := StrReplace(StrReplace(FileRead(DirList[Item]),"`r`n","`n"), "`n", "`r`n")
+        V1Edit.Text := v1Text
+        V2Edit.Text := Convert(v1Text)
+        V2ExpectedEdit.Text := StrReplace(StrReplace(FileRead(StrReplace(DirList[Item],".ah1",".ah2")), "`r`n", "`n"), "`n", "`r`n")
+        MyGui.GetPos(,, &Width,&Height)
+        Gui_Size(MyGui, 0, Width - 14, Height - 60)
+        ; ControlSetText V1Edit, V1Edit
+        ; MsgBox(v1Text)
+    }
+
+    ; Update the three parts of the status bar to show info about the currently selected folder:
+    ; SB.SetText( " ", 1)
+    ; SB.SetText(Round(TotalSize / 1024, 1) " KB", 2)
+    ; SB.SetText(DirList[Item], 3)
+}
+ViewSymbols(*)
+{
+    ViewMenu.ToggleCheck("Show Symols")
+    if (CheckBoxViewSymbols.Value){
+        V1Edit.Value := StrReplace(StrReplace(StrReplace(StrReplace(V1Edit.Text,"`r","\r`r"),"`n","\n`n")," ","·"),"`t","→")
+        V2Edit.Value := StrReplace(StrReplace(StrReplace(StrReplace(V2Edit.Text,"`r","\r`r"),"`n","\n`n")," ","·"),"`t","→")
+        V2ExpectedEdit.Value := StrReplace(StrReplace(StrReplace(StrReplace(V2ExpectedEdit.Text,"`r","\r`r"),"`n","\n`n")," ","·"),"`t","→")
+    }
+    else{
+        V1Edit.Value := StrReplace(StrReplace(StrReplace(StrReplace(V1Edit.Text,"\r`r","`r"),"\n`r`n","`n"),"·"," "),"→","`t",)
+        V2Edit.Value := StrReplace(StrReplace(StrReplace(StrReplace(V2Edit.Text,"\r`r","`r"),"\n`r`n","`n"),"·"," "),"→","`t",)
+        V2ExpectedEdit.Value := StrReplace(StrReplace(StrReplace(StrReplace(V2ExpectedEdit.Text,"\r`r","`r"),"\n`r`n","`n"),"·"," "),"→","`t",)
+    }
+}
+ViewV2E(*)
+{
+    ViewMenu.ToggleCheck("View Expected Code")
+    V2ExpectedEdit.GetPos(,, &V2ExpectedEdit_W)
+    MyGui.GetPos(&X,, &Width,&Height)
+    if (!CheckBoxV2E.Value){
+        V2ExpectedEdit.Move(,,0,)
+        WinMove(, , Width+3,,MyGui)
+    }
+    else{
+        V2ExpectedEdit.Move(,,180,)
+        WinMove(, , Width-3,,MyGui)
+    }
+    IniWrite(CheckBoxV2E.Value, "QuickConvertorV2.ini", "Convertor", "ViewExpectedCode")
+}
+;***************
+;*** HOTKEYS ***
+;***************
+Esc::     ;Exit application - Using either <Esc> Hotkey or Goto("MyExit")
+{
+MyExit:
+    ;WRITE BACK VARIABLES SO THAT DEFAULTS ARE SAVED TO INI
+    IniWrite(TestMode,           IniFile, Section, "FontSize")
+    IniWrite(TreeViewWidth,      IniFile, Section, "GuiHeight")
+    IniWrite(ViewExpectedCode,   IniFile, Section, "GuiWidth")
+    IniWrite(TestMode,           IniFile, Section, "TestMode")
+    IniWrite(TreeViewWidth,      IniFile, Section, "TreeViewWidth")
+    IniWrite(ViewExpectedCode,   IniFile, Section, "ViewExpectedCode")
+    ExitApp
+    Return
+}
+~LButton::      ; Keep track of charet position
+{
+    if WinActive("testV2.ahk"){
+        ErrorText := WinGetText("testV2.ahk")
+        Line := RegexReplace(WinGetText("testV2.ahk"),"s).*Error at line (\d*)\..*","$1",&RegexCount)
+        if (RegexCount){
+            LineCount := EditGetLineCount(V2Edit)
+            if (Line>LineCount){
+                return ; The line number is beyond the total number of lines
+            }
+            else{
+                FoundPos := InStr(V2Edit.Text, "`n", , , Line-1)
+                WinActivate myGui
+                ControlFocus(V2Edit)
+                SendMessage(0xB1, FoundPos, FoundPos+1,,V2Edit)
+                Sleep(300)
+                SendInput("{Right}{Left}")
+            }
+        }
+    }
+
+    Sleep(100)
+    Edit_Change()
+}
+XButton1::      ; Quick conversion of selected string of script/ or selected filefile
+{
+    ClipSaved := ClipboardAll()   ; Save the entire clipboard to a variable of your choice.
+    A_Clipboard := ""
+    Send "^c"
+    if !WinExist("Quick Convertor V2"){
+       GuiTest()
+    }
+
+    if !ClipWait(3){
+        DebugWindow( "error`n",Clear:=0)
+        return
+    }
+
+    Clipboard1 := A_Clipboard
+    A_Clipboard := ClipSaved   ; Restore the original clipboard. Note the use of A_Clipboard (not ClipboardAll).
+    ClipSaved := ""  ; Free the memory in case the clipboard was very large.
+
+    ; in case a script is selected
+    if FileExist(Clipboard1){
+        Clipboard1 := FileRead(Clipboard1)
+    }
+
+    V1Edit.Text := Clipboard1
+    V2ExpectedEdit.Text := ""
+   ButtonConvert(myGui)
+   WinActivate(myGui)
+}
+XButton2::      ; Reload convertor
+{
+
+    if WinActive("ahk_exe code.exe"){
+        Title := WinGetTitle("ahk_exe code.exe")
+        File := RegExReplace(Title, "^.*? - (.*) - .*$","$1")
+        MyMenu := Menu()
+        MyMenu.Add("Run", (*) => Run(File))
+        MyMenu.Show()
+
+    }
+    else{
+        FileTempScript := A_ScriptDir "\Tests\TempScript.ah1"
+        if (FileExist(FileTempScript)) {
+            FileDelete(FileTempScript)
+        }
+        FileAppend(V1Edit.Text, FileTempScript)
+        Reload
+    }
+
+}
+^XButton1::     ; Search for help
+{
+    ClipSaved := ClipboardAll()
+    A_Clipboard := ""
+    Send "^c"
+    if !ClipWait(3){
+        DebugWindow( "error`n",Clear:=0)
+        return
+    }
+    gui_AhkHelp(A_Clipboard)
+    A_Clipboard := ClipSaved
+}
+#HotIf WinActive(MyGui)
+F1::            ; Use Fi to search for help in the correct version.
+{
+    MenuCommandHelp()
+    return
 }

@@ -156,7 +156,7 @@ Convert(ScriptString)
       If RegExMatch(Line, "i)^(.*)(else|for|if|loop|return|while)(\s*,\s*|\s+)(.*)$", &Equation) {
           Line := Equation[1] Equation[2] " " Equation[4]
       }
-      
+
       ; Handle return % var -> return var
       If RegExMatch(Line, "i)^(.*)(return)(\s+%\s*\s+)(.*)$", &Equation) {
          Line := Equation[1] Equation[2] " " Equation[4]
@@ -574,7 +574,7 @@ Convert(ScriptString)
          {
             CommandMatch := 0
             FirstDelim := RegExMatch(Line, "\w([ \t]*[, \t])", &Match) ; doesn't use \s to not consume line jumps
-            
+
             if (FirstDelim > 0)
             {
                Command := Trim(SubStr(Line, 1, FirstDelim))
@@ -1987,14 +1987,22 @@ _Loop(p) {
       p[1] := "Files"
    }
 
-   If (p[1] ~= "i)^(HKEY|HKLM|HKU|HKCR|HKCC).*") {
+   If (p[1] ~= "i)^(HKEY|HKLM|HKU|HKCR|HKCC|HKCU).*") {
       p[3] := p[2]
       p[2] := p[1]
       p[1] := "Reg"
+      Line := p.Has(3) ? Trim(ToExp(p[3])) : ""
+      Line := Line != "" ? ' . "\" . ' Line : ""
+      Line := p.Has(2) ? Trim(ToExp(p[2])) Line : "" Line
+      Line := StrReplace(Line, '" . "')
+      Line := Line != "" ? ", " Line : ""
+      Line := p.Has(1) ? Trim(p[1]) Line : "" Line
+      Line := "Loop " Line
+      Line := RegExReplace(Line, "(?:,\s(?:`"`")?)*$", "")	; remove trailing ,\s and ,\s""
+      return Line BracketEnd
    }
 
-   if (p[1] = "Parse")
-   {
+   if (p[1] = "Parse"){
       Line := p.Has(4) ? Trim(ToExp(p[4])) : ""
       Line := Line != "" ? ", " Line : ""
       Line := p.Has(3) ? Trim(ToExp(p[3])) Line : "" Line
@@ -2013,7 +2021,7 @@ _Loop(p) {
       Line := format("Loop {1}, {2}, {3}", "Files", ToExp(p[2]), ToExp(p[3]))
       Line := RegExReplace(Line, "(?:,\s(?:`"`")?)*$", "")	; remove trailing ,\s and ,\s""
       return Line
-   } else if (p[1] = "Read" || p[1] = "Reg")
+   } else if (p[1] = "Read")
    {
       Line := p.Has(3) ? Trim(ToExp(p[3])) : ""
       Line := Line != "" ? ", " Line : ""
@@ -2024,7 +2032,7 @@ _Loop(p) {
       Line := RegExReplace(Line, "(?:,\s(?:`"`")?)*$", "")	; remove trailing ,\s and ,\s""
       return Line BracketEnd
    } else {
-      
+
       Line := p[1] != "" ? "Loop " Trim(ToExp(p[1])) : "Loop"
       return Line BracketEnd
    }
@@ -2132,7 +2140,7 @@ _Menu(p) {
       )"
       , "$5", &RegExCount5) ; =% func_arg5(nested_arg5a, nested_arg5b)
 
-   menuNameLine := Trim(menuNameLine)   
+   menuNameLine := Trim(menuNameLine)
    if !InStr(menuList, "|" menuNameLine "|") {
       if (menuNameLine = "Tray") {
          if (Var2 = "Tip") {
@@ -2140,7 +2148,7 @@ _Menu(p) {
          }
          else if (Var2 = "Icon"){
                Var2 := "SetIcon"
-               LineResult .= "TraySetIcon(" ToStringExpr(Var3) 
+               LineResult .= "TraySetIcon(" ToStringExpr(Var3)
                LineResult .= Var4 ? "," ToStringExpr(Var4) : ""
                LineResult .= Var5 ? "," ToStringExpr(Var5) : ""
                LineResult .= ")"
@@ -2271,7 +2279,7 @@ _SetTimer(p) {
 }
 
 _SendRaw(p) {
-   p[1] := ParameterFormat("keysT2E","{Raw}" p[1]) 
+   p[1] := ParameterFormat("keysT2E","{Raw}" p[1])
    Return "Send(" p[1] ")"
 }
 
@@ -2634,7 +2642,7 @@ _StringSplit(p) {
 }
 _SuspendV2(p) {
    ;V1 Suspend , Mode
-   
+
    p[1] := p[1]="toggle" ? -1 : p[1]
    if (p[1]="Permit"){
       Return "#SuspendExempt"
@@ -2661,7 +2669,7 @@ _SysGet(p) {
 }
 
 _Transform(p) {
-   
+
    if (p[2] ~= "i)^(Asc|Chr|Mod|Exp|sqrt|log|ln|Round|Ceil|Floor|Abs|Sin|Cos|Tan|ASin|ACos|Atan)") {
       p[2] := p[2] ~= "i)^(Asc)" ? "Ord" : p[2]
       Out := format("{1} := {2}({3}, {4})", p*)
@@ -3186,7 +3194,7 @@ ConvertPseudoArray(ScriptStringInput, PseudoArrayName) {
    } else {
       ScriptStringInput := RegExReplace(ScriptStringInput, "is)(?<!\w|&)" ArrayName "0?(?!\w|%|\.|\[|\s*:=)", NewName ".Length")
       ScriptStringInput := RegExReplace(ScriptStringInput, "is)(?<!\w|&)" ArrayName "(%(\w+)%|(\d+)\b)", NewName "[$2$3]")
-      
+
       if PseudoArrayName.HasOwnProp("namedregex") {
          ; RegExMatch variable conversion is handled here because it shares a lot of similarity with PseudoArrays.
          ; But some exceptions are needed for named subpatterns, which can cause replacements that are too broad.

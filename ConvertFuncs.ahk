@@ -567,7 +567,15 @@ Convert(ScriptString)
             Line := AssArr2Map(Line)
          }
       }
-      ;
+
+      ; Fixing ternary operations [var ?  : "1"] => [var ? "" : "1"]
+      if RegExMatch(Line, "i)^(.*)(\s\?\s*\:\s*)(.*)$", &Equation) {
+         Line := RegExReplace(Line, "i)^(.*\s*)\?\s*\:(\s*)(.*)$", '$1? "" :$3')
+      }
+      ; Fixing ternary operations [var ? "1" : ] => [var ? "1" : ""]
+      if RegExMatch(Line, "i)^(.*\s\?.*\:\s*)(\)|$)", &Equation) {
+         Line := RegExReplace(Line, "i)^(.*\s\?.*\:\s*)(\)|$)", '$1 ""$2')
+      }
 
       LabelRedoCommandReplacing:
          ; -------------------------------------------------------------------------------

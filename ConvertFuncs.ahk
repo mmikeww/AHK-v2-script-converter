@@ -473,7 +473,7 @@ Convert(ScriptString)
       ; Replace = with := in function default params
       ;
       else if RegExMatch(Line, "i)^\s*(\w+)\((.+)\)", &MatchFunc)
-         && !(MatchFunc[1] ~= "i)\b(if|while)")	; skip if(expr) and while(expr) when no space before paren
+         && !(MatchFunc[1] ~= "i)\b(if|while)\b")	; skip if(expr) and while(expr) when no space before paren
       ; this regex matches anything inside the parentheses () for both func definitions, and func calls :(
       {
          ; Changing the ByRef parameters to & signs.

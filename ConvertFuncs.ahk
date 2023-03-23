@@ -473,7 +473,7 @@ Convert(ScriptString)
       ; Replace = with := in function default params
       ;
       else if RegExMatch(Line, "i)^\s*(\w+)\((.+)\)", &MatchFunc)
-         && !(MatchFunc[1] ~= "i)(if|while)")	; skip if(expr) and while(expr) when no space before paren
+         && !(MatchFunc[1] ~= "i)\b(if|while)")	; skip if(expr) and while(expr) when no space before paren
       ; this regex matches anything inside the parentheses () for both func definitions, and func calls :(
       {
          ; Changing the ByRef parameters to & signs.
@@ -553,8 +553,8 @@ Convert(ScriptString)
          PreLine .= Equation[1]
          Line := Equation[3]
       }
-
       If RegExMatch(Line, "i)(^\s*)([a-z_][a-z_0-9]*)\s*\+=\s*(.*?)\s*,\s*([SMHD]\w*)(.*$)", &Equation) {
+
          Line := Equation[1] Equation[2] " := DateAdd(" Equation[2] ", " ParameterFormat("ValueCBE2E", Equation[3]) ", '" Equation[4] "')" Equation[5]
       } else If RegExMatch(Line, "i)(^\s*)([a-z_][a-z_0-9]*)\s*\-=\s*(.*?)\s*,\s*([SMHD]\w*)(.*$)", &Equation) {
          Line := Equation[1] Equation[2] " := DateDiff(" Equation[2] ", " ParameterFormat("ValueCBE2E", Equation[3]) ", '" Equation[4] "')" Equation[5]

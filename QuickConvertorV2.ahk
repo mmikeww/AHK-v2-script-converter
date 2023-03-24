@@ -50,20 +50,17 @@
     ;READ INI VARIABLES WITH DEFAULTS
     IniFile := "QuickConvertorV2.ini"
     Section := "Convertor"
-    FontSize          := IniRead(IniFile, Section, "FontSize", 10)
-    GuiHeight         := IniRead(IniFile, Section, "GuiHeight", 500)
-    GuiWidth          := IniRead(IniFile, Section, "GuiWidth", 800)
-    TestMode          := IniRead(IniFile, Section, "TestMode", 0)
-    TreeViewWidth     := IniRead(IniFile, Section, "TreeViewWidth", 280)
-    ViewExpectedCode  := IniRead(IniFile, Section, "ViewExpectedCode", 0)
-
+    FontSize            := IniRead(IniFile, Section, "FontSize", 10)
+    GuiHeight           := IniRead(IniFile, Section, "GuiHeight", 500)
+    GuiWidth            := IniRead(IniFile, Section, "GuiWidth", 800)
+    GuiX                := IniRead(IniFile, Section, "GuiX", "")
+    GuiY                := IniRead(IniFile, Section, "GuiY", "")
+    TestMode            := IniRead(IniFile, Section, "TestMode", 0)
+    TreeViewWidth       := IniRead(IniFile, Section, "TreeViewWidth", 280)
+    ViewExpectedCode    := IniRead(IniFile, Section, "ViewExpectedCode", 0)
+    OnExit(ExitFunc)
     ;WRITE BACK VARIABLES SO THAT DEFAULTS ARE SAVED TO INI (Seems like this should be moved to exit routine SEE Esc::)
-    IniWrite(TestMode,           IniFile, Section, "FontSize")
-    IniWrite(TreeViewWidth,      IniFile, Section, "GuiHeight")
-    IniWrite(ViewExpectedCode,   IniFile, Section, "GuiWidth")
-    IniWrite(TestMode,           IniFile, Section, "TestMode")
-    IniWrite(TreeViewWidth,      IniFile, Section, "TreeViewWidth")
-    IniWrite(ViewExpectedCode,   IniFile, Section, "ViewExpectedCode")
+
 }
 { ;*** MAIN PROGRAM - BEGINS HERE *****************************************************************************************
 
@@ -93,6 +90,7 @@
 
     TempV1Script := FileExist(FileTempScript) ? FileRead(FileTempScript) : ""
     GuiTest(TempV1Script)
+
 
     Return
 } ; MAIN PROGRAM - ENDS HERE *******************************************************************************************
@@ -548,9 +546,31 @@ Gui_Size(thisGui, MinMax, Width, Height)  ; Expand/Shrink ListView and TreeView 
     CheckBoxV2E.Move(Width-100,EditHeight+6)
     ButtonValidateConversion.Move(Width-30,ButtonHeight)
     DllCall("LockWindowUpdate", "Uint",0)
-    IniWrite(Width, "QuickConvertorV2.ini", "Convertor", "GuiWidth")
-    IniWrite(Height+22, "QuickConvertorV2.ini", "Convertor", "GuiHeight")
+    thisGui.GetPos(&GuiX,&GuiY)
+    thisGui.GetClientPos(,,&GuiW,&GuiH)
+    IniWrite(GuiW, "QuickConvertorV2.ini", "Convertor", "GuiWidth")
+    IniWrite(GuiH, "QuickConvertorV2.ini", "Convertor", "GuiHeight")
+    IniWrite(GuiX, "QuickConvertorV2.ini", "Convertor", "GuiX")
+    IniWrite(GuiY, "QuickConvertorV2.ini", "Convertor", "GuiY")
+
 }
+
+Gui_Close(thisGui){
+    FileTempScript := A_ScriptDir "\Tests\TempScript.ah1"
+    if (FileExist(FileTempScript)){
+        FileDelete(FileTempScript)
+    }
+    FileAppend(V1Edit.Text,FileTempScript)
+    thisGui.GetPos(&GuiX,&GuiY)
+    thisGui.GetClientPos(,,&GuiW,&GuiH)
+    IniWrite(GuiW, "QuickConvertorV2.ini", "Convertor", "GuiWidth")
+    IniWrite(GuiH, "QuickConvertorV2.ini", "Convertor", "GuiHeight")
+    IniWrite(GuiX, "QuickConvertorV2.ini", "Convertor", "GuiX")
+    IniWrite(GuiY, "QuickConvertorV2.ini", "Convertor", "GuiY")
+    ; FileTempScript := A_ScriptDir "\Tests\TempScript.ah1"
+    return
+}
+
 GuiTest(strV1Script:="")
 {
     global
@@ -670,7 +690,7 @@ GuiTest(strV1Script:="")
     ; Call Gui_Size whenever the window is resized:
     MyGui.OnEvent("Size", Gui_Size)
 
-    ; MyGui.OnEvent("Close", (*) => ExitApp())
+    MyGui.OnEvent("Close", Gui_Close)
     ; MyGui.OnEvent("Escape", (*) => ExitApp())
 
     FileMenu := Menu()
@@ -702,7 +722,7 @@ GuiTest(strV1Script:="")
     Menus.Add("&File", FileMenu)  ; Attach the two submenus that were created above.
     Menus.Add("&Settings", SettingsMenu)
     Menus.Add("&View", ViewMenu)
-    Menus.Add "&Reload", (*) => Reload()
+    Menus.Add( "&Reload", (*) => (Gui_Close(MyGui),Reload()))
     Menus.Add( "Test", TestMenu)
     Menus.Add( "Help", HelpMenu)
     MyGui.MenuBar := Menus
@@ -712,8 +732,13 @@ GuiTest(strV1Script:="")
     }
     MyGui.Opt("+MinSize450x200")
     MyGui.OnEvent("DropFiles",Gui_DropFiles)
+
+    ; Correct coordinates to a visible position inside the screens
+    GuiXOpt := (GuiX!="") ? " x" ((GuiX<0) ? 0 : (GuiX+GuiWidth>SysGet(78)) ? SysGet(78)-GuiWidth : GuiX) : ""
+    GuiYOpt := (GuiY!="") ? " y" ((GuiY<0) ? 0 : (GuiY+GuiHeight>SysGet(79)) ? SysGet(79)-GuiHeight : GuiY) : ""
+
     ; Display the window. The OS will notify the script whenever the user performs an eligible action:
-    MyGui.Show("h" GuiHeight " w" GuiWidth)
+    MyGui.Show("h" GuiHeight " w" GuiWidth GuiXOpt GuiYOpt)
     sleep(500)
     if TestMode {
         TestMode := !TestMode
@@ -723,11 +748,12 @@ GuiTest(strV1Script:="")
     if (strV1Script!=""){
         ButtonConvert(myGui)
     }
+
     OnMessage(0x0200, On_WM_MOUSEMOVE)
-
+    OnMessage(0x03, On_WM_MOVE)
     Return
-
 }
+
 MenuCommandHelp(*)
 {
     ogcFocused := MyGui.FocusedCtrl
@@ -975,9 +1001,7 @@ Esc::     ;Exit application - Using either <Esc> Hotkey or Goto("MyExit")
 {
 MyExit:
     ;WRITE BACK VARIABLES SO THAT DEFAULTS ARE SAVED TO INI
-    IniWrite(TestMode,           IniFile, Section, "FontSize")
-    IniWrite(TreeViewWidth,      IniFile, Section, "GuiHeight")
-    IniWrite(ViewExpectedCode,   IniFile, Section, "GuiWidth")
+    IniWrite(FontSize,           IniFile, Section, "FontSize")
     IniWrite(TestMode,           IniFile, Section, "TestMode")
     IniWrite(TreeViewWidth,      IniFile, Section, "TreeViewWidth")
     IniWrite(ViewExpectedCode,   IniFile, Section, "ViewExpectedCode")
@@ -1050,4 +1074,24 @@ XButton2::
 
     Sleep(100)
     Edit_Change()
+}
+
+ExitFunc(ExitReason, ExitCode){
+    IniWrite(FontSize,           IniFile, Section, "FontSize")
+    IniWrite(TestMode,           IniFile, Section, "TestMode")
+    IniWrite(TreeViewWidth,      IniFile, Section, "TreeViewWidth")
+    IniWrite(ViewExpectedCode,   IniFile, Section, "ViewExpectedCode")
+}
+
+On_WM_MOVE(wParam, lParam, msg, hwnd){
+    ; Detects the movement of a window
+    thisGui := GuiFromHwnd(hwnd)
+    if (thisGui.title = "Quick Convertor V2"){
+        thisGui.GetPos(&GuiX,&GuiY)
+        thisGui.GetClientPos(,,&GuiW,&GuiH)
+        IniWrite(GuiW, "QuickConvertorV2.ini", "Convertor", "GuiWidth")
+        IniWrite(GuiH, "QuickConvertorV2.ini", "Convertor", "GuiHeight")
+        IniWrite(GuiX, "QuickConvertorV2.ini", "Convertor", "GuiX")
+        IniWrite(GuiY, "QuickConvertorV2.ini", "Convertor", "GuiY")
+    }
 }

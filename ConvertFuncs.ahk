@@ -993,6 +993,7 @@ subLoopFunctions(ScriptString, Line, &retV2, &gotFunc) {
 ; =============================================================================
 ToExp(Text)
 {
+   text := ReplaceQuotes(text)
    static qu := '"' 	; Constant for double quotes
    static bt := "``"	; Constant for backtick to escape
    Text := Trim(Text, " `t")
@@ -1047,6 +1048,7 @@ ToExp(Text)
 ; that is, a number will be turned into a quoted number.  3 -> "3"
 ToStringExpr(Text)
 {
+   text := ReplaceQuotes(text)
    static qu := '"' 	; Constant for double quotes
    static bt := "``"	; Constant for backtick to escape
    Text := Trim(Text, " `t")
@@ -1113,6 +1115,33 @@ RemoveSurroundingPercents(text)
    if (SubStr(text, 1, 1) = "`%") && (SubStr(text, -1) = "`%")
       return SubStr(text, 2, -1)
    return text
+}
+
+; Replaces "" by `"
+ReplaceQuotes(Text){
+    aText :=StrSplit(Text)
+    InExpr := false
+    Skip := false
+    TOut :=""
+    loop aText.Length
+    {
+        if Skip{
+            Skip := false
+        } else{
+            if(aText[A_Index]='"'){
+                if(aText.has(A_Index+1) and aText[A_Index+1]='"' and InExpr){
+                    aText[A_Index] := '``'
+                } else {
+                    InExpr := !InExpr
+                }
+            }
+            if(aText[A_Index]='``'){
+                Skip := true
+            }
+        }
+        TOut .= aText[A_Index]
+    }
+    return TOut
 }
 
 ; check if a param is empty

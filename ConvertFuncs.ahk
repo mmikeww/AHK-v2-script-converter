@@ -1022,6 +1022,8 @@ ToExp(Text)
 
          if (Symbol_Prev="``"){
             TOut .= Symbol
+            Symbol_Prev := "" ; if the next symbol is another ` treat it like a normal symbol
+            continue
          } else If (Symbol == "%")
          {
             If (DeRef := !DeRef) && (A_Index != 1)

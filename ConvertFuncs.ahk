@@ -1,4 +1,4 @@
-#Requires AutoHotKey v2.0-beta.3
+#Requires AutoHotKey v2.0
 #SingleInstance Force
 
 ; to do: strsplit (old command)
@@ -1012,12 +1012,17 @@ ToExp(Text)
       ;msgbox %text%
       TOut := ""
       DeRef := 0
+      Symbol_Prev := ""
       ;Loop % StrLen(Text)
       Loop Parse, Text
       {
+
          ;Symbol := Chr(NumGet(Text, (A_Index-1)*2, "UChar"))
          Symbol := A_LoopField
-         If Symbol == "%"
+
+         if (Symbol_Prev="``"){
+            TOut .= Symbol
+         } else If (Symbol == "%")
          {
             If (DeRef := !DeRef) && (A_Index != 1)
                TOut .= qu . " "	;TOut .= qu . " . "
@@ -1029,8 +1034,9 @@ ToExp(Text)
                TOut .= qu
             TOut .= Symbol
          }
+         Symbol_Prev := Symbol
       }
-      If Symbol != "%"
+      If (Symbol != "%")
          TOut .= (qu)	; One double quote
    } else if isNumber(Text)
    {

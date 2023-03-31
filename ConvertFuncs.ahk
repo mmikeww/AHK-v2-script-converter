@@ -3218,6 +3218,8 @@ ParameterFormat(ParName, ParValue) {
             ParValue := "(" ParValue ")<1 ? (" ParValue ")-1 : (" ParValue ")"
          }
       }
+   } else{
+      ParValue := ReplaceQuotes(ParValue)
    }
 
    Return ParValue
@@ -3295,14 +3297,26 @@ AssArr2Map(ScriptString) {
       ScriptString1 := ScriptStringBegin "map(" Key ", " Value
       ScriptStringRest := RegExReplace(ScriptString, "is)(^.*?)\{\s*([^\s:]+?)\s*:\s*([^\,}]*)\s*(.*$)", "$4")
       loop {
-         if RegExMatch(ScriptStringRest, "is)^\s*,\s*[^\s:]+?\s*:\s*([^\},]*)\s*.*") {
-            Key := RegExReplace(ScriptStringRest, "is)^\s*,\s*([^\s:]+?)\s*:\s*([^\},]*)\s*(.*)", "$1")
-            Value := RegExReplace(ScriptStringRest, "is)^\s*,\s*([^\s:]+?)\s*:\s*([^\},]*)\s*(.*)", "$2")
+
+         ; if RegExMatch(ScriptStringRest, "is)^\s*,\s*[^\s:]+?\s*:\s*([^\},]*)\s*.*") {
+         ;    OutputDebug("match 1 : " ScriptStringRest "`n")
+         ;    Key := RegExReplace(ScriptStringRest, "is)^\s*,\s*([^\s:]+?)\s*:\s*([^\},]*)\s*(.*)", "$1")
+         ;    Value := RegExReplace(ScriptStringRest, "is)^\s*,\s*([^\s:]+?)\s*:\s*([^\},]*)\s*(.*)", "$2")
+         ;    Key := (InStr(Key, '"')) ? Key : ToExp(Key)
+         ;    ScriptString1 .= ", " Key ", " Value
+         ;    ScriptStringRest := RegExReplace(ScriptStringRest, "is)^\s*,\s*([^\s:]+?)\s*:\s*([^\},]*)\s*(.*$)", "$3")
+         ; } else {
+         if RegExMatch(ScriptStringRest, "is)^\s*,\s*([^\s:]+?|`"[^:`"]`"+?)\s*:\s*([^\},]*)\s*.*") {
+            OutputDebug("match 1 : " ScriptStringRest "`n")
+            Key := RegExReplace(ScriptStringRest, "is)^\s*,\s*([^\s:]+?|`"[^:`"]`"+?)\s*:\s*([^\},]*)\s*(.*)", "$1")
+            Value := RegExReplace(ScriptStringRest, "is)^\s*,\s*([^\s:]+?|`"[^:`"]`"+?)\s*:\s*([^\},]*)\s*(.*)", "$2")
             Key := (InStr(Key, '"')) ? Key : ToExp(Key)
             ScriptString1 .= ", " Key ", " Value
-            ScriptStringRest := RegExReplace(ScriptStringRest, "is)^\s*,\s*([^\s:]+?)\s*:\s*([^\},]*)\s*(.*$)", "$3")
+            ScriptStringRest := RegExReplace(ScriptStringRest, "is)^\s*,\s*([^\s:]+?|`"[^:`"]`"+?)\s*:\s*([^\},]*)\s*(.*$)", "$3")
          } else {
+            OutputDebug("match 2 : " ScriptStringRest "`n")
             if RegExMatch(ScriptStringRest, "is)^\s*(\})\s*.*") {
+               OutputDebug("{{{}}}:" ScriptStringRest "`n")
                ScriptStringRest := RegExReplace(ScriptStringRest, "is)^\s*(\})(\s*.*$)", ")$2")
             }
             break

@@ -18,7 +18,7 @@ However, this project is way more ambitious that I originally thought, and __it 
 ![screenshot](https://github.com/mmikeww/AHK-v2-script-converter/blob/master/images/Quick%20Convertor%20V2.png)
 
 ## Usage 2 (alternative)
-1. [Download](https://github.com/mmikeww/AHK-v2-script-converter/archive/master.zip) the full repo. Then run the included `v2converter.exe` file
+1. [Download](https://github.com/mmikeww/AHK-v2-script-converter/archive/master.zip) the full repo. Then run the included `v2converter.ahk` script with AHK v2
 2. Choose your input `scriptfile.ahk` written for AHK v1.  
    The converted script will be named `scriptfile_v2new.ahk` in the same directory
 3. Look over the Visual Diff to manually inspect the changes

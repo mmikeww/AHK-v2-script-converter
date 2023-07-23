@@ -2784,11 +2784,17 @@ _WinMove(p) {
    ;V1 : WinMove, WinTitle, WinText, X, Y , Width, Height, ExcludeTitle, ExcludeText
    ;V1 : WinMove, X, Y
    ;V2 : WinMove X, Y , Width, Height, WinTitle, WinText, ExcludeTitle, ExcludeText
-   if (p[3] = "" and p[4] = "") {
+   lastpos := 0
+   for i, v in p {
+      if (v != "")
+         lastpos := i
+   }
+   if (lastpos <= 2) {
       p[1] := ParameterFormat("XCBE2E", p[1])
       p[2] := ParameterFormat("YCBE2E", p[2])
       Out := Format("WinMove({1}, {2})", p*)
    } else {
+      ; Parameters over p[2] come already formated before reaching here.
       p[1] := ParameterFormat("WinTitleT2E", p[1])
       p[2] := ParameterFormat("WinTextT2E", p[2])
       Out := Format("WinMove({3}, {4}, {5}, {6}, {1}, {2}, {7}, {8})", p*)

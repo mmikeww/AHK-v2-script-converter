@@ -2684,8 +2684,9 @@ _StringSplit(p) {
    ;V1 StringSplit,OutputArray,InputVar,DelimitersT2E,OmitCharsT2E
    ; Output should be checked to replace OutputArray\d to OutputArray[\d]
    global aListPseudoArray
-   ;aListPseudoArray.Push(Trim(p[1]))
-   aListPseudoArray.Push({name: Trim(p[1])})
+   VarName := Trim(p[1])
+   aListPseudoArray.Push({name: VarName})
+   aListPseudoArray.Push({strict: true, name: VarName "0", newname: VarName ".Length"})
    Out := Format("{1} := StrSplit({2},{3},{4})", p*)
    Return RegExReplace(Out, "[\s\,]*\)$", ")")
 }
@@ -2776,6 +2777,7 @@ _WinGet(p) {
       Out .= Indentation "{   a" P[1] ".Push(v)`r`n"
       Out .= Indentation "}"
       aListPseudoArray.Push({name: P[1], newname: "a" P[1]})
+      aListPseudoArray.Push({strict: true, name: P[1], newname: "a" P[1] ".Length"})
    }
    Return RegExReplace(Out, "[\s\,]*\)$", ")")
 }
@@ -3239,26 +3241,27 @@ ParameterFormat(ParName, ParValue) {
 ;// Converts PseudoArray to Array
 ConvertPseudoArray(ScriptStringInput, PseudoArrayName) {
    ; The caller does a fast InStr before calling.
+   ; Summary of suffix variations depending on sources:
+   ;  - StringSplit      => OutVar:Blank;  OutVar0:Length; OutVarN:Items;
+   ;  - WinGet-List      => OutVar:Length; OutVar0:Blank;  OutVarN:Items;
+   ;  - RegExMatch-Mode1 => OutVar:Text;   OutVar0:Blank;  OutVarN:Items;
+   ;  - RegExMatch-Mode2 => OutVar:Length; OutVar0:Blank;  OutVarN:Blank; OutVarPosN:Item-pos; OutVarLenN:Item-len;
+   ;  - RegExMatch-Mode3 => OutVar:Object; OutVar0:Blank;  OutVarN:Blank;
+
    ArrayName := PseudoArrayName.name
    NewName := PseudoArrayName.HasOwnProp("newname") ? PseudoArrayName.newname : ArrayName
-   if RegexMatch(ScriptStringInput,"i)\b(local|global|static)\s"){
+   if RegexMatch(ScriptStringInput,"i)^\s*(local|global|static)\s"){
       ; Expecting situations like "local x,v0,v1" to end up as "local x,v".
-      ScriptStringInput := RegExReplace(ScriptStringInput, "is)(\b" ArrayName ")(\w*\s*,\s*(?1)\w*)+", NewName)
-   } else if PseudoArrayName.HasOwnProp("selfprop") {
-      ; Treated indepently from the regular cases for more flexibility on RegExMatch's P mode.
-      ; In combined cases, this one should be pushed before the general case for selfprop to take preference over ".Length".
-      ScriptStringInput := RegExReplace(ScriptStringInput, "is)(?<!\w|&)" ArrayName "0?(?!\w|%|\.|\[|\s*:=)", NewName . PseudoArrayName.selfprop)
+      ScriptStringInput := RegExReplace(ScriptStringInput, "is)\b(" ArrayName ")(\d*\s*,\s*(?1)\d*)+\b", NewName)
+   } else if (PseudoArrayName.HasOwnProp("strict") && PseudoArrayName.strict) {
+      ; Replacement without allowing suffix.
+      ScriptStringInput := RegExReplace(ScriptStringInput, "is)(?<!\w|&|\.)" ArrayName "(?!\w|%|\.|\[|\s*:=)", NewName)
    } else {
-      ScriptStringInput := RegExReplace(ScriptStringInput, "is)(?<!\w|&)" ArrayName "0?(?!\w|%|\.|\[|\s*:=)", NewName ".Length")
-      ScriptStringInput := RegExReplace(ScriptStringInput, "is)(?<!\w|&)" ArrayName "(%(\w+)%|(\d+)\b)", NewName "[$2$3]")
-
-      if PseudoArrayName.HasOwnProp("namedregex") {
-         ; RegExMatch variable conversion is handled here because it shares a lot of similarity with PseudoArrays.
-         ; But some exceptions are needed for named subpatterns, which can cause replacements that are too broad.
-         ; If this replacement is still problematic in the future, it might need to be put behind some option or be disabled.
-         ScriptStringInput := RegExReplace(ScriptStringInput, "is)(?<!\w|&)" ArrayName "(\w+)(?!\w|%|\.|\[|\s*:=)", NewName '["$1"]')
-      }
+      ; General replacement for numerical suffixes and percent signs.
+      ScriptStringInput := RegExReplace(ScriptStringInput, "is)(?<!\w|&|\.)" ArrayName "([1-9]\d*)(?!\w|\.|\[)", NewName "[$1]")
+      ScriptStringInput := RegExReplace(ScriptStringInput, "is)(?<!\w|&|\.)" ArrayName "%(\w+)%(?!\w|\.|\[)", NewName "[$1]")
    }
+
    Return ScriptStringInput
 }
 

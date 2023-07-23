@@ -1,3 +1,3 @@
 var := "exe"
-if (var ~= "iAD)(exe|bat|com)")
+if (var ~= "^(?i:exe|bat|com)$")
     MsgBox("The file extension is an executable type.")

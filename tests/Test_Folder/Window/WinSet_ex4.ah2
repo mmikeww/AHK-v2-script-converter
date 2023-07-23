@@ -1,7 +1,7 @@
 #t::  ; Press Win+T to make the color under the mouse cursor invisible.
 { ; V1toV2: Added bracket
 MouseGetPos(&MouseX, &MouseY, &MouseWin)
-MouseRGB := PixelGetColor(MouseX, MouseY, "RGB")
+MouseRGB := PixelGetColor(MouseX, MouseY, "RGB") ;V1toV2: Switched from BGR to RGB values
 ; It seems necessary to turn off any existing transparency first:
 WinSetTransColor("Off", "ahk_id " MouseWin)
 WinSetTransColor(MouseRGB " 220", "ahk_id " MouseWin)

@@ -2842,46 +2842,38 @@ _WinSetTitle(p) {
 _WinWait(p) {
    ; Created because else there where empty parameters.
    if ScriptStringsUsed.ErrorLevel {
-      out := Format("ErrorLevel := WinWait({1}, {2}, {3}, {4}, {5}) , ErrorLevel := ErrorLevel = 0 ? 1 : 0", p*)
-      out := RegExReplace(Out, "[\s\,]*\)\s,\sErrorLevel", ") , ErrorLevel")
+      out := Format("ErrorLevel := !WinWait({1}, {2}, {3}, {4}, {5})", p*)
    } else {
       out := Format("WinWait({1}, {2}, {3}, {4}, {5})", p*)
-      out := RegExReplace(Out, "[\s\,]*\)", ")")
    }
-   Return out
+   Return RegExReplace(out, "[\s\,]*\)$", ")") ;remove trailing empty params
 }
 _WinWaitActive(p) {
    ; Created because else there where empty parameters.
    if ScriptStringsUsed.ErrorLevel {
-      out := Format("ErrorLevel := WinWaitActive({1}, {2}, {3}, {4}, {5}) , ErrorLevel := ErrorLevel = 0 ? 1 : 0", p*)
-      out := RegExReplace(Out, "[\s\,]*\)\s,\sErrorLevel", ") , ErrorLevel")
+      out := Format("ErrorLevel := !WinWaitActive({1}, {2}, {3}, {4}, {5})", p*)
    } else {
       out := Format("WinWaitActive({1}, {2}, {3}, {4}, {5})", p*)
-      out := RegExReplace(Out, "[\s\,]*\)", ")")
    }
-   Return out
+   Return RegExReplace(out, "[\s\,]*\)$", ")") ;remove trailing empty params
 }
 _WinWaitNotActive(p) {
    ; Created because else there where empty parameters.
    if ScriptStringsUsed.ErrorLevel {
-      out := Format("ErrorLevel := WinWaitNotActive({1}, {2}, {3}, {4}, {5}) , ErrorLevel := ErrorLevel = 0 ? 1 : 0", p*)
-      out := RegExReplace(Out, "[\s\,]*\)\s,\sErrorLevel", ") , ErrorLevel")
+      out := Format("ErrorLevel := !WinWaitNotActive({1}, {2}, {3}, {4}, {5})", p*)
    } else {
       out := Format("WinWaitNotActive({1}, {2}, {3}, {4}, {5})", p*)
-      out := RegExReplace(Out, "[\s\,]*\)", ")")
    }
-   Return out
+   Return RegExReplace(out, "[\s\,]*\)$", ")") ;remove trailing empty params
 }
 _WinWaitClose(p) {
    ; Created because else there where empty parameters.
    if ScriptStringsUsed.ErrorLevel {
-      out := Format("ErrorLevel := WinWaitClose({1}, {2}, {3}, {4}, {5}) , ErrorLevel := ErrorLevel = 0 ? 1 : 0", p*)
-      out := RegExReplace(Out, "[\s\,]*\)\s,\sErrorLevel", ") , ErrorLevel")
+      out := Format("ErrorLevel := !WinWaitClose({1}, {2}, {3}, {4}, {5})", p*)
    } else {
       out := Format("WinWaitClose({1}, {2}, {3}, {4}, {5})", p*)
-      out := RegExReplace(Out, "[\s\,]*\)", ")")
    }
-   Return out
+   Return RegExReplace(out, "[\s\,]*\)$", ")") ;remove trailing empty params
 }
 
 _HashtagIfWinActivate(p) {

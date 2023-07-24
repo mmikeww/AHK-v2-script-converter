@@ -1,5 +1,5 @@
 Run("notepad.exe")
-ErrorLevel := WinWaitActive("Untitled - Notepad", , 2) , ErrorLevel := ErrorLevel = 0 ? 1 : 0
+ErrorLevel := !WinWaitActive("Untitled - Notepad", , 2)
 if ErrorLevel
 {
     MsgBox("WinWait timed out.")

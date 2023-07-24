@@ -1,3 +1,3 @@
 Path := "C:\Foo\Bar\Baz.txt"
 RegExMatch(Path, "\w+$", &Extension)
-MsgBox(Extension[0])  ; Reports "txt".
+MsgBox((Extension && Extension[0]))  ; Reports "txt".

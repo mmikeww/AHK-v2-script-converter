@@ -313,35 +313,47 @@ _RegExMatch(p) {
   ; V2: FoundPos := RegExMatch(Haystack, NeedleRegEx , &OutputVar, StartingPos := 1)
 
   if (p[3] != "") {
+    OrigPattern := P[2]
     OutputVar := p[3]
+
+    CaptNames := [], pos := 1
+    while pos := RegExMatch(OrigPattern, "(?<!\\)(?:\\\\)*\(\?<(\w+)>", &Match, pos)
+      pos += Match.Len, CaptNames.Push(Match[1])
+
     Out := ""
-    if RegExMatch(P[2], '^"([^"(])*O([^"(])*\)(.*)$', &Match) {
+    if RegExMatch(OrigPattern, '^"([^"(])*O([^"(])*\)(.*)$', &Match) {
       ; Mode 3 (match object)
       ; v1OutputVar.Value(1) -> v2OutputVar[1]
       ; The v1 methods Count and Mark are properties in v2.
       P[2] := ( Match[1] || Match[2] ? '"' Match[1] Match[2] ")" : '"' ) . Match[3] ; Remove the "O" from the options
       aListMatchObject.Push(OutputVar)
-    } else if RegExMatch(P[2], '^"([^"(])*P([^"(])*\)(.*)$', &Match) {
+    } else if RegExMatch(OrigPattern, '^"([^"(])*P([^"(])*\)(.*)$', &Match) {
       ; Mode 2 (position-and-length)
       ; v1OutputVar -> v2OutputVar.Len
       ; v1OutputVarPos1 -> v2OutputVar.Pos[1]
       ; v1OutputVarLen1 -> v2OutputVar.Len[1]
       P[2] := ( Match[1] || Match[2] ? '"' Match[1] Match[2] ")" : '"' ) . Match[3] ; Remove the "P" from the options
-      aListPseudoArray.Push({name: OutputVar "Len", newname: OutputVar ".Len", namedregex: true})
-      aListPseudoArray.Push({name: OutputVar "Pos", newname: OutputVar ".Pos", namedregex: true})
-      aListPseudoArray.Push({name: OutputVar, selfprop: ".Len"}) ; Important to be after *Pos and *Len.
-    } else if RegExMatch(P[2], 'i)^"[a-z``]*\)') ; Explicit options.
-      || RegExMatch(P[2], 'i)^"[^"]*[^a-z``]') { ; Explicit no options.
+      aListPseudoArray.Push({name: OutputVar "Len", newname: OutputVar '.Len'})
+      aListPseudoArray.Push({name: OutputVar "Pos", newname: OutputVar '.Pos'})
+      aListPseudoArray.Push({strict: true, name: OutputVar, newname: OutputVar ".Len"})
+      for CaptName in CaptNames {
+        aListPseudoArray.Push({strict: true, name: OutputVar "Len" CaptName, newname: OutputVar '.Len["' CaptName '"]'})
+        aListPseudoArray.Push({strict: true, name: OutputVar "Pos" CaptName, newname: OutputVar '.Pos["' CaptName '"]'})
+      }
+    } else if RegExMatch(OrigPattern, 'i)^"[a-z``]*\)') ; Explicit options.
+      || RegExMatch(OrigPattern, 'i)^"[^"]*[^a-z``]') { ; Explicit no options.
       ; Mode 1 (Default)
       ; v1OutputVar -> v2OutputVar[0]
       ; v1OutputVar1 -> v2OutputVar[1]
-      aListPseudoArray.Push({name: OutputVar, selfprop: "[0]"}) ; Important to be before general case.
-      aListPseudoArray.Push({name: OutputVar, namedregex: true})
+      aListPseudoArray.Push({name: OutputVar})
+      aListPseudoArray.Push({strict: true, name: OutputVar, newname: OutputVar "[0]"})
+      for CaptName in CaptNames
+        aListPseudoArray.Push({strict: true, name: OutputVar CaptName, newname: OutputVar '["' CaptName '"]'})
     } else { 
       ; Unknown mode. Unclear options, possibly variables obscuring the parameter.
       ; Treat as default mode?... The unhandled options O and P will make v2 throw anyway.
-      aListPseudoArray.Push({name: OutputVar, selfprop: "[0]"}) ; Important to be before general case.
-      aListPseudoArray.Push({name: OutputVar, namedregex: true})
+      aListPseudoArray.Push({name: OutputVar})
+      aListPseudoArray.Push({strict: true, name: OutputVar, newname: OutputVar "[0]"})
     }
     Out .= Format("RegExMatch({1}, {2}, &{3}, {4})", p*)
   } else {

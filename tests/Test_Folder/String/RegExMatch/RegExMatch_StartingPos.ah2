@@ -8,5 +8,5 @@ Func1() {
 Func1()
 
 Func2() {
-	local NotMatch, Match, NotMatch
+	local NotMatch, Match, MatchAbc, NotMatch
 }

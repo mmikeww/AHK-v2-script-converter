@@ -9,7 +9,7 @@ Deref(Str)
     while (fpo:=RegExMatch(Str, "(%(.*?)%)|``(.)", &m, (spo)<1 ? (spo)-1 : (spo)))
     {
         out .= SubStr(Str, (spo)<1 ? (spo)-1 : (spo), fpo-spo)
-        spo := fpo + StrLen(m[0])
+        spo := fpo + StrLen((m && m[0]))
         if (m[1])
             out .= %m[2]%
         else switch (m[3])

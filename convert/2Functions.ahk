@@ -256,12 +256,13 @@ _NumPut(p) {
         OffSet := p[3]
         Type := p[4]
       }
+      
+      ParBuffer := Type ", " Number ", `r`n" Indentation "   " ParBuffer
+      
       NextParameters := RegExReplace(VarOrAddress, "is)^\s*Numput\((.*)\)\s*$", "$1", &OutputVarCount)
       if (OutputVarCount = 0) {
         break
       }
-
-      ParBuffer := Type ", " Number ", `r`n" Indentation "   " ParBuffer
 
       p := V1ParSplit(NextParameters)
       loop 4 - p.Length {

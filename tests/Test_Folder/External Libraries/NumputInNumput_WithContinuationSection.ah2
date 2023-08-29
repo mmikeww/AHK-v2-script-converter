@@ -1,4 +1,5 @@
-	VarSetStrCapacity(&kMsg, 48), NumPut("UPtr", nMsg, 
+	VarSetStrCapacity(&kMsg, 48), NumPut("UPtr", hWnd, 
+	   "UPtr", nMsg, 
 	   "UPtr", wParam, 
 	   "UPtr", lParam, 
 	   "uint", A_EventInfo, 

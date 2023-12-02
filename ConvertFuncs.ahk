@@ -2132,7 +2132,7 @@ _Menu(p) {
    LineResult := ""
    menuNameLine := RegExReplace(MenuLine, "i)^\s*Menu\s*[,\s]\s*([^,]*).*$", "$1", &RegExCount1)
    ; e.g.: Menu, Tray, Add, % func_arg3(nested_arg3a, nested_arg3b), % func_arg4(nested_arg4a, nested_arg4b), % func_arg5(nested_arg5a, nested_arg5b)
-   Var2 := RegExReplace(MenuLine, "
+   Var2 := Trim(RegExReplace(MenuLine, "
       (
       ix)                  # case insensitive, extended mode to ignore space and comments
       ^\s*Menu\s*[,\s]\s*  #
@@ -2140,7 +2140,7 @@ _Menu(p) {
       ([^,]*)              # arg2 Add  {group $2}
       .*                   #
       )"
-      , "$2", &RegExCount2) ; =Add
+      , "$2", &RegExCount2)) ; =Add
    Var3 := RegExReplace(MenuLine, "
       (
       ix)                   #
@@ -2153,6 +2153,7 @@ _Menu(p) {
       .*$                   #
       )"
       , "$3", &RegExCount3) ; =% func_arg3(nested_arg3a, nested_arg3b)
+
    Var4 := RegExReplace(MenuLine, "
       (
       ix)                    	#

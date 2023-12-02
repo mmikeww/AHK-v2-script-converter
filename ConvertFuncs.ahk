@@ -2991,13 +2991,13 @@ V1ParSplit(String) {
 
       if (Char = "`"" && !InApostrophe && CheckQuotes) {
          if (!InQuote) {
-            if (A_Index = 1 || Instr("( ,", oString[A_Index - 1])) {
+            if (A_Index = 1 || (oString.has(A_Index - 1) && Instr("( ,", oString[A_Index - 1]))) {
                InQuote := 1
             } else {
                CheckQuotes := 0
             }
          } else {
-            if (A_Index = oString.Length || Instr(") ,", oString[A_Index + 1])) {
+            if (A_Index = oString.Length || (oString.has(A_Index + 1) && Instr(") ,", oString[A_Index + 1]))) {
                InQuote := 0
             } else {
                CheckQuotes := 0
@@ -3006,13 +3006,13 @@ V1ParSplit(String) {
 
       } else if (Char = "`'" && !InQuote && CheckApostrophes) {
          if (!InApostrophe) {
-            if (A_Index != 1 || Instr("( ,", oString[A_Index - 1])) {
+            if (A_Index != 1 || (oString.has(A_Index - 1) && Instr("( ,", oString[A_Index - 1]))) {
                CheckApostrophes := 0
             } else {
                InApostrophe := 1
             }
          } else {
-            if (A_Index != oString.Length || Instr(") ,", oString[A_Index + 1])) {
+            if (A_Index != oString.Length || (oString.has(A_Index + 1) && Instr(") ,", oString[A_Index + 1]))) {
                CheckApostrophes := 0
             } else {
                InApostrophe := 0

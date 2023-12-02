@@ -154,8 +154,11 @@ Convert(ScriptString)
 
       ; Remove comma after flow commands
       If RegExMatch(Line, "i)^(.*)(else|for|if|loop|return|while)(\s*,\s*|\s+)(.*)$", &Equation) {
-          Line := Equation[1] Equation[2] " " Equation[4]
+         Line := Equation[1] Equation[2] " " Equation[4]
       }
+
+      ; Correct <> to !=
+      Line := StrReplace(Line, "<>","!=")
 
       ; Handle return % var -> return var
       If RegExMatch(Line, "i)^(.*)(return)(\s+%\s*\s+)(.*)$", &Equation) {
@@ -240,6 +243,7 @@ Convert(ScriptString)
       ; got that RegEx from Coco here: https://github.com/cocobelgica/AutoHotkey-Util/blob/master/EnumIncludes.ahk#L65
       ; and modified it slightly
       ;
+
       if (FirstChar == "(")
          && RegExMatch(Line, "i)^\s*\((?:\s*(?(?<=\s)(?!;)|(?<=\())(\bJoin\S*|[^\s)]+))*(?<!:)(?:\s+;.*)?$")
       {

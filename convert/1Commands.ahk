@@ -440,9 +440,9 @@ global CommandsToConvertM := OrderedMap(
     "#HotIf {1}"
   , "#IfTimeout,ExpressionCBE2E" ,
     "#HotIfTimeout {1}"
-  , "#Include,FileOrDirNameT2E" ,
+  , "#Include,FileOrDirName" ,
     "#Include {1}"
-  , "#IncludeAgain,FileOrDirNameT2E" ,
+  , "#IncludeAgain,FileOrDirName" ,
     "#IncludeAgain {1}"
   , "#InputLevel,LevelCBE2E" ,
     "#InputLevel {1}"

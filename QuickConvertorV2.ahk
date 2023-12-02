@@ -1,6 +1,6 @@
 
 { ;FILE_NAME:  QuickConverterV2.ahk - v2 - Converts AutoHotkey v1.1 to v2.0
-  ; REWUIRES: AutoHotkey v2.0+
+  ; REQUIRES: AutoHotkey v2.0+
   ; Language:       English
   ; Platform:       Windows11
   ; Author:         mmikeww

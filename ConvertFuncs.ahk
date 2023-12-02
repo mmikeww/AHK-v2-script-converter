@@ -1468,7 +1468,6 @@ _Gui(p) {
             } else {
                GuiVList[GuiNameLine] := ControlName
             }
-
          }
       }
       if RegExMatch(Var3, "i)\b\+?\bhwnd[\w]*\b") {
@@ -1550,15 +1549,14 @@ _Gui(p) {
          If (ControlObject != "") {
             mGuiCType[ControlObject] := var2	; Create a map containing the type of control
          }
-      }
-      if (var1 = "Color") {
+      } else if (var1 = "Color") {
          Return LineResult GuiNameLine ".BackColor := " ToStringExpr(Var2)
-      }
-      if (var1 = "Margin") {
+      } else if (var1 = "Margin") {
          Return LineResult GuiNameLine ".MarginX := " ToStringExpr(Var2) ", " GuiNameLine ".MarginY := " ToStringExpr(Var3)
-      }
-      if (var1 = "Font") {
+      }  else if (var1 = "Font") {
          var1 := "SetFont"
+      } else if (var1 = "New") {
+         return Trim(LineResult,"`n")
       }
 
       LineResult .= GuiNameLine "."

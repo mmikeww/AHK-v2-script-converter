@@ -3471,29 +3471,33 @@ AddBracket(ScriptString) {
             HotkeyStart := 1
          }
       } else If (HotkeyStart = 1) {
-         if (RegExMatch(Line, "i)^\s*([{\(]).*")) {	; Hotkey is already good :)
-            HotkeyPointer := 0
-         } else if RegExMatch(RestString, "is)^\s*([\w]+?\([^\)]*\)[\s\n\r]*(`;[^\r\n]*|)([\s\n\r]*){).*") {	; Function declaration detection
-            ; Named Function Hotkeys do not need brackets
-            ; https://lexikos.github.io/v2/docs/Hotstrings.htm
-            ; Maybe add an * to the function?
-            A_Index2 := A_Index - 1
-            Loop oScriptString.Length - A_Index2 {
-               if RegExMatch(oScriptString[A_Index2 + A_Index], "i)^\s*([\w]+?\().*$") {
-                  oScriptString[A_Index2 + A_Index] := RegExReplace(oScriptString[A_Index2 + A_Index], "i)(^\s*[\w]+?\()[\s]*(\).*)$", "$1*$2")
-                  if (A_Index = 1) {
-                     Line := oScriptString[A_Index2 + A_Index]
-                  }
-                  Break
-               }
-            }
-            RegExReplace(RestString, "is)^(\s*)([\w]+?\([^\)]*\)[\s\n\r]*(`;[^\r\n]*|)([\s\n\r]*){).*", "$1")
-            HotkeyPointer := 0
+         if (RegExMatch(Line, "i)^\s*(#).*")) {	; #if statement, skip this line
+            HotkeyStart := 1
          } else {
-            Result .= "{ `; V1toV2: Added bracket`r`n"
-            HotkeyPointer := 1
+            if (RegExMatch(Line, "i)^\s*([{\(]).*")) {	; Hotkey is already good :)
+               HotkeyPointer := 0
+            } else if RegExMatch(RestString, "is)^\s*([\w]+?\([^\)]*\)[\s\n\r]*(`;[^\r\n]*|)([\s\n\r]*){).*") {	; Function declaration detection
+               ; Named Function Hotkeys do not need brackets
+               ; https://lexikos.github.io/v2/docs/Hotstrings.htm
+               ; Maybe add an * to the function?
+               A_Index2 := A_Index - 1
+               Loop oScriptString.Length - A_Index2 {
+                  if RegExMatch(oScriptString[A_Index2 + A_Index], "i)^\s*([\w]+?\().*$") {
+                     oScriptString[A_Index2 + A_Index] := RegExReplace(oScriptString[A_Index2 + A_Index], "i)(^\s*[\w]+?\()[\s]*(\).*)$", "$1*$2")
+                     if (A_Index = 1) {
+                        Line := oScriptString[A_Index2 + A_Index]
+                     }
+                     Break
+                  }
+               }
+               RegExReplace(RestString, "is)^(\s*)([\w]+?\([^\)]*\)[\s\n\r]*(`;[^\r\n]*|)([\s\n\r]*){).*", "$1")
+               HotkeyPointer := 0
+            } else {
+               Result .= "{ `; V1toV2: Added bracket`r`n"
+               HotkeyPointer := 1
+            }
+            HotkeyStart := 0
          }
-         HotkeyStart := 0
       }
       if (HotkeyPointer = 1) {
 

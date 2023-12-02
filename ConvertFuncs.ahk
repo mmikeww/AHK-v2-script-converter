@@ -160,6 +160,11 @@ Convert(ScriptString)
       ; Correct <> to !=
       Line := StrReplace(Line, "<>","!=")
 
+      ; Remove new from code for classes
+      If RegExMatch(Line, "i)^(.*)(:=|\(|,)(\s*)new\s(\s*\w.*)$", &Equation) {
+         Line := Equation[1] Equation[2] Equation[3] Equation[4]
+      }
+
       ; Handle return % var -> return var
       If RegExMatch(Line, "i)^(.*)(return)(\s+%\s*\s+)(.*)$", &Equation) {
          Line := Equation[1] Equation[2] " " Equation[4]

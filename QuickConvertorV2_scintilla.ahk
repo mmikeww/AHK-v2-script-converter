@@ -1,5 +1,5 @@
 { ;FILE_NAME:  QuickConverterV2_scintilla.ahk - v2 - Converts AutoHotkey v1.1 to v2.0 uses Scintilla editor function
-  ; REWUIRES: AutoHotkey v2.0+
+  ; REQUIRES: AutoHotkey v2.0+
   ; Language:       English
   ; Platform:       Windows11
   ; Author:         mmikeww

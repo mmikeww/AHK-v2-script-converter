@@ -1,6 +1,6 @@
 
 { ;FILE_NAME:  QuickConverterV2.ahk - v2 - Converts AutoHotkey v1.1 to v2.0
-  ; REQUIRES: AutoHotkey v2.0+
+  ; REWUIRES: AutoHotkey v2.0+
   ; Language:       English
   ; Platform:       Windows11
   ; Author:         mmikeww
@@ -478,6 +478,40 @@ gui_KeyDown(wb, wParam, lParam, nMsg, hWnd)
   ; S_OK: the message was translated to an accelerator.
   return 0
 }
+
+
+mcColorFunc()
+{
+    return mcColors := {
+        MCSC_BACKGROUND: 0,
+        MCSC_TEXT: 1,
+        MCSC_TITLEBK: 2,
+        MCSC_TITLETEXT: 3,
+        MCSC_MONTHBK: 4,
+        MCSC_TRAILINGTEXT: 5
+    }
+}
+darkMode(myGUI)
+{
+    V1Edit.Opt("Background272727")
+    V2Edit.Opt("Background272727")
+    if (VerCompare(A_OSVersion, "10.0.17763") >= 0)
+    {
+        DWMWA_USE_IMMERSIVE_DARK_MODE := 19
+        if (VerCompare(A_OSVersion, "10.0.18985") >= 0)
+        {
+            DWMWA_USE_IMMERSIVE_DARK_MODE := 20
+        }
+        DllCall("dwmapi\DwmSetWindowAttribute", "Ptr", myGUI.hWnd, "Int", DWMWA_USE_IMMERSIVE_DARK_MODE, "Int*", true, "Int", 4)
+        ; listView => SetExplorerTheme(LV1.hWnd, "DarkMode_Explorer"), SetExplorerTheme(LV2.hWnd, "DarkMode_Explorer")
+        uxtheme := DllCall("GetModuleHandle", "Str", "uxtheme", "Ptr")
+        DllCall(DllCall("GetProcAddress", "Ptr", uxtheme, "Ptr", 135, "Ptr"), "Int", 2) ; ForceDark
+        DllCall(DllCall("GetProcAddress", "Ptr", uxtheme, "Ptr", 136, "Ptr"))
+    }
+    ;else
+    ;SetExplorerTheme(LV1.hWnd), SetExplorerTheme(LV2.hWnd)
+
+}
 Gui_Size(thisGui, MinMax, Width, Height)  ; Expand/Shrink ListView and TreeView in response to the user's resizing.
 {
     DllCall("LockWindowUpdate", "Uint",myGui.Hwnd)
@@ -623,7 +657,7 @@ GuiTest(strV1Script:="")
     CheckBoxViewSymbols.OnEvent("Click", ViewSymbols)
     V1Edit := MyGui.Add("Edit", "x280 y0 w600 vvCodeV1 +Multi +WantTab +0x100", strV1Script)  ; Add a fairly wide edit control at the top of the window.
     V1Edit.OnEvent("Change",Edit_Change)
-
+    V1Edit.SetFont("cWhite")
     ButtonRunV1 := MyGui.AddPicButton("w24 h24", "mmcndmgr.dll","icon33 h23")
     ButtonRunV1.StatusBar := "Run the V1 code"
     ButtonRunV1.OnEvent("Click", RunV1)
@@ -640,6 +674,7 @@ GuiTest(strV1Script:="")
     V2Edit.OnEvent("Change",Edit_Change)
     V2ExpectedEdit := MyGui.Add("Edit", "x1000 ym w600 H100 vvCodeV2Expected +Multi +WantTab +0x100", "")  ; Add a fairly wide edit control at the top of the window.
     V2ExpectedEdit.OnEvent("Change",Edit_Change)
+    V2Edit.SetFont("cWhite")
 
     ButtonRunV2 := MyGui.AddPicButton("w24 h24", "mmcndmgr.dll","icon33 h23")
     ButtonRunV2.StatusBar := "Run this code in Autohotkey V2"
@@ -732,7 +767,7 @@ GuiTest(strV1Script:="")
     }
     MyGui.Opt("+MinSize450x200")
     MyGui.OnEvent("DropFiles",Gui_DropFiles)
-
+    darkMode(MyGui)
     ; Correct coordinates to a visible position inside the screens
     GuiXOpt := (GuiX!="") ? " x" ((GuiX<0) ? 0 : (GuiX+GuiWidth>SysGet(78)) ? SysGet(78)-GuiWidth : GuiX) : ""
     GuiYOpt := (GuiY!="") ? " y" ((GuiY<0) ? 0 : (GuiY+GuiHeight>SysGet(79)) ? SysGet(79)-GuiHeight : GuiY) : ""

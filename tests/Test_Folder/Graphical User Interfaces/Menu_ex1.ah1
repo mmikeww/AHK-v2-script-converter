@@ -1,0 +1,1 @@
+Menu, MenuName, Icon, MenuItemName, Filename.png,, 0

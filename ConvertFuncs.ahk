@@ -1593,9 +1593,18 @@ _Gui(p) {
             LineResult .= ", "
          }
          if (Var4 != "") {
-            if (RegExMatch(Var2, "i)^tab[23]?$") or Var2 = "ListView" or Var2 = "DropDownList" or Var2 = "ListBox" or Var2 = "ComboBox") {
+            if (RegExMatch(Var2, "i)^tab[23]?$") or Var2 = "ListView" or Var2 = "DropDownList" or Var2 = "DDL" or Var2 = "ListBox" or Var2 = "ComboBox") {
                ObjectValue := "["
                ChooseString := ""
+               if (!InStr(Var3, "Choose") && InStr(Var4, "||")) { ; ChooseN takes priority over ||
+                  RegexReplace(RegexReplace(Var4, "\|\|.*"), "\|",, &OptionsBefore)
+                  LineResult := RegexReplace(LineResult, "`"$", " Choose" OptionsBefore + 1 "`"")
+                  if (Var3 = "")
+                     LineResult .= "`"Choose" OptionsBefore + 1 "`""
+                  Var4 := RTrim(StrReplace(Var4, "||", "|"), "|")
+               } else if (InStr(Var3, "Choose")) {
+                  Var4 := RegexReplace(Var4, "\|+", "|") ; Replace all pipe groups, this breaks empty choices
+               }
                Loop Parse Var4, "|", " "
                {
                   if (RegExMatch(Var2, "i)^tab[23]?$") and A_LoopField = "") {
@@ -2243,6 +2252,12 @@ _Menu(p) {
    if (Var2 = "DeleteAll") {
       return LineResult "Delete()"
    }
+   if (Var2 = "Icon") {
+      Var2 := "SetIcon"
+   }
+   if (Var2 = "Color") {
+      Var2 := "SetColor"
+   }
    if (Var2 = "Add" and RegExCount3 and !RegExCount4) {
       Var4 := Var3
       RegExCount4 := RegExCount3
@@ -2267,6 +2282,10 @@ _Menu(p) {
          if Var4 != "" {
             LineResult .= ", " FunctionName
          }
+      } else if (Var2 = "SetColor") {
+         if (Var4 = "Single") {
+            LineResult .= ", 1"
+         }
       } else {
          if Var4 != "" {
             LineResult .= ", " ToStringExpr(Var4)
@@ -2276,8 +2295,18 @@ _Menu(p) {
    if (RegExCount5) {
       if Var5 != "" {
          LineResult .= ", " ToStringExpr(Var5)
+      } else if Var5 = "" && p[6] != "" {
+         LineResult .= ",, "
       }
    }
+
+   if (p[6] != "") {
+      if Var5 != "" {
+         LineResult .= ", "
+      }
+      LineResult .= p[6]
+   }
+
    if (RegExCount1) {
       LineResult .= ")"
    }
@@ -2889,6 +2918,20 @@ _HashtagIfWinActivate(p) {
       Return "#HotIf"
    }
    Return format("#HotIf WinActive({1}, {2})", p*)
+}
+
+_HashtagInclude(p) {
+   if (SubStr(p[1], -1) = "%") {
+      Return "#Include " Trim(p[1], "%")
+   }
+   Return "#Include `"" p[1] "`""
+}
+
+_HashtagIncludeAgain(p) {
+   if (SubStr(p[1], -1) = "%") {
+      Return "#IncludeAgain " Trim(p[1], "%")
+   }
+   Return "#IncludeAgain `"" p[1] "`""
 }
 
 ; =============================================================================

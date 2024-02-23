@@ -56,6 +56,7 @@
     GuiX                := IniRead(IniFile, Section, "GuiX", "")
     GuiY                := IniRead(IniFile, Section, "GuiY", "")
     TestMode            := IniRead(IniFile, Section, "TestMode", 0)
+    TestFailing         := IniRead(IniFile, Section, "TestFailing", 0)
     TreeViewWidth       := IniRead(IniFile, Section, "TreeViewWidth", 280)
     ViewExpectedCode    := IniRead(IniFile, Section, "ViewExpectedCode", 0)
     OnExit(ExitFunc)
@@ -601,7 +602,9 @@ GuiTest(strV1Script:="")
     ; Add folders and their subfolders to the tree. Display the status in case loading takes a long time:
     M := Gui("ToolWindow -SysMenu Disabled AlwaysOnTop", "Loading the tree..."), M.Show("w200 h0")
 
-    if TestMode{
+    if TestFailing{
+        DirList := AddSubFoldersToTree(A_ScriptDir "/tests", Map())
+    } else if TestMode{
         DirList := AddSubFoldersToTree(TreeRoot, Map())
     }
     else{
@@ -700,6 +703,7 @@ GuiTest(strV1Script:="")
     FileMenu.Add( "E&xit", (*) => ExitApp())
     SettingsMenu := Menu()
     SettingsMenu.Add("Testmode", MenuTestMode)
+    SettingsMenu.Add("Include Failing", MenuTestFailing)
     TestMenu := Menu()
     TestMenu.Add("AddBracketToHotkeyTest", (*) => V2Edit.Text := AddBracket(V1Edit.Text))
     TestMenu.Add("GetAltLabelsMap", (*) => V2Edit.Text := GetAltLabelsMap(V1Edit.Text))
@@ -825,6 +829,13 @@ MenuTestMode(*)
     IniWrite(TestMode, "QuickConvertorV2.ini", "Convertor", "TestMode")
     MyGui.GetPos(, , &Width, &Height)
     Gui_Size(MyGui, 0, Width-14, Height - 60)
+}
+MenuTestFailing(*)
+{
+    global
+    SettingsMenu.ToggleCheck("Include Failing")
+    TestFailing := !TestFailing
+    IniWrite(TestFailing, "QuickConvertorV2.ini", "Convertor", "TestFailing")
 }
 MenuViewExpected(*)
 {
@@ -1003,6 +1014,7 @@ MyExit:
     ;WRITE BACK VARIABLES SO THAT DEFAULTS ARE SAVED TO INI
     IniWrite(FontSize,           IniFile, Section, "FontSize")
     IniWrite(TestMode,           IniFile, Section, "TestMode")
+    IniWrite(TestFailing,        IniFile, Section, "TestFailing")
     IniWrite(TreeViewWidth,      IniFile, Section, "TreeViewWidth")
     IniWrite(ViewExpectedCode,   IniFile, Section, "ViewExpectedCode")
     ExitApp
@@ -1079,6 +1091,7 @@ XButton2::
 ExitFunc(ExitReason, ExitCode){
     IniWrite(FontSize,           IniFile, Section, "FontSize")
     IniWrite(TestMode,           IniFile, Section, "TestMode")
+    IniWrite(TestFailing,        IniFile, Section, "TestFailing")
     IniWrite(TreeViewWidth,      IniFile, Section, "TreeViewWidth")
     IniWrite(ViewExpectedCode,   IniFile, Section, "ViewExpectedCode")
 }

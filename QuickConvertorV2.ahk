@@ -749,6 +749,11 @@ GuiTest(strV1Script:="")
         MenuTestMode('')
     }
 
+    if TestFailing {
+        TestFailing := !TestFailing
+        MenuTestFailing('')
+    }
+
     if (strV1Script!=""){
         ButtonConvert(myGui)
     }

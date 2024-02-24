@@ -2284,7 +2284,7 @@ _Menu(p) {
          }
       } else if (Var2 = "SetColor") {
          if (Var4 = "Single") {
-            LineResult .= ", 1"
+            LineResult .= ", 0"
          }
       } else {
          if Var4 != "" {

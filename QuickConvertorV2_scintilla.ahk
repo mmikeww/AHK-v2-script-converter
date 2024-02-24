@@ -740,13 +740,17 @@ MyGui.OnEvent("DropFiles",Gui_DropFiles)
 ; Display the window. The OS will notify the script whenever the user performs an eligible action:
 MyGui.Show("h" GuiHeight " w" GuiWidth)
 sleep(500)
+UserClicked := true
+
 if TestMode {
     TestMode := !TestMode
+    UserClicked := false
     MenuTestMode('')
 }
 
 if TestFailing {
     TestFailing := !TestFailing
+    UserClicked := false
     MenuTestFailing('')
 }
 
@@ -875,6 +879,12 @@ MenuTestMode(*)
         CheckBoxV2E.Visible := false
         ViewMenu.UnCheck("View Tree")
     }
+    if TestMode and UserClicked{
+        msgResult := MsgBox("In order for changes to take effect a reload is required.`n`nReload now?", "Reload Required", 68)
+        if (msgResult = "Yes")
+            Gui_Close(MyGui),Reload()
+    }
+    UserClicked := true
     IniWrite(TestMode, "QuickConvertorV2.ini", "Convertor", "TestMode")
     MyGui.GetPos(, , &Width, &Height)
     Gui_Size(MyGui, 0, Width-14, Height - 60)
@@ -884,6 +894,12 @@ MenuTestFailing(*)
     global
     SettingsMenu.ToggleCheck("Include Failing")
     TestFailing := !TestFailing
+    if TestFailing and TestMode and UserClicked{
+        msgResult := MsgBox("In order for changes to take effect a reload is required.`n`nReload now?", "Reload Required", 68)
+        if (msgResult = "Yes")
+            Gui_Close(MyGui),Reload()
+    }
+    UserClicked := true
     IniWrite(TestFailing, "QuickConvertorV2.ini", "Convertor", "TestFailing")
 }
 MenuViewExpected(*)

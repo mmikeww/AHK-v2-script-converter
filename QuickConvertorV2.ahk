@@ -41,7 +41,7 @@
     #Include <_GuiCtlExt>
 }
 { ;VARIABLES:
-    global icons, TestMode, FontSize, ViewExpectedCode, GuiWidth, GuiHeight
+    global icons, TestMode, TestFailing, FontSize, ViewExpectedCode, GuiWidth, GuiHeight
 
     ; TreeRoot will be the root folder for the TreeView.
     ;   Note: Loading might take a long time if an entire drive such as C:\ is specified.
@@ -602,7 +602,7 @@ GuiTest(strV1Script:="")
     ; Add folders and their subfolders to the tree. Display the status in case loading takes a long time:
     M := Gui("ToolWindow -SysMenu Disabled AlwaysOnTop", "Loading the tree..."), M.Show("w200 h0")
 
-    if TestFailing{
+    if TestFailing and TestMode{
         DirList := AddSubFoldersToTree(A_ScriptDir "/tests", Map())
     } else if TestMode{
         DirList := AddSubFoldersToTree(TreeRoot, Map())

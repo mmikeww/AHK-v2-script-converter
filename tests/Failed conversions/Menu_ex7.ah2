@@ -128,7 +128,7 @@ Return
 
 Delete(A_GuiEvent, GuiCtrlObj, Info, *)
 { ; V1toV2: Added bracket
-Tab1.DeleteAll()
+Tab1.Delete()
 Tab2.Delete()
 Tab3.Delete()
 Tab4.Delete()

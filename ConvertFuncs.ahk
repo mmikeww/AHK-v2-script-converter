@@ -318,10 +318,37 @@ Convert(ScriptString)
       {
          Line := RTrim(Equation[1]) . ' := ""' . Equation[2]
       }
-      else if RegexMatch(Line, "i)^([\s]*[a-z_][a-z_0-9]*[\s]*:=\s*)(`".*`")$", &Equation)
+      else if RegexMatch(Line, "i)^([\s]*[a-z_][a-z_0-9]*[\s]*:=\s*)(.*)", &Equation) ; Line is a variable assignment, check for ""
       { ; Replace "" with `", see #111
-         QuoteTrim := RegExReplace(Equation[2], "`"(.*)`"", "$1")
-         Line := Equation[1] . "`"" . RegexReplace(QuoteTrim, "`"`"", "```"") . "`""
+         if InStr(Line, "`"`"") {
+            Line := Equation[1]
+            val := Equation[2]
+            pos := RegExMatch(val, "(\w[\w\d]*[^`"]*)?(`"(?:`"`")?(?:(?:`"`"|[^`"])*)*?(?:`"`")?`")([ \t]*[a-z]*[ \t]*)", &match) ; https://regex101.com/r/tpJlSH/1
+            if pos != 0 {
+               arr := []
+               while pos != 0 {
+                  pos := RegExMatch(val, "(\w[\w\d]*[^`"]*)?(`"(?:`"`")?(?:(?:`"`"|[^`"])*)*?(?:`"`")?`")([ \t]*[a-z]*[ \t]*)", &match)
+                  if pos != 0 {
+                     i := 1
+                     Loop(match.Count) {
+                        if SubStr(match[i], 1, 1) = "`"" {
+                           QuoteTrim := RegexReplace(match[i], "`"(.*)`"", "$1")
+                           QuoteTrim := StrReplace(QuoteTrim, "`"`"", "```"")
+                           QuoteTrim := "`"" QuoteTrim "`""
+                           arr.Push(QuoteTrim)
+                        } else {
+                           arr.Push(match[i])
+                        }
+                        i++
+                     }
+                     val := StrReplace(val, match[])
+                  }
+               }
+               for i, v in arr {
+                  Line .= v
+               }
+            }
+         }
       }
 
       ; -------------------------------------------------------------------------------

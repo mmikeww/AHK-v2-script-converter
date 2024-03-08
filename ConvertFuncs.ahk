@@ -323,19 +323,16 @@ Convert(ScriptString)
          if InStr(Line, "`"`"") {
             Line := Equation[1]
             val := Equation[2]
-            pos := RegExMatch(val, "(\w[\w\d]*[^`"]*)?(`"(?:`"`")?(?:(?:`"`"|[^`"])*)*?(?:`"`")?`")([ \t]*[a-z]*[ \t]*)", &match) ; https://regex101.com/r/tpJlSH/1
-            if pos != 0 {
+            if pos := RegExMatch(val, "(\w[\w\d]*[^`"]*)?(`"(?:`"`")?(?:(?:`"`"|[^`"])*)*?(?:`"`")?`")([ \t]*[a-z]*[ \t]*)", &match) != 0 { ; https://regex101.com/r/tpJlSH/1
                arr := []
                while pos != 0 {
                   pos := RegExMatch(val, "(\w[\w\d]*[^`"]*)?(`"(?:`"`")?(?:(?:`"`"|[^`"])*)*?(?:`"`")?`")([ \t]*[a-z]*[ \t]*)", &match)
                   if pos != 0 {
                      i := 1
                      Loop(match.Count) {
-                        if SubStr(match[i], 1, 1) = "`"" {
-                           QuoteTrim := RegexReplace(match[i], "`"(.*)`"", "$1")
-                           QuoteTrim := StrReplace(QuoteTrim, "`"`"", "```"")
-                           QuoteTrim := "`"" QuoteTrim "`""
-                           arr.Push(QuoteTrim)
+                        if SubStr(match[i], 1, 1) = "`"" { ; If match is a string
+                           str := "`"" StrReplace(RegexReplace(match[i], "`"(.*)`"", "$1"), "`"`"", "```"") "`""
+                           arr.Push(str)
                         } else {
                            arr.Push(match[i])
                         }

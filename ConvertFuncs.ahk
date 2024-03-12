@@ -2331,7 +2331,9 @@ _Menu(p) {
       }
    }
    if (RegExCount5) {
-      if Var5 != "" {
+      if Var2 = "Insert" {
+         LineResult .= ", " Var5
+      } else if Var5 != "" {
          LineResult .= ", " ToStringExpr(Var5)
       } else if Var5 = "" && p[6] != "" {
          LineResult .= ",, "

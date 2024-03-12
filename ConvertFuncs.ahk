@@ -318,6 +318,35 @@ Convert(ScriptString)
       {
          Line := RTrim(Equation[1]) . ' := ""' . Equation[2]
       }
+      else if RegexMatch(Line, "i)^([\s]*[a-z_][a-z_0-9]*[\s]*[:\.]=\s*)(.*)", &Equation) ; Line is a variable assignment, check for ""
+      { ; Replace "" with `", see #111
+         if InStr(Line, "`"`"") {
+            Line := Equation[1]
+            val := Equation[2]
+            if pos := RegExMatch(val, "(\w[\w\d]*[^`"]*)?(`"(?:`"`")?(?:(?:`"`"|[^`"])*)*?(?:`"`")?`")([ \t]*[a-z]*[ \t]*)", &match) != 0 { ; https://regex101.com/r/tpJlSH/1
+               arr := []
+               while pos != 0 {
+                  pos := RegExMatch(val, "(\w[\w\d]*[^`"]*)?(`"(?:`"`")?(?:(?:`"`"|[^`"])*)*?(?:`"`")?`")([ \t]*[a-z]*[ \t]*)", &match)
+                  if pos != 0 {
+                     i := 1
+                     Loop(match.Count) {
+                        if SubStr(match[i], 1, 1) = "`"" { ; If match is a string
+                           str := "`"" StrReplace(RegexReplace(match[i], "`"(.*)`"", "$1"), "`"`"", "```"") "`""
+                           arr.Push(str)
+                        } else {
+                           arr.Push(match[i])
+                        }
+                        i++
+                     }
+                     val := StrReplace(val, match[])
+                  }
+               }
+               for i, v in arr {
+                  Line .= v
+               }
+            }
+         }
+      }
 
       ; -------------------------------------------------------------------------------
       ;

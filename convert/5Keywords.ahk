@@ -28,4 +28,8 @@ global KeywordsToRenameM := OrderedMap(
     "A_LoopRegKey"
   , "%A_LoopRegKey%\%A_LoopRegSubKey%" ,
     "%A_LoopRegKey%"
+  , "A_BatchLines" , 
+    "-1"
+  , "A_NumBatchLines" , 
+    "-1"
   )

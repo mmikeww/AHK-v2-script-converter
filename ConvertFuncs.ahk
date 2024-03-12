@@ -790,6 +790,15 @@ Convert(ScriptString)
             }
          }
 
+      if RegexMatch(Line, "i)A_Caret(X|Y)", &Equation) {
+         if RegexMatch(Line, "i)A_CaretX") and RegexMatch(Line, "i)A_CaretY") {
+            Param := "&A_CaretX, &A_CaretY"
+         } else {
+            Equation[1] = "X" ? Param := "&" Equation[] : Param := ", &" Equation[]
+         }
+         Line := "CaretGetPos(" Param ")`n" Line
+      }
+
          ; Remove lines we can't use
       If CommandMatch = 0 && !InCommentBlock
       {

@@ -318,7 +318,7 @@ Convert(ScriptString)
       {
          Line := RTrim(Equation[1]) . ' := ""' . Equation[2]
       }
-      else if RegexMatch(Line, "i)^([\s]*[a-z_][a-z_0-9]*[\s]*:=\s*)(.*)", &Equation) ; Line is a variable assignment, check for ""
+      else if RegexMatch(Line, "i)^([\s]*[a-z_][a-z_0-9]*[\s]*[:\.]=\s*)(.*)", &Equation) ; Line is a variable assignment, check for ""
       { ; Replace "" with `", see #111
          if InStr(Line, "`"`"") {
             Line := Equation[1]

@@ -42,7 +42,7 @@
     (Scintilla) ; Init class, or simply #INCLUDE the extension-lib at the top.
 }
 { ;VARIABLES:
-    global icons, TestMode, FontSize, ViewExpectedCode, GuiWidth, GuiHeight
+    global icons, TestMode, TestFailing, FontSize, ViewExpectedCode, GuiWidth, GuiHeight
 
     ; TreeRoot will be the root folder for the TreeView.
     ;   Note: Loading might take a long time if an entire drive such as C:\ is specified.
@@ -55,6 +55,7 @@
     GuiHeight         := IniRead(IniFile, Section, "GuiHeight", 500)
     GuiWidth          := IniRead(IniFile, Section, "GuiWidth", 800)
     TestMode          := IniRead(IniFile, Section, "TestMode", 0)
+    TestFailing       := IniRead(IniFile, Section, "TestFailing", 0)
     TreeViewWidth     := IniRead(IniFile, Section, "TreeViewWidth", 280)
     ViewExpectedCode  := IniRead(IniFile, Section, "ViewExpectedCode", 0)
 
@@ -63,6 +64,7 @@
     IniWrite(TreeViewWidth,      IniFile, Section, "GuiHeight")
     IniWrite(ViewExpectedCode,   IniFile, Section, "GuiWidth")
     IniWrite(TestMode,           IniFile, Section, "TestMode")
+    IniWrite(TestFailing,        IniFile, Section, "TestFailing")
     IniWrite(TreeViewWidth,      IniFile, Section, "TreeViewWidth")
     IniWrite(ViewExpectedCode,   IniFile, Section, "ViewExpectedCode")
 }
@@ -578,8 +580,10 @@ SB.SetParts(300, 300)  ; Create three parts in the bar (the third part fills all
 
 ; Add folders and their subfolders to the tree. Display the status in case loading takes a long time:
 M := Gui("ToolWindow -SysMenu Disabled AlwaysOnTop", "Loading the tree..."), M.Show("w200 h0")
-
-if TestMode{
+if TestFailing and TestMode{
+    DirList := AddSubFoldersToTree(A_ScriptDir "/tests", Map())
+}
+else if TestMode{
     DirList := AddSubFoldersToTree(TreeRoot, Map())
 }
 else{
@@ -700,6 +704,7 @@ FileMenu.Add()
 FileMenu.Add "E&xit", (*) => ExitApp()
 SettingsMenu := Menu()
 SettingsMenu.Add("Testmode", MenuTestMode)
+SettingsMenu.Add("Include Failing", MenuTestFailing)
 TestMenu := Menu()
 TestMenu.Add("AddBracketToHotkeyTest", (*) => V2Edit.Text := AddBracket(V1Edit.Text))
 TestMenu.Add("GetAltLabelsMap", (*) => V2Edit.Text := GetAltLabelsMap(V1Edit.Text))
@@ -735,9 +740,18 @@ MyGui.OnEvent("DropFiles",Gui_DropFiles)
 ; Display the window. The OS will notify the script whenever the user performs an eligible action:
 MyGui.Show("h" GuiHeight " w" GuiWidth)
 sleep(500)
+UserClicked := true
+
 if TestMode {
     TestMode := !TestMode
+    UserClicked := false
     MenuTestMode('')
+}
+
+if TestFailing {
+    TestFailing := !TestFailing
+    UserClicked := false
+    MenuTestFailing('')
 }
 
 if (strV1Script!=""){
@@ -865,9 +879,28 @@ MenuTestMode(*)
         CheckBoxV2E.Visible := false
         ViewMenu.UnCheck("View Tree")
     }
+    if TestMode and UserClicked{
+        msgResult := MsgBox("In order for changes to take effect a reload is required.`n`nReload now?", "Reload Required", 68)
+        if (msgResult = "Yes")
+            Gui_Close(MyGui),Reload()
+    }
+    UserClicked := true
     IniWrite(TestMode, "QuickConvertorV2.ini", "Convertor", "TestMode")
     MyGui.GetPos(, , &Width, &Height)
     Gui_Size(MyGui, 0, Width-14, Height - 60)
+}
+MenuTestFailing(*)
+{
+    global
+    SettingsMenu.ToggleCheck("Include Failing")
+    TestFailing := !TestFailing
+    if TestFailing and TestMode and UserClicked{
+        msgResult := MsgBox("In order for changes to take effect a reload is required.`n`nReload now?", "Reload Required", 68)
+        if (msgResult = "Yes")
+            Gui_Close(MyGui),Reload()
+    }
+    UserClicked := true
+    IniWrite(TestFailing, "QuickConvertorV2.ini", "Convertor", "TestFailing")
 }
 MenuViewExpected(*)
 {
@@ -1165,6 +1198,7 @@ MyExit:
     IniWrite(TreeViewWidth,      IniFile, Section, "GuiHeight")
     IniWrite(ViewExpectedCode,   IniFile, Section, "GuiWidth")
     IniWrite(TestMode,           IniFile, Section, "TestMode")
+    IniWrite(TestFailing,        IniFile, Section, "TestFailing")
     IniWrite(TreeViewWidth,      IniFile, Section, "TreeViewWidth")
     IniWrite(ViewExpectedCode,   IniFile, Section, "ViewExpectedCode")
     ExitApp

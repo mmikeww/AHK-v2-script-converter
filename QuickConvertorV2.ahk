@@ -41,7 +41,7 @@
     #Include <_GuiCtlExt>
 }
 { ;VARIABLES:
-    global icons, TestMode, FontSize, ViewExpectedCode, GuiWidth, GuiHeight
+    global icons, TestMode, TestFailing, FontSize, ViewExpectedCode, GuiWidth, GuiHeight
 
     ; TreeRoot will be the root folder for the TreeView.
     ;   Note: Loading might take a long time if an entire drive such as C:\ is specified.
@@ -56,6 +56,7 @@
     GuiX                := IniRead(IniFile, Section, "GuiX", "")
     GuiY                := IniRead(IniFile, Section, "GuiY", "")
     TestMode            := IniRead(IniFile, Section, "TestMode", 0)
+    TestFailing         := IniRead(IniFile, Section, "TestFailing", 0)
     TreeViewWidth       := IniRead(IniFile, Section, "TreeViewWidth", 280)
     ViewExpectedCode    := IniRead(IniFile, Section, "ViewExpectedCode", 0)
     OnExit(ExitFunc)
@@ -601,7 +602,9 @@ GuiTest(strV1Script:="")
     ; Add folders and their subfolders to the tree. Display the status in case loading takes a long time:
     M := Gui("ToolWindow -SysMenu Disabled AlwaysOnTop", "Loading the tree..."), M.Show("w200 h0")
 
-    if TestMode{
+    if TestFailing and TestMode{
+        DirList := AddSubFoldersToTree(A_ScriptDir "/tests", Map())
+    } else if TestMode{
         DirList := AddSubFoldersToTree(TreeRoot, Map())
     }
     else{
@@ -700,6 +703,7 @@ GuiTest(strV1Script:="")
     FileMenu.Add( "E&xit", (*) => ExitApp())
     SettingsMenu := Menu()
     SettingsMenu.Add("Testmode", MenuTestMode)
+    SettingsMenu.Add("Include Failing", MenuTestFailing)
     TestMenu := Menu()
     TestMenu.Add("AddBracketToHotkeyTest", (*) => V2Edit.Text := AddBracket(V1Edit.Text))
     TestMenu.Add("GetAltLabelsMap", (*) => V2Edit.Text := GetAltLabelsMap(V1Edit.Text))
@@ -740,9 +744,18 @@ GuiTest(strV1Script:="")
     ; Display the window. The OS will notify the script whenever the user performs an eligible action:
     MyGui.Show("h" GuiHeight " w" GuiWidth GuiXOpt GuiYOpt)
     sleep(500)
+    UserClicked := true
+
     if TestMode {
         TestMode := !TestMode
+        UserClicked := false
         MenuTestMode('')
+    }
+
+    if TestFailing {
+        TestFailing := !TestFailing
+        UserClicked := false
+        MenuTestFailing('')
     }
 
     if (strV1Script!=""){
@@ -822,9 +835,28 @@ MenuTestMode(*)
         CheckBoxV2E.Visible := false
         ViewMenu.UnCheck("View Tree")
     }
+    if TestMode and UserClicked{
+        msgResult := MsgBox("In order for changes to take effect a reload is required.`n`nReload now?", "Reload Required", 68)
+        if (msgResult = "Yes")
+            Gui_Close(MyGui),Reload()
+    }
+    UserClicked := true
     IniWrite(TestMode, "QuickConvertorV2.ini", "Convertor", "TestMode")
     MyGui.GetPos(, , &Width, &Height)
     Gui_Size(MyGui, 0, Width-14, Height - 60)
+}
+MenuTestFailing(*)
+{
+    global
+    SettingsMenu.ToggleCheck("Include Failing")
+    TestFailing := !TestFailing
+    if TestFailing and TestMode and UserClicked{
+        msgResult := MsgBox("In order for changes to take effect a reload is required.`n`nReload now?", "Reload Required", 68)
+        if (msgResult = "Yes")
+            Gui_Close(MyGui),Reload()
+    }
+    UserClicked := true
+    IniWrite(TestFailing, "QuickConvertorV2.ini", "Convertor", "TestFailing")
 }
 MenuViewExpected(*)
 {
@@ -1003,6 +1035,7 @@ MyExit:
     ;WRITE BACK VARIABLES SO THAT DEFAULTS ARE SAVED TO INI
     IniWrite(FontSize,           IniFile, Section, "FontSize")
     IniWrite(TestMode,           IniFile, Section, "TestMode")
+    IniWrite(TestFailing,        IniFile, Section, "TestFailing")
     IniWrite(TreeViewWidth,      IniFile, Section, "TreeViewWidth")
     IniWrite(ViewExpectedCode,   IniFile, Section, "ViewExpectedCode")
     ExitApp
@@ -1079,6 +1112,7 @@ XButton2::
 ExitFunc(ExitReason, ExitCode){
     IniWrite(FontSize,           IniFile, Section, "FontSize")
     IniWrite(TestMode,           IniFile, Section, "TestMode")
+    IniWrite(TestFailing,        IniFile, Section, "TestFailing")
     IniWrite(TreeViewWidth,      IniFile, Section, "TreeViewWidth")
     IniWrite(ViewExpectedCode,   IniFile, Section, "ViewExpectedCode")
 }

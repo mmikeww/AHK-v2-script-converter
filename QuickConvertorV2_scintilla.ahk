@@ -358,7 +358,11 @@ CompVscV2E(*)
 }
 Edit_Change(*)
 {
-    GuiCtrlObj := MyGui.FocusedCtrl
+    try {
+        GuiCtrlObj := MyGui.FocusedCtrl
+    } Catch {
+        GuiCtrlObj := ""
+    }
     if IsObject(GuiCtrlObj){
         CurrentCol := EditGetCurrentCol(GuiCtrlObj)
 	    CurrentLine := EditGetCurrentLine(GuiCtrlObj)

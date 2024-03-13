@@ -360,7 +360,11 @@ CompVscV2E(*)
 }
 Edit_Change(*)
 {
-    GuiCtrlObj := MyGui.FocusedCtrl
+    try {
+        GuiCtrlObj := MyGui.FocusedCtrl
+    } Catch {
+        GuiCtrlObj := ""
+    }
     if IsObject(GuiCtrlObj){
         CurrentCol := EditGetCurrentCol(GuiCtrlObj)
 	    CurrentLine := EditGetCurrentLine(GuiCtrlObj)
@@ -694,7 +698,7 @@ ButtonValidateConversion.OnEvent("Click", ButtonGenerateTest)
 ; Call Gui_Size whenever the window is resized:
 MyGui.OnEvent("Size", Gui_Size)
 
-; MyGui.OnEvent("Close", (*) => ExitApp())
+MyGui.OnEvent("Close", MyExit)
 ; MyGui.OnEvent("Escape", (*) => ExitApp())
 
 FileMenu := Menu()
@@ -1191,6 +1195,7 @@ ViewV2E(*)
 ;*** HOTKEYS ***
 ;***************
 Esc::     ;Exit application - Using either <Esc> Hotkey or Goto("MyExit")
+MyExit(*)
 {
 MyExit:
     ;WRITE BACK VARIABLES SO THAT DEFAULTS ARE SAVED TO INI

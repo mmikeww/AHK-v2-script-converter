@@ -386,7 +386,7 @@ class Scintilla extends Gui.Custom {
         If (this.AutoSizeNumberMargin)
             this.MarginWidth(0, 33, scn) ; number margin 0, with default style 33
         
-        If (this.CustomSyntaxHighlighting) {
+        If (this.CustomSyntaxHighlighting && WinExist("Quick Convertor V2")) {
             
             data := this.scn_data(scn) ; prep data for DLL calls
             ; wordList := this.makeWordLists()

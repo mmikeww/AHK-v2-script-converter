@@ -91,6 +91,10 @@ global FunctionsToConvertM := OrderedMap(
      "*_NumPut"
   , "Object(Array*)" ,
      "*_Object"
+  , "ObjRawGet(Object, KeyQ2T)" ,
+     "{1}.{2}"
+  , "ObjRawSet(Object, KeyQ2T, Value)" ,
+     "{1}.{2} := {3}"
   , "OnError(FuncQ2T,AddRemove)" ,
      "OnError({1}, {2})"
   , "OnMessage(MsgNumber, FunctionQ2T, MaxThreads)" ,

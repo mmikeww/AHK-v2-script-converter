@@ -13,9 +13,9 @@ global ArrayMethodsToConvertM := OrderedMap(
     "Length"
   , "HasKey(Key)" ,
     "Has({1})"
-  , "Insert(Keys)",
+  , "Insert(Keys*)",
     "*_InsertAt"
-  , "Remove(Keys)",
+  , "Remove(Keys*)",
     "*_RemoveAt"
   )
 

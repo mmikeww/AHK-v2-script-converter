@@ -29,6 +29,9 @@
     - param names ending in "On2True" would convert an OnOff Parameter name to a Mode
         On  => True
         Off => False
+    - param names ending in "*" means there could be an unlimited amount of params after
+        more common in functions, prevents program from warning extra params
+        DllCall will have different params, compared to the dll's function
     - any other param name will not be converted
         this means that the literal text of the parameter is unchanged
         this would be used for InputVar/OutputVar params, or whenever you want the literal text preserved

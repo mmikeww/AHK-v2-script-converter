@@ -1,4 +1,4 @@
-﻿#Requires AutoHotKey v2.0-beta.1
+﻿#Requires AutoHotKey v2.0
 
 /* a list of all renamed functions, in this format:
     , "OrigV1Function" ,

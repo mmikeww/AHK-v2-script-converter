@@ -1,4 +1,4 @@
-#Requires AutoHotKey v2.0-beta.1
+#Requires AutoHotKey v2.0
 #Include Yunit\Yunit.ahk
 #Include Yunit\Window.ahk
 #Include ..\ConvertFuncs.ahk

@@ -1,4 +1,4 @@
-﻿#Requires AutoHotkey v2.0-beta.1
+﻿#Requires AutoHotkey v2.0
 
 ; autohotkey.com/boards/viewtopic.php?f=82&t=94114&p=418207
 class OrderedMap extends Map {

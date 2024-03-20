@@ -1,4 +1,4 @@
-#Requires AutoHotkey v2.0-beta.1
+#Requires AutoHotkey v2.0
 
 class Yunit
 {

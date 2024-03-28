@@ -886,7 +886,7 @@ MenuTestMode(*)
     if TestMode and UserClicked{
         msgResult := MsgBox("In order for changes to take effect a reload is required.`n`nReload now?", "Reload Required", 68)
         if (msgResult = "Yes")
-            Gui_Close(MyGui),Reload()
+            MyExit(MyGui),Reload()
     }
     UserClicked := true
     IniWrite(TestMode, "QuickConvertorV2.ini", "Convertor", "TestMode")
@@ -901,7 +901,7 @@ MenuTestFailing(*)
     if TestFailing and TestMode and UserClicked{
         msgResult := MsgBox("In order for changes to take effect a reload is required.`n`nReload now?", "Reload Required", 68)
         if (msgResult = "Yes")
-            Gui_Close(MyGui),Reload()
+            MyExit(MyGui),Reload()
     }
     UserClicked := true
     IniWrite(TestFailing, "QuickConvertorV2.ini", "Convertor", "TestFailing")
@@ -1198,6 +1198,8 @@ Esc::     ;Exit application - Using either <Esc> Hotkey or Goto("MyExit")
 MyExit(*)
 {
 MyExit:
+    if (MyGui.title != WinGetTitle("A"))
+        return
     ;WRITE BACK VARIABLES SO THAT DEFAULTS ARE SAVED TO INI
     IniWrite(TestMode,           IniFile, Section, "FontSize")
     IniWrite(TreeViewWidth,      IniFile, Section, "GuiHeight")

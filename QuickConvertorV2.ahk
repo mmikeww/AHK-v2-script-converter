@@ -1032,6 +1032,8 @@ ViewV2E(*)
 Esc::     ;Exit application - Using either <Esc> Hotkey or Goto("MyExit")
 {
 MyExit:
+    if (MyGui.title != WinGetTitle("A"))
+        return
     ;WRITE BACK VARIABLES SO THAT DEFAULTS ARE SAVED TO INI
     IniWrite(FontSize,           IniFile, Section, "FontSize")
     IniWrite(TestMode,           IniFile, Section, "TestMode")

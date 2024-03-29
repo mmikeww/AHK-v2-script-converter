@@ -163,7 +163,7 @@ global CommandsToConvertM := OrderedMap(
     "*_GuiControlGet"
   , "Gosub,Label" ,
     "*_Gosub"
-  , "Goto,Label" ,
+  , "Goto,LabelT2E" ,
     "Goto({1})"
   , "GroupActivate,GroupNameT2E,ModeT2E" ,
     "GroupActivate({1}, {2})"

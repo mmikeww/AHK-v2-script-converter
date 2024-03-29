@@ -161,6 +161,7 @@ Convert(ScriptString)
       Line := StrReplace(Line, "<>","!=")
 
       ; Remove new from code for classes
+      ; Known Issue: Removes new from strings
       If RegExMatch(Line, "i)^(.*)(:=|\(|,)(\s*)new\s(\s*\w.*)$", &Equation) {
          Line := Equation[1] Equation[2] Equation[3] Equation[4]
       }
@@ -220,6 +221,13 @@ Convert(ScriptString)
       subLoopFunctions(ScriptString, Line, &LineFuncV2, &gotFunc:=False)
       if gotFunc {
          Line := LineFuncV2
+      }
+
+      ; Remove case from switch to ensure conversion works
+      CaseValue := ""
+      if RegExMatch(Line, "i)^\s*(?:case .*?|default):(?!=)", &Equation) {
+         CaseValue := Equation[]
+         Line := StrReplace(Line, CaseValue,,,, 1)
       }
 
       ; -------------------------------------------------------------------------------
@@ -504,6 +512,15 @@ Convert(ScriptString)
             , StrTitle(Equation[4])	;type
             , Equation[5])	;otb
          Line := Equation[6]
+      }
+
+      ; -------------------------------------------------------------------------------
+      ;
+      ; Replace all switch variations with Switch SwitchValue
+      ;
+      else if RegExMatch(Line, "i)^\s*switch,?\s*\(?(.*)\)?\s*\{?", &Equation)
+      {
+         Line := "Switch " Equation[1]
       }
 
       ; -------------------------------------------------------------------------------
@@ -826,6 +843,11 @@ Convert(ScriptString)
             Equation[1] = "X" ? Param := "&" Equation[] : Param := ", &" Equation[]
          }
          Line := "CaretGetPos(" Param ")`n" Line
+      }
+
+      ; Add back Case if exists
+      if (CaseValue != "") {
+         Line := CaseValue " " Line
       }
 
          ; Remove lines we can't use

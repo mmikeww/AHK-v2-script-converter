@@ -1194,12 +1194,14 @@ ViewV2E(*)
 ;***************
 ;*** HOTKEYS ***
 ;***************
-Esc::     ;Exit application - Using either <Esc> Hotkey or Goto("MyExit")
+$Esc::     ;Exit application - Using either <Esc> Hotkey or Goto("MyExit")
 MyExit(*)
 {
 MyExit:
-    if (MyGui.title != WinGetTitle("A"))
+    if (MyGui.title != WinGetTitle("A")) {
+        Send("{esc}")
         return
+    }
     ;WRITE BACK VARIABLES SO THAT DEFAULTS ARE SAVED TO INI
     IniWrite(TestMode,           IniFile, Section, "FontSize")
     IniWrite(TreeViewWidth,      IniFile, Section, "GuiHeight")

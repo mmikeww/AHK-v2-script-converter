@@ -2982,20 +2982,6 @@ _HashtagIfWinActivate(p) {
    Return format("#HotIf WinActive({1}, {2})", p*)
 }
 
-_HashtagInclude(p) {
-   if (SubStr(p[1], -1) = "%") {
-      Return "#Include " Trim(p[1], "%")
-   }
-   Return "#Include `"" p[1] "`""
-}
-
-_HashtagIncludeAgain(p) {
-   if (SubStr(p[1], -1) = "%") {
-      Return "#IncludeAgain " Trim(p[1], "%")
-   }
-   Return "#IncludeAgain `"" p[1] "`""
-}
-
 ; =============================================================================
 
 Convert_GetContSect() {

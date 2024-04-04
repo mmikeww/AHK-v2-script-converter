@@ -444,9 +444,9 @@ global CommandsToConvertM := OrderedMap(
   , "#IfTimeout,ExpressionCBE2E" ,
     "#HotIfTimeout {1}"
   , "#Include,FileOrDirName" ,
-    "*_HashtagInclude"
+    "#Include `"{1}`""
   , "#IncludeAgain,FileOrDirName" ,
-    "*_HashtagIncludeAgain"
+    "#IncludeAgain `"{1}`""
   , "#InputLevel,LevelCBE2E" ,
     "#InputLevel {1}"
   , "#IfWinActive,WinTitleT2E,WinTextT2E" ,

@@ -1,1 +1,1 @@
-#Include A_ScriptDir
+#Include "%A_ScriptDir%"

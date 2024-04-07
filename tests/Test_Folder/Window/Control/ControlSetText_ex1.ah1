@@ -1,1 +1,1 @@
-ControlSetText, Edit1, New Text Here, Untitled -
+ControlSetText, Edit1, Changed Text, Untitled -

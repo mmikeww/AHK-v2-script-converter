@@ -1,0 +1,2 @@
+MyValue := "<>"
+MsgBox(MyValue " <>")

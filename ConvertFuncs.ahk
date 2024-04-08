@@ -285,7 +285,7 @@ Convert(ScriptString)
          ;continue ; Don't add to the output file
       } else if (FirstChar == ")")
       {
-         ;MsgBox, End Cont. Section`n`nLine:`n%Line%`n`nLastLine:`n%LastLine%`n`nScriptOutput:`n[`n%ScriptOutput%`n]
+         ;MsgBox "End Cont. Section`n`nLine:`n" Line "`n`nLastLine:`n" LastLine "`n`nScriptOutput:`n[`n" ScriptOutput "`n]"
          InCont := 0
          if (Cont_String = 1)
          {
@@ -303,7 +303,8 @@ Convert(ScriptString)
          ;If InCont > 1
          ;Line := ". " . Line
          ;InCont++
-         ;MsgBox, Inside Cont. Section`n`nLine:`n%Line%`n`nLastLine:`n%LastLine%`n`nScriptOutput:`n[`n%ScriptOutput%`n]
+         Line := RegexReplace(Line, "%(.*?)%", "`" $1 `"")
+         ;MsgBox "Inside Cont. Section`n`nLine:`n" Line "`n`nLastLine:`n" LastLine "`n`nScriptOutput:`n[`n" ScriptOutput "`n]"
          ScriptOutput .= Line . "`r`n"
          LastLine := Line
          continue

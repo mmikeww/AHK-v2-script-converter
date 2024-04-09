@@ -166,6 +166,13 @@ Convert(ScriptString)
          Line := Equation[1] Equation[2] Equation[3] Equation[4]
       }
 
+      ; Fix lines with preceeding }
+      LinePrefix := ""
+      If RegExMatch(Line, "i)^\s*}(?!\s*else|\s*\n)\s*", &Equation) {
+         Line := StrReplace(Line, Equation[],,,, 1)
+         LinePrefix := Equation[]
+      }
+
       ; Handle return % var -> return var
       If RegExMatch(Line, "i)^(.*)(return)(\s+%\s*\s+)(.*)$", &Equation) {
          Line := Equation[1] Equation[2] " " Equation[4]
@@ -883,6 +890,12 @@ Convert(ScriptString)
       }
 
       Line := PreLine Line
+
+      ; Add back LinePrefix if exists
+      if (LinePrefix != "") {
+         ;MsgBox("LinePrefix Add Back`nLine: [" Line "]`nOG Line: [" Orig_Line "]`nPrefix: [" LinePrefix "]`nScript Output: [" LinePrefix Line "]", "LinePrefix Add Back")
+         Line := LinePrefix Line
+      }
 
       ; Correction PseudoArray to Array
       Loop aListPseudoArray.Length {

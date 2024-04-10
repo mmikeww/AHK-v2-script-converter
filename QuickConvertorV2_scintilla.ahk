@@ -148,6 +148,13 @@ AddSubFoldersToTree(Folder, DirList, ParentItemID := 0,*)
         DirList[A_LoopFilePath] := ItemID
         DirList := AddSubFoldersToTree(A_LoopFilePath, DirList, ItemID)
     }
+    if TestFailing { ; Clean up issues caused by making tree test root
+        try Switch(TV.GetText(ParentItemID)) {
+            Case "Test_Folder": TV.Modify(ParentItemID, "Expand")
+            Case "TempScript.ah1": TV.Delete(ParentItemID)
+            Case "Yunit": TV.Delete(ParentItemID)
+        }
+    }
     TV.Opt("+Redraw")
     SB.SetText("Number of tests: " . Number_Tests . " ( " . Number_Tests - Number_Tests_Pass . " failed / " . Number_Tests_Pass . " passed)", 1)
     return DirList
@@ -625,7 +632,7 @@ ButtonRunV1 := MyGui.AddPicButton("w24 h24", "mmcndmgr.dll","icon33 h23")
 ButtonRunV1.StatusBar := "Run the V1 code"
 ButtonRunV1.OnEvent("Click", RunV1)
 
-ButtonCloseV1 := MyGui.AddPicButton("w24 h24 x+10 yp", "mmcndmgr.dll","icon62 h23")
+ButtonCloseV1 := MyGui.AddPicButton("w24 h24 x+10 yp Disabled", "mmcndmgr.dll","icon62 h23")
 ButtonCloseV1.StatusBar := "Close the running V1 code"
 ButtonCloseV1.OnEvent("Click", CloseV1)
 
@@ -653,7 +660,7 @@ ButtonRunV2 := MyGui.AddPicButton("w24 h24", "mmcndmgr.dll","icon33 h23")
 ButtonRunV2.StatusBar := "Run this code in Autohotkey V2"
 ButtonRunV2.OnEvent("Click", RunV2)
 
-ButtonCloseV2 := MyGui.AddPicButton("w24 h24 x+10 yp", "mmcndmgr.dll","icon62 h23")
+ButtonCloseV2 := MyGui.AddPicButton("w24 h24 x+10 yp Disabled", "mmcndmgr.dll","icon62 h23")
 ButtonCloseV2.StatusBar := "Close the running V2 code"
 ButtonCloseV2.OnEvent("Click", CloseV2)
 
@@ -671,7 +678,7 @@ ButtonRunV2E := MyGui.AddPicButton("w24 h24 x+10 yp", "mmcndmgr.dll","icon33 h23
 ButtonRunV2.StatusBar := "Run expected V2 code"
 ButtonRunV2E.OnEvent("Click", RunV2E)
 
-ButtonCloseV2E := MyGui.AddPicButton("w24 h24", "mmcndmgr.dll","icon62 h23")
+ButtonCloseV2E := MyGui.AddPicButton("w24 h24 Disabled", "mmcndmgr.dll","icon62 h23")
 ButtonCloseV2E.StatusBar := "Close the running expected V2 code"
 ButtonCloseV2E.OnEvent("Click", CloseV2E)
 
@@ -722,8 +729,8 @@ ViewMenu.Add("View Expected Code",MenuViewExpected)
 HelpMenu := Menu()
 HelpMenu.Add("Command Help`tF1",MenuCommandHelp)
 HelpMenu.Add()
-HelpMenu.Add("Online v1 docs", (*)=>Run("https://www.autohotkey.com/docs/AutoHotkey.htm"))
-HelpMenu.Add("Online v2 docs", (*)=>Run("https://lexikos.github.io/v2/docs/AutoHotkey.htm"))
+HelpMenu.Add("Online v1 docs", (*)=>Run("https://www.autohotkey.com/docs/v1/index.htm"))
+HelpMenu.Add("Online v2 docs", (*)=>Run("https://www.autohotkey.com/docs/v2/index.htm"))
 HelpMenu.Add()
 HelpMenu.Add("Report Issue", (*)=>Run("https://github.com/mmikeww/AHK-v2-script-converter/issues/new"))
 HelpMenu.Add("Open Github", (*)=>Run("https://github.com/mmikeww/AHK-v2-script-converter"))
@@ -841,10 +848,10 @@ MenuCommandHelp(*)
         }
 
         if InStr(ogcFocused.Name,"V1"){
-            URLSearch := "https://www.autohotkey.com/docs/search.htm?q="
+            URLSearch := "https://www.autohotkey.com/docs/v1/search.htm?q="
         }
         else{
-            URLSearch := "https://lexikos.github.io/v2/docs/search.htm?q="
+            URLSearch := "https://www.autohotkey.com/docs/v2/search.htm?q="
         }
         URL := URLSearch word "&m=2"
 
@@ -1202,6 +1209,9 @@ MyExit:
         Send("{esc}")
         return
     }
+    CloseV1(myGui) ; Close active scripts
+    CloseV2(myGui)
+    CloseV2E(myGui)
     ;WRITE BACK VARIABLES SO THAT DEFAULTS ARE SAVED TO INI
     IniWrite(TestMode,           IniFile, Section, "FontSize")
     IniWrite(TreeViewWidth,      IniFile, Section, "GuiHeight")

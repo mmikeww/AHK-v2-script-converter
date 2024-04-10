@@ -1,1 +1,1 @@
-ControlSetText("Changed Text", "Edit1", "Untitled -")
+ControlSetText("New Text Here", "Edit1", "Untitled -")

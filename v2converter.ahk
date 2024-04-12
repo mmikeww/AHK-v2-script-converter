@@ -31,6 +31,7 @@
 }
 { ;VARIABLES:
    global dbg:=0
+   global StartPath := A_ScriptDir ; FileSelect starting directory, useful if mass converting
 }
 { ;INCLUDES:
    #Include lib/ClassOrderedMap.ahk
@@ -44,6 +45,7 @@
 ;   Many changes can be made here to affect loading and processing
 ; =============================================================================
    MyOutExt  := "_newV2.ahk"    ;***ADDED OUTPUT EXTENSION OPTION***
+   ;MyOutExt := ".ahk"          ;***USE THIS TO OVERWRITE V1 FILE***
    ;MyOutExt := ".c2v2.ahk"     ;***THIS IS THE OUTPUT EXTENSION OPTION THAT I USE***
    ;NOTES: 1. When I have a coverted 2 version 2 file ("FILENAME.c2v2.ahk") working, 
    ;          I change the name to "FILENAME.v2.ahk".  
@@ -61,10 +63,21 @@
    {
       case 0:  ;IF NO ARGUMENTS THEN LOOK UP SOURCE FILE AND USE DEFAULT OUTPUT FILE
       {
-         FN := FileSelect("", A_ScriptDir, "Choose an AHK v1 file to convert to v2")
+         FN := FileSelect("", StartPath, "Choose an AHK v1 file to convert to v2")
       }
       case 1: ;IF ONE ARGUMENT THEN ASSUME THE ARUGMENT IS THE SOURCE FILE (FN) AND USE DEFAULT OUTPUT FILE
       {
+         if (A_Args[1] = "-h") {
+            MyMsg := "Flags:`n`n"
+            MyMsg .= "  -i  --input    The name of the v1 file you want to convert`n"
+            MyMsg .= "  -o  --output   The name of converted v2 file`n"
+            MyMsg .= "  If no path is given script location is used`n`n`n"
+            MyMsg .= "Variables (set by editing script):`n`n"
+            MyMsg .= "  StartPath      The starting location of the file selection`n"
+            MyMsg .= "  MyOutExt       The extension of the converted file"
+            MsgBox MyMsg
+            ExitApp
+         }
          FN := A_Args[1]
       }
       case 2: ;IF ONLY TWO ARGUMENTS THEN IF A_Args[1] IS NOT input THEN ERROR
@@ -98,7 +111,7 @@
    If !FN
    {
       if A_Args.Length > 0 {
-         MyMgs := ""
+         MyMsg := ""
          For args in A_Args
          {
             MyMsg .= "A_Args[" . A_Index . "]:" . A_Args[A_Index] . "`n`n"

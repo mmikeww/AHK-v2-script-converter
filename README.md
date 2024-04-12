@@ -21,6 +21,8 @@ However, this project is way more ambitious that I originally thought, and __it 
 1. [Download](https://github.com/mmikeww/AHK-v2-script-converter/archive/master.zip) the full repo. Then run the included `v2converter.ahk` script with AHK v2
 2. Choose your input `scriptfile.ahk` written for AHK v1.  
    The converted script will be named `scriptfile_newV2.ahk` in the same directory
+   Use `v2converter.ahk -h` in cmd to use the CLI
+   You can modify parts of how the script behave from editing variables inside the script
 3. Look over the Visual Diff to manually inspect the changes
 ![screenshot](https://github.com/mmikeww/AHK-v2-script-converter/blob/master/images/screenshot.jpg)
 

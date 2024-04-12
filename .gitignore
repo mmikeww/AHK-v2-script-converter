@@ -3,3 +3,6 @@ QuickConvertorV2.ini
 
 # Script being converted
 tests/TempScript.ah1
+
+# HTML file created by diff
+diff/temp.html

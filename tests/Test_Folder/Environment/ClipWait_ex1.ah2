@@ -3,8 +3,8 @@ Send("^c")
 Errorlevel := !ClipWait(2)
 if ErrorLevel
 {
-    MsgBox("The attempt to copy text onto the A_Clipboard failed.")
+    MsgBox("The attempt to copy text onto the clipboard failed.")
     return
 }
-MsgBox("A_Clipboard = " A_Clipboard)
+MsgBox("clipboard = " A_Clipboard)
 return

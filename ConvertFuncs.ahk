@@ -345,27 +345,38 @@ Convert(ScriptString)
          if InStr(Line, "`"`"") {
             Line := Equation[1]
             val := Equation[2]
-            if pos := RegExMatch(val, "(\w[\w\d]*[^`"]*)?(`"(?:`"`")?(?:(?:`"`"|[^`"])*)*?(?:`"`")?`")([ \t]*[a-z]*[ \t]*)", &match) != 0 { ; https://regex101.com/r/tpJlSH/1
+            funcArray := []
+            while (pos := RegexMatch(val, "\w+\(.*?\)", &match)) {
+               funcArray.push(match[])
+               val := StrReplace(val, match[], Chr(1000) funcArray.Length Chr(1000) Chr(932),,, 1)
+            }
+            regex := '(\w[\w\d]*[^"]*)?("(?:"")?(?:(?:""|[^"])*)*?(?:"")?")([ \t]*[a-z]*[ \t]*)'
+            if (pos := RegExMatch(val, regex, &match) != 0) { ; https://regex101.com/r/tpJlSH/1
                arr := []
                while pos != 0 {
-                  pos := RegExMatch(val, "(\w[\w\d]*[^`"]*)?(`"(?:`"`")?(?:(?:`"`"|[^`"])*)*?(?:`"`")?`")([ \t]*[a-z]*[ \t]*)", &match)
-                  if pos != 0 {
-                     i := 1
-                     Loop(match.Count) {
-                        if SubStr(match[i], 1, 1) = "`"" { ; If match is a string
-                           str := "`"" StrReplace(RegexReplace(match[i], "`"(.*)`"", "$1"), "`"`"", "```"") "`""
-                           arr.Push(str)
-                        } else {
-                           arr.Push(match[i])
-                        }
-                        i++
+                  i := 1
+                  Loop(match.Count) {
+                     if SubStr(match[i], 1, 1) = "`"" { ; If match is a string
+                        str := "`"" StrReplace(RegexReplace(match[i], "`"(.*)`"", "$1"), "`"`"", "```"") "`""
+                        arr.Push(str)
+                     } else {
+                        arr.Push(match[i])
                      }
-                     val := StrReplace(val, match[])
+                     i++
                   }
+                  val := StrReplace(val, match[])
+                  pos := RegExMatch(val, regex, &match)
                }
                for i, v in arr {
                   Line .= v
                }
+            }
+            if (Line = Equation[1])
+               Line .= val
+            for i, v in funcArray {
+               Line := StrReplace(Line, Chr(1000) i Chr(1000) Chr(932), v,, &replacements, 1)
+               if (replacements = 0) ; First Chr(1000) not included with match[i]
+                  Line := StrReplace(Line, i Chr(1000) Chr(932), v,,, 1) ; This is a horrible fix
             }
          }
       }

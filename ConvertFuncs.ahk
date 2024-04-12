@@ -4,6 +4,7 @@
 ; to do: strsplit (old command)
 ; requires should change the version :D
 global dbg:=0
+global gQuotedStrings := []     ; 2024-04-08 ADDED, andymbody
 
 #Include lib/ClassOrderedMap.ahk
 #Include lib/dbg.ahk
@@ -161,10 +162,11 @@ Convert(ScriptString)
       Line := StrReplace(Line, "<>","!=")
 
       ; Remove new from code for classes
-      ; Known Issue: Removes new from strings
-      If RegExMatch(Line, "i)^(.*)(:=|\(|,)(\s*)new\s(\s*\w.*)$", &Equation) {
-         Line := Equation[1] Equation[2] Equation[3] Equation[4]
-      }
+      ; Known Issue: Removes new from strings - 2024-04-09, andymbody - FIXED - See RemoveNewKeyword()
+      ; also moved to bottom of loop
+      ;If RegExMatch(Line, "i)^(.*)(:=|\(|,)(\s*)new\s(\s*\w.*)$", &Equation) {
+      ;   Line := Equation[1] Equation[2] Equation[3] Equation[4]
+      ;}
 
       ; Fix lines with preceeding }
       LinePrefix := ""
@@ -238,20 +240,24 @@ Convert(ScriptString)
       }
 
       ; -------------------------------------------------------------------------------
+      ; 2024-04-08 - andymbody - RELOCATED code into its own function - RenameKeywords()
+      ; also moved the function call near the bottom of this loop...
+      ; ... so that strings that have been converted can be masked prior to replacing keywords.
+      ; ... This prevents keywords found in strings from being converted by mistake
       ;
-      ; replace any renamed vars
-      ; Known Error: converts also the text
-      for v1, v2 in KeywordsToRenameM
-      {
-         srchtxt := Trim(v1)
-         rplctxt := Trim(v2)
+;      ; replace any renamed vars
+;      ; Known Error: converts also the text
+;      for v1, v2 in KeywordsToRenameM
+;      {
+;         srchtxt := Trim(v1)
+;         rplctxt := Trim(v2)
 
-         if InStr(Line, srchtxt)
-         {
-            Line := RegExReplace(Line, "i)([^\w]|^)\Q" . srchtxt . "\E([^\w]|$)", "$1" . rplctxt . "$2")
-            ;MsgBox(Line "`n" srchtxt "`n" rplctxt)
-         }
-      }
+;         if InStr(Line, srchtxt)
+;         {
+;            Line := RegExReplace(Line, "i)([^\w]|^)\Q" . srchtxt . "\E([^\w]|$)", "$1" . rplctxt . "$2")
+;            ;MsgBox(Line "`n" srchtxt "`n" rplctxt)
+;         }
+;      }
 
       Orig_Line_NoComment := Line
 
@@ -908,6 +914,13 @@ Convert(ScriptString)
          if (InStr(Line, aListMatchObject[A_Index]))
             Line := ConvertMatchObject(Line, aListMatchObject[A_Index])
       }
+
+      ; 2024-04-09, andymbody
+      ; RELOCATED to here and provided dedicated functions and better handling of strings
+      if (InStr(Line, "new"))
+         Line := RemoveNewKeyword(line)
+      Line := RenameKeywords(Line)
+      Line := RenameLoopRegKeywords(line)
 
       ; VerCompare when using A_AhkVersion.
       Line := RegExReplace(Line, 'i)\b(A_AhkVersion)(\s*[!=<>]+\s*)"?(\d[\w\-\.]*)"?', 'VerCompare($1, "$3")${2}0')
@@ -3693,4 +3706,125 @@ GetAltLabelsMap(ScriptString) {
 GetV2Label(LabelName) {
    NewLabelName := RegExReplace(LabelName, "^(\d.*)", "_$1")	; adds "_" before label if first char is number
    return NewLabelName
+}
+
+;################################################################################
+															 maskStrings(&srcStr)
+;################################################################################
+{
+; 2024-04-08 ADDED, andymbody
+; masks quoted-strings, stores the orig text in gQuotedStrings global array
+
+   global gQuotedStrings
+
+    ; ini
+	pref	:= '#TAG' chr(1000) 'MS_', trail := chr(1000) '#'    ; unique tag
+	pattern := '"[^"\v]+"'   ; characters surrounded by double quotes, treats each set separately
+
+
+	; find all target strings (one at a time), replace them with tags
+	pos := 0, m := []
+	while (pos  := RegExMatch(srcStr, pattern, &m, pos+1)) {
+		gQuotedStrings.push(m[])    ; save original text into array
+		tag		:= pref . gQuotedStrings.Length . trail
+		srcStr	:= StrReplace(srcStr, m[], tag,,, 1)	; replace only one at a time
+ 	}
+	return
+}
+;################################################################################
+														  restoreStrings(&srcStr)
+;################################################################################
+{
+; 2024-04-08 ADDED, andymbody
+; restores orig strings that were masked by maskStrings()
+
+   global gQuotedStrings
+
+	; ini
+	pref    := '#TAG' chr(1000) 'MS_', trail := chr(1000) '#'    ; unique tag
+	tag		:= pref . '\d+' . trail		; tag pattern
+
+	; find all tags (one at a time), then replace them with orig
+    pos := 0, m := []
+	while (pos  := RegExMatch(srcStr, tag, &m))
+	{
+		; tag found - get orig text, then replace tag with it
+		RegExMatch(m[], '\d+', &idx)
+		orig    := gQuotedStrings[idx[]]
+		srcStr  := StrReplace(srcStr, m[], orig)
+	}
+	return
+}
+;################################################################################
+														   RemoveNewKeyword(line)
+;################################################################################
+{
+; 2024-04-09, andymbody - MODIFIED to prevent "new" within strings from being removed
+
+   ; orig
+   ;If RegExMatch(Line, "i)^(.*)(:=|\(|,)(\s*)new\s(\s*\w.*)$", &Equation) {
+   ;   Line := Equation[1] Equation[2] Equation[3] Equation[4]
+   ;}
+
+   maskStrings(&Line)   ; prevent "new" within strings from being removed
+   If RegExMatch(Line, "i)^(.+?)(:=|\(|,)(\h*)new\h(\h*\w.*)$", &Equation)
+   {
+      Line := Equation[1] Equation[2] Equation[3] Equation[4]
+   }
+   restoreStrings(&Line)
+   return line
+}
+;################################################################################
+													  RenameLoopRegKeywords(line)
+;################################################################################
+{
+; 2024-04-08 ADDED, andymbody
+; separated LoopReg keywords from KeywordsToRenameM map...
+;   so that they can be treated differently - See 5Keywords.ahk
+
+   for v1, v2 in LoopRegKeywords
+   {
+      srchtxt := Trim(v1)
+      rplctxt := Trim(v2)
+
+      if InStr(Line, srchtxt)
+      {
+         Line := RegExReplace(Line, "i)([^\w]|^)\Q" . srchtxt . "\E([^\w]|$)", "$1" . rplctxt . "$2")
+      }
+   }
+	return line
+}
+;################################################################################
+															 RenameKeywords(Line)
+;################################################################################
+{
+; 2024-04-08 ADDED, andymbody
+; moved this code from main loop to it's own function
+; also separated LoopReg keywords from KeywordsToRenameM map...
+;   so that they can be treated differently - See 5Keywords.ahk
+; Added the ability to mask the line-strings so that Keywords found within
+;   strings are no longer converted along with Keyword vars
+
+   ; replace any renamed vars
+   ; Fixed - NO LONGER converts text found in strings
+   masked := false
+   for v1, v2 in KeywordsToRenameM
+   {
+      srchtxt := Trim(v1)
+      rplctxt := Trim(v2)
+
+      if InStr(Line, srchtxt)
+      {
+         if (!masked)
+         {
+            masked := true, maskStrings(&Line)   ; masking is slow, so only do this as necessary
+         }
+         Line := RegExReplace(Line, "i)([^\w]|^)\Q" . srchtxt . "\E([^\w]|$)", "$1" . rplctxt . "$2")
+      }
+   }
+
+   if (masked)
+      restoreStrings(&Line)
+
+   return Line
 }

@@ -3720,18 +3720,19 @@ GetV2Label(LabelName) {
 }
 
 ;################################################################################
-															 maskStrings(&srcStr)
+maskStrings(&srcStr)
 ;################################################################################
 {
 ; 2024-04-08 ADDED, andymbody
+; 2024-04-14 UPDATED, andymbody
 ; masks quoted-strings, stores the orig text in gQuotedStrings global array
 
    global gQuotedStrings
 
     ; ini
-	pref	:= '#TAG' chr(1000) 'MS_', trail := chr(1000) '#'    ; unique tag
-	pattern := '"[^"\v]+"'   ; characters surrounded by double quotes, treats each set separately
-
+    uChar   := Chr(0x2605)  ; giant star
+	pref	:= '#TAG' uChar '_STR~', trail := "_" uChar '#'     ; unique tag
+	pattern := '(?<!")"[^"\v]+"(?!")'
 
 	; find all target strings (one at a time), replace them with tags
 	pos := 0, m := []
@@ -3742,18 +3743,21 @@ GetV2Label(LabelName) {
  	}
 	return
 }
+
 ;################################################################################
-														  restoreStrings(&srcStr)
+restoreStrings(&srcStr)
 ;################################################################################
 {
 ; 2024-04-08 ADDED, andymbody
+; 2024-04-14 UPDATED, andymbody
 ; restores orig strings that were masked by maskStrings()
 
    global gQuotedStrings
 
 	; ini
-	pref    := '#TAG' chr(1000) 'MS_', trail := chr(1000) '#'    ; unique tag
-	tag		:= pref . '\d+' . trail		; tag pattern
+    uChar   := Chr(0x2605)  ; giant star
+	pref	:= '#TAG' uChar '_STR~', trail := "_" uChar '#'     ; unique tag
+	tag		:= pref '\d+' trail		                            ; tag pattern
 
 	; find all tags (one at a time), then replace them with orig
     pos := 0, m := []
@@ -3767,7 +3771,7 @@ GetV2Label(LabelName) {
 	return
 }
 ;################################################################################
-														   RemoveNewKeyword(line)
+RemoveNewKeyword(line)
 ;################################################################################
 {
 ; 2024-04-09, andymbody - MODIFIED to prevent "new" within strings from being removed
@@ -3786,10 +3790,11 @@ GetV2Label(LabelName) {
    return line
 }
 ;################################################################################
-													  RenameLoopRegKeywords(line)
+RenameLoopRegKeywords(line)
 ;################################################################################
 {
 ; 2024-04-08 ADDED, andymbody
+; 2024-04-14 UPDATED, andymbody
 ; separated LoopReg keywords from KeywordsToRenameM map...
 ;   so that they can be treated differently - See 5Keywords.ahk
 
@@ -3800,16 +3805,18 @@ GetV2Label(LabelName) {
 
       if InStr(Line, srchtxt)
       {
-         Line := RegExReplace(Line, "i)([^\w]|^)\Q" . srchtxt . "\E([^\w]|$)", "$1" . rplctxt . "$2")
+         ;Line := RegExReplace(Line, "i)([^\w]|^)\Q" . srchtxt . "\E([^\w]|$)", "$1" . rplctxt . "$2")
+         Line := RegExReplace(Line, "i)(\W|^)\Q" . srchtxt . "\E(\W|$)", "$1" . rplctxt . "$2")
       }
    }
 	return line
 }
 ;################################################################################
-															 RenameKeywords(Line)
+RenameKeywords(Line)
 ;################################################################################
 {
 ; 2024-04-08 ADDED, andymbody
+; 2024-04-14 UPDATED, andymbody
 ; moved this code from main loop to it's own function
 ; also separated LoopReg keywords from KeywordsToRenameM map...
 ;   so that they can be treated differently - See 5Keywords.ahk
@@ -3830,7 +3837,8 @@ GetV2Label(LabelName) {
          {
             masked := true, maskStrings(&Line)   ; masking is slow, so only do this as necessary
          }
-         Line := RegExReplace(Line, "i)([^\w]|^)\Q" . srchtxt . "\E([^\w]|$)", "$1" . rplctxt . "$2")
+         ;Line := RegExReplace(Line, "i)([^\w]|^)\Q" . srchtxt . "\E([^\w]|$)", "$1" . rplctxt . "$2")
+         Line := RegExReplace(Line, "i)(\W|^)\Q" . srchtxt . "\E(\W|$)", "$1" . rplctxt . "$2")
       }
    }
 

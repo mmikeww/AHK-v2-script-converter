@@ -1,1 +1,0 @@
-A_Clipboard := "`"" Trim(A_Clipboard) "`""

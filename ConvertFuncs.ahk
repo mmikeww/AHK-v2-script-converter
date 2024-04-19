@@ -445,8 +445,8 @@ Convert(ScriptString)
                , Equation[6])	;otb
          } else	; if not numbers or variables, then compare alphabetically with StrCompare()
          {
-            ;if ((StrCompare(var, "blue") > 0) && (StrCompare(var, "red") < 0))
-            PreLine .= Indentation . format("{1}if {3}((StrCompare({2}, {4}) > 0) && (StrCompare({2}, {5}) < 0)){6}"
+            ;if ((StrCompare(var, "blue") >= 0) && (StrCompare(var, "red") <= 0))
+            PreLine .= Indentation . format("{1}if {3}((StrCompare({2}, {4}) >= 0) && (StrCompare({2}, {5}) <= 0)){6}"
                , Equation[1]	;else
                , Equation[2]	;var
                , (Equation[3]) ? "!" : ""	;not

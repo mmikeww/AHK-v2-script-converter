@@ -350,7 +350,7 @@ Convert(ScriptString)
                funcArray.push(match[])
                val := StrReplace(val, match[], Chr(1000) funcArray.Length Chr(1000) Chr(932),,, 1)
             }
-            regex := '(\w[\w\d]*[^"]*)?("(?:"")?(?:(?:""|[^"])*)*?(?:"")?")([ \t]*[a-z]*[ \t]*)'
+            regex := 'i)(\w[\w\d]*[^"]*)?("(?:"")?(?:(?:""|[^"])*)*?(?:"")?")([ \t]*[a-z]*[ \t]*)'
             if (pos := RegExMatch(val, regex, &match) != 0) { ; https://regex101.com/r/tpJlSH/1
                arr := []
                while pos != 0 {

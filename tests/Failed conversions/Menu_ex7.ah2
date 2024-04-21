@@ -64,7 +64,7 @@ Tab5.Add("Different Check", MenuHandler)
 Tab5.Check("Different Check")
 Tab5.Add("Radio Checked", MenuHandler, "+Radio")
 Tab5.Check("Radio Checked")
-Tab5.Add("Column", MenuHandler, "+Break")
+Tab5.Add("New Column", MenuHandler, "+Break")
 Tab5.Add("Separated", MenuHandler, "+BarBreak")
 
 Tab6 := Menu()

@@ -164,7 +164,11 @@ ButtonConvert(*)
     if (CheckBoxViewSymbols.Value){
         MenuShowSymols()
     }
+    DllCall("QueryPerformanceFrequency", "Int64*", &freq := 0)
+    DllCall("QueryPerformanceCounter", "Int64*", &CounterBefore := 0)
     V2Edit.Text := Convert(V1Edit.Text)
+    DllCall("QueryPerformanceCounter", "Int64*", &CounterAfter := 0)
+    SB.SetText("Conversion completed in " Format("{:.4f}", (CounterAfter - CounterBefore) / freq * 1000) "ms", 4) 
 }
 ButtonGenerateTest(*)
 {
@@ -418,7 +422,11 @@ EvalSelectedTest(thisCtrl, *)
     if FileExist(file_v1) and FileExist(file_v2){
         TextV1 := FileRead(file_v1)
         TextV2Expected := FileRead(file_v2)
+        DllCall("QueryPerformanceFrequency", "Int64*", &freq := 0)
+        DllCall("QueryPerformanceCounter", "Int64*", &CounterBefore := 0)
         TextV2Converted := Convert(TextV1)
+        DllCall("QueryPerformanceCounter", "Int64*", &CounterAfter := 0)
+        SB.SetText("Conversion completed in " Format("{:.4f}", (CounterAfter - CounterBefore) / freq * 1000) "ms", 4) 
         ; Number_Tests++
         if (TextV2Expected=TextV2Converted){
             TV.Modify(selItemID, icons.pass)
@@ -587,7 +595,7 @@ TV := MyGui.Add("TreeView", "r20 w" TreeViewWidth " ImageList" ImageListID)
 
 ; Create a Status Bar to give info about the number of files and their total size:
 SB := MyGui.Add("StatusBar")
-SB.SetParts(300, 300)  ; Create three parts in the bar (the third part fills all the remaining width).
+SB.SetParts(300, 300, 300)  ; Create four parts in the bar (the fourth part fills all the remaining width).
 
 ; Add folders and their subfolders to the tree. Display the status in case loading takes a long time:
 M := Gui("ToolWindow -SysMenu Disabled AlwaysOnTop", "Loading the tree..."), M.Show("w200 h0")

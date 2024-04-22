@@ -3090,6 +3090,7 @@ V1ParSplit(String) {
    ; Tries to split the parameters better because sometimes the , is part of a quote, function or object
    ; spinn-off from DeathByNukes from https://autohotkey.com/board/topic/35663-functions-to-get-the-original-command-line-and-parse-it/
    ; I choose not to trim the values as spaces can be valuable too
+   ;MsgBox(String)
    oResult := Array()	; Array to store result
    oIndex := 1	; index of array
    InArray := 0
@@ -3099,8 +3100,10 @@ V1ParSplit(String) {
    InQuote := false
 
    ; Checks if an even number was found, not bulletproof, fixes 50%
-   StrReplace(String, '"', , , &NumberQuotes)
+   ;StrReplace(String, '"', , , &NumberQuotes)
+   RegexReplace(" " String, '[^``]"',, &NumberQuotes) ; Use regex to ignore `"
    CheckQuotes := Mod(NumberQuotes + 1, 2)
+   ;MsgBox(CheckQuotes "`n" NumberQuotes)
 
    StrReplace(String, "'", , , &NumberApostrophes)
    CheckApostrophes := Mod(NumberApostrophes + 1, 2)
@@ -3164,6 +3167,8 @@ V1ParSplit(String) {
       }
       oResult[oIndex] := oResult[oIndex] Char
    }
+   ;for i, v in oResult
+   ;   MsgBox v
    return oResult
 }
 

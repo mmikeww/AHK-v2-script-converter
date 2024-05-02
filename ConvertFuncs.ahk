@@ -1942,9 +1942,11 @@ _GuiControlGet(p) {
    Out := ""
    ControlObject := mGuiCObject.Has(ControlID) ? mGuiCObject[ControlID] : "ogc" ControlID
    Type := mGuiCType.Has(ControlObject) ? mGuiCType[ControlObject] : ""
+   ;MsgBox("OutputVar: [" OutputVar "]`nControlObject: [" ControlObject "]`nmGuiCType[ControlObject]: [" mGuiCType[ControlObject] "]`nType: [" Type "]")
 
    if (SubCommand = "") {
-      if (Value = "text" or Type := "ListBox") {
+      if (Value = "text" or Type = "ListBox") {
+         ;MsgBox("Value: [" Value "]`nType: [" Type "]")
          Out := OutputVar " := " ControlObject ".Text"
       } else {
          Out := OutputVar " := " ControlObject ".Value"

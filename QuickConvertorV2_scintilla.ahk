@@ -321,7 +321,7 @@ CompDiffV2E(*)
     }
     FileAppend V2ExpectedEdit.Text, TempAhkFileV2E
 
-   RunWait('"' A_ScriptDir '\diff\VisualDiff.exe" "' A_ScriptDir '\diff\VisualDiff.ahk" "' . TempAhkFileV2E . '" "' . TempAhkFileV2 . '"')
+   RunWait('"' A_ScriptDir '\diff\VisualDiff.exe" "' A_ScriptDir '\diff\VisualDiff.ahk" "' . TempAhkFileV2 . '" "' . TempAhkFileV2E . '"')
 
     Return
 }
@@ -366,7 +366,7 @@ CompVscV2E(*)
         FileDelete TempAhkFileV2E
     }
     FileAppend V2ExpectedEdit.Text, TempAhkFileV2E
-    Run "C:\Users\" A_UserName "\AppData\Local\Programs\Microsoft VS Code\Code.exe -d `"" TempAhkFileV2E "`" `"" TempAhkFileV2 "`""
+    Run "C:\Users\" A_UserName "\AppData\Local\Programs\Microsoft VS Code\Code.exe -d `"" TempAhkFileV2 "`" `"" TempAhkFileV2E "`""
     Return
 }
 Edit_Change(*)

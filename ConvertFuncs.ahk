@@ -34,9 +34,10 @@ Convert(ScriptString)
    global GuiList
    global GuiVList	; Used to list all variable names defined in a Gui
    global MenuList
-   global mAltLabel   := GetAltLabelsMap(ScriptString)	; Create a map of labels who are identical
-   global mGuiCType   := map()                        	; Create a map to return the type of control
-   global mGuiCObject := map()                        	; Create a map to return the object of a control
+   global mAltLabel    := GetAltLabelsMap(ScriptString)	; Create a map of labels who are identical
+   global mGuiCType    := map()                        	; Create a map to return the type of control
+   global mGuiCObject  := map()                        	; Create a map to return the object of a control
+   global OnMessageMap := map()                          ; Create a map of OnMessage listeners        
    global NL_Func          := ""                      	; _Funcs can use this to add New Previous Line
    global EOLComment_Func  := ""                      	; _Funcs can use this to add comments at EOL
    global grePostFuncMatch := False                   	; ... to know their regex matched

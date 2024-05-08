@@ -3737,7 +3737,7 @@ GetV2Label(LabelName) {
 
     ; ini
 	pref	:= '#TAG' chr(1000) 'MS_', trail := chr(1000) '#'    ; unique tag
-	pattern := '"[^"\v]+"'   ; characters surrounded by double quotes, treats each set separately
+	pattern := '(?<!")"[^"]+"(?!")'   ; characters surrounded by double quotes, treats each set separately
 
 
 	; find all target strings (one at a time), replace them with tags

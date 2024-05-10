@@ -158,16 +158,6 @@ Convert(ScriptString)
          Line := Equation[1] Equation[2] " " Equation[4]
       }
 
-      ; Correct <> to !=
-      Line := StrReplace(Line, "<>","!=")
-
-      ; Remove new from code for classes
-      ; Known Issue: Removes new from strings - 2024-04-09, andymbody - FIXED - See RemoveNewKeyword()
-      ; also moved to bottom of loop
-      ;If RegExMatch(Line, "i)^(.*)(:=|\(|,)(\s*)new\s(\s*\w.*)$", &Equation) {
-      ;   Line := Equation[1] Equation[2] Equation[3] Equation[4]
-      ;}
-
       ; Fix lines with preceeding }
       LinePrefix := ""
       If RegExMatch(Line, "i)^\s*}(?!\s*else|\s*\n)\s*", &Equation) {
@@ -926,8 +916,11 @@ Convert(ScriptString)
             Line := ConvertMatchObject(Line, aListMatchObject[A_Index])
       }
 
-      ; 2024-04-09, andymbody
-      ; RELOCATED to here and provided dedicated functions and better handling of strings
+      ; Convert <> to !=
+      if (InStr(Line, "<>"))
+         Line := CorrectNEQ(Line)
+
+      ; Remove New keyword from classes
       if (InStr(Line, "new"))
          Line := RemoveNewKeyword(line)
       Line := RenameKeywords(Line)
@@ -3792,6 +3785,17 @@ GetV2Label(LabelName) {
    restoreStrings(&Line)
    return line
 }
+
+;################################################################################
+                                         CorrectNEQ(line)
+;################################################################################
+{
+   maskStrings(&Line)   ; prevent "<>" within strings from being removed
+   Line := StrReplace(Line, "<>", "!=")
+   restoreStrings(&Line)
+   return Line
+}
+
 ;################################################################################
 													  RenameLoopRegKeywords(line)
 ;################################################################################

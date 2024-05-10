@@ -34,12 +34,7 @@
    global StartPath := A_ScriptDir ; FileSelect starting directory, useful if mass converting
 }
 { ;INCLUDES:
-   #Include lib/ClassOrderedMap.ahk
-   #Include Convert/1Commands.ahk
-   #Include Convert/2Functions.ahk
-   #Include Convert/3Methods.ahk
-   #Include Convert/4ArrayMethods.ahk
-   #Include Convert/5Keywords.ahk
+   #Include ConvertFuncs.ahk
 }
 { ;MAIN PROGRAM - BEGINS HERE *****************************************************************************************
 ;   Many changes can be made here to affect loading and processing

@@ -23,7 +23,7 @@
 }
 { ;DIRECTIVES AND SETTINGS
    #Requires AutoHotkey >=2.0-<2.1  ; Requires AHK v2 to run this script
-   #SingleInstance Force			      ; Recommended so only one copy is runnnig at a time
+   #SingleInstance Force			      ; Recommended so only one copy is running at a time
    SendMode "Input"  				        ; Recommended for new scripts due to its superior speed and reliability.
    SetWorkingDir A_ScriptDir  	    ; Ensures a consistent starting directory.
 }
@@ -32,14 +32,10 @@
 { ;VARIABLES:
    global dbg:=0
    global StartPath := A_ScriptDir ; FileSelect starting directory, useful if mass converting
+   global PatternArr := ["*.ahk", "*.ah1", "*.ahk1"] ; Extensions converted when using -r
 }
 { ;INCLUDES:
-   #Include lib/ClassOrderedMap.ahk
-   #Include Convert/1Commands.ahk
-   #Include Convert/2Functions.ahk
-   #Include Convert/3Methods.ahk
-   #Include Convert/4ArrayMethods.ahk
-   #Include Convert/5Keywords.ahk
+   #Include ConvertFuncs.ahk
 }
 { ;MAIN PROGRAM - BEGINS HERE *****************************************************************************************
 ;   Many changes can be made here to affect loading and processing
@@ -71,10 +67,12 @@
             MyMsg := "Flags:`n`n"
             MyMsg .= "  -i  --input    The name of the v1 file you want to convert`n"
             MyMsg .= "  -o  --output   The name of converted v2 file`n"
+            MyMsg .= "  -r  --recurse  Recursively convert a directory, uncompatible with -i or -o`n"
             MyMsg .= "  If no path is given script location is used`n`n`n"
             MyMsg .= "Variables (set by editing script):`n`n"
             MyMsg .= "  StartPath      The starting location of the file selection`n"
             MyMsg .= "  MyOutExt       The extension of the converted file"
+            MyMsg .= "  PatternArr     An array of file patterns to convert in -r"
             MsgBox MyMsg
             ExitApp
          }
@@ -82,7 +80,7 @@
       }
       case 2: ;IF ONLY TWO ARGUMENTS THEN IF A_Args[1] IS NOT input THEN ERROR
       {       ;ELSE A_Args[2] IS FN
-         if (A_Args[1] = "-i" || A_Args[1] = "--input")
+         if (A_Args[1] = "-i" || A_Args[1] = "--input") || (A_Args[1] = "-r" || A_Args[1] = "--recurse")
             FN := A_Args[2]
       }
       case 4:
@@ -129,7 +127,7 @@
 
    If !FNOut
    {
-      FNOut := SubStr(FN, 1, StrLen(FN)-4) . MyOutExt   ;***USE OUTPUT EXTENSION OPTION***
+      FNOut := RegExReplace(FN, "\.[^.]*$", MyOutExt)   ;***USE OUTPUT EXTENSION OPTION***
    }
 
    if (!FileExist(FN))
@@ -139,25 +137,40 @@
       MsgBox MyMsg
       ExitApp
    }
-   inscript := FileRead(FN)
-   outscript := Convert(inscript)
-   outfile   := FileOpen(FNOut, "w", "utf-8")
-   outfile.Write(outscript)
-   outfile.Close()
 
-   MyMsg := "Conversion complete.`n"
-   MyMsg .= "  New file saved as: " . FNOut . "`n`n"
-   MyMsg .= "    Would you like to see the changes made?"
-   result := MsgBox(MyMsg,"", 68)
-   if (result = "Yes") {
-         Run("diff\VisualDiff.exe diff\VisualDiff.ahk `"" . FN . "`" `"" . FNOut . "`"")
+   if (A_Args.Length = 0 || A_Args[1] != "-r") {
+      inscript  := FileRead(FN)
+      outscript := Convert(inscript)
+      outfile   := FileOpen(FNOut, "w", "utf-8")
+      outfile.Write(outscript)
+      outfile.Close()
+      MyMsg := "Conversion complete.`n"
+      MyMsg .= "  New file saved as: " . FNOut . "`n`n"
+      MyMsg .= "    Would you like to see the changes made?"
+      result := MsgBox(MyMsg,"Conversion complete!", 68)
+      if (result = "Yes") {
+            Run("diff\VisualDiff.exe diff\VisualDiff.ahk `"" . FN . "`" `"" . FNOut . "`"")
+      }
+   } else {
+      i := 0
+      A_Args[2] := RegExReplace(A_Args[2], "[^\\/]$", "$0\")
+      For , pattern in PatternArr {
+         Loop Files, A_Args[2] pattern, "FR" {
+            inscript  := FileRead(A_LoopFileFullPath)
+            outscript := Convert(inscript)
+            outfile   := FileOpen(FNOut, "w", "utf-8")
+            outfile.Write(outscript)
+            outfile.Close()
+            i++
+         }
+      }
+      MsgBox("Conversion Complete!`n`nMade " i "conversions", "Conversion Complete!")
    }
    ExitApp
 } ;MAIN PROGRAM - ENDS HERE *******************************************************************************************
 ;######################################################################################################################
 ;##### FUNCTIONS(): #####
 ;######################################################################################################################
-#include ConvertFuncs.ahk
 ;######################################################################################################################
 ;##### HOTKEYS: #####
 ;######################################################################################################################

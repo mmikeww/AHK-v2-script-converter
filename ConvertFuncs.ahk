@@ -330,43 +330,23 @@ Convert(ScriptString)
       {
          Line := RTrim(Equation[1]) . ' := ""' . Equation[2]
       }
-      else if RegexMatch(Line, "i)^([\s]*[a-z_][a-z_0-9]*[\s]*[:\.]=\s*)(.*)", &Equation) ; Line is a variable assignment, check for ""
-      { ; Replace "" with `", see #111
-         if InStr(Line, "`"`"") {
+      else if RegexMatch(Line, "i)^([\s]*[a-z_][a-z_0-9]*[\s]*[:\.]=\s*)(.*)", &Equation) and InStr(Line, '""') ; Line is a variable assignment, and has ""
+      {
+         If !RegexMatch(Line, "\w+\(.*?\)") { ; Contains "" and not func
+            Line := Equation[1]
+            val := Equation[2]
+            ConvertDblQuotes(&Line, val, Equation)
+         } else if InStr(RegExReplace(Line, "\w*\(.*\)"), '""') {
             Line := Equation[1]
             val := Equation[2]
             funcArray := []
             while (pos := RegexMatch(val, "\w+\(.*?\)", &match)) {
                funcArray.push(match[])
-               val := StrReplace(val, match[], Chr(1000) funcArray.Length Chr(1000) Chr(932),,, 1)
+               val := StrReplace(val, match[], Chr(1000) "FUNC_" funcArray.Length Chr(1000),,, 1)
             }
-            regex := 'i)(\w[\w\d]*[^"]*)?("(?:"")?(?:(?:""|[^"])*)*?(?:"")?")([ \t]*[a-z]*[ \t]*)'
-            if (pos := RegExMatch(val, regex, &match) != 0) { ; https://regex101.com/r/tpJlSH/1
-               arr := []
-               while pos != 0 {
-                  i := 1
-                  Loop(match.Count) {
-                     if SubStr(match[i], 1, 1) = "`"" { ; If match is a string
-                        str := "`"" StrReplace(RegexReplace(match[i], "`"(.*)`"", "$1"), "`"`"", "```"") "`""
-                        arr.Push(str)
-                     } else {
-                        arr.Push(match[i])
-                     }
-                     i++
-                  }
-                  val := StrReplace(val, match[])
-                  pos := RegExMatch(val, regex, &match)
-               }
-               for i, v in arr {
-                  Line .= v
-               }
-            }
-            if (Line = Equation[1])
-               Line .= val
+            ConvertDblQuotes(&Line, val, Equation)
             for i, v in funcArray {
-               Line := StrReplace(Line, Chr(1000) i Chr(1000) Chr(932), v,, &replacements, 1)
-               if (replacements = 0) ; First Chr(1000) not included with match[i]
-                  Line := StrReplace(Line, i Chr(1000) Chr(932), v,,, 1) ; This is a horrible fix
+               Line := StrReplace(Line, Chr(1000) "FUNC_" i Chr(1000), v)
             }
          }
       }
@@ -3717,6 +3697,32 @@ GetAltLabelsMap(ScriptString) {
 GetV2Label(LabelName) {
    NewLabelName := RegExReplace(LabelName, "^(\d.*)", "_$1")	; adds "_" before label if first char is number
    return NewLabelName
+}
+
+ConvertDblQuotes(&Line, val, Equation) {
+   regex := 'i)(Ϩ?\w[\w\d]*[^"]*)?("(?:"")?(?:(?:""|[^"])*)*?(?:"")?")([ \t]*[a-z]*[ \t]*)'
+   if (pos := RegExMatch(val, regex, &match) != 0) { ; https://regex101.com/r/tpJlSH/1
+      arr := []
+      while pos != 0 {
+         i := 1
+         Loop(match.Count) {
+            if SubStr(match[i], 1, 1) = "`"" { ; If match is a string
+               str := "`"" StrReplace(RegExReplace(match[i], "`"(.*)`"", "$1"), "`"`"", "```"") "`""
+               arr.Push(str)
+            } else {
+               arr.Push(match[i])
+            }
+            i++
+         }
+         val := StrReplace(val, match[],,,, 1)
+         pos := RegExMatch(val, regex, &match)
+      }
+      for i, v in arr {
+         Line .= v
+      }
+   }
+   if (Line = Equation[1])
+      Line .= val
 }
 
 ;################################################################################

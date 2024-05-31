@@ -1,0 +1,2 @@
+input := Clipboard
+MsgBox % input

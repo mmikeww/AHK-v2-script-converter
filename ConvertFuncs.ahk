@@ -837,7 +837,8 @@ Convert(ScriptString)
          } else {
             Equation[1] = "X" ? Param := "&" Equation[] : Param := ", &" Equation[]
          }
-         Line := "CaretGetPos(" Param ")`n" Line
+         RegExMatch(Line, "^(\s*)(.*)", &Equation)
+         Line := Equation[1] "CaretGetPos(" Param "), " Equation[2]
       }
 
       ; Add back Case if exists

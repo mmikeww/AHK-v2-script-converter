@@ -651,6 +651,9 @@ Convert(ScriptString)
             ; Now we format the parameters into their v2 equivilents
             if (Command~="i)^#?[a-z]+$" and FindCommandDefinitions(Command, &v1, &v2))
             {
+               SkipLine := ""
+               If (Params ~= "^[^`"]=")
+                  SkipLine := Line
                ListDelim := RegExMatch(v1, "[,\s]|$")
                ListCommand := Trim(SubStr(v1, 1, ListDelim - 1))
 
@@ -828,6 +831,8 @@ Convert(ScriptString)
                      Goto LabelRedoCommandReplacing
                   }
                }
+               if (SkipLine != "")
+                  Line := SkipLine
             }
          }
 

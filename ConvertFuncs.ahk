@@ -129,7 +129,7 @@ Convert(ScriptString)
       ; Prelines is code that does not need to changes anymore, but coud prevent correct command conversion
       PreLine := ""
 
-      if RegExMatch(Line, "^\s*(.*[^\s]::).*$") {
+      if RegExMatch(Line, "^\s*(.*[^\s]::).*$") and (FirstTwo != "::") {
          LineNoHotkey := RegExReplace(Line, "(^\s*).+::(.*$)", "$2")
          if (LineNoHotkey != "") {
             PreLine .= RegExReplace(Line, "^(\s*.+::).*$", "$1")

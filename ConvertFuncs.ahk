@@ -1654,8 +1654,13 @@ _Gui(p) {
 
          LineResult .= "MenuBar := " Var2
       } else {
+         LineSuffix := ""
          if (Var1 != "") {
             if (RegExMatch(Var1, "^\s*[-\+]\w*")) {
+               While (RegExMatch(Var1, 'i)\+HWND(.*?)(?:\s|$)', &match)) {
+                  LineSuffix .= ", " match[1] " := " GuiNameLine ".Hwnd"
+                  Var1 := StrReplace(Var1, match[])
+               }
                LineResult .= "Opt(" ToStringExpr(Var1)
             } Else {
                LineResult .= Var1 "("
@@ -1697,7 +1702,9 @@ _Gui(p) {
             }
          }
          if (Var1 != "") {
-            LineResult .= ")"
+            LineResult .= ")" LineSuffix
+         } else if (Var1 = "" and LineSuffix != "") {
+            LineResult := RegExReplace(LineResult, 'm)^.*\.Opt\(""', LTrim(LineSuffix, ", "))
          }
 
          if (var1 = "Submit") {

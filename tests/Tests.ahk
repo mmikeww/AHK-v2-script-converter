@@ -112,7 +112,7 @@ class ConvertTests
    {
       input_script := "
          (Join`r`n
-                                 msg =    hello world   
+                                 msg =    hello world
                                  FileAppend, %msg%, *
          )"
       expected := "
@@ -202,7 +202,7 @@ class ConvertTests
          (Join`r`n
                                  var = hi
                                  /`*
-                                 var = 
+                                 var =
                                  `(
                                  blah blah
                                  `)
@@ -214,7 +214,7 @@ class ConvertTests
          (Join`r`n
                                  var := "hi"
                                  /`*
-                                 var = 
+                                 var =
                                  `(
                                  blah blah
                                  `)
@@ -340,7 +340,7 @@ class ConvertTests
       input_script := "
          (Join`r`n
                                  var := 9
-                                 FileAppend, 
+                                 FileAppend,
                                  `(
                                  %var%
                                  line2
@@ -349,7 +349,7 @@ class ConvertTests
       expected := "
          (Join`r`n
                                  var := 9
-                                 FileAppend, 
+                                 FileAppend,
                                  `(
                                  %var%
                                  line2
@@ -434,7 +434,7 @@ class ConvertTests
       input_script := "
          (Join`r`n
                                  var = 3
-                                 if var != 
+                                 if var !=
                                     FileAppend, %var%, *
          )"
       expected := "
@@ -578,7 +578,7 @@ class ConvertTests
       input_script := "
          (Join`r`n
                                  MyVar = joe
-                                 MyVar2 = 
+                                 MyVar2 =
                                  if MyVar = %MyVar2%
                                      FileAppend, The contents of MyVar and MyVar2 are identical., *
                                  else if MyVar =
@@ -682,7 +682,7 @@ class ConvertTests
       input_script := "
          (Join`r`n
                                  var := ""
-                                 if not var = 
+                                 if not var =
                                     FileAppend, var is not empty, *
                                  else
                                     FileAppend, var is empty, *
@@ -965,7 +965,7 @@ class ConvertTests
 
    IfEqual_EscapedCommaNotNeededInLastParam()
    {
-      ; "Commas that appear within the last parameter of a command do not need to be escaped because 
+      ; "Commas that appear within the last parameter of a command do not need to be escaped because
       ;  the program knows to treat them literally."
       ;
       ; from:   https://autohotkey.com/docs/commands/_EscapeChar.htm
@@ -996,7 +996,7 @@ class ConvertTests
 
    IfEqual_EscapedCommaNotNeededMidString()
    {
-      ; "Commas that appear within the last parameter of a command do not need to be escaped because 
+      ; "Commas that appear within the last parameter of a command do not need to be escaped because
       ;  the program knows to treat them literally."
       ;
       ; from:   https://autohotkey.com/docs/commands/_EscapeChar.htm
@@ -2467,13 +2467,13 @@ class ConvertTests
    {
       input_script := "
          (Join`r`n
-                                 Source = Hello this is a test. 
+                                 Source = Hello this is a test.
                                  StringMid, out, Source, 7
                                  FileAppend, %out%, *
          )"
       expected := "
          (Join`r`n
-                                 Source := "Hello this is a test." 
+                                 Source := "Hello this is a test."
                                  out := SubStr(Source, 7)
                                  FileAppend(out, "*")
          )"
@@ -2495,13 +2495,13 @@ class ConvertTests
    {
       input_script := "
          (Join`r`n
-                                 Source = Hello this is a test. 
+                                 Source = Hello this is a test.
                                  StringMid, out, Source, 7, 4
                                  FileAppend, %out%, *
          )"
       expected := "
          (Join`r`n
-                                 Source := "Hello this is a test." 
+                                 Source := "Hello this is a test."
                                  out := SubStr(Source, 7, 4)
                                  FileAppend(out, "*")
          )"
@@ -2524,14 +2524,14 @@ class ConvertTests
       input_script := "
          (Join`r`n
                                  start = 7
-                                 Source = Hello this is a test. 
+                                 Source = Hello this is a test.
                                  StringMid, out, Source, %start%, 4
                                  FileAppend, %out%, *
          )"
       expected := "
          (Join`r`n
                                  start := "7"
-                                 Source := "Hello this is a test." 
+                                 Source := "Hello this is a test."
                                  out := SubStr(Source, start, 4)
                                  FileAppend(out, "*")
          )"
@@ -2555,7 +2555,7 @@ class ConvertTests
          (Join`r`n
                                  start = 2
                                  count = 4
-                                 Source = Hello this is a test. 
+                                 Source = Hello this is a test.
                                  StringMid, out, Source, start+5, count
                                  FileAppend, %out%, *
          )"
@@ -2563,7 +2563,7 @@ class ConvertTests
          (Join`r`n
                                  start := "2"
                                  count := "4"
-                                 Source := "Hello this is a test." 
+                                 Source := "Hello this is a test."
                                  out := SubStr(Source, start+5, count)
                                  FileAppend(out, "*")
          )"
@@ -3651,7 +3651,7 @@ class ConvertTests
          (Join`r`n
                                  start = 2
                                  count = 4
-                                 Source = Hello this is a test. 
+                                 Source = Hello this is a test.
                                  StringMid, out, Source, % start+5, % count
                                  FileAppend, %out%, *
          )"
@@ -3659,7 +3659,7 @@ class ConvertTests
          (Join`r`n
                                  start := "2"
                                  count := "4"
-                                 Source := "Hello this is a test." 
+                                 Source := "Hello this is a test."
                                  out := SubStr(Source, start+5, count)
                                  FileAppend(out, "*")
          )"
@@ -4815,7 +4815,7 @@ class ConvertTests
       expected := "
          (Join`r`n
                                  var := "boy"
-                                 if ((StrCompare(var, "blue") > 0) && (StrCompare(var, "red") < 0))
+                                 if ((StrCompare(var, "blue") >= 0) && (StrCompare(var, "red") <= 0))
                                     FileAppend(var " is alphabetically between 'blue' and 'red'", "*")
          )"
       ; first test that our expected code actually produces the same results in v2
@@ -5127,7 +5127,7 @@ class ToExpTests
       Yunit.assert(ToExp("`%hello`% world") = "hello `" world`"")
       Yunit.assert(ToExp("one `%two`% three") = "`"one `" two `" three`"")
    }
-   
+
    RemoveEscapedCommas()
    {
       Yunit.assert(ToExp("hello``,world") = "`"hello,world`"")
@@ -5138,7 +5138,7 @@ class ToExpTests
       /*
          from:
          https://lexikos.github.io/v2/docs/Variables.htm#Operators
-         Within a quoted string: Evaluates Expr and inserts the result at that position within the string. 
+         Within a quoted string: Evaluates Expr and inserts the result at that position within the string.
          For example, the following are equivalent:
          MsgBox("Hello, %A_UserName%!")
          MsgBox, Hello`, %A_Username%!
@@ -5315,12 +5315,12 @@ IB := InputBox("(your input will be hidden)", "Enter Password", "Password"), pas
          (Join`r`n
             MsgBox This is the 1-parameter method. Commas (,) do not need to be escaped.
          )"
-      
+
       expected := "
          (Join`r`n
             MsgBox("This is the 1-parameter method. Commas (,) do not need to be escaped.")
          )"
-      
+
       ; if (this.test_exec = true) {
       ; result_input    := ExecScript_v1(input_script)
       ; result_expected := ExecScript_v2(expected)
@@ -5338,13 +5338,13 @@ IB := InputBox("(your input will be hidden)", "Enter Password", "Password"), pas
    {
       input_script := "
          (Join`r`n
-MsgBox, 
+MsgBox,
 `(
 This is the 1-parameter method. Commas (,) do not need to be escaped.
 With continuation section.
 `)
       )"
-      
+
       expected := "
          (Join`r`n
 MsgBox("
@@ -5353,7 +5353,7 @@ This is the 1-parameter method. Commas (,) do not need to be escaped.
 With continuation section.
 `)")
 )"
-      
+
       ; if (this.test_exec = true) {
       ; result_input    := ExecScript_v1(input_script)
       ; result_expected := ExecScript_v2(expected)
@@ -5373,12 +5373,12 @@ With continuation section.
          (Join`r`n
 MsgBox, 4, , This is the 3-parameter method. Commas (,) do not need to be escaped.
          )"
-      
+
       expected := "
          (Join`r`n
 MsgBox("This is the 3-parameter method. Commas (,) do not need to be escaped.", "", 4)
          )"
-      
+
       ; if (this.test_exec = true) {
       ; result_input    := ExecScript_v1(input_script)
       ; result_expected := ExecScript_v2(expected)
@@ -5399,12 +5399,12 @@ MsgBox("This is the 3-parameter method. Commas (,) do not need to be escaped.", 
          (Join`r`n
 MsgBox, 4, , 4-parameter method: this MsgBox will time out in 5 seconds.  Continue?, 5
          )"
-      
+
       expected := "
          (Join`r`n
 MsgBox("4-parameter method: this MsgBox will time out in 5 seconds.  Continue?", "", "4 T5")
          )"
-      
+
       ; if (this.test_exec = true) {
       ; result_input    := ExecScript_v1(input_script)
       ; result_expected := ExecScript_v2(expected)
@@ -5435,7 +5435,7 @@ class GuiTests
             Gui, Add, Edit, vName
             Gui, Show
          )"
-      
+
       expected := "
          (Join`r`n
             myGui := Gui()
@@ -5443,7 +5443,7 @@ class GuiTests
             ogcEditName := myGui.Add("Edit", "vName")
             myGui.Show()
          )"
-      
+
       ; if (this.test_exec = true) {
       ; result_input    := ExecScript_v1(input_script)
       ; result_expected := ExecScript_v2(expected)
@@ -5465,7 +5465,7 @@ Gui, +AlwaysOnTop +Disabled -SysMenu +Owner  ; +Owner avoids a taskbar button.
 Gui, Add, Text,, Some text to display.
 Gui, Show, NoActivate, Title of Window  ; NoActivate avoids deactivating the currently active window.
          )"
-      
+
       expected := "
          (Join`r`n
 myGui := Gui()
@@ -5474,7 +5474,7 @@ myGui.Add("Text", , "Some text to display.")
 myGui.Title := "Title of Window"
 myGui.Show("NoActivate")  ; NoActivate avoids deactivating the currently active window.
          )"
-      
+
 
       converted := Convert(input_script)
       ;~ if (expected!=converted){
@@ -5498,14 +5498,14 @@ class MenuTests
 Menu, Tray, Add  ; Creates a separator line.
 Menu, Tray, Add, Item1, MenuHandler  ; Creates a new menu item.
          )"
-      
+
       expected := "
          (Join`r`n
 Tray:= A_TrayMenu
 Tray.Add()  ; Creates a separator line.
 Tray.Add("Item1", MenuHandler)  ; Creates a new menu item.
          )"
-      
+
       ; if (this.test_exec = true) {
       ; result_input    := ExecScript_v1(input_script)
       ; result_expected := ExecScript_v2(expected)
@@ -5533,7 +5533,7 @@ Loop, 3
     Sleep, 100
 }
          )"
-      
+
       expected := "
          (Join`r`n
 Loop 3
@@ -5542,7 +5542,7 @@ Loop 3
     Sleep(100)
 }
          )"
-      
+
       converted := Convert(input_script)
       ;~ if (expected!=converted){
          ;~ ViewStringDiff(expected, converted)
@@ -5599,7 +5599,7 @@ Loop parse, A_Clipboard, "``n", "``r"
          )"
 
       converted := Convert(input_script)
-      
+
       ;~ if (expected!=converted){
          ;~ ViewStringDiff(expected, converted)
       ;~ }

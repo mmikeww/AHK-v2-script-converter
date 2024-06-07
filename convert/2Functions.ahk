@@ -98,7 +98,7 @@ global FunctionsToConvertM := OrderedMap(
   , "OnError(FuncQ2T,AddRemove)" ,
      "OnError({1}, {2})"
   , "OnMessage(MsgNumber, FunctionQ2T, MaxThreads)" ,
-     "OnMessage({1}, {2}, {3})"
+     "*_OnMessage"
   , "OnClipboardChange(FuncQ2T,AddRemove)" ,
      "OnClipboardChange({1}, {2})"
   , "Asc(String)" ,
@@ -310,6 +310,28 @@ _Object(p) {
   }
   ; Should we convert used statements as mapname.test to mapname["test"]?
   Return Function "(" Parameters ")"
+}
+
+_OnMessage(p) {
+  ; OnMessage(MsgNumber, FunctionQ2T, MaxThreads)
+  ; OnMessage({1}, {2}, {3})
+  If (p.Has(1) and p.Has(2) and p[1] != "" and p[2] != "") {
+    OnMessageMap.%p[1]% := p[2]
+    If (p.Has(3) and p[3] != "") {
+      Return "OnMessage(" p[1] ", " p[2] ", " p[3] ")"
+    }
+    Return "OnMessage(" p[1] ", " p[2] ")"
+  }
+  If (p.Has(2) and p[2] = "") {
+    Try {
+      callback := OnMessageMap.%p[1]%
+    } Catch {
+      ; Didnt find lister to turn off
+      Return "OnMessage(" p[1] ", , 0) `; V1toV2: Put callback to turn off in param 2"
+    }
+    ; Found the listener to turn off
+    Return "OnMessage(" p[1] ", " callback ", 0)"
+  }
 }
 
 _RegExMatch(p) {

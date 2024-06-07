@@ -97,7 +97,7 @@ global FunctionsToConvertM := OrderedMap(
      "{1}.{2} := {3}"
   , "OnError(FuncQ2T,AddRemove)" ,
      "OnError({1}, {2})"
-  , "OnMessage(MsgNumber*)" ,
+  , "OnMessage(MsgNumber, FunctionQ2T, MaxThreads)" ,
      "*_OnMessage"
   , "OnClipboardChange(FuncQ2T,AddRemove)" ,
      "OnClipboardChange({1}, {2})"
@@ -315,8 +315,6 @@ _Object(p) {
 _OnMessage(p) {
   ; OnMessage(MsgNumber, FunctionQ2T, MaxThreads)
   ; OnMessage({1}, {2}, {3})
-  If (p.Has(2))
-    p[2] := Trim(p[2], '"')
   If (p.Has(1) and p.Has(2) and p[1] != "" and p[2] != "") {
     OnMessageMap.%p[1]% := p[2]
     If (p.Has(3) and p[3] != "") {

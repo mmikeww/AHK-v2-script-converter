@@ -3012,6 +3012,62 @@ _HashtagIfWinActivate(p) {
 }
 
 ; =============================================================================
+; Post Conversion Functions
+; These functions make conversions that cannot be done during first conversion,
+; Or go against the main purpose of+ the script (to ease the transition to v2)
+; They will only run on user input (via the Conversion menu item)
+; =============================================================================
+
+/**
+ * Fix turning off OnMessage
+ */
+_FixOnMessage(*) {
+   PostOnMessageMap := Map()
+   Loop Parse V1Edit.Text, "`n" {
+      Line := A_LoopField
+      maskStrings(&Line)
+      If !InStr(Line, "OnMessage")
+         continue
+      restoreStrings(&Line)
+      RegExMatch(Line, 'OnMessage\(((?:0x)?\d+)(\s*,\s*)(".+")?(\s*)(,\s*\d+\s*)?\)', &ogmatch)
+      If (IsObject(ogmatch) and ogmatch[3] != '""') {
+         PostOnMessageMap.%ogmatch[1]% := ogmatch[3]
+      }
+   }
+   FixedScript := ""
+   Loop Parse V2Edit.Text, "`n" {
+      Line := A_LoopField
+      maskStrings(&Line)
+      If !InStr(Line, "OnMessage") {
+         FixedScript .= A_LoopField "`n"
+         continue
+      }
+      If !RegExMatch(Line, "OnMessage\(((?:0x)?\d+), , 0\)", &match) {
+         FixedScript .= A_LoopField "`n"
+         continue
+      }
+      FixedScript .= "OnMessage(" match[1] ogmatch[2] Trim(PostOnMessageMap.%match[1]%, '"') ", 0)`r`n"
+   }
+   V2Edit.Text := FixedScript
+}
+
+/**
+ * Adds MinIndex() and MaxIndex() definitions to Array and Maps
+ */
+_MinMaxIndexFix(*) {
+   MinMaxIndexFix := "Array.Prototype.DefineProp('MinIndex', {Call:(a)=>(i:='',e:=a.__Enum(),[((*)=>e(&k,&v)&&(i:=k,!IsSet(v)))*],i)})`r`n"
+   MinMaxIndexFix .= "Array.Prototype.DefineProp('MaxIndex', {Call:(a)=>(i:='',e:=a.__Enum(),[((*)=>e(&k,&v)&&(i:=IsSet(k)?k:i))*],i)})`r`n"
+   MinMaxIndexFix .= "Map.Prototype.DefineProp('MinIndex', {Call:(this)=>(i:='',e:=this.__Enum(),[((*)=>e(&k,&v)&&(i:=(isNumber(k)&&(i=''||k<i))?k:i))*],i)})`r`n"
+   MinMaxIndexFix .= "Map.Prototype.DefineProp('MaxIndex', {Call:(this)=>(i:='',e:=this.__Enum(),[((*)=>e(&k,&v)&&(i:=(isNumber(k)&&(i=''||i<k))?k:i))*],i)})`r`n"
+   V2Edit.Text := MinMaxIndexFix V2Edit.Text
+}
+
+_WinFuncsFix(*) {
+   ; First Loop through V1Edit and find Win* funcs
+   ; Then add overwritten functions in V2Edit
+}
+
+; =============================================================================
 
 Convert_GetContSect() {
    ; Go further in the lines to get the next continuation section

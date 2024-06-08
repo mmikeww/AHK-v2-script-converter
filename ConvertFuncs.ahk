@@ -37,7 +37,7 @@ Convert(ScriptString)
    global mAltLabel    := GetAltLabelsMap(ScriptString)	; Create a map of labels who are identical
    global mGuiCType    := map()                        	; Create a map to return the type of control
    global mGuiCObject  := map()                        	; Create a map to return the object of a control
-   global OnMessageMap := map()                          ; Create a map of OnMessage listeners        
+   global OnMessageMap := map()                          ; Create a map of OnMessage listeners
    global NL_Func          := ""                      	; _Funcs can use this to add New Previous Line
    global EOLComment_Func  := ""                      	; _Funcs can use this to add comments at EOL
    global grePostFuncMatch := False                   	; ... to know their regex matched
@@ -2290,25 +2290,31 @@ _Menu(p) {
       , "$5", &RegExCount5) ; =% func_arg5(nested_arg5a, nested_arg5b)
 
    menuNameLine := Trim(menuNameLine)
-   if !InStr(menuList, "|" menuNameLine "|") {
-      if (menuNameLine = "Tray") {
-         if (Var2 = "Tip") {
-            Return LineResult .= "A_IconTip := " ToStringExpr(Var3)
-         }
-         else if (Var2 = "Icon"){
-               Var2 := "SetIcon"
-               LineResult .= "TraySetIcon(" ToStringExpr(Var3)
-               LineResult .= Var4 ? "," ToStringExpr(Var4) : ""
-               LineResult .= Var5 ? "," ToStringExpr(Var5) : ""
-               LineResult .= ")"
-               Return LineResult
-         }
-         LineResult .= menuNameLine ":= A_TrayMenu`r`n" Indentation
-      } else {
-         LineResult .= menuNameLine " := Menu()`r`n" Indentation
-      }
 
-      menuList .= menuNameLine "|"
+   ; 2024-06-08 andymbody   fix #179
+   ; handle certain subCommands of Script SysTray-main/root-menu ("Tray")
+   if (menuNameLine="Tray")
+   {
+      if (Var2 = "Tip") {           ; set tooltip for script sysTray menu
+         Return LineResult .= "A_IconTip := " ToStringExpr(Var3)
+      } else if (Var2 = "Icon") {   ; set icon for script systray menu
+         LineResult .= "TraySetIcon(" ToStringExpr(Var3)
+         LineResult .= Var4 ? "," ToStringExpr(Var4) : ""
+         LineResult .= Var5 ? "," ToStringExpr(Var5) : ""
+         LineResult .= ")"
+         Return LineResult
+      }
+   }
+
+   ; handle all other menu code
+   if (!InStr(menuList, "|" menuNameLine "|"))
+   {
+      if (menuNameLine = "Tray") {
+         LineResult .= menuNameLine ":= A_TrayMenu`r`n" Indentation     ; initialize/declare systray object (only once)
+      } else {
+         LineResult .= menuNameLine " := Menu()`r`n" Indentation        ; initialize/declare a new sub-menu
+      }
+      menuList .= menuNameLine "|"                                      ; keep track of menu roots
    }
 
    LineResult .= menuNameLine "."

@@ -1675,11 +1675,26 @@ _Gui(p) {
             if (RegExMatch(Var2, "i)^tab[23]?$") or Var2 = "ListView" or Var2 = "DropDownList" or Var2 = "DDL" or Var2 = "ListBox" or Var2 = "ComboBox") {
                ObjectValue := "["
                ChooseString := ""
-               if (!InStr(Var3, "Choose") && InStr(Var4, "||")) { ; ChooseN takes priority over ||
-                  RegexReplace(RegexReplace(Var4, "\|\|.*"), "\|",, &OptionsBefore)
-                  LineResult := RegexReplace(LineResult, "`"$", " Choose" OptionsBefore + 1 "`"")
+               if (!InStr(Var3, "Choose") && InStr(Var4, "||")) ; ChooseN takes priority over ||
+               {
+                  ;################################################################################
+                  ; 2024-06-09 andymbody    fix for Gui_pr_137
+                  dPipes    := StrSplit(var4, "||")
+                  selIndex  := 0
+                  for idx, str in dPipes {
+                      if (idx=dPipes.length)
+                          break
+                      RegExReplace(str, "\|",,&curCount)
+                      selIndex += curCount+1
+                  }
+                  LineResult := RegexReplace(LineResult, "`"$", " Choose" selIndex "`"")
                   if (Var3 = "")
-                     LineResult .= "`"Choose" OptionsBefore + 1 "`""
+                     LineResult .= "`"Choose" selIndex "`""
+;                  RegexReplace(RegexReplace(Var4, "\|\|.*"), "\|",, &OptionsBefore)
+;                  LineResult := RegexReplace(LineResult, "`"$", " Choose" OptionsBefore + 1 "`"")
+;                  if (Var3 = "")
+;                     LineResult .= "`"Choose" OptionsBefore + 1 "`""
+                  ;################################################################################
                   Var4 := RTrim(StrReplace(Var4, "||", "|"), "|")
                } else if (InStr(Var3, "Choose")) {
                   Var4 := RegexReplace(Var4, "\|+", "|") ; Replace all pipe groups, this breaks empty choices

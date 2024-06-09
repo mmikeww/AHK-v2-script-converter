@@ -1081,55 +1081,60 @@ subLoopFunctions(ScriptString, Line, &retV2, &gotFunc) {
 ; =============================================================================
 ToExp(Text)
 {
-; 2024-06-02 UPDATED, andymbody
-; USED MORE THAN 70 TIMES
+;   text := ReplaceQuotes(text)     ; 2024-06-09 AMB, Removed - not needed and can cause issues
 
-   ;text := ReplaceQuotes(text)     ; not needed and causes issues
+   static qu := '"' 	; Constant for double quotes
+   static bt := "``"	; Constant for backtick to escape
+   Text := Trim(Text, " `t")
 
-   static sq    := "'", dq := '"', qu := dq
-   static qEsc  := '``'
-   Text         := Trim(Text, ' `t')
+   If (Text = "")                      	    ; If text is empty
+      return (qu . qu)                 	    ; Two double quotes
+   else if (SubStr(Text, 1, 2) = "`% ")	    ; if this param was a forced expression
+      return SubStr(Text, 3)           	    ; then just return it without the %
 
-   ; if empty string
-   If (Text = '')
-      return (qu . qu)          ; return empty string
+   Text := StrReplace(Text, qu, bt . qu)  	; first escape literal quotes
+   Text := StrReplace(Text, bt . ",", ",")	; then remove escape char for comma
 
-   ; if forced expression (begins with single '% ')
-   else if (SubStr(Text, 1, 2) = '% ')
-      return SubStr(Text, 3)    ; simply remove '% '
-
-   ; any quotes found at this point are intended to be part of the string, so convert to v2 format
-   Text := StrReplace(Text, qu, qEsc . qu)  	; add escape char to quote
-
-   ; remove any escape char from commas
-   Text := StrReplace(Text, qEsc . ',', ',')
-
-   ; if text has %, it has variables, and probably strings that are chained together
-   ; search text from left to right, extracting/converting each variable and string to v2 format
-   tout := '', curPos := 1
-   if InStr(Text, '%')
+   if InStr(Text, "%")	                    ; deref   %var% -> var
    {
-      while(true)
+      TOut := "", DeRef := 0
+      Symbol_Prev := ""
+      Loop Parse, Text
       {
-         m := [], pos := 0, linkChar := (A_Index=1) ? '' : ' '                      ; linkChar is different than ToStringExp
-         if ((pos := RegExMatch(text, '%([^"%]+)%',     &m, curPos))=curPos)        ; extract next variable name
-            TOut .= linkChar . m[1]                                                 ; add variable name without surrounding %
-         else if ((pos := RegExMatch(text, '([^%]+)',   &m, curPos))=curPos)        ; extract next string ('not' a variable)
-            TOut .= linkChar . qu . m[1] . qu                                       ; add surrounding quotes to string
-         else                                                                       ; done with all characters
-            break
-         curPos := pos + m.len                                                      ; move pointer further into text string
+         Symbol := A_LoopField
+         ; handle escaped character
+         if (Symbol_Prev="``")              ; if current char is escaped...
+         {
+            TOut .= Symbol                  ; ... include as is
+            Symbol_Prev := ""               ; treat next char as literal/normal char
+            continue
+         }
+         else if (Symbol == "%")            ; leading or trailing
+         {
+            If ((DeRef := !DeRef) && (A_Index != 1))
+               TOut .= qu . " "             ; trailing quote
+            else If (!DeRef) && (A_Index != StrLen(Text))
+               TOut .= " " . qu             ; leading quote
+         }
+         else
+         {
+            If (A_Index = 1)
+               TOut .= qu                   ; add leading quote to beginning of string
+            TOut .= Symbol                  ; add current char
+         }
+         Symbol_Prev := Symbol              ; watch for escape char
       }
+      If (Symbol != "%")
+         TOut .= (qu)                   	; Close string
    }
-
-   ; is text a number?
    else if isNumber(Text)
+   {
       TOut := Text + 0
-
-   ; wrap anything else in quotes
-   else
+   }
+   else	; wrap anything else in quotes
+   {
       TOut := qu . Text . qu
-
+   }
    return (TOut)
 }
 
@@ -1139,55 +1144,60 @@ ToExp(Text)
 ;   ... the linkChar is a string-concat instead of a space.
 ToStringExpr(Text)
 {
-; 2024-06-02 UPDATED, andymbody
-; USED 27 TIMES
+;   text := ReplaceQuotes(text)     ; 2024-06-09 AMB, Removed - not needed and can cause issues
 
-   ;text := ReplaceQuotes(text)     ; not needed and causes issues
+   static qu := '"' 	; Constant for double quotes
+   static bt := "``"	; Constant for backtick to escape
+   Text := Trim(Text, " `t")
 
-   static sq    := "'", dq := '"', qu := dq
-   static qEsc  := '``'
-   Text         := Trim(Text, ' `t')
+   If (Text = "")                      	    ; If text is empty
+      return (qu . qu)                 	    ; Two double quotes
+   else if (SubStr(Text, 1, 2) = "`% ")	    ; if this param was a forced expression
+      return SubStr(Text, 3)           	    ; then just return it without the %
 
-   ; if empty string
-   If (Text = '')
-      return (qu . qu)          ; return empty string
+   Text := StrReplace(Text, qu, bt . qu)  	; first escape literal quotes
+   Text := StrReplace(Text, bt . ",", ",")	; then remove escape char for comma
 
-   ; if forced expression (begins with single '% ')
-   else if (SubStr(Text, 1, 2) = '% ')
-      return SubStr(Text, 3)    ; simply remove '% '
-
-   ; any quotes found at this point are intended to be part of the string, so convert to v2 format
-   Text := StrReplace(Text, qu, qEsc . qu)  	; add escape char to quote
-
-   ; remove any escape char from commas
-   Text := StrReplace(Text, qEsc . ',', ',')
-
-   ; if text has %, it has variables, and probably strings that are chained together
-   ; search text from left to right, extracting/converting each variable and string to v2 format
-   tout := '', curPos := 1
-   if InStr(Text, '%')
+   if InStr(Text, "%")	                    ; deref   %var% -> var
    {
-      while(true)
+      TOut := "", DeRef := 0
+      Symbol_Prev := ""
+      Loop Parse, Text
       {
-         m := [], pos := 0, linkChar := (A_Index=1) ? '' : ' . '                    ; linkChar is different than ToExp
-         if ((pos := RegExMatch(text, '%([^"%]+)%',     &m, curPos))=curPos)        ; extract next variable name
-            TOut .= linkChar . m[1]                                                 ; add variable name without surrounding %
-         else if ((pos := RegExMatch(text, '([^%]+)',   &m, curPos))=curPos)        ; extract next string ('not' a variable)
-            TOut .= linkChar . qu . m[1] . qu                                       ; add surrounding quotes to string
-         else                                                                       ; done with all characters
-            break
-         curPos := pos + m.len                                                      ; move pointer further into text string
+         Symbol := A_LoopField
+         ; handle escaped character
+         if (Symbol_Prev="``")              ; if current char is escaped...
+         {
+            TOut .= Symbol                  ; ... include as is
+            Symbol_Prev := ""               ; treat next char as literal/normal char
+            continue
+         }
+         else if (Symbol == "%")            ; leading or trailing
+         {
+            If ((DeRef := !DeRef) && (A_Index != 1))
+               TOut .= qu . " . "           ; trailing quote (with a dot)
+            else If (!DeRef) && (A_Index != StrLen(Text))
+               TOut .= " . " . qu           ; trailing quote (with a dot)
+         }
+         else
+         {
+            If (A_Index = 1)
+               TOut .= qu                   ; add leading quote to beginning of string
+            TOut .= Symbol                  ; add current char
+         }
+         Symbol_Prev := Symbol              ; watch for escape char
       }
+      If (Symbol != "%")
+         TOut .= (qu)                   	; Close string
    }
-
-;   ; NUMBERS WILL BE CONVERTED TO STRING
 ;   else if isNumber(Text)
+;   {
 ;      TOut := Text + 0
-
-   ; wrap anything else in quotes
-   else
+;   }
+   else	; wrap anything else in quotes
+   {
       TOut := qu . Text . qu
-
+   }
    return (TOut)
 }
 

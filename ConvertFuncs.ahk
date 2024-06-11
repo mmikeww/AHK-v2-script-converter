@@ -2317,12 +2317,15 @@ _Menu(p) {
    menuNameLine := Trim(menuNameLine)
 
    ; 2024-06-08 andymbody   fix #179
-   ; handle certain subCommands of Script SysTray-main/root-menu ("Tray")
-   if (menuNameLine="Tray")
+   ; if systray root menu
+   ; (menuNameLine "->" var3) should be a unique root->child id tag (hopefully)
+   ;    this should distinguish between 'systray-root-menu' and 'child-menuItem/submenu'
+   if (menuNameLine="Tray" && !InStr(menuList, "|" menuNameLine "->" var3 "|"))
    {
-      if (Var2 = "Tip") {           ; set tooltip for script sysTray menu
+      ; should be dealing with the root-menu (not a child menu item)
+      if (Var2 = "Tip") {           ; set tooltip for script sysTray root-menu
          Return LineResult .= "A_IconTip := " ToStringExpr(Var3)
-      } else if (Var2 = "Icon") {   ; set icon for script systray menu
+      } else if (Var2 = "Icon") {   ; set icon for script systray root-menu
          LineResult .= "TraySetIcon(" ToStringExpr(Var3)
          LineResult .= Var4 ? "," ToStringExpr(Var4) : ""
          LineResult .= Var5 ? "," ToStringExpr(Var5) : ""
@@ -2331,7 +2334,7 @@ _Menu(p) {
       }
    }
 
-   ; handle all other menu code
+   ; should be child menu item (not main systray-root-menu)
    if (!InStr(menuList, "|" menuNameLine "|"))
    {
       if (menuNameLine = "Tray") {
@@ -2339,7 +2342,7 @@ _Menu(p) {
       } else {
          LineResult .= menuNameLine " := Menu()`r`n" Indentation        ; initialize/declare a new sub-menu
       }
-      menuList .= menuNameLine "|"                                      ; keep track of menu roots
+      menuList .= menuNameLine "|"                                      ; keep track of sub-menu roots
    }
 
    LineResult .= menuNameLine "."
@@ -2367,12 +2370,13 @@ _Menu(p) {
       return LineResult "Delete()"
    }
    if (Var2 = "Icon") {
-      Var2 := "SetIcon"
+      Var2 := "SetIcon"     ; child menuItem
    }
    if (Var2 = "Color") {
       Var2 := "SetColor"
    }
    if (Var2 = "Add" and RegExCount3 and !RegExCount4) {
+      menuList .= menuNameLine "->" var3 "|"         ; 2024-06-08 ADDED for fix #179 (unique parent->child id tag)
       Var4 := Var3
       RegExCount4 := RegExCount3
    }
@@ -2387,6 +2391,7 @@ _Menu(p) {
    }
    if (RegExCount4) {
       if (Var2 = "Add") {
+         menuList .= menuNameLine "->" var3 "|"         ; 2024-06-08 ADDED for fix #179 (unique parent->child id tag)
          FunctionName := RegExReplace(Var4, "&", "")	; Removes & from labels
          if mAltLabel.Has(FunctionName) {
             FunctionName := mAltLabel[FunctionName]

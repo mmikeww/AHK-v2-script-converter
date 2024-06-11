@@ -105,8 +105,8 @@ HKEY_CURRENT_CONFIG,HKCC
 )
 
 BUILTIN_LABELS := "GuiClose GuiContextMenu GuiDropFiles GuiEscape GuiSize OnClipboardChange"
-WIDTH := 1000
-HEIGHT := 700
+WIDTH	:= A_ScreenWidth - 100 ;1000
+HEIGHT	:= A_ScreenHeight - 100 ;700
 
 ; __________________________________________________________________________________________________
 ; Global variables
@@ -174,8 +174,8 @@ exoHelper=
 		Array: function() {
 			return Array.prototype.slice.call(arguments);
 		},
-		
-		
+
+
 		registerFunction: function(name, func) {
 			%scope%[name] = func;
 		},
@@ -255,7 +255,8 @@ for key, val in builtinLabels {
 trigger("OnClipboardChange")
 OnMessage(0x100, "WB_onKey", 2) ; support for key down
 OnMessage(0x101, "WB_onKey", 2) ; support for key up
-Gui, Show, w%WIDTH% h%HEIGHT%, AHK v1 -> v2 Script Converter - Visual Diff
+;Gui, Show, w%WIDTH% h%HEIGHT%, AHK v1 -> v2 Script Converter - Visual Diff
+Gui, Show, x0 y0 w%WIDTH% h%HEIGHT% maximize, AHK v1 -> v2 Script Converter - Visual Diff
 return
 
 
@@ -294,18 +295,18 @@ getArgs(){
 /**
  * By SKAN,  http://goo.gl/JfMNpN,  CD:23/Aug/2014 | MD:24/Aug/2014
  */
-Args( CmdLine := "", Skip := 0 ) {    
+Args( CmdLine := "", Skip := 0 ) {
 	Local pArgs := 0, nArgs := 0, A := []
 	pArgs := DllCall( "Shell32\CommandLineToArgvW", "WStr",CmdLine, "PtrP",nArgs, "Ptr" )
 	Loop % ( nArgs )
 		If ( A_Index > Skip )
-			A[ A_Index - Skip ] := StrGet( NumGet( ( A_Index - 1 ) * A_PtrSize + pArgs ), "UTF-16" )  
-	Return A,   A[0] := nArgs - Skip,   DllCall( "LocalFree", "Ptr", pArgs )  
+			A[ A_Index - Skip ] := StrGet( NumGet( ( A_Index - 1 ) * A_PtrSize + pArgs ), "UTF-16" )
+	Return A,   A[0] := nArgs - Skip,   DllCall( "LocalFree", "Ptr", pArgs )
 }
 
 
 /**
- * 
+ *
  */
 trigger(key, args*){
 	closure := closures[key]

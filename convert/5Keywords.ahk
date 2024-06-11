@@ -29,13 +29,14 @@ global KeywordsToRenameM := OrderedMap(
     "-1"
   , "A_NumBatchLines" ,
     "-1"
-; moved to a dedicated map
-;  , "A_LoopRegKey `"\`" A_LoopRegSubKey" ,
-;    "A_LoopRegKey"
-;  , "A_LoopRegKey . `"\`" . A_LoopRegSubKey" ,
-;    "A_LoopRegKey"
-;  , "%A_LoopRegKey%\%A_LoopRegSubKey%" ,
-;    "%A_LoopRegKey%"
+  , "A_IPAddress1" ,
+    "SysGetIPAddresses()[1]"
+  , "A_IPAddress2" ,
+    "SysGetIPAddresses()[2]"
+  , "A_IPAddress3" ,
+    "SysGetIPAddresses()[3]"
+  , "A_IPAddress4" ,
+    "SysGetIPAddresses()[4]"
   )
 
 ; 2024-04-08, andymbody

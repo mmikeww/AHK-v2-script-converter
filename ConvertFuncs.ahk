@@ -33,6 +33,7 @@ Convert(ScriptString)
    global GuiNameDefault
    global GuiList
    global GuiVList	; Used to list all variable names defined in a Gui
+   global GuiControlCount := 0
    global MenuList
    global mAltLabel    := GetAltLabelsMap(ScriptString)	; Create a map of labels who are identical
    global mGuiCType    := map()                        	; Create a map to return the type of control
@@ -1498,6 +1499,7 @@ _Gui(p) {
 
    global Orig_Line_NoComment
    global GuiNameDefault
+   global GuiControlCount
    global ListViewNameDefault
    global TreeViewNameDefault
    global StatusbarNameDefault
@@ -1564,10 +1566,14 @@ _Gui(p) {
          }
       }
       if RegExMatch(Var3, "i)\b\+?\bhwnd[\w]*\b") {
-         ControlHwnd := RegExReplace(Var3, "i)^.*\b\+?\bhwnd([\w]*)\b.*$", "$1")
-         Var3 := RegExReplace(Var3, "i)^(.*?)\s?\+?\bhwnd([\w]*)\b(.*)$", "$1$3")
-         if (ControlObject = "") {
+         RegExMatch(Var3, "i)\+?HWND(.*?)(?:\s|$)", &match)
+         ControlHwnd := match[1]
+         Var3 := StrReplace(Var3, match[])
+         if (ControlObject = "" and Var4 != "") {
             ControlObject := InStr(ControlHwnd, SubStr(Var4, 1, 4)) ? "ogc" StrReplace(ControlHwnd, "hwnd") : "ogc" Var4 StrReplace(ControlHwnd, "hwnd")
+         } else if (ControlObject = "") {
+            GuiControlCount++
+            ControlObject := Var2 GuiControlCount
          }
          mGuiCObject["%" ControlHwnd "%"] := ControlObject
          mGuiCObject["% " ControlHwnd] := ControlObject
@@ -1724,9 +1730,10 @@ _Gui(p) {
             }
          }
          if (Var1 != "") {
-            LineResult .= ")" LineSuffix
+            LineResult .= ")"
          } else if (Var1 = "" and LineSuffix != "") {
-            LineResult := RegExReplace(LineResult, 'm)^.*\.Opt\(""', LTrim(LineSuffix, ", "))
+            LineResult := RegExReplace(LineResult, 'm)^.*\.Opt\(""')
+            LineSuffix := LTrim(LineSuffix, ", ")
          }
 
          if (var1 = "Submit") {
@@ -1771,7 +1778,7 @@ _Gui(p) {
       }
    }
    DebugWindow("LineResult:" LineResult "`r`n")
-   Out := format("{1}", LineResult)
+   Out := format("{1}", LineResult LineSuffix)
    return Out
 }
 

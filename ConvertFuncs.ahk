@@ -323,30 +323,41 @@ Convert(ScriptString)
       ; lexikos says var=value should always be a string, even numbers
       ; https://autohotkey.com/boards/viewtopic.php?p=118181#p118181
       ;
-      else If RegExMatch(Line, "i)^([\s]*[a-z_][a-z_0-9]*[\s]*)=([^;]*)", &Equation)	; Thanks Lexikos
+;      else If RegExMatch(Line, "i)^([\s]*[a-z_][a-z_0-9]*[\s]*)=([^;]*)", &Equation)	; Thanks Lexikos
+      else If (RegExMatch(Line, "(?i)^(\h*[a-z_][a-z_0-9]*\h*)=([^;\v]*)", &Equation))
       {
          ; msgbox("assignment regex`norigLine: " Line "`norig_left=" Equation[1] "`norig_right=" Equation[2] "`nconv_right=" ToStringExpr(Equation[2]))
          Line := RTrim(Equation[1]) . " := " . ToStringExpr(Equation[2])	; regex above keeps the indentation already
       }
-      Else If RegExMatch(Line, "i)^([\s]*[a-z_][a-z_0-9]*[\s]*):=([\s\t]*)$", &Equation) ; var := should become var := ""
+;      Else If RegExMatch(Line, "i)^([\s]*[a-z_][a-z_0-9]*[\s]*):=([\s\t]*)$", &Equation) ; var := should become var := ""
+      Else If (RegExMatch(Line, "(?i)^(\h*[a-z_][a-z_0-9]*\h*):=(\h*)$", &Equation))
       {
          Line := RTrim(Equation[1]) . ' := ""' . Equation[2]
       }
-      else if RegexMatch(Line, "i)^([\s]*[a-z_][a-z_0-9]*[\s]*[:\.]=\s*)(.*)", &Equation) and InStr(Line, '""') ; Line is a variable assignment, and has ""
+ ;     else if RegexMatch(Line, "i)^([\s]*[a-z_][a-z_0-9]*[\s]*[:\.]=\s*)(.*)", &Equation) and InStr(Line, '""') ; Line is a variable assignment, and has ""
+      else if (RegexMatch(Line, "(?i)^(\h*[a-z_][a-z_0-9]*\h*[:*\.]=\h*)(.*)", &Equation) && InStr(Line, '""'))
       {
-         If !RegexMatch(Line, "\w+\(.*?\)") { ; Contains "" and not func
-            Line := Equation[1]
-            val := Equation[2]
-            ConvertDblQuotes(&Line, val, Equation)
-         } else if InStr(RegExReplace(Line, "\w*\(.*\)"), '""') {
+;         If !RegexMatch(Line, "\w+\(.*?\)") { ; Contains "" and not func
+         If (!RegexMatch(Line, "\h*\w+(\((?>[^)(]+|(?-1))*\))")) ; not a func
+         {
+            Line := Equation[1], val := Equation[2]
+;            ConvertDblQuotes(&Line, val, Equation)
+            ConvertDblQuotesAMB(&Line, val)
+         }
+;         } else if InStr(RegExReplace(Line, "\w*\(.*\)"), '""') {
+         else if (InStr(RegExReplace(Line, "\w*(\((?>[^)(]+|(?-1))*\))"), '""'))
+         {
             Line := Equation[1]
             val := Equation[2]
             funcArray := []
-            while (pos := RegexMatch(val, "\w+\(.*?\)", &match)) {
+ ;           while (pos := RegexMatch(val, "\w+\(.*?\)", &match)) {
+            while (pos := RegexMatch(val, "\w+(\((?>[^)(]+|(?-1))*\))", &match))
+            {
                funcArray.push(match[])
                val := StrReplace(val, match[], Chr(1000) "FUNC_" funcArray.Length Chr(1000),,, 1)
             }
-            ConvertDblQuotes(&Line, val, Equation)
+;            ConvertDblQuotes(&Line, val, Equation)
+            ConvertDblQuotesAMB(&Line, val)
             for i, v in funcArray {
                Line := StrReplace(Line, Chr(1000) "FUNC_" i Chr(1000), v)
             }
@@ -3751,7 +3762,7 @@ GetV2Label(LabelName) {
    NewLabelName := RegExReplace(LabelName, "^(\d.*)", "_$1")	; adds "_" before label if first char is number
    return NewLabelName
 }
-
+;################################################################################
 ConvertDblQuotes(&Line, val, Equation) {
    regex := 'i)(Ϩ?\w[\w\d]*[^"]*)?("(?:"")?(?:(?:""|[^"])*)*?(?:"")?")([ \t]*[a-z]*[ \t]*)'
    if (pos := RegExMatch(val, regex, &match) != 0) { ; https://regex101.com/r/tpJlSH/1
@@ -3777,7 +3788,81 @@ ConvertDblQuotes(&Line, val, Equation) {
    if (Line = Equation[1])
       Line .= val
 }
+;################################################################################
+ConvertDblQuotesAMB(&Line, eqRSide)
+;################################################################################
+{
+; 2024-06-13 andymbody - ADDED.
+; provides conversion of double quotes (multiple styles)
 
+   masks := []  ; for temporarily masking changes
+
+   ; isolated quote ("""" to "`"")
+      eqRSide := RegExReplace(eqRSide, '""""', '"``""')
+      ; mask temporarily to avoid conflicts with other conversions below
+      m := []
+      while (pos := RegexMatch(eqRSide, '"``""', &m)) {
+         masks.push(m[])
+         eqRSide := StrReplace(eqRSide, m[], Chr(1000) "Q_" masks.Length Chr(1000),,, 1)
+      }
+
+   ; escaped quotes within a string ("" to `")
+      eqRSide := ConvertEscapedQuotesInStr(eqRSide)
+      ; mask temporarily to avoid conflicts with other conversions below
+      m := []
+      while (pos := RegexMatch(eqRSide, '"``""', &m)) {
+         masks.push(m[])
+         eqRSide := StrReplace(eqRSide, m[], Chr(1000) "Q_" masks.Length Chr(1000),,, 1)
+      }
+
+   ; forced quotes around char-string
+      eqRSide := RegExReplace(eqRSide, '(")?("")([^"\v]+)("")(")?', '$1``"$3``"$5')
+      ; mask temporarily to avoid conflicts with other conversions below
+;      m := []
+;      while (pos := RegexMatch(eqRSide, '``"', &m)) {
+;         masks.push(m[])
+;         eqRSide := StrReplace(eqRSide, m[], Chr(1000) "Q_" masks.Length Chr(1000),,, 1)
+;      }
+
+   ; remove masks
+      for i, v in masks
+         eqRSide := StrReplace(eqRSide, Chr(1000) "Q_" i Chr(1000), v)
+
+   ; update line with conversion
+   line .= eqRSide
+   return
+}
+;################################################################################
+ConvertEscapedQuotesInStr(srcStr)
+;################################################################################
+{
+; 2024-06-13 andymbody - ADDED
+; convert each double quote found in srcStr ("" to `")
+
+   pos := 1, tempStr := ""
+   while (pos := RegExMatch(srcStr, '(?<!")"([^"\v]+""[^"\v]+)+"(?!")', &m, pos))
+   {
+      srcLen := StrLen(srcStr), curLen := StrLen(tempStr)
+      ; add any chars that are to the left of the match
+      if (curLen=0)
+         tempStr .= SubStr(srcStr, 1, pos-1)
+      ; add any chars that are between matches
+      if ((curLen > 0) && (curLen < srcLen))
+         tempStr .= SubStr(srcStr, curLen+1, (pos-curLen)-1)
+      ; convert each "" to `"
+      qSplit := StrSplit(m[], '""')	; makes separation easy
+      for i, v in qSplit
+         tempStr .= ((A_Index=1) ? '' : '``"') . v
+      ; set new search position (in case there is more than one string on line)
+      pos += m.len
+   }
+
+   ; add any trailing chars
+   srcLen := StrLen(srcStr), curLen := StrLen(tempStr)
+   tempStr .= SubStr(srcStr, curLen+1, (srcLen-curLen)+1)
+
+   return (tempStr) ? tempStr : srcStr
+}
 ;################################################################################
 															 maskStrings(&srcStr)
 ;################################################################################

@@ -3604,7 +3604,7 @@ ConvertLabel2Func(ScriptString, Label, Parameters := "", NewFunctionName := "", 
    if (LabelPointer = 1) {
       Result .= "} `; Added bracket in the end`r`n"
    }
-   return Result
+   return trim(Result, "`r`n")  ; added trim to fix #193 (unnecessary CRLFs)
 }
 
 /**

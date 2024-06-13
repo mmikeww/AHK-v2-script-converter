@@ -1516,6 +1516,7 @@ _Gui(p) {
 
    GuiLine := Orig_Line_NoComment
    LineResult := ""
+   LineSuffix := ""
    if RegExMatch(GuiLine, "i)^\s*Gui\s*[,\s]\s*.*$") {
       ControlHwnd := ""
       ControlLabel := ""
@@ -1667,7 +1668,6 @@ _Gui(p) {
 
          LineResult .= "MenuBar := " Var2
       } else {
-         LineSuffix := ""
          if (Var1 != "") {
             if (RegExMatch(Var1, "^\s*[-\+]\w*")) {
                While (RegExMatch(Var1, 'i)\+HWND(.*?)(?:\s|$)', &match)) {

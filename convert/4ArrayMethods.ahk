@@ -22,7 +22,7 @@ global ArrayMethodsToConvertM := OrderedMap(
 _InsertAt(p) {
   if (p.Length = 1) {
     Return "Push(" p[1] ")"
-  } else if (p.Length > 1 && IsDigit(p[1])) {
+  } else if (p.Length > 1 && (IsDigit(p[1]) || p[1] = Trim(p[1], '"'))) {
     for i, v in p {
       val .= ", " v
     }
@@ -31,16 +31,19 @@ _InsertAt(p) {
   }
 }
 
-_RemoveAt(p) { ; TODO: handle Vars
+_RemoveAt(p) {
   if (p.Length = 1 && p[1] = "") { ; Arr.Remove()
     Return "Pop()"
-  } else if (p.Length = 1 && IsDigit(p[1])) { ; Arr.Remove(n)
+  } else if (p.Length = 1 && (IsDigit(p[1]) || p[1] = Trim(p[1], '"'))) { ; Arr.Remove(n)
     Return "RemoveAt(" p[1] ")"
-  } else if (p.Length = 2 && IsDigit(p[1]) && IsDigit(p[2])) { ; Arr.Remove(n, n)
+  } else if (p.Length = 2 && (IsDigit(p[1]) || p[1] = Trim(p[1], '"')) && (IsDigit(p[2]) || p[2] = Trim(p[2], '"'))) { ; Arr.Remove(n, n)
     Return "RemoveAt(" p[1] ", " p[2] " - " p[1] " + 1)"
-  } else if (p.Length = 2 && IsDigit(p[1]) && p[2] = "`"`"") { ; Arr.Remove(n, "")
+  } else if (p.Length = 2 && (IsDigit(p[1]) || p[1] = Trim(p[1], '"')) && p[2] = "`"`"") { ; Arr.Remove(n, "")
     Return "Delete(" p[1] ")"
   } else {
-    Return "Pop()" ; TODO: Pop is placeholder, need better fix
+    params := ""
+    for , param in p
+      params .= param ", "
+    Return "Delete(" RTrim(params, ", ") ") `; V1toV2: Check Object.Remove in v1 docs to see which one matches"
   }
 }

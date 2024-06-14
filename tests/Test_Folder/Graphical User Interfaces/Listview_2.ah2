@@ -14,5 +14,4 @@ return
 GuiClose(*)  ; Exit the script when the user closes the ListView's GUI window.
 { ; V1toV2: Added bracket
 ExitApp()
-
 } ; Added bracket in the end

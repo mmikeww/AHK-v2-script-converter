@@ -23,7 +23,3 @@ return
 } ; V1toV2: Added Bracket before hotkey or Hotstring
 
 #z::MyMenu.Show()  ; i.e. press the Win-Z hotkey to show the menu.
-
-
-
-

@@ -14,5 +14,4 @@ If (Type = 1) {
 } else {
   MsgBox("You Selected Option 2")
 }
-
 } ; Added bracket in the end

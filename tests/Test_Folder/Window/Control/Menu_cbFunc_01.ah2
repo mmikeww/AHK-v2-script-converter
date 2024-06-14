@@ -19,5 +19,3 @@ lbChangeWallpaper(A_ThisMenuItem, A_ThisMenuItemPos, MyMenu)
 Run(WallpaperChangerScript)
 return
 } ; V1toV2: Added bracket in the end
-
-

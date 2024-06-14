@@ -141,44 +141,4 @@ Return
 Exit(A_GuiEvent, GuiCtrlObj, Info, *)
 { ; V1toV2: Added bracket
 ExitApp()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 } ; Added bracket in the end

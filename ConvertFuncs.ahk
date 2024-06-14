@@ -3515,6 +3515,14 @@ ConvertLabel2Func(ScriptString, Label, Parameters := "", NewFunctionName := "", 
    LabelStart := 0	; active searching for the beginning of the bracket
    RegexPointer := 0
    RestString := ScriptString	;Used to have a string to look the rest of the file
+
+   ; 2024-06-13 AMB - part of fix #193
+   ; capture any trailing blank lines at end of string
+   ; they will be added back prior to returning converted string
+   happyTrails := ''
+   if (RegExMatch(ScriptString, '.*(\R+)$', &m))
+      happyTrails := m[1]
+
    if (NewFunctionName = "") {	; Use Labelname if no FunctionName is defined
       NewFunctionName := Label
    }
@@ -3601,9 +3609,14 @@ ConvertLabel2Func(ScriptString, Label, Parameters := "", NewFunctionName := "", 
       Result .= Line
       Result .= "`r`n"
    }
+
+   ; 2024-06-13 AMB - part of fix #193
+   result := trim(result, '`r`n')   ; first trim all blank lines from end of string
    if (LabelPointer = 1) {
-      Result .= "} `; Added bracket in the end`r`n"
+      Result .= "`r`n} `; Added bracket in the end"     ; edited
    }
+   result .= happyTrails    ; add ONLY original trailing blank lines back
+
    return Result
 }
 

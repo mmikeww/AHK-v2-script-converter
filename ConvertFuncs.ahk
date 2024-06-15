@@ -36,6 +36,7 @@ Convert(ScriptString)
    global GuiControlCount := 0
    global MenuList
    global mAltLabel    := GetAltLabelsMap(ScriptString)	; Create a map of labels who are identical
+   global LabelsToFunc := Array()                        ; List of labels that were converted to funcs
    global mGuiCType    := map()                        	; Create a map to return the type of control
    global mGuiCObject  := map()                        	; Create a map to return the object of a control
    global OnMessageMap := map()                          ; Create a map of OnMessage listeners
@@ -962,6 +963,9 @@ Convert(ScriptString)
    ; Add Brackets to Hotkeys
    ScriptOutput := AddBracket(ScriptOutput)
 
+   ; Update Goto Label when Label is converted to a func
+   ScriptOutput := UpdateGoto(ScriptOutput)
+
    return ScriptOutput
 }
 
@@ -1560,6 +1564,7 @@ _Gui(p) {
       if RegExMatch(Var3, "\bg[\w]*\b") {
          ; Remove the goto option g....
          ControlLabel := RegExReplace(Var3, "^.*\bg([\w]*)\b.*$", "$1")
+         LabelsToFunc.Push(ControlLabel)
          Var3 := RegExReplace(Var3, "^(.*)\bg([\w]*)\b(.*)$", "$1$3")
       } else if (Var2 = "Button") {
          ControlLabel := GuiOldName var2 RegExReplace(Var4, "[\s&]", "")
@@ -1782,7 +1787,7 @@ _Gui(p) {
          V1GuiControlEvent := ControlEvent = "Change" ? "Normal" : ControlEvent
          V1GuiControlEvent := V1GuiControlEvent = "Click" ? "Normal" : ControlEvent
          LineResult .= "`r`n" Indentation ControlObject ".OnEvent(`"" ControlEvent "`", " GetV2Label(ControlLabel) ".Bind(`"" V1GuiControlEvent "`"))"
-         aListLabelsToFunction.Push({label: ControlLabel, parameters: "A_GuiEvent, GuiCtrlObj, Info, *", NewFunctionName: GetV2Label(ControlLabel)})
+         aListLabelsToFunction.Push({label: ControlLabel, parameters: 'A_GuiEvent := "", GuiCtrlObj := "", Info := "", *', NewFunctionName: GetV2Label(ControlLabel)})
       }
       if (ControlHwnd != "") {
          LineResult .= "`r`n" Indentation ControlHwnd " := " ControlObject ".hwnd"
@@ -3775,6 +3780,27 @@ GetV2Label(LabelName) {
    NewLabelName := RegExReplace(LabelName, "^(\d.*)", "_$1")	; adds "_" before label if first char is number
    return NewLabelName
 }
+
+/**
+ * Converts Goto Label for label that have been converted to funcs
+ */
+UpdateGoto(ScriptString) {
+   If LabelsToFunc.Length = 0
+      return ScriptString
+   FixedScript := ""
+   loop parse ScriptString, "`n" {
+      If !InStr(A_LoopField, "Goto", "On") { ; Case sensitive because converter always converts to "Goto"
+         FixedScript .= A_LoopField "`r`n"
+         continue
+      }
+      for , LabelName in LabelsToFunc {
+         ;If InStr(A_LoopField, 'Goto("' LabelName '")')
+         FixedScript .= StrReplace(A_LoopField, 'Goto("' LabelName '")', LabelName "()`r`n")
+      }
+   }
+   Return FixedScript
+}
+
 ;################################################################################
 ConvertDblQuotes(&Line, val, Equation) {
    regex := 'i)(Ϩ?\w[\w\d]*[^"]*)?("(?:"")?(?:(?:""|[^"])*)*?(?:"")?")([ \t]*[a-z]*[ \t]*)'

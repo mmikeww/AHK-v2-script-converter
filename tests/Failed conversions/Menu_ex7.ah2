@@ -126,7 +126,7 @@ MsgBox("You selected `"" ItemName "`".")
 Return
 } ; V1toV2: Added Bracket before label
 
-Delete(A_GuiEvent, GuiCtrlObj, Info, *)
+Delete(A_GuiEvent := "", GuiCtrlObj := "", Info := "", *)
 { ; V1toV2: Added bracket
 Tab1.Delete()
 Tab2.Delete()
@@ -138,7 +138,7 @@ Tab7.Delete()
 Return
 } ; V1toV2: Added bracket before function
 
-Exit(A_GuiEvent, GuiCtrlObj, Info, *)
+Exit(A_GuiEvent := "", GuiCtrlObj := "", Info := "", *)
 { ; V1toV2: Added bracket
 ExitApp()
 } ; Added bracket in the end

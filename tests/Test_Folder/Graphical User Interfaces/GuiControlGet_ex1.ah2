@@ -8,6 +8,7 @@ Return
 
 CheckResponse(A_GuiEvent := "", GuiCtrlObj := "", Info := "", *)
 { ; V1toV2: Added bracket
+global ; V1toV2: Made function global
 Type := ogcRadioType.Value
 If (Type = 1) {
   MsgBox("You Selected Option 1")

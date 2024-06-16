@@ -37,6 +37,7 @@ return  ; End of auto-execute section. The script is idle until the user does so
 
 EmptyTest(A_GuiEvent := "", GuiCtrlObj := "", Info := "", *)
 { ; V1toV2: Added bracket
+global ; V1toV2: Made function global
 oSaved := myGui.Submit("0")
 FirstName := oSaved.FirstName
 MyCheckBox := oSaved.MyCheckBox
@@ -75,5 +76,6 @@ return
 GuiClose(*)
 
 { ; V1toV2: Added bracket
+global ; V1toV2: Made function global
 ExitApp()
 } ; Added bracket in the end

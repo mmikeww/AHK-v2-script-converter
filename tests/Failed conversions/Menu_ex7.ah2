@@ -122,12 +122,14 @@ Return
 
 MenuHandler(ItemName, ItemPos, MyMenu)
 { ; V1toV2: Added bracket
+global ; V1toV2: Made function global
 MsgBox("You selected `"" ItemName "`".")
 Return
 } ; V1toV2: Added Bracket before label
 
 Delete(A_GuiEvent := "", GuiCtrlObj := "", Info := "", *)
 { ; V1toV2: Added bracket
+global ; V1toV2: Made function global
 Tab1.Delete()
 Tab2.Delete()
 Tab3.Delete()
@@ -140,5 +142,6 @@ Return
 
 Exit(A_GuiEvent := "", GuiCtrlObj := "", Info := "", *)
 { ; V1toV2: Added bracket
+global ; V1toV2: Made function global
 ExitApp()
 } ; Added bracket in the end

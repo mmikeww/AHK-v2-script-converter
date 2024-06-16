@@ -17,6 +17,7 @@ return
 
 MyListView(A_GuiEvent := "", GuiCtrlObj := "", Info := "", *)
 { ; V1toV2: Added bracket
+global ; V1toV2: Made function global
 if (A_GuiEvent = "DoubleClick")
 {
     RowText := ogcListViewNameSizeKB.GetText(A_EventInfo)  ; Get the text from the row's first field.
@@ -27,5 +28,6 @@ return
 
 GuiClose(*)  ; Indicate that the script should exit automatically when the window is closed.
 { ; V1toV2: Added bracket
+global ; V1toV2: Made function global
 ExitApp()
 } ; Added bracket in the end

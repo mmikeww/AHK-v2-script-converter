@@ -18,6 +18,7 @@ return  ; End of script's auto-execute section.
 
 MenuHandler(A_ThisMenuItem, A_ThisMenuItemPos, MyMenu)
 { ; V1toV2: Added bracket
+global ; V1toV2: Made function global
 MsgBox("You selected " A_ThisMenuItem " from the menu " A_ThisMenu ".")
 return
 } ; V1toV2: Added Bracket before hotkey or Hotstring

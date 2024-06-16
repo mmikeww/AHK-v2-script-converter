@@ -1,5 +1,6 @@
 ^h::
 { ; V1toV2: Added bracket
+global ; V1toV2: Made function global
 Goto("Start")
 MsgBox("Skipped")
 

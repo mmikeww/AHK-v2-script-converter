@@ -1,5 +1,6 @@
 ~RControl::
 { ; V1toV2: Added bracket
+global ; V1toV2: Made function global
 if (A_PriorHotkey != "~RControl" or A_TimeSincePriorHotkey > 400)
 {
     ; Too much time between presses, so this isn't a double-press.

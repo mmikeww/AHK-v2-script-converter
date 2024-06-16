@@ -4,6 +4,7 @@ return
 
 WatchCursor()
 { ; V1toV2: Added bracket
+global ; V1toV2: Made function global
 MouseGetPos(, , &id, &control)
 title := WinGetTitle("ahk_id " id)
 class := WinGetClass("ahk_id " id)

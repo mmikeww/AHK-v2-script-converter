@@ -3581,7 +3581,7 @@ ConvertLabel2Func(ScriptString, Label, Parameters := "", NewFunctionName := "", 
          if (RegExMatch(Line, "i)^\s*({).*")) {	; Hotkey is already good :)
             LabelPointer := 0
          } else {
-            Result .= "{ `; V1toV2: Added bracket`r`n"
+            Result .= "{ `; V1toV2: Added bracket`r`nglobal `; V1toV2: Made function global`r`n" ; Global - See #49
             LabelPointer := 1
          }
          LabelStart := 0
@@ -3698,7 +3698,7 @@ AddBracket(ScriptString) {
                   RegExReplace(RestString, "is)^(\s*)([\w]+?\([^\)]*\)[\s\n\r]*(`;[^\r\n]*|)([\s\n\r]*){).*", "$1")
                   HotkeyPointer := 0
                } else {
-                  Result .= "{ `; V1toV2: Added bracket`r`n"
+                  Result .= "{ `; V1toV2: Added bracket`r`nglobal `; V1toV2: Made function global`r`n" ; Global - See #49
                   HotkeyPointer := 1
                }
                HotkeyStart := 0

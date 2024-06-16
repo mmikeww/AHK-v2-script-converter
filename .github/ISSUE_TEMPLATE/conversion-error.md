@@ -1,6 +1,6 @@
 ---
 name: Conversion Error
-about: Report an error in script conversion
+about: Report a problem with script conversion
 title: ''
 labels: ''
 assignees: ''

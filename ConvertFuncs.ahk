@@ -3914,8 +3914,10 @@ ConvertEscapedQuotesInStr(srcStr)
 
     ; ini
 	pref	:= '#TAG' chr(1000) 'MS_', trail := chr(1000) '#'    ; unique tag
-;	pattern := '(?<!")"[^"]+"(?!")'   ; characters surrounded by double quotes, treats each set separately
-    pattern := '(*UCP)`'`'|`'([^`'\v]+(?:(?<=``)`')?)+`'|""|"([^"\v]+(?:(?<=``)")?)+"'
+    ; this needle is a bit overkill for this converter, but...
+    ; ... should support both v1/v2 nested quotes. Does not support multiline strings
+    ; 2024-06-17 UPDATED with atomic groups to prevent catastrophic failure if an apostrophe is encountered
+    pattern := '(*UCP)(?m)(?:`'`'|`'(?>[^`'\v]+(?:(?<=``)`')?)+`'|""|"(?>[^"\v]+(?:(?<=``)")?)+")'
 
 	; find all target strings (one at a time), replace them with tags
 	pos := 0, m := []

@@ -1108,10 +1108,10 @@ ToExp(Text)
    else if (SubStr(Text, 1, 2) = "`% ")	    ; if this param was a forced expression
       return SubStr(Text, 3)           	    ; then just return it without the %
 
-   Text := StrReplace(Text, qu, bt . qu)  	; first escape literal quotes
+   Text := RegExReplace(Text, '(?<!``)"', bt . qu)  	; first escape literal quotes
    Text := StrReplace(Text, bt . ",", ",")	; then remove escape char for comma
 
-   if InStr(Text, "%")	                    ; deref   %var% -> var
+   if RegExMatch(Text, '(?<!``)%')           ; deref   %var% -> var
    {
       TOut := "", DeRef := 0
       Symbol_Prev := ""

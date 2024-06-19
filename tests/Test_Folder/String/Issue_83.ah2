@@ -1,0 +1,2 @@
+MsgBox("`%")
+MsgBox("`% becoming `"")

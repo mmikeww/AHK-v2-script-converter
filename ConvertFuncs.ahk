@@ -2477,6 +2477,18 @@ _Pause(p) {
    Return Format("Pause({1})", p*)
 }
 
+_PixelGetColor(p) {
+   Out := p[1] " := PixelGetColor(" p[2] ", " p[3]
+   if (p[4] != "") {
+      mode := StrReplace(p[4], "RGB") ; We remove RGB because it is no longer used, while it doesn't error now it might error in the future
+      if Trim(Trim(mode, '"')) = ""
+         Return Out ")"
+      Return Out ", " Trim(mode) ")"
+   } else {
+      Return Out ") `; V1toV2: Now returns RGB instead of BGR"
+   }
+}
+
 _PixelSearch(p) {
    if !InStr(p[9], "RGB") {
       msg := " `; V1toV2: Converted colour to RGB format"

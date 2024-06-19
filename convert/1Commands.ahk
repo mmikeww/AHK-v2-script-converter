@@ -244,7 +244,7 @@ global CommandsToConvertM := OrderedMap(
   , "Pause,OnOffToggleOn2True,OperateOnUnderlyingThread " ,
     "*_Pause"
   , "PixelGetColor,OutputVar,XCBE2E,YCBE2E,ModeT2E" ,
-    "{1} := PixelGetColor({2}, {3}, {4}) `; V1toV2: Now returns RGB instead of BGR"
+    "*_PixelGetColor"
   , "PixelSearch,OutputVarXV2VR,OutputVarYV2VR,X1CBE2E,Y1CBE2E,X2CBE2E,Y2CBE2E,ColorIDCBE2E,VariationCBE2E,ModeT2E" ,
     "*_PixelSearch"
   , "PostMessage,MsgCBE2E,wParamCBE2E,lParamCBE2E,ControlT2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E" ,

@@ -2,7 +2,7 @@
 { ; V1toV2: Added bracket
 global ; V1toV2: Made function global
 MouseGetPos(&MouseX, &MouseY, &MouseWin)
-MouseRGB := PixelGetColor(MouseX, MouseY, "RGB") ;V1toV2: Switched from BGR to RGB values
+MouseRGB := PixelGetColor(MouseX, MouseY)
 ; It seems necessary to turn off any existing transparency first:
 WinSetTransColor("Off", "ahk_id " MouseWin)
 WinSetTransColor(MouseRGB " 220", "ahk_id " MouseWin)

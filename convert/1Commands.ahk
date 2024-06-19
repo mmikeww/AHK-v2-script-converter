@@ -244,9 +244,9 @@ global CommandsToConvertM := OrderedMap(
   , "Pause,OnOffToggleOn2True,OperateOnUnderlyingThread " ,
     "*_Pause"
   , "PixelGetColor,OutputVar,XCBE2E,YCBE2E,ModeT2E" ,
-    "{1} := PixelGetColor({2}, {3}, {4}) `;V1toV2: Switched from BGR to RGB values"
+    "{1} := PixelGetColor({2}, {3}, {4}) `; V1toV2: Now returns RGB instead of BGR"
   , "PixelSearch,OutputVarXV2VR,OutputVarYV2VR,X1CBE2E,Y1CBE2E,X2CBE2E,Y2CBE2E,ColorIDCBE2E,VariationCBE2E,ModeT2E" ,
-    "ErrorLevel := !PixelSearch({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}) `;V1toV2: Switched from BGR to RGB values"
+    "*_PixelSearch"
   , "PostMessage,MsgCBE2E,wParamCBE2E,lParamCBE2E,ControlT2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E" ,
     "PostMessage({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8})"
   , "Process,SubCommand,PIDOrNameT2E,ValueT2E" ,

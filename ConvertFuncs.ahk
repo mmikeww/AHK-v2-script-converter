@@ -2477,6 +2477,18 @@ _Pause(p) {
    Return Format("Pause({1})", p*)
 }
 
+_PixelSearch(p) {
+   if !InStr(p[9], "RGB") {
+      msg := " `; V1toV2: Converted colour to RGB format"
+      FixedColour := RegExReplace(p[7], "i)0x(..)(..)(..)", "0x$3$2$1")
+   } else msg := "", FixedColour := p[7]
+   param8 := ""
+   Out := "ErrorLevel := !PixelSearch(" p[1] ", " p[2] ", " p[3] ", " p[4] ", " p[5] ", " p[6] ", " FixedColour
+   if (p[8] = "")
+      param8 := ", " p[8]
+   Return Out param8 ")" msg
+}
+
 _Process(p) {
    ; V1: Process,SubCommand,PIDOrName,Value
 

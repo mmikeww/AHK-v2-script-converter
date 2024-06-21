@@ -40,6 +40,7 @@ Convert(ScriptString)
    global mGuiCType    := map()                        	; Create a map to return the type of control
    global mGuiCObject  := map()                        	; Create a map to return the object of a control
    global OnMessageMap := map()                          ; Create a map of OnMessage listeners
+   global BufferArr    := Array()                        ; Create a list of Buffers for use in DllCall pointers
    global NL_Func          := ""                      	; _Funcs can use this to add New Previous Line
    global EOLComment_Func  := ""                      	; _Funcs can use this to add comments at EOL
    global grePostFuncMatch := False                   	; ... to know their regex matched

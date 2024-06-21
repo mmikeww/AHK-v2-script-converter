@@ -23,6 +23,8 @@ global FunctionsToConvertM := OrderedMap(
     "*_RegExMatch"
   , "RegExReplace(Haystack,NeedleRegEx,Replacement,OutputVarCountV2VR,Limit,StartingPos)" ,
     "RegExReplace({1}, {2}, {3}, {4}, {5}, {6})"
+  , "StrGet(Source, Length, Encoding)" ,
+    "*_StrGet"
   , "StrReplace(Haystack,Needle,ReplaceText,OutputVarCountV2VR,Limit)" ,
     "StrReplace({1}, {2}, {3}, , {4}, {5})"
   , "SubStr(String, StartingPos, Length)" ,
@@ -125,7 +127,6 @@ _DllCall(p) {
     if (prevParam = '"Ptr"' and !InStr(p[A_Index], '"')) {
       loopIndex := A_Index ; Because for-loop writes to A_Index despite i existing :(
       for , v in BufferArr {
-        MsgBox "[" v "]`n[" p[loopIndex] "]"
         if (p[loopIndex] = v)
           p[loopIndex] .= ".Ptr"
       }
@@ -164,6 +165,26 @@ _DllCall(p) {
     prevParam := p[A_Index]
   }
   Return "DllCall(" ParBuffer ")"
+}
+
+_StrGet(p) {
+  if (p[1] ~= "^&") { ; Remove the & parameter
+    p[1] := SubStr(p[1], 2)
+  }
+  for , v in BufferArr {
+    if (p[1] = v)
+      p[1] .= ".Ptr"
+  }
+  Out := "StrGet(" p[1]
+  if p[2] != "" {
+    Out .= ", " p[2]
+    if p[3] != ""
+      Return Out ", " p[3] ")"
+    Return Out ")"
+  }
+  if p[3] != ""
+    Return Out ",, " p[3] ")"
+  Return Out ")"
 }
 
 _LV_Add(p) {

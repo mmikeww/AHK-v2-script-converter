@@ -3191,16 +3191,18 @@ V1ParSplit(String) {
 
       if (Char = "`"" && !InApostrophe && CheckQuotes) {
          if (!InQuote) {
-            if (A_Index = 1 || (oString.has(A_Index - 1) && Instr("( ,", oString[A_Index - 1]))) {
+            ;  2024-06-24 andymbody - added double quote to Instr search just in case causing hidden issues
+            if (A_Index = 1 || (oString.has(A_Index - 1) && Instr('(" ,', oString[A_Index - 1]))) {
                InQuote := 1
             } else {
                CheckQuotes := 0
             }
          } else {
-            if (A_Index = oString.Length || (oString.has(A_Index + 1) && Instr(") ,", oString[A_Index + 1]))) {
+            ;  2024-06-24 andymbody - added double quote to Instr search to fix failed test RegexMatch_O-Mode_ex2.ah1
+            if (A_Index = oString.Length || (oString.has(A_Index + 1) && Instr(')" ,', oString[A_Index + 1]))) {
                InQuote := 0
             } else {
-               CheckQuotes := 0
+               CheckQuotes := 0     ; could also just remove this to fix RegexMatch_O-Mode_ex2.ah1
             }
          }
 
@@ -3457,7 +3459,19 @@ ConvertPseudoArray(ScriptStringInput, PseudoArrayName) {
       ScriptStringInput := RegExReplace(ScriptStringInput, "is)\b(" ArrayName ")(\d*\s*,\s*(?1)\d*)+\b", NewName)
    } else if (PseudoArrayName.HasOwnProp("strict") && PseudoArrayName.strict) {
       ; Replacement without allowing suffix.
-      ScriptStringInput := RegExReplace(ScriptStringInput, "is)(?<!\w|&|\.)" ArrayName "(?!\w|%|\.|\[|\s*:=)", NewName)
+
+      ; 2024-06-22 AMB Added regex property to support regexmatch array validation (has it been set?)
+      ; see _RegExMatch() in 2Functions.ahk to see where this property is set
+      if (PseudoArrayName.HasOwnProp("regex") && PseudoArrayName.regex)
+      {
+         ; this is regexmatch array[0] - validate that array has been set -> (m&&m[0])
+         ScriptStringInput := RegExReplace(ScriptStringInput, "is)(?<!\w|&|\.)" ArrayName "(?!&|\w|%|\.|\[|\s*:=)", "(" ArrayName "&&" NewName ")")
+      }
+      else
+      {
+         ; anything other than regexmatch
+         ScriptStringInput := RegExReplace(ScriptStringInput, "is)(?<!\w|&|\.)" ArrayName "(?!\w|%|\.|\[|\s*:=)", NewName)
+      }
    } else {
       ; General replacement for numerical suffixes and percent signs.
       ScriptStringInput := RegExReplace(ScriptStringInput, "is)(?<!\w|&|\.)" ArrayName "([1-9]\d*)(?!\w|\.|\[)", NewName "[$1]")

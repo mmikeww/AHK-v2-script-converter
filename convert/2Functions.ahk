@@ -224,7 +224,7 @@ _NumGet(p) {
   }
   if (p[3] = "" and InStr(p[2],"A_PtrSize")) {
     p[3] := '"UPtr"'
-  }  
+  }
   Out := "NumGet(" P[1] ", " p[2] ", " p[3] ")"
   Return RegExReplace(Out, "[\s\,]*\)$", ")")
 }
@@ -260,9 +260,9 @@ _NumPut(p) {
         OffSet := p[3]
         Type := p[4]
       }
-      
+
       ParBuffer := Type ", " Number ", `r`n" Indentation "   " ParBuffer
-      
+
       NextParameters := RegExReplace(VarOrAddress, "is)^\s*Numput\((.*)\)\s*$", "$1", &OutputVarCount)
       if (OutputVarCount = 0) {
         break
@@ -372,15 +372,21 @@ _RegExMatch(p) {
       ; Mode 1 (Default)
       ; v1OutputVar -> v2OutputVar[0]
       ; v1OutputVar1 -> v2OutputVar[1]
-      aListPseudoArray.Push({name: OutputVar})
-      aListPseudoArray.Push({strict: true, name: OutputVar, newname: OutputVar "[0]"})
+      ; 2024-06-22 AMB - Added regex property to be used in ConvertPseudoArray()
+      aListPseudoArray.Push({regex: true, name: OutputVar})
+      aListPseudoArray.Push({regex: true, strict: true, name: OutputVar, newname: OutputVar "[0]"})
+;      aListPseudoArray.Push({name: OutputVar})
+;      aListPseudoArray.Push({strict: true, name: OutputVar, newname: OutputVar "[0]"})
       for CaptName in CaptNames
         aListPseudoArray.Push({strict: true, name: OutputVar CaptName, newname: OutputVar '["' CaptName '"]'})
-    } else { 
+    } else {
       ; Unknown mode. Unclear options, possibly variables obscuring the parameter.
       ; Treat as default mode?... The unhandled options O and P will make v2 throw anyway.
-      aListPseudoArray.Push({name: OutputVar})
-      aListPseudoArray.Push({strict: true, name: OutputVar, newname: OutputVar "[0]"})
+      ; 2024-06-22 AMB - Added regex property to be used in ConvertPseudoArray()
+      aListPseudoArray.Push({regex: true, name: OutputVar})
+      aListPseudoArray.Push({regex: true, strict: true, name: OutputVar, newname: OutputVar "[0]"})
+;      aListPseudoArray.Push({name: OutputVar})
+;      aListPseudoArray.Push({strict: true, name: OutputVar, newname: OutputVar "[0]"})
     }
     Out .= Format("RegExMatch({1}, {2}, &{3}, {4})", p*)
   } else {

@@ -156,16 +156,16 @@ Convert(ScriptString)
 
       Orig_Line := Line
 
-      ; Remove comma after flow commands
-      If RegExMatch(Line, "i)^(\s*)(else|for|if|loop|return|while)(\s*,\s*|\s+)(.*)$", &Equation) {
-         Line := Equation[1] Equation[2] " " Equation[4]
-      }
-
       ; Fix lines with preceeding }
       LinePrefix := ""
       If RegExMatch(Line, "i)^\s*}(?!\s*else|\s*\n)\s*", &Equation) {
          Line := StrReplace(Line, Equation[],,,, 1)
          LinePrefix := Equation[]
+      }
+
+      ; Remove comma after flow commands
+      If RegExMatch(Line, "i)^(\s*)(else|for|if|loop|return|while)(\s*,\s*|\s+)(.*)$", &Equation) {
+         Line := Equation[1] Equation[2] " " Equation[4]
       }
 
       ; Handle return % var -> return var

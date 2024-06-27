@@ -42,6 +42,7 @@ Convert(ScriptString)
    ; must be performed AFTER all conversions
    try convertedCode := AddBracket(convertedCode)               ; Add Brackets to Hotkeys
    try convertedCode := UpdateGoto(convertedCode)               ; Update Goto Label when Label is converted to a func
+   convertedCode := addMenuCBParam(convertedCode)
 
    return convertedCode
 }
@@ -66,6 +67,7 @@ _convertLines(ScriptString, finalize:=!gUseMasking)             ; 2024-06-26 REN
    global GuiVList	; Used to list all variable names defined in a Gui
    global GuiControlCount := 0
    global MenuList
+   global MenuCBChecks := map()                         ; 2024-06-26 AMB, for fix #131
    global mAltLabel    := GetAltLabelsMap(ScriptString)	; Create a map of labels who are identical
    global LabelsToFunc := Array()                        ; List of labels that were converted to funcs
    global mGuiCType    := map()                        	; Create a map to return the type of control
@@ -997,6 +999,7 @@ _convertLines(ScriptString, finalize:=!gUseMasking)             ; 2024-06-26 REN
    {
       ScriptOutput := AddBracket(ScriptOutput)      ; Add Brackets to Hotkeys
       ScriptOutput := UpdateGoto(ScriptOutput)      ; Update Goto Label when Label is converted to a func
+      ScriptOutput := addMenuCBParam(ScriptOutput)
    }
 
    return ScriptOutput
@@ -2455,6 +2458,10 @@ _Menu(p) {
             aListLabelsToFunction.Push({label: Var4, parameters: "A_ThisMenuItem, A_ThisMenuItemPos, MyMenu", NewFunctionName: FunctionName})
          }
          if Var4 != "" {
+            ; 2024-06-26 ADDED by AMB for fix #131
+            ; add CB func name to list - if the func exists, will add * param (near end of regular conversion)
+            global MenuCBChecks
+            MenuCBChecks[Var4] := true
             LineResult .= ", " FunctionName
          }
       } else if (Var2 = "SetColor") {
@@ -2462,7 +2469,7 @@ _Menu(p) {
             LineResult .= ", 0"
          }
       } else {
-         if Var4 != "" {
+         if (Var4 != "") {
             LineResult .= ", " ToStringExpr(Var4)
          }
       }
@@ -4106,4 +4113,28 @@ ConvertEscapedQuotesInStr(srcStr)
       restoreStrings(&Line)
 
    return Line
+}
+;################################################################################
+															 addMenuCBParam(code)
+;################################################################################
+{
+; 2024-06-26, AMB - ADDED to fix issue #131
+
+   ; add menu params to callback functions
+   for key, val in MenuCBChecks
+   {
+       nTargFunc := RegExReplace(gFuncPtn, 'i)\Q?<fName>[_a-z]\w*\E', key)
+       if (pos := RegExMatch(code, nTargFunc, &m)) {
+          nCommon       := '^\h*(?<fName>[_a-z]\w*)(?<fArgG>\((?<Args>(?>[^()]|\((?&Args)\))*+)'
+          nFuncParam1   := '(?ims)' nCommon '\))(.*)'
+          nFuncParam2   := '(?im)' nCommon '\K\)).*'
+          argList       := RegExReplace(m[], nFuncParam1, "$2$3")
+          if (instr(argList, 'A_ThisMenuItem') && instr(argList, 'A_ThisMenuItemPos') && instr(argList, 'MyMenu'))
+            continue    ; skip converted labels
+          param         := (argList ~= '\(\h*\)') ? '*)' : ',*)'        ; add * or place it at the end of param list
+          addParam      := RegExReplace(m[], nFuncParam2, param ' {',, 1)
+          code          := RegExReplace(code, '\Q' m[] '\E', addParam,, 1)
+       }
+   }
+   return code
 }

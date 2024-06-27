@@ -23,6 +23,8 @@ global FunctionsToConvertM := OrderedMap(
     "*_RegExMatch"
   , "RegExReplace(Haystack,NeedleRegEx,Replacement,OutputVarCountV2VR,Limit,StartingPos)" ,
     "RegExReplace({1}, {2}, {3}, {4}, {5}, {6})"
+  , "StrGet(Source, Length, Encoding)" ,
+    "*_StrGet"
   , "StrReplace(Haystack,Needle,ReplaceText,OutputVarCountV2VR,Limit)" ,
     "StrReplace({1}, {2}, {3}, , {4}, {5})"
   , "SubStr(String, StartingPos, Length)" ,
@@ -110,6 +112,7 @@ global FunctionsToConvertM := OrderedMap(
 
 _DllCall(p) {
   ParBuffer := ""
+  prevParam := "" ; Track previous param for Ptr
   global noSideEffect
   loop p.Length
   {
@@ -120,7 +123,15 @@ _DllCall(p) {
     NeedleRegEx := "(\*\s*0\s*\+\s*)(&)(\w*)" ; *0+&var split into 3 groups (*0+), (&), and (var)
     if (p[A_Index] ~= "^&") {                       ; Remove the & parameter
       p[A_Index] := SubStr(p[A_Index], 2)
-    } else if RegExMatch(p[A_Index], NeedleRegEx) { ; even if it's behind a *0 var assignment preceding it
+    }
+    if (prevParam = '"Ptr"' and !InStr(p[A_Index], '"')) {
+      loopIndex := A_Index ; Because for-loop writes to A_Index despite i existing :(
+      for , v in BufferArr {
+        if (p[loopIndex] = v)
+          p[loopIndex] .= ".Ptr"
+      }
+    }
+    if RegExMatch(p[A_Index], NeedleRegEx) { ; even if it's behind a *0 var assignment preceding it
       noSideEffect := 1
       subLoopFunctions(ScriptString:=p[A_Index], Line:=p[A_Index], &v2:="", &gotFunc:=False)
       noSideEffect := 0
@@ -151,8 +162,29 @@ _DllCall(p) {
       }
     }
     ParBuffer .= A_Index=1 ? p[A_Index] : ", " p[A_Index]
+    prevParam := p[A_Index]
   }
   Return "DllCall(" ParBuffer ")"
+}
+
+_StrGet(p) {
+  if (p[1] ~= "^&") { ; Remove the & parameter
+    p[1] := SubStr(p[1], 2)
+  }
+  for , v in BufferArr {
+    if (p[1] = v)
+      p[1] .= ".Ptr"
+  }
+  Out := "StrGet(" p[1]
+  if p[2] != "" {
+    Out .= ", " p[2]
+    if p[3] != ""
+      Return Out ", " p[3] ")"
+    Return Out ")"
+  }
+  if p[3] != ""
+    Return Out ",, " p[3] ")"
+  Return Out ")"
 }
 
 _LV_Add(p) {
@@ -465,6 +497,7 @@ _VarSetCapacity(p) {
   }
   %lEOLComment_Func%:=""
   reM := grePostFuncMatch
+  BufferArr.Push(p[1])
   if        (p[3] != "") {
     ; since even multiline continuation allows semicolon comments adding lEOLComment_Func shouldn't break anything, but if it does, add this hacky comment
       ;`{3} + 0*StrLen("V1toV2: comment")`, or when you can't add a 0 (to a buffer)

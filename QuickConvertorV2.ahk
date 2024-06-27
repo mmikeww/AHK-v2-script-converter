@@ -1047,13 +1047,10 @@ ViewV2E(*)
 ;***************
 ;*** HOTKEYS ***
 ;***************
+#HotIf WinActive(MyGui.title)
 $Esc::     ;Exit application - Using either <Esc> Hotkey or Goto("MyExit")
 {
 MyExit:
-    if (MyGui.title != WinGetTitle("A")) {
-        Send("{esc}")
-        return
-    }
     CloseV1(myGui) ; Close active scripts
     CloseV2(myGui)
     CloseV2E(myGui)

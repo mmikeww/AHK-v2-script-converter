@@ -4,7 +4,8 @@
 ; to do: strsplit (old command)
 ; requires should change the version :D
 global dbg:=0
-global gQuotedStrings := []     ; 2024-04-08 ADDED, andymbody
+;global gQuotedStrings := []    ; 2024-04-08 ADDED, andymbody, 2024-06-26 REMOVED
+global gUseMasking := 1         ; 2024-06-26 - set to 0 to test without masking applied
 
 #Include lib/ClassOrderedMap.ahk
 #Include lib/dbg.ahk
@@ -14,10 +15,40 @@ global gQuotedStrings := []     ; 2024-04-08 ADDED, andymbody
 #Include Convert/3Methods.ahk
 #Include Convert/4ArrayMethods.ahk
 #Include Convert/5Keywords.ahk
+#Include "Convert/MaskCode.ahk"       ; 2024-06-26 ADDED AMB (masking support)
 
+;^esc::ExitApp
+
+;################################################################################
 Convert(ScriptString)
+;################################################################################
 {
+; 2024-06-26 andymbody - ADDED support for block masking
+; all masking supported through \Convert\MaskCode.ahk
 
+   if (!gUseMasking) ; turn on/off at top of script
+      return _convertLines(ScriptString,finalize:=1)            ; test without masking
+
+   ; convert and mask classes and functions
+   maskBlocks(&ScriptString)                                    ; see MaskCode.ahk
+
+   ; perform conversion of main/global portion of script only
+   convertedCode := _convertLines(ScriptString,finalize:=0)     ; convert main/global code
+
+   ; remove masking from classes and functions
+   ; class and functions are returned as v2 converted
+   restoreBlocks(&convertedCode)                                ; see MaskCode.ahk
+
+   ; must be performed AFTER all conversions
+   try convertedCode := AddBracket(convertedCode)               ; Add Brackets to Hotkeys
+   try convertedCode := UpdateGoto(convertedCode)               ; Update Goto Label when Label is converted to a func
+
+   return convertedCode
+}
+;################################################################################
+;Convert(ScriptString)
+_convertLines(ScriptString, finalize:=!gUseMasking)             ; 2024-06-26 RENAMED to accommodate masking
+{
    global ScriptStringsUsed := Array()	; Keeps an array of interesting strings used in the script
    ScriptStringsUsed.ErrorLevel := InStr(ScriptString, "ErrorLevel")
    global aListPseudoArray := Array()     	; list of strings that should be converted from pseudoArray to Array
@@ -960,11 +991,13 @@ Convert(ScriptString)
    if (SubStr(ScriptOutput, -2) = "`r`n")
       ScriptOutput := SubStr(ScriptOutput, 1, -2)
 
-   ; Add Brackets to Hotkeys
-   ScriptOutput := AddBracket(ScriptOutput)
-
-   ; Update Goto Label when Label is converted to a func
-   ScriptOutput := UpdateGoto(ScriptOutput)
+   ; 2024-06-26 andymbody - CHANGED to support masking
+   ; these will be performed in new Convert() when masking mode is ON
+   if (finalize)
+   {
+      ScriptOutput := AddBracket(ScriptOutput)      ; Add Brackets to Hotkeys
+      ScriptOutput := UpdateGoto(ScriptOutput)      ; Update Goto Label when Label is converted to a func
+   }
 
    return ScriptOutput
 }
@@ -3940,56 +3973,58 @@ ConvertEscapedQuotesInStr(srcStr)
 
    return (tempStr) ? tempStr : srcStr
 }
-;################################################################################
-															 maskStrings(&srcStr)
-;################################################################################
-{
-; 2024-04-08 ADDED andymbody
-; 2024-06-02 UPDATED
-; masks quoted-strings, stores the orig text in gQuotedStrings global array
+;;################################################################################
+;															 maskStrings(&srcStr)
+;;################################################################################
+;{
+;; 2024-04-08 ADDED andymbody
+;; 2024-06-02 UPDATED
+;; masks quoted-strings, stores the orig text in gQuotedStrings global array
+;; 2024-06-26 MOVED to MaskCode.ahk
 
-   global gQuotedStrings
+;   global gQuotedStrings
 
-    ; ini
-	pref	:= '#TAG' chr(1000) 'MS_', trail := chr(1000) '#'    ; unique tag
-    ; this needle is a bit overkill for this converter, but...
-    ; ... should support both v1/v2 nested quotes. Does not support multiline strings
-    ; 2024-06-17 UPDATED with atomic groups to prevent catastrophic failure if an apostrophe is encountered
-    pattern := '(*UCP)(?m)(?:`'`'|`'(?>[^`'\v]+(?:(?<=``)`')?)+`'|""|"(?>[^"\v]+(?:(?<=``)")?)+")'
+;    ; ini
+;	pref	:= '#TAG' chr(1000) 'MS_', trail := chr(1000) '#'    ; unique tag
+;    ; this needle is a bit overkill for this converter, but...
+;    ; ... should support both v1/v2 nested quotes. Does not support multiline strings
+;    ; 2024-06-17 UPDATED with atomic groups to prevent catastrophic failure if an apostrophe is encountered
+;    pattern := '(*UCP)(?m)(?:`'`'|`'(?>[^`'\v]+(?:(?<=``)`')?)+`'|""|"(?>[^"\v]+(?:(?<=``)")?)+")'
 
-	; find all target strings (one at a time), replace them with tags
-	pos := 0, m := []
-	while (pos  := RegExMatch(srcStr, pattern, &m, pos+1)) {
-		gQuotedStrings.push(m[])    ; save original text into array
-		tag		:= pref . gQuotedStrings.Length . trail
-		srcStr	:= StrReplace(srcStr, m[], tag,,, 1)	; replace only one at a time
- 	}
-	return
-}
-;################################################################################
-														  restoreStrings(&srcStr)
-;################################################################################
-{
-; 2024-04-08 ADDED, andymbody
-; restores orig strings that were masked by maskStrings()
+;	; find all target strings (one at a time), replace them with tags
+;	pos := 0, m := []
+;	while (pos  := RegExMatch(srcStr, pattern, &m, pos+1)) {
+;		gQuotedStrings.push(m[])    ; save original text into array
+;		tag		:= pref . gQuotedStrings.Length . trail
+;		srcStr	:= StrReplace(srcStr, m[], tag,,, 1)	; replace only one at a time
+; 	}
+;	return
+;}
+;;################################################################################
+;														  restoreStrings(&srcStr)
+;;################################################################################
+;{
+;; 2024-04-08 ADDED, andymbody
+;; restores orig strings that were masked by maskStrings()
+;; 2024-06-26 MOVED to MaskCode.ahk
 
-   global gQuotedStrings
+;   global gQuotedStrings
 
-	; ini
-	pref    := '#TAG' chr(1000) 'MS_', trail := chr(1000) '#'    ; unique tag
-	tag		:= pref . '\d+' . trail		; tag pattern
+;	; ini
+;	pref    := '#TAG' chr(1000) 'MS_', trail := chr(1000) '#'    ; unique tag
+;	tag		:= pref . '\d+' . trail		; tag pattern
 
-	; find all tags (one at a time), then replace them with orig
-    pos := 0, m := []
-	while (pos  := RegExMatch(srcStr, tag, &m))
-	{
-		; tag found - get orig text, then replace tag with it
-		RegExMatch(m[], '\d+', &idx)
-		orig    := gQuotedStrings[idx[]]
-		srcStr  := StrReplace(srcStr, m[], orig)
-	}
-	return
-}
+;	; find all tags (one at a time), then replace them with orig
+;    pos := 0, m := []
+;	while (pos  := RegExMatch(srcStr, tag, &m))
+;	{
+;		; tag found - get orig text, then replace tag with it
+;		RegExMatch(m[], '\d+', &idx)
+;		orig    := gQuotedStrings[idx[]]
+;		srcStr  := StrReplace(srcStr, m[], orig)
+;	}
+;	return
+;}
 ;################################################################################
 														   RemoveNewKeyword(line)
 ;################################################################################

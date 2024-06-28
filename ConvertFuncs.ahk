@@ -3877,7 +3877,7 @@ UpdateGoto(ScriptString) {
    If LabelsToFunc.Length = 0
       return ScriptString
    FixedScript := ""
-   loop parse ScriptString, "`n" {
+   loop parse ScriptString, "`n", "`r" {
       If !InStr(A_LoopField, "Goto", "On") { ; Case sensitive because converter always converts to "Goto"
          FixedScript .= A_LoopField "`r`n"
          continue

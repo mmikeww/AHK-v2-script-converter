@@ -316,7 +316,10 @@ _OnMessage(p) {
   ; OnMessage(MsgNumber, FunctionQ2T, MaxThreads)
   ; OnMessage({1}, {2}, {3})
   If (p.Has(1) and p.Has(2) and p[1] != "" and p[2] != "") {
-    OnMessageMap.%p[1]% := p[2]
+    ;OnMessageMap.%p[1]% := p[2]
+    ; 2024-06-28 change to key/val format for fix of Issue 136
+    ; see addOnMessageCBArgs() in ConvertFuncs.ahk
+    OnMessageMap[string(p[1])] := p[2]
     If (p.Has(3) and p[3] != "") {
       Return "OnMessage(" p[1] ", " p[2] ", " p[3] ")"
     }
@@ -324,7 +327,7 @@ _OnMessage(p) {
   }
   If (p.Has(2) and p[2] = "") {
     Try {
-      callback := OnMessageMap.%p[1]%
+      callback := OnMessageMap[string(p[1])] ;OnMessageMap.%p[1]%
     } Catch {
       ; Didnt find lister to turn off
       Return "OnMessage(" p[1] ", , 0) `; V1toV2: Put callback to turn off in param 2"

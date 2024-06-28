@@ -11,13 +11,13 @@ InvertImageInCb() {
     MsgBox, Inverted colors of image in clipboard.
 }
 
-SaveCbImageasFile() {
+SaveCbImageasFile(param1) { ; comment
 
     RunWait, magick.exe convert clipboard:myimage -channel RGB -negate -background white -flatten clipboard:, , Hide
     MsgBox, Inverted colors of image in clipboard.
 }
 
-SaveCbImageas8Bit() {
+SaveCbImageas8Bit(param1, param2, param3) {
 
     RunWait, magick.exe convert clipboard:myimage -channel RGB -negate -background white -flatten clipboard:, , Hide
     MsgBox, Inverted colors of image in clipboard.

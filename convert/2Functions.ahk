@@ -330,7 +330,7 @@ _OnMessage(p) {
       callback := OnMessageMap[string(p[1])] ;OnMessageMap.%p[1]%
     } Catch {
       ; Didnt find lister to turn off
-      Return "OnMessage(" p[1] ", , 0) `; V1toV2: Put callback to turn off in param 2"
+      Return "OnMessage(" p[1] ", " Chr(1000) Chr(1000) "CallBack_Placeholder" Chr(1000) Chr(1000) ", 0)"
     }
     ; Found the listener to turn off
     Return "OnMessage(" p[1] ", " callback ", 0)"

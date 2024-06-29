@@ -1010,6 +1010,7 @@ _convertLines(ScriptString, doPost:=!gUseMasking)               ; 2024-06-26 REN
 
    try code := AddBracket(code)         ; Add Brackets to Hotkeys
    try code := UpdateGoto(code)         ; Update Goto Label when Label is converted to a func
+   try code := FixOnMessage(code)       ; Fix turning off OnMessage when defined after turn off
    addMenuCBArgs(&code)                 ; 2024-06-26, AMB - Fix #131
    addOnMessageCBArgs(&code)            ; 2024-06-28, AMB - Fix #136
 
@@ -3904,6 +3905,26 @@ UpdateGoto(ScriptString) {
          ;If InStr(A_LoopField, 'Goto("' LabelName '")')
          FixedScript .= StrReplace(A_LoopField, 'Goto("' LabelName '")', LabelName "()`r`n")
       }
+   }
+   Return FixedScript
+}
+
+/**
+ * Fix turning off OnMessage when OnMessage is turned off
+ * before it is assigned a callback (by eg using functions)
+ */
+FixOnMessage(ScriptString) { ; TODO: If callback *still* isn't found, add this comment  `; V1toV2: Put callback to turn off in param 2
+   if !InStr(ScriptString, Chr(1000) Chr(1000) "CallBack_Placeholder" Chr(1000) Chr(1000))
+      Return ScriptString
+   FixedScript := ""
+   loop parse ScriptString, "`n", "`r" {
+      Line := A_LoopField
+      for i, v in OnMessageMap {
+         if (RegExMatch(Line, 'OnMessage\(\s*((?:0x)?\d+)\s*,\s*ϨϨCallBack_PlaceholderϨϨ\s*(?:,\s*\d+\s*)?\)', &match)) { ; and (i = match[1]))) {
+            Line := StrReplace(Line, "ϨϨCallBack_PlaceholderϨϨ", v,, &OutputVarCount)
+         }
+      }
+      FixedScript .= Line "`r`n"
    }
    Return FixedScript
 }

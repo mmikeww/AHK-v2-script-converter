@@ -125,6 +125,8 @@ _convertLines(ScriptString, doPost:=!gUseMasking)               ; 2024-06-26 REN
    Loop
    {
       O_Index++
+;      ToolTip("Converting line: " O_Index)
+
       if (oScriptString.Length < O_Index) {
          ; This allows the user to add or remove lines if necessary
          ; Do not forget to change the O_index if you want to remove or add the line above or lines below
@@ -1477,10 +1479,25 @@ _FileRead(p) {
    Return format("{1} := Fileread({2})", p[1], ToExp(p[2]))
 }
 _FileReadLine(p) {
+   global Indentation
    ; FileReadLine, OutputVar, Filename, LineNum
    ; Not really a good alternative, inefficient but the result is the same
 
-   Return p[1] " := StrSplit(FileRead(" p[2] "),`"``n`",`"``r`")[" P[3] "]"
+;   Return p[1] " := StrSplit(FileRead(" p[2] "),`"``n`",`"``r`")[" P[3] "]"
+
+   ; 2024-06-28, AMB Issue #20
+   ; is this proper conversion?
+   newLine  := '`r`n'   . Indentation
+   lineTab  := newLine  . '`t'
+   cmd :=       'try {'
+            .   lineTab     . 'Global ErrorLevel := 0'
+            .   lineTab     . p[1] . ' := StrSplit(FileRead(' p[2] '),`"``n`",`"``r`")[' P[3] ']'
+            .   newLine     . '} Catch {'
+            .   lineTab     . p[1] . ' := ""'
+            .   lineTab     . 'ErrorLevel := 1'
+            .   newLine     . '}'
+
+   Return cmd
 }
 _FileSelect(p) {
    ; V1: FileSelectFile, OutputVar [, Options, RootDir\Filename, Title, Filter]

@@ -24,7 +24,7 @@ Return
 
 Off() {
     ToolTip()
-    OnMessage(0x0201, WM_LBUTTONDOWN, 0) ; V1toV2: Put callback to turn off in param 2
+    OnMessage(0x0201, WM_LBUTTONDOWN, 0)
 }
 
 On() {

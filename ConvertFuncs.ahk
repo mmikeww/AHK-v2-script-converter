@@ -4,8 +4,7 @@
 ; to do: strsplit (old command)
 ; requires should change the version :D
 global dbg:=0
-;global gQuotedStrings := []    ; 2024-04-08 ADDED, andymbody, 2024-06-26 REMOVED
-global gUseMasking := 1         ; 2024-06-26 - set to 0 to test without masking applied
+global gUseMasking := 1             ; 2024-06-26 - set to 0 to test without masking applied
 
 #Include lib/ClassOrderedMap.ahk
 #Include lib/dbg.ahk
@@ -15,9 +14,7 @@ global gUseMasking := 1         ; 2024-06-26 - set to 0 to test without masking 
 #Include Convert/3Methods.ahk
 #Include Convert/4ArrayMethods.ahk
 #Include Convert/5Keywords.ahk
-#Include "Convert/MaskCode.ahk"       ; 2024-06-26 ADDED AMB (masking support)
-
-;^esc::ExitApp
+#Include "Convert/MaskCode.ahk"     ; 2024-06-26 ADDED AMB (masking support)
 
 ;################################################################################
 Convert(ScriptString)
@@ -27,33 +24,33 @@ Convert(ScriptString)
 ; all masking supported through \Convert\MaskCode.ahk
 
    if (!gUseMasking) ; turn on/off at top of script
-      return _convertLines(ScriptString,finalize:=1)            ; test without masking
+      return _convertLines(ScriptString,doPost:=1)              ; test without masking
 
    ; convert and mask classes and functions
    maskBlocks(&ScriptString)                                    ; see MaskCode.ahk
 
    ; perform conversion of main/global portion of script only
-   convertedCode := _convertLines(ScriptString,finalize:=0)     ; convert main/global code
+   convertedCode := _convertLines(ScriptString,doPost:=0)       ; convert main/global code
 
    ; remove masking from classes and functions
    ; class and functions are returned as v2 converted
    restoreBlocks(&convertedCode)                                ; see MaskCode.ahk
 
-   ; must be performed AFTER all conversions
-   try convertedCode := AddBracket(convertedCode)               ; Add Brackets to Hotkeys
-   try convertedCode := UpdateGoto(convertedCode)               ; Update Goto Label when Label is converted to a func
+   ; operations that must be performed...
+   ;    AFTER line conversions and masking removed
+   PostConvert(&convertedCode)                                  ; doPost - perform all post-convert operations
 
    return convertedCode
 }
 ;################################################################################
 ;Convert(ScriptString)
-_convertLines(ScriptString, finalize:=!gUseMasking)             ; 2024-06-26 RENAMED to accommodate masking
+_convertLines(ScriptString, doPost:=!gUseMasking)               ; 2024-06-26 RENAMED to accommodate masking
 {
    global ScriptStringsUsed := Array()	; Keeps an array of interesting strings used in the script
    ScriptStringsUsed.ErrorLevel := InStr(ScriptString, "ErrorLevel")
    global aListPseudoArray := Array()     	; list of strings that should be converted from pseudoArray to Array
    global aListMatchObject := Array()     	; list of strings that should be converted from Match Object V1 to Match Object V2
-   global aListLabelsToFunction := Array()	; array of objects with the properties [label] and [parameters] that should be converted from label to Function
+   global aListLabelToFunc := Array()	    ; array of objects with the properties [label] and [parameters] that should be converted from label to Function
    global Orig_Line
    global Orig_Line_NoComment
    global Orig_ScriptString := ScriptString
@@ -66,11 +63,12 @@ _convertLines(ScriptString, finalize:=!gUseMasking)             ; 2024-06-26 REN
    global GuiVList	; Used to list all variable names defined in a Gui
    global GuiControlCount := 0
    global MenuList
+   global MenuCBChecks := map()                         ; 2024-06-26 AMB, for fix #131
    global mAltLabel    := GetAltLabelsMap(ScriptString)	; Create a map of labels who are identical
-   global LabelsToFunc := Array()                        ; List of labels that were converted to funcs
+   global LabelsToFunc := Array()                       ; List of labels that were converted to funcs
    global mGuiCType    := map()                        	; Create a map to return the type of control
    global mGuiCObject  := map()                        	; Create a map to return the object of a control
-   global OnMessageMap := map()                          ; Create a map of OnMessage listeners
+   global OnMessageMap := map()                         ; Create a map of OnMessage listeners
    global NL_Func          := ""                      	; _Funcs can use this to add New Previous Line
    global EOLComment_Func  := ""                      	; _Funcs can use this to add comments at EOL
    global grePostFuncMatch := False                   	; ... to know their regex matched
@@ -973,35 +971,51 @@ _convertLines(ScriptString, finalize:=!gUseMasking)             ; 2024-06-26 REN
       ; Output and NewInput should become arrays, NewInput is a copy of the Input, but with empty lines added for easier comparison.
       LastLine := Line
 
-   }
+   }    ; END of individual-line conversions
 
-   ; Convert labels listed in aListLabelsToFunction
-   Loop aListLabelsToFunction.Length {
-      if aListLabelsToFunction[A_Index].label
-         ScriptOutput := ConvertLabel2Func(ScriptOutput, aListLabelsToFunction[A_Index].label, aListLabelsToFunction[A_Index].parameters, aListLabelsToFunction[A_Index].HasOwnProp("NewFunctionName") ? aListLabelsToFunction[A_Index].NewFunctionName : "", aListLabelsToFunction[A_Index].HasOwnProp("aRegexReplaceList") ? aListLabelsToFunction[A_Index].aRegexReplaceList : "")
+   ;################################################################################
 
-   }
-
-   If InStr(ScriptOutput, "OnClipboardChange:") {
-      ;ScriptOutput :=  RegExReplace(ScriptOutput, "is)^(.*\n[\s\t]*)(OnClipboardChange:)(.*)$" , "$1ClipChanged:$3")
-      ScriptOutput := "OnClipboardChange(ClipChanged)`r`n" ConvertLabel2Func(ScriptOutput, "OnClipboardChange", "Type", "ClipChanged", [{NeedleRegEx: "i)^(.*)\b\QA_EventInfo\E\b(.*)$", Replacement: "$1Type$2"}])
-   }
-
-   ; trim the very last newline that we add to every line (a few code lines above)
-   if (SubStr(ScriptOutput, -2) = "`r`n")
-      ScriptOutput := SubStr(ScriptOutput, 1, -2)
-
-   ; 2024-06-26 andymbody - CHANGED to support masking
-   ; these will be performed in new Convert() when masking mode is ON
-   if (finalize)
-   {
-      ScriptOutput := AddBracket(ScriptOutput)      ; Add Brackets to Hotkeys
-      ScriptOutput := UpdateGoto(ScriptOutput)      ; Update Goto Label when Label is converted to a func
-   }
+   ; SPECIALIZED POST-CONVERT OPERATIONS
+   ; 2024-06-27 AMB - MOVED post-convert operations to dedicated function PostConvert()
+   ; doPost should be set to FALSE when global block-masking is performed within Convert()
+   if (doPost)
+      PostConvert(&ScriptOutput)    ; performed within Convert() instead when masking is applied
 
    return ScriptOutput
 }
+;################################################################################
+															   PostConvert(&code)
+;################################################################################
+{
+; 2024-06-27 ADDED, AMB
+; Performs specialized tasks that must happen AFTER line-loop conversions
 
+   ; Convert labels listed in aListLabelToFunc
+   Loop aListLabelToFunc.Length {
+      if (aListLabelToFunc[A_Index].label)
+         code := ConvertLabel2Func(code, aListLabelToFunc[A_Index].label,    aListLabelToFunc[A_Index].parameters
+               , aListLabelToFunc[A_Index].HasOwnProp("NewFunctionName")   ? aListLabelToFunc[A_Index].NewFunctionName : ""
+               , aListLabelToFunc[A_Index].HasOwnProp("aRegexReplaceList") ? aListLabelToFunc[A_Index].aRegexReplaceList : "")
+   }
+
+   ; convert labels for OnClipboardChange
+   If (InStr(code, "OnClipboardChange:")) {
+     ;code :=  RegExReplace(ScriptOutput, "is)^(.*\n[\s\t]*)(OnClipboardChange:)(.*)$" , "$1ClipChanged:$3")
+      code := "OnClipboardChange(ClipChanged)`r`n" . ConvertLabel2Func(code, "OnClipboardChange", "Type", "ClipChanged"
+                                                   , [{NeedleRegEx: "i)^(.*)\b\QA_EventInfo\E\b(.*)$", Replacement: "$1Type$2"}])
+   }
+
+   ; trim the very last newline from end of code string
+   if (SubStr(code, -2) = "`r`n")
+      code := SubStr(code, 1, -2)
+
+   try code := AddBracket(code)         ; Add Brackets to Hotkeys
+   try code := UpdateGoto(code)         ; Update Goto Label when Label is converted to a func
+   addMenuCBArgs(&code)                 ; 2024-06-26, AMB - Fix #131
+   addOnMessageCBArgs(&code)            ; 2024-06-28, AMB - Fix #136
+
+   return ; code
+}
 ; =================================================================================
 ; Convert a v1 function in a single script line to v2
 ;    Can be used from inside _Funcs for nested checks (e.g., function in a DllCall)
@@ -1538,7 +1552,7 @@ _FileSetTime(p) {
 _Gosub(p) {
    ; Need to convert label into a function
    if RegexMatch(Orig_ScriptString, "\n(\s*)" p[1] ":\s") {
-      aListLabelsToFunction.Push({label: p[1], parameters: ""})
+      aListLabelToFunc.Push({label: p[1], parameters: ""})
    }
    Return trim(p[1]) "()"
 }
@@ -1646,7 +1660,7 @@ _Gui(p) {
                   aEventRename[A_Index].NewFunctionName := mAltLabel[aEventRename[A_Index].oldlabel]
                   ; Alternative label is available
                } else {
-                  aListLabelsToFunction.Push({label: aEventRename[A_Index].oldlabel, parameters: aEventRename[A_Index].parameters, NewFunctionName: GetV2Label(aEventRename[A_Index].NewFunctionName)})
+                  aListLabelToFunc.Push({label: aEventRename[A_Index].oldlabel, parameters: aEventRename[A_Index].parameters, NewFunctionName: GetV2Label(aEventRename[A_Index].NewFunctionName)})
                }
                LineResult .= GuiNameLine ".OnEvent(`"" aEventRename[A_Index].event "`", " GetV2Label(aEventRename[A_Index].NewFunctionName) ")`r`n"
             }
@@ -1820,7 +1834,7 @@ _Gui(p) {
          V1GuiControlEvent := ControlEvent = "Change" ? "Normal" : ControlEvent
          V1GuiControlEvent := V1GuiControlEvent = "Click" ? "Normal" : ControlEvent
          LineResult .= "`r`n" Indentation ControlObject ".OnEvent(`"" ControlEvent "`", " GetV2Label(ControlLabel) ".Bind(`"" V1GuiControlEvent "`"))"
-         aListLabelsToFunction.Push({label: ControlLabel, parameters: 'A_GuiEvent := "", GuiCtrlObj := "", Info := "", *', NewFunctionName: GetV2Label(ControlLabel)})
+         aListLabelToFunc.Push({label: ControlLabel, parameters: 'A_GuiEvent := "", GuiCtrlObj := "", Info := "", *', NewFunctionName: GetV2Label(ControlLabel)})
       }
       if (ControlHwnd != "") {
          LineResult .= "`r`n" Indentation ControlHwnd " := " ControlObject ".hwnd"
@@ -2041,7 +2055,7 @@ _Hotkey(p) {
    ;Convert label to function
 
    if RegexMatch(Orig_ScriptString, "\n(\s*)" p[2] ":\s") {
-      aListLabelsToFunction.Push({label: p[2], parameters: "ThisHotkey"})
+      aListLabelToFunc.Push({label: p[2], parameters: "ThisHotkey"})
    }
 
    if (p[1] = "IfWinActive") {
@@ -2452,9 +2466,13 @@ _Menu(p) {
          if mAltLabel.Has(FunctionName) {
             FunctionName := mAltLabel[FunctionName]
          } else if RegexMatch(Orig_ScriptString, "\n(\s*)" Var4 ":\s") {
-            aListLabelsToFunction.Push({label: Var4, parameters: "A_ThisMenuItem, A_ThisMenuItemPos, MyMenu", NewFunctionName: FunctionName})
+            aListLabelToFunc.Push({label: Var4, parameters: "A_ThisMenuItem, A_ThisMenuItemPos, MyMenu", NewFunctionName: FunctionName})
          }
          if Var4 != "" {
+            ; 2024-06-26 ADDED by AMB for fix #131
+            ; add CB func name to list - if the func exists, will add * param (near end of regular conversion)
+            global MenuCBChecks
+            MenuCBChecks[Var4] := true
             LineResult .= ", " FunctionName
          }
       } else if (Var2 = "SetColor") {
@@ -2462,7 +2480,7 @@ _Menu(p) {
             LineResult .= ", 0"
          }
       } else {
-         if Var4 != "" {
+         if (Var4 != "") {
             LineResult .= ", " ToStringExpr(Var4)
          }
       }
@@ -2494,7 +2512,7 @@ _Menu(p) {
 _OnExit(p) {
    ;V1 OnExit,Func,AddRemove
    if RegexMatch(Orig_ScriptString, "\n(\s*)" p[1] ":\s") {
-      aListLabelsToFunction.Push({label: p[1], parameters: "A_ExitReason, ExitCode", aRegexReplaceList: [{NeedleRegEx: "i)^(.*)\bReturn\b([\s\t]*;.*|)$", Replacement: "$1Return 1$2"}]})
+      aListLabelToFunc.Push({label: p[1], parameters: "A_ExitReason, ExitCode", aRegexReplaceList: [{NeedleRegEx: "i)^(.*)\bReturn\b([\s\t]*;.*|)$", Replacement: "$1Return 1$2"}]})
 
    }
    ; return needs to be replaced by return 1 inside the exitcode
@@ -2559,7 +2577,7 @@ _SetTimer(p) {
       Out := format("SetTimer({1},0)", p*)
    } else {
       Out := format("SetTimer({1},{2},{3})", p*)
-      aListLabelsToFunction.Push({label: p[1], parameters: ""})
+      aListLabelToFunc.Push({label: p[1], parameters: ""})
    }
 
    Return RegExReplace(Out, "[\s\,]*\)$", ")")
@@ -3859,7 +3877,7 @@ UpdateGoto(ScriptString) {
    If LabelsToFunc.Length = 0
       return ScriptString
    FixedScript := ""
-   loop parse ScriptString, "`n" {
+   loop parse ScriptString, "`n", "`r" {
       If !InStr(A_LoopField, "Goto", "On") { ; Case sensitive because converter always converts to "Goto"
          FixedScript .= A_LoopField "`r`n"
          continue
@@ -4106,4 +4124,56 @@ ConvertEscapedQuotesInStr(srcStr)
       restoreStrings(&Line)
 
    return Line
+}
+;################################################################################
+															 addMenuCBArgs(&code)
+;################################################################################
+{
+; 2024-06-26, AMB - ADDED to fix issue #131
+
+   ; add menu args to callback functions
+   nCommon := '^\h*(?<fName>[_a-z]\w*)(?<fArgG>\((?<Args>(?>[^()]|\((?&Args)\))*+)'
+   for key, val in MenuCBChecks
+   {
+       nTargFunc := RegExReplace(gFuncPtn, 'i)\Q?<fName>[_a-z]\w*\E', key)
+       if (pos := RegExMatch(code, nTargFunc, &m)) {
+         nDeclare   := '(?im)' nCommon '\))(?<trail>.*)'
+         nArgs      := '(?im)' nCommon '\K\)).*'
+         RegExMatch(m[], nDeclare, &declare)    ; get just declaration line
+         argList    := declare.fArgG, trail := declare.trail
+         if (instr(argList, 'A_ThisMenuItem') && instr(argList, 'A_ThisMenuItemPos') && instr(argList, 'MyMenu'))
+            continue ; skip converted labels
+         newArgs    := '(A_ThisMenuItem:="", A_ThisMenuItemPos:="", A_ThisMenu:=""' . ((m.Args='') ? ')' : ', ' SubStr(argList,2))
+         ;arg        := (argList ~= '\(\h*\)') ? '*)' : ',*)'               ; add * or place it at the end of arg list
+         ;addArgs    := RegExReplace(m[], nArgs, arg . trail,, 1)
+         addArgs    := RegExReplace(m[],  '\Q' argList '\E', newArgs,,1)    ; replace function args
+         code       := RegExReplace(code, '\Q' m[] '\E', addArgs,,, pos)    ; replace function within the code
+       }
+   }
+   return ; code
+}
+;################################################################################
+														addOnMessageCBArgs(&code)
+;################################################################################
+{
+; 2024-06-28, AMB - ADDED to fix issue #136
+
+   ; add menu args to callback functions
+   nCommon := '^\h*(?<fName>[_a-z]\w*)(?<fArgG>\((?<Args>(?>[^()]|\((?&Args)\))*+)'
+   for key, funcName in OnMessageMap
+   {
+       nTargFunc := RegExReplace(gFuncPtn, 'i)\Q?<fName>[_a-z]\w*\E', funcName)
+       if (pos := RegExMatch(code, nTargFunc, &m)) {
+         nDeclare   := '(?im)' nCommon '\))(?<trail>.*)'
+         nArgs      := '(?im)' nCommon '\K\)).*'
+         RegExMatch(m[], nDeclare, &declare)    ; get just declaration line
+         argList    := declare.fArgG, trail := declare.trail
+         cleanArgs  := RegExReplace(argList, '(?i)(?:\b(?:wParam|lParam|msg|hwnd)\b(\h*,\h*)?)+')
+         ;newArgs   := '(wParam:="", lParam:="", msg:="", hwnd:=""' . ((cleanArgs='()') ? ')' : ', ' SubStr(cleanArgs,2))
+         newArgs    := '(wParam, lParam, msg, hwnd' . ((cleanArgs='()') ? ')' : ', ' SubStr(cleanArgs,2))
+         addArgs    := RegExReplace(m[],  '\Q' argList '\E', newArgs,,1)    ; replace function args
+         code       := RegExReplace(code, '\Q' m[] '\E', addArgs,,, pos)    ; replace function within the code
+       }
+   }
+   return ; code
 }

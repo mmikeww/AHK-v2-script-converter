@@ -8,7 +8,7 @@
 ;	Please do NOT change this to spaces or a different number of chars... Thanks!
 
 
-global	  gTagChar		:= chr(0x2605) ; ?	;chr(0x17F3) ; ? for mask	;chr(0x0D6C) ; ? for mask
+global	  gTagChar		:= chr(0x2605)
 		, gFuncPtn		:= buildPtn_FUNC(), gClassPtn := buildPtn_CLS()
 		, gLCPtn		:= '(*UCP)(?m)(^\h*;|\h+;).*'															; line comments
 		, gBCPtn		:= '(*UCP)(?m)^\h*(/\*((?>[^*/]+|\*[^/]|/[^*])*)(?>(?-2)(?-1))*(?:\*/|\Z))'				; block comments
@@ -19,19 +19,23 @@ global	  gTagChar		:= chr(0x2605) ; ?	;chr(0x17F3) ; ? for mask	;chr(0x0D6C) ; ?
 class NodeMap
 {
 	name					:= ''		; name of block
-	taggedCode				:= ''		; orig block, but with children tagged
+;	taggedCode				:= ''		; (no longer used)
+	BlockCode				:= ''		; orig block code - used to determine whether code was converted
 	ConvCode				:= ''		; converted code
 	cType					:= ''		; CLS, FUNC, etc
+	tagId					:= ''		; tagId
+	parentPos				:= -1		; -1 is root
 	pos						:= -1		; block start position within code, ALSO use as unique key for MapList
 	len						:= 0		; block entire length
 	ParentList				:= ''		; list of parent ids (immediate parent will be listed first)
 	ChildList				:= map()	; list of child nodes
 
 	; acts as constructor for a node object
-	__New(name, cType, pos, len)
+	__New(name, cType, blkCode, pos, len)
 	{
 		this.name			:= name
 		this.cType			:= cType
+		this.blockCode		:= blkCode
 		this.pos			:= pos
 		this.len			:= len
 	}
@@ -63,16 +67,17 @@ class NodeMap
 	ParentName				=> (this.parentPos > 0)	 ? NodeMap.mapList[this.parentPos].name : "Root"
 	Path					=> ((this.parentPos > 0) ? NodeMap.mapList[this.parentPos].Path : "") . ("\" this.name)
 	PathVal					=> ((this.parentPos > 0) ? NodeMap.mapList[this.parentPos].PathVal : "") . ("\" this.pos)
-	AddChild(id)			=> this.ChildList[id] := NodeMap.mapList[id]	; add node object
+	AddChild(id)			=> this.ChildList[id]	:= NodeMap.mapList[id]	; add node object
 	hasChildren				=> this.ChildList.Count
+	hasChanged				=> (this.ConvCode && (this.ConvCode = this.BlockCode))
 
 	;################################################################################
 
-	static getNode(id)		=> NodeMap.mapList(id)
-	static getName(id)		=> NodeMap.mapList(id).name
 	static mapList			:= map()
 	static idIndex			:= 0
 	static nextIdx			=> ++NodeMap.IdIndex
+	static getNode(id)		=> NodeMap.mapList(id)
+	static getName(id)		=> NodeMap.mapList(id).name
 
 	; PRIVATE - adds a node to maplist
 	static _add(node) {
@@ -101,7 +106,7 @@ class NodeMap
 		; map all classes - including nested ones, from top to bottom
 		pos := 0
 		while(pos := RegExMatch(code, gClassPtn, &m, pos+1)) {
-			NodeMap._add(NodeMap(m.cname, "CLS", pos, m.len))
+			NodeMap._add(NodeMap(m.cname, "CLS", m[], pos, m.len))
 		}
 
 		; map all functions - including nested ones, from top to bottom
@@ -109,7 +114,7 @@ class NodeMap
 		while(pos := RegExMatch(code, gFuncPtn, &m, pos+1)) {
 			if (m[]="")
 				continue	; bypass IF/WHILE/LOOP
-			NodeMap._add(NodeMap(m.fname, "FUNC", pos, m.len))
+			NodeMap._add(NodeMap(m.fname, "FUNC", m[], pos, m.len))
 		}
 
 		; identify parents and children for each node in maplist
@@ -142,7 +147,7 @@ class NodeMap
 				if ((p:=RegExMatch(code, gClassPtn, &m, pos))=pos)			; node position is known and specific
 				{
 					mCode := m[], doPreMask_remove(&mCode)					; remove premask of comments and strings
-					node.taggedCode	:= mCode								; tag the code
+					;node.taggedCode	:= mCode						 	; (not used)
 					node.ConvCode	:= _convertLines(mCode,finalize:=1)		; now convert code to v2
 					code := RegExReplace(code, "\Q" mCode "\E", tag,,1,pos)
 				}
@@ -155,7 +160,7 @@ class NodeMap
 				if ((p:=RegExMatch(code, gFuncPtn, &m, pos))=pos)			; node position is known and specific
 				{
 					mCode := m[], doPreMask_remove(&mCode)					; remove premask of comments and strings
-					node.taggedCode	:= mCode								; tag the code
+					;node.taggedCode	:= mCode						 	; (not used)
 					node.ConvCode	:= _convertLines(mCode,finalize:=1)		; now convert code to v2
 					code := RegExReplace(code, "\Q" mCode "\E", tag,,1,pos)
 				}
@@ -324,7 +329,7 @@ class PreMask
 		while (pos := RegExMatch(code, pattern, &m)) ;, pos))
 		{
 			mCode	:= m[]
-			oCode	:= PreMask.masklist[mCode].origCode	; get original code from mask object
+			oCode	:= PreMask.masklist[mCode].origCode		; get original code from mask object
 			code	:= StrReplace(code, mcode, oCode)		; replace - should only be 1 occurence
 		}
 	}
@@ -396,7 +401,8 @@ class PreMask
 																   buildPtn_CLS()
 ;################################################################################
 {
-; CLASS-BLOCK pattern
+; CLASS-BLOCK pattern of my own design
+
 	opt 		:= '(*UCP)(?im)'										; pattern options
 	LC			:= '(?:(?:\h*;|(?<=\h);).*)'							; line comment (allows lead space to be consumed already)
 	tagChar 	:= (IsSet(gTagChar)) ? gTagChar : chr(0x2605)

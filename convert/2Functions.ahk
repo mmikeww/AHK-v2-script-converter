@@ -77,7 +77,7 @@ global FunctionsToConvertM := OrderedMap(
      "*_TV_SetImageList"
   , "SB_SetText(NewText,PartNumber,Style)" ,
      "*_SB_SetText"
-  , "SB_SetParts(NewText,PartNumber,Style)" ,
+  , "SB_SetParts(Width*)" ,
      "*_SB_SetParts"
   , "SB_SetIcon(Filename,IconNumber,PartNumber)" ,
      "*_SB_SetIcon"
@@ -403,8 +403,12 @@ _SB_SetText(p) {
   Return format("{1}.SetText({2}, {3}, {4})", StatusBarNameDefault, p*)
 }
 _SB_SetParts(p) {
-  global StatusBarNameDefault, gFunctPar
-  Return format("{1}.SetParts({2})", StatusBarNameDefault, gFunctPar)
+  global StatusBarNameDefault
+  Out := StatusBarNameDefault ".SetParts("
+  for , v in p {
+    Out .= v ", "
+  }
+  Return RTrim(Out, ", ") ")"
 }
 _SB_SetIcon(p) {
   global StatusBarNameDefault, gFunctPar

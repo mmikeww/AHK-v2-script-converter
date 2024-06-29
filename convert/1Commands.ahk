@@ -484,7 +484,7 @@ global CommandsToConvertM := OrderedMap(
   , "#UseHook,OnOffOn2True" ,
     "#UseHook {1}"
   , "#Warn,WarningType,WarningMode" ,
-    "#Warn {1}, {2}"
+    "*_HashtagWarn"
   )
 
   FindCommandDefinitions(Command, &v1:=unset, &v2:=unset) {

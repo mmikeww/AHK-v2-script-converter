@@ -93,7 +93,6 @@ _convertLines(ScriptString, doPost:=!gUseMasking)               ; 2024-06-26 REN
    MenuList := "|"
    GuiVList := Map()
 
-   ;Directives := "#Warn UseUnsetLocal`r`n#Warn UseUnsetGlobal"
    ; Splashtexton and Splashtextoff is removed, but alternative gui code is available
    Remove := "
    (
@@ -3137,6 +3136,25 @@ _HashtagIfWinActivate(p) {
       Return "#HotIf"
    }
    Return format("#HotIf WinActive({1}, {2})", p*)
+}
+
+_HashtagWarn(p) {
+   ; #Warn {1}, {2}
+   if (p[1] = "" and p[2] = "") {
+      Return "#Warn"
+   }
+   Out := "#Warn "
+   if (p[1] != "") {
+      if (p[1] ~= "^((Use(Env|Unset(Local|Global)))|ClassOverwrite)$") { ; UseUnsetLocal, UseUnsetGlobal, UseEnv, ClassOverwrite
+         Out := "; REMOVED: " Out p[1]
+         if p[2] != ""
+            Out .= ", " p[2]
+         Return Out
+      } else Out .= p[1]
+   }
+   if p[2] != ""
+      Out .= ", " p[2]
+   Return Out
 }
 
 ; =============================================================================

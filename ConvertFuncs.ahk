@@ -68,6 +68,7 @@ _convertLines(ScriptString, doPost:=!gUseMasking)               ; 2024-06-26 REN
    global LabelsToFunc := Array()                       ; List of labels that were converted to funcs
    global mGuiCType    := map()                        	; Create a map to return the type of control
    global mGuiCObject  := map()                        	; Create a map to return the object of a control
+   global UseLastName  := False                          ; Keep track of if we use the last set name in GuiList
    global OnMessageMap := map()                         ; Create a map of OnMessage listeners
    global NL_Func          := ""                      	; _Funcs can use this to add New Previous Line
    global EOLComment_Func  := ""                      	; _Funcs can use this to add comments at EOL
@@ -1595,6 +1596,7 @@ _Gui(p) {
    global TreeViewNameDefault
    global StatusbarNameDefault
    global GuiList
+   global UseLastName
    global Orig_ScriptString	; array of all the lines
    global oScriptString	; array of all the lines
    global O_Index	; current index of the lines
@@ -1614,8 +1616,22 @@ _Gui(p) {
       ControlName := ""
       ControlObject := ""
 
-      if RegExMatch(GuiLine, "i)^\s*Gui\s*[\s,]\s*[^,\s]*:.*$")
-      {
+      if (p[1] = "New" and GuiList != "") {
+         if !InStr(GuiList, GuiNameDefault) {
+            GuiNameLine := GuiNameDefault
+         } else {
+            loop {
+               if !InStr(GuiList, GuiNameDefault A_Index) {
+                  GuiNameLine := GuiNameDefault A_Index
+                  break
+               }
+            }
+            UseLastName := True
+         }
+      } else if UseLastName {
+         RegExMatch(GuiList, "([^|]*)\|$", &match)
+         GuiNameLine := match[1]
+      } else if RegExMatch(GuiLine, "i)^\s*Gui\s*[\s,]\s*[^,\s]*:.*$") {
          GuiNameLine := RegExReplace(GuiLine, "i)^\s*Gui\s*[\s,]\s*([^,\s]*):.*$", "$1", &RegExCount1)
          GuiLine := RegExReplace(GuiLine, "i)^(\s*Gui\s*[\s,]\s*)([^,\s]*):(.*)$", "$1$3", &RegExCount1)
          if (GuiNameLine = "1") {

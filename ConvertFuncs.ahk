@@ -236,13 +236,25 @@ _convertLines(ScriptString, doPost:=!gUseMasking)               ; 2024-06-26 REN
          if (oScriptString.Length < O_Index + 1) {
             break
          }
-         FirstNextLine := SubStr(LTrim(oScriptString[O_Index + 1]), 1, 1)
-         FirstTwoNextLine := SubStr(LTrim(oScriptString[O_Index + 1]), 1, 1)
-         TreeNextLine := SubStr(LTrim(oScriptString[O_Index + 1]), 1, 1)
-         if (FirstNextLine ~= "[,\.]" or FirstTwoNextLine ~= "[\?:]\s" or FirstTwoNextLine = "||" or FirstTwoNextLine = "&&" or FirstTwoNextLine = "or" or TreeNextLine = "and") {
+
+         FirstNextLine      := SubStr(LTrim(oScriptString[O_Index + 1]),    1, 1)
+         ; 2024-06-30, AMB - FIXED - these are incorrect, they both capture first character only
+;         FirstTwoNextLine := SubStr(LTrim(oScriptString[O_Index + 1]), 1, 1)
+;         TreeNextLine := SubStr(LTrim(oScriptString[O_Index + 1]), 1, 1)
+         FirstTwoNextLine   := SubStr(LTrim(oScriptString[O_Index + 1]),    1, 2)       ; now captures 2 chars
+         ThreeNextLine      := SubStr(LTrim(oScriptString[O_Index + 1]),    1, 3)       ; now captures 3 chars
+         if (FirstNextLine ~= "[,\.]"  || FirstTwoNextLine  ~= "\?\h"                   ; tenary (?)
+                                       || FirstTwoNextLine  = "||"
+                                       || FirstTwoNextLine  = "&&"
+                                       || FirstTwoNextLine  = "or"
+                                       || ThreeNextLine     = "and"
+                                       || ThreeNextLine     ~= ":\h(?!:)")              ; tenary (:) - fix hotkey mistaken for tenary colon
+
+         {
             O_Index++
-            ; Known effect : removes the linefeeds and comments of continuation sections
-            Line .= RegExReplace(oScriptString[O_Index], "(\s+`;.*)$", "")
+            ; 2024-06-30, AMB Fix missing linefeed - Issue #72
+            ; FIXED (Known effect : removes the linefeeds and comments of continuation sections)
+            Line .= "`r`n" . RegExReplace(oScriptString[O_Index], "(\h+`;.*)$", "")
          } else {
             break
          }

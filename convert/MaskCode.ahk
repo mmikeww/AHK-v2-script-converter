@@ -13,6 +13,7 @@ global	  gTagChar		:= chr(0x2605)
 		, gLCPtn		:= '(*UCP)(?m)(^\h*;|\h+;).*'															; line comments
 		, gBCPtn		:= '(*UCP)(?m)^\h*(/\*((?>[^*/]+|\*[^/]|/[^*])*)(?>(?-2)(?-1))*(?:\*/|\Z))'				; block comments
 		, gQSPtn		:= '(*UCP)(?m)(?:`'`'|`'(?>[^`'\v]+(?:(?<=``)`')?)+`'|""|"(?>[^"\v]+(?:(?<=``)")?)+")'	; quoted string	(UPDATED 2024-06-17)
+		, gMQSPtn		:= buildPtn_MStr()																		; v1 multiline string (non expression)
 ;		, gBracePtn		:= '(\{(?>[^}{]+|(?-1))*\})'															; nested brace blocks (for future support)
 
 ;################################################################################
@@ -333,6 +334,103 @@ class PreMask
 			code	:= StrReplace(code, mcode, oCode)		; replace - should only be 1 occurence
 		}
 	}
+
+	; override in sub-classes (for custom conversions)
+	static _convertCode(&code)
+	{
+	}
+
+}
+;################################################################################
+class MLSTR extends PreMask
+{
+; for multi-line strings (non expression equals)
+
+;	convCode := ''
+
+	; PUBLIC - finds tags within code and replaces the tags with converted code
+	static RestoreAll(&code, mType)
+	{
+		; setup unique tag id
+		tagChar := (IsSet(gTagChar)) ? gTagChar : chr(0x2605)
+		pref	:= '#TAG' . tagChar . mType . "\w+"
+		trail	:= tagChar . '#'
+		pattern	:= pref . trail
+		; search/replace tags with original code
+		while (pos := RegExMatch(code, pattern, &m)) ;, pos))
+		{
+			mCode	:= m[]
+			oCode	:= MLSTR.masklist[mCode].origCode		; get original code from mask object
+			MLSTR._convertCode(&oCode)						; THIS IS THE LINE THAT IS DIFFERENT FROM PreMask class
+			code	:= StrReplace(code, mcode, oCode)		; replace - should only be 1 occurence
+		}
+	}
+
+	; 2024-07-01, ADDED, AMB - fix for Issue #74
+	Static _convertCode(&code)
+	{
+		if(RegExMatch(code, gMQSPtn, &m)) ;, pos))	; should only be 1 occurence (pos not needed)
+		{
+			blk := m[], doPreMask_remove(&blk)
+			; if block has no variable, convert normally
+			if (!(blk~='im)%[a-z]\w*%')) {
+				code := trim(_convertLines(blk), "`r`n")
+			}
+			; block has a variable - convert each line separately
+			else
+			{
+				blkLines		:= StrSplit(blk, "`n", "`r")
+				nDeclare		:= '^(\h*[_a-z]\w*\h*=)'	; non-expression equals
+				varEquals		:= RegExReplace(blk, '(?s)' nDeclare '.*$', '$1')
+				ExpVarEquals	:= RegExReplace(varEquals, '=', ':=',,1)
+				newStr			:= ''
+				for idx, line in blkLines
+				{
+					; if var declaration line
+					if (idx=1 && (line~=nDeclare)) {
+						newStr := ExpVarEquals								; replace legacy equals with expression equals
+						continue
+					}
+					; if no variable on this line, convert normally
+					if (!(line~='im)%[a-z]\w*%')) {
+						newStr	.= '`r`n' . trim(_convertLines(line), "`r`n")
+						continue
+					}
+					; has a variable on this line - make adj and let _convertLines() handle it
+					RegExMatch(line, '^(?<LWS>\h*)(?<EXP>.*)$', &lineParts)	; preserve leading whitespce
+					tempExp		:= varEquals . lineParts.EXP				; add var declaration for pass to _convertLines()
+					convLine	:= trim(_convertLines(tempExp), '`r`n')		; convert
+					; restore any leading whitespace, and remove var declaration
+					convLine	:= lineParts.LWS . RegExReplace(convLine, '\Q' ExpVarEquals '\E(.*)', '$1')
+					newStr		.= '`r`n' . convLine						; save results
+				}
+				code := newStr
+			}
+		}
+	}
+}
+;################################################################################
+															 maskMLStrings(&code)
+;################################################################################
+{
+; 2024-06-30 ADDED, AMB
+; masks multiline strings
+; MLSTR class is custom masking and convert class for multiline strings
+
+	doPreMask(&code)	; restore is handled in Convert() of ConvertFuncs.ahk
+	MLSTR.MaskAll(&code, 'MQS', gMQSPtn)
+	return
+}
+;################################################################################
+														  restoreMLStrings(&code)
+;################################################################################
+{
+; 2024-06-30 ADDED, AMB
+; restore multiline strings
+; called from Convert() of ConvertFuncs.ahk
+
+	MLSTR.RestoreAll(&code, 'MQS')	; converts multiline string code as part of restore
+	return
 }
 ;################################################################################
 															   maskStrings(&code)
@@ -439,3 +537,22 @@ class PreMask
 ;	A_Clipboard := pattern
 	return		pattern
 }
+
+
+;################################################################################
+																  buildPtn_MSTR()
+;################################################################################
+{
+	opt 		:= '(*UCP)(?s)'											; pattern options
+	LC			:= '(?:(?:\h*;|(?<=\h);).*)'							; line comment (allows lead space to be consumed already)
+	tagChar 	:= (IsSet(gTagChar)) ? gTagChar : chr(0x2605)
+	TG			:= '(?:#TAG' tagChar '\w+' tagChar '#)'					; mask tags
+	CT			:= '(?:' . LC . '|' . TG . ')*'							; optional line comment OR tag
+	TCT			:= '(?>\s*' . CT . ')*'									; optional trailing comment or tag (MUST BE ATOMIC)
+	var			:= '(?<var>[_a-z]\w*)\h*='								; var	- variable name
+	body		:= '\R+(?<blk>\((?<guts>(?>.+?)+?)\R+\h*\))'			; body	- block body with parentheses and guts
+	pattern		:= opt . var . TCT . body
+	A_Clipboard := pattern
+	return pattern
+}
+

@@ -255,7 +255,7 @@ CloseV1(*)
     if WinExist("testV1.ahk"){
         WinClose()
     }
-    ButtonCloseV1.Opt("+Disabled")
+    try ButtonCloseV1.Opt("+Disabled")
 }
 CloseV2(*)
 {
@@ -267,7 +267,7 @@ CloseV2(*)
     if WinExist("testV2.ahk"){
         WinClose()
     }
-    ButtonCloseV2.Opt("+Disabled")
+    try ButtonCloseV2.Opt("+Disabled")
 }
 CloseV2E(*)
 {
@@ -276,7 +276,7 @@ CloseV2E(*)
     if WinExist(TempAhkFile . " ahk_class AutoHotkey"){
         WinClose(TempAhkFile . " ahk_class AutoHotkey")
     }
-    ButtonCloseV2E.Opt("+Disabled")
+    try ButtonCloseV2E.Opt("+Disabled")
 }
 CompDiffV2(*)
 {
@@ -1144,13 +1144,15 @@ ExitFunc(ExitReason, ExitCode){
 
 On_WM_MOVE(wParam, lParam, msg, hwnd){
     ; Detects the movement of a window
-    thisGui := GuiFromHwnd(hwnd)
-    if (thisGui.title = "Quick Convertor V2"){
-        thisGui.GetPos(&GuiX,&GuiY)
-        thisGui.GetClientPos(,,&GuiW,&GuiH)
-        IniWrite(GuiW, "QuickConvertorV2.ini", "Convertor", "GuiWidth")
-        IniWrite(GuiH, "QuickConvertorV2.ini", "Convertor", "GuiHeight")
-        IniWrite(GuiX, "QuickConvertorV2.ini", "Convertor", "GuiX")
-        IniWrite(GuiY, "QuickConvertorV2.ini", "Convertor", "GuiY")
+    try {
+        thisGui := GuiFromHwnd(hwnd)
+        if (thisGui.title = "Quick Convertor V2"){
+            thisGui.GetPos(&GuiX,&GuiY)
+            thisGui.GetClientPos(,,&GuiW,&GuiH)
+            IniWrite(GuiW, "QuickConvertorV2.ini", "Convertor", "GuiWidth")
+            IniWrite(GuiH, "QuickConvertorV2.ini", "Convertor", "GuiHeight")
+            IniWrite(GuiX, "QuickConvertorV2.ini", "Convertor", "GuiX")
+            IniWrite(GuiY, "QuickConvertorV2.ini", "Convertor", "GuiY")
+        }
     }
 }

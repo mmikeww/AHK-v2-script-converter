@@ -256,7 +256,7 @@ CloseV1(*)
     if WinExist("testV1.ahk"){
         WinClose()
     }
-    ButtonCloseV1.Opt("+Disabled")
+    try ButtonCloseV1.Opt("+Disabled")
 }
 CloseV2(*)
 {
@@ -268,7 +268,7 @@ CloseV2(*)
     if WinExist("testV2.ahk"){
         WinClose()
     }
-    ButtonCloseV2.Opt("+Disabled")
+    try ButtonCloseV2.Opt("+Disabled")
 }
 CloseV2E(*)
 {
@@ -277,7 +277,7 @@ CloseV2E(*)
     if WinExist(TempAhkFile . " ahk_class AutoHotkey"){
         WinClose(TempAhkFile . " ahk_class AutoHotkey")
     }
-    ButtonCloseV2E.Opt("+Disabled")
+    try ButtonCloseV2E.Opt("+Disabled")
 }
 CompDiffV2(*)
 {

@@ -1,5 +1,5 @@
 user := "defaultuser0"
-script :=
+script =
 (
 	document.querySelector('#userId').value = '%user%'
 )

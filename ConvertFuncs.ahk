@@ -16,6 +16,8 @@ global gUseMasking := 1             ; 2024-06-26 - set to 0 to test without mask
 #Include Convert/5Keywords.ahk
 #Include "Convert/MaskCode.ahk"     ; 2024-06-26 ADDED AMB (masking support)
 
+;~esc::ExitApp
+
 ;################################################################################
 Convert(ScriptString)
 ;################################################################################
@@ -26,15 +28,21 @@ Convert(ScriptString)
    if (!gUseMasking) ; turn on/off at top of script
       return _convertLines(ScriptString,doPost:=1)              ; test without masking
 
+   ; 2024-07-01 ADDED, AMB - For fix of #74
+   ; multiline string blocks
+   ; blocks are converted prior to mask-restore
+   maskMLStrings(&ScriptString)                                 ; mask multiline string blocks
+
    ; convert and mask classes and functions
    maskBlocks(&ScriptString)                                    ; see MaskCode.ahk
 
    ; perform conversion of main/global portion of script only
    convertedCode := _convertLines(ScriptString,doPost:=0)       ; convert main/global code
 
-   ; remove masking from classes and functions
+   ; remove masking from classes, functions, multiline string
    ; class and functions are returned as v2 converted
    restoreBlocks(&convertedCode)                                ; see MaskCode.ahk
+   restoreMLStrings(&convertedCode)                             ; 2024-07-01 - converts prior to restore
 
    ; operations that must be performed...
    ;    AFTER line conversions and masking removed
@@ -115,6 +123,7 @@ _convertLines(ScriptString, doPost:=!gUseMasking)               ; 2024-06-26 REN
    )"
 
    ScriptOutput := ""
+   lastLine := ""
    InCommentBlock := false
    InCont := 0
    Cont_String := 0

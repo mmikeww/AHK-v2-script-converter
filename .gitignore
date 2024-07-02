@@ -6,3 +6,11 @@ tests/TempScript.ah1
 
 # HTML file created by diff
 diff/temp.html
+
+# Temp source file to prevent HTML read errors for source files that contain LF (rather than CRLF) 
+# created by v2converter.ahk then removed by VisualDiff.ahk
+# filename is unique/dynamic based off of original source filename
+# will be place in same directory as source file
+# example:
+# source file name: sourceFileDir\MyV1Script.ahk
+# temp filename:	sourceFileDir\MyV1Script_AHKv1v2_MMddHHmmss.ahk

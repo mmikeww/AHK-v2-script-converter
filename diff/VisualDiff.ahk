@@ -12,14 +12,15 @@ params := getArgs()
 if (params[0] > 0) {     ; if command line args are passed
 	SplitPath, % params[1], file1name
 	SplitPath, % params[2], file2name
-	lhsvalue := "FileRead('" . RegExReplace(params[1], "\\", "/") . "')"
-	rhsvalue := "FileRead('" . RegExReplace(params[2], "\\", "/") . "')"
+	srcFilePath	:= params[1]	; 2024-07-01 ADDED, AMB
+	lhsvalue	:= "FileRead('" . RegExReplace(params[1], "\\", "/") . "')"
+	rhsvalue	:= "FileRead('" . RegExReplace(params[2], "\\", "/") . "')"
 	instructions := "&nbsp;"
 } else {
-	lhsvalue := "'the quick red fox jumped\nover the hairy dog\n\nhello world'"
-	rhsvalue := "'the quick brown fox jumped\nover the lazy dog\n\nhello big world'"
-	file1name := ""
-	file2name := ""
+	lhsvalue	:= "'the quick red fox jumped\nover the hairy dog\n\nhello world'"
+	rhsvalue	:= "'the quick brown fox jumped\nover the lazy dog\n\nhello big world'"
+	file1name	:= ""
+	file2name	:= ""
 	instructions := "First clear the boxes, then just drop a file in each side"
 }
 ;msgbox, %file1name%`n%file2name%
@@ -404,6 +405,11 @@ return
 LabelOnExit:
 	if (trigger("OnExit") == 0) {
 		return
+	}
+	; 2024-07-01 ADDED, AMB - delete temp source file
+	; part of fix to prevent errors when reading files with LF rather than CRLF
+	if (srcFilePath~="_AHKv1v2_\d{10}\.ahk$") {
+		FileDelete % srcFilePath
 	}
 	FileDelete, temp.html
 	ExitApp

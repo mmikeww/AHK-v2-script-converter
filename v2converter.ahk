@@ -42,13 +42,13 @@
    MyOutExt  := "_newV2.ahk"    ;***ADDED OUTPUT EXTENSION OPTION***
    ;MyOutExt := ".ahk"          ;***USE THIS TO OVERWRITE V1 FILE***
    ;MyOutExt := ".c2v2.ahk"     ;***THIS IS THE OUTPUT EXTENSION OPTION THAT I USE***
-   ;NOTES: 1. When I have a coverted 2 version 2 file ("FILENAME.c2v2.ahk") working, 
-   ;          I change the name to "FILENAME.v2.ahk".  
-   ;       2. I use the format "FILENAME.v2.ahk" for all v2 scripts and "FILNAME.v1.ahk" for all v1.1 scripts.  
-   ;          This lets me distinguish the files at a glance.  
-   ;       3. When I batch inserted #Requires AutoHotkey 64-bit into my v1.1 files I renamed them to ".v1.ahk" and 
+   ;NOTES: 1. When I have a coverted 2 version 2 file ("FILENAME.c2v2.ahk") working,
+   ;          I change the name to "FILENAME.v2.ahk".
+   ;       2. I use the format "FILENAME.v2.ahk" for all v2 scripts and "FILNAME.v1.ahk" for all v1.1 scripts.
+   ;          This lets me distinguish the files at a glance.
+   ;       3. When I batch inserted #Requires AutoHotkey 64-bit into my v1.1 files I renamed them to ".v1.ahk" and
    ;          when I batch inserted #Requires AutoHotkey >=2.0- <2.1 into my v2 files I renamed them to ".v2.ahk"
-   ;       4. For new scripts I have SciTE4AHK abbreviations rv1=... and rv2 =... that I insert into the directives 
+   ;       4. For new scripts I have SciTE4AHK abbreviations rv1=... and rv2 =... that I insert into the directives
 
    FN    := ""
    FNOut := ""
@@ -134,18 +134,31 @@
       MsgBox MyMsg
       ExitApp
    }
-   inscript := FileRead(FN)
-   outscript := Convert(inscript)
-   outfile   := FileOpen(FNOut, "w", "utf-8")
+
+   ; 2024-07-01, ADDED, AMB - ensure source file has CRLF (no LF terminators)
+   ;    this is to avoid read issue by VisualDiff
+   ; create new v1 source file that guarantees CRLF terminators
+   SplitPath(FN, &FName, &dir, &ext, &FnNoExt, &drv)
+   unique       := FormatTime(A_Now, 'MMddHHmmss')
+   newPath      := dir "\" FnNoExt "_AHKv1v2_" unique "." ext
+   tempRead     := FileRead(FN)                                     ; read orignal source file
+   tempRead     := RegExReplace(tempRead, '(?m)(?<!\r)\n', '`r`n')  ; convert any LF to CRLF
+   FN           := newPath                                          ; ensure VisualDiff knows about new source file
+
+   inscript     := tempRead ;FileRead(FN)
+   outscript    := Convert(inscript)
+   outfile      := FileOpen(FNOut, "w", "utf-8")
    outfile.Write(outscript)
    outfile.Close()
 
-   MyMsg := "Conversion complete.`n"
-   MyMsg .= "  New file saved as: " . FNOut . "`n`n"
-   MyMsg .= "    Would you like to see the changes made?"
-   result := MsgBox(MyMsg,"", 68)
+   MyMsg        := "Conversion complete.`n`n"
+   MyMsg        .= "New file saved as:`n" . FNOut . "`n`n"
+   MyMsg        .= "Would you like to see the changes made?"
+   result       := MsgBox(MyMsg,"", 68)
    if (result = "Yes") {
-         Run("diff\VisualDiff.exe diff\VisualDiff.ahk `"" . FN . "`" `"" . FNOut . "`"")
+      FileAppend(tempRead, newPath)     ; save CRLF temp file for VisualDiff read
+      Sleep(1000)
+      Run("diff\VisualDiff.exe diff\VisualDiff.ahk `"" . FN . "`" `"" . FNOut . "`"")
    }
    ExitApp
 } ;MAIN PROGRAM - ENDS HERE *******************************************************************************************

@@ -8,7 +8,7 @@
   Similar to commands, parameters can be added
 */
 
-global ArrayMethodsToConvertM := OrderedMap(
+global gmAhkArrMethsToConvert := OrderedMap(
     "length()" ,
     "Length"
   , "HasKey(Key)" ,

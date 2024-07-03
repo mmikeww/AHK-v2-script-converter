@@ -9,7 +9,7 @@
   !!! we split the lists of Arrays and objects, as Count needs only to be replaced for maps
 */
 
-global MethodsToConvertM := OrderedMap(
+global gmAhkMethsToConvert := OrderedMap(
     "Count()" ,
     "Count"
   , "HasKey(Key)" ,

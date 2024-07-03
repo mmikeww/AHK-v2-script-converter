@@ -8,7 +8,7 @@
   order of Is important do not change
 */
 
-global FunctionsToConvertM := OrderedMap(
+global gmAhkFuncsToConvert := OrderedMap(
     "ComObject(vt, value, Flags)" ,
     "ComValue({1}, {2}, {3})"
   , "ComObjCreate(CLSID , IID)" ,
@@ -110,7 +110,7 @@ global FunctionsToConvertM := OrderedMap(
 
 _DllCall(p) {
   ParBuffer := ""
-  global noSideEffect
+  global gfNoSideEffect
   loop p.Length
   {
     if (p[A_Index] ~= "i)^U?(Str|AStr|WStr|Int64|Int|Short|Char|Float|Double|Ptr)P?\*?$"){
@@ -121,9 +121,9 @@ _DllCall(p) {
     if (p[A_Index] ~= "^&") {                       ; Remove the & parameter
       p[A_Index] := SubStr(p[A_Index], 2)
     } else if RegExMatch(p[A_Index], NeedleRegEx) { ; even if it's behind a *0 var assignment preceding it
-      noSideEffect := 1
+      gfNoSideEffect := 1
       subLoopFunctions(ScriptString:=p[A_Index], Line:=p[A_Index], &v2:="", &gotFunc:=False)
-      noSideEffect := 0
+      gfNoSideEffect := 0
       if (commentPos:=InStr(v2,"`;")) {
         v2 := SubStr(v2, 1, commentPos-1)
       }
@@ -156,42 +156,42 @@ _DllCall(p) {
 }
 
 _LV_Add(p) {
-  global ListviewNameDefault
-  Out := ListviewNameDefault ".Add("
+  global gLVNameDefault
+  Out := gLVNameDefault ".Add("
   loop p.Length {
     Out .= p[A_Index] ", "
   }
   Out .= ")"
-  ; Out := format("{1}.Add({2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}, {16}, {17})", ListviewNameDefault, p*)
+  ; Out := format("{1}.Add({2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}, {16}, {17})", gLVNameDefault, p*)
   Return RegExReplace(Out, "[\s\,]*\)$", ")")
 }
 _LV_Delete(p) {
-  global ListviewNameDefault
-  Return format("{1}.Delete({2})", ListviewNameDefault, p*)
+  global gLVNameDefault
+  Return format("{1}.Delete({2})", gLVNameDefault, p*)
 }
 _LV_DeleteCol(p) {
-  global ListviewNameDefault
-  Return format("{1}.DeleteCol({2})", ListviewNameDefault, p*)
+  global gLVNameDefault
+  Return format("{1}.DeleteCol({2})", gLVNameDefault, p*)
 }
 _LV_GetCount(p) {
-  global ListviewNameDefault
-  Return format("{1}.GetCount({2})", ListviewNameDefault, p*)
+  global gLVNameDefault
+  Return format("{1}.GetCount({2})", gLVNameDefault, p*)
 }
 _LV_GetText(p) {
-  global ListviewNameDefault
-  Return format("{2} := {1}.GetText({3})", ListviewNameDefault, p*)
+  global gLVNameDefault
+  Return format("{2} := {1}.GetText({3})", gLVNameDefault, p*)
 }
 _LV_GetNext(p) {
-  global ListviewNameDefault
-  Return format("{1}.GetNext({2},{3})", ListviewNameDefault, p*)
+  global gLVNameDefault
+  Return format("{1}.GetNext({2},{3})", gLVNameDefault, p*)
 }
 _LV_InsertCol(p) {
-  global ListviewNameDefault
-  Return format("{1}.InsertCol({2}, {3}, {4})", ListviewNameDefault, p*)
+  global gLVNameDefault
+  Return format("{1}.InsertCol({2}, {3}, {4})", gLVNameDefault, p*)
 }
 _LV_Insert(p) {
-  global ListviewNameDefault
-  Out := ListviewNameDefault ".Insert("
+  global gLVNameDefault
+  Out := gLVNameDefault ".Insert("
   loop p.Length {
     Out .= p[A_Index] ", "
   }
@@ -199,8 +199,8 @@ _LV_Insert(p) {
   Return RegExReplace(Out, "[\s\,]*\)$", ")")
 }
 _LV_Modify(p) {
-  global ListviewNameDefault
-  Out := ListviewNameDefault ".Modify("
+  global gLVNameDefault
+  Out := gLVNameDefault ".Modify("
   loop p.Length {
     Out .= p[A_Index] ", "
   }
@@ -208,12 +208,12 @@ _LV_Modify(p) {
   Return RegExReplace(Out, "[\s\,]*\)$", ")")
 }
 _LV_ModifyCol(p) {
-  global ListviewNameDefault
-  Return format("{1}.ModifyCol({2}, {3}, {4})", ListviewNameDefault, p*)
+  global gLVNameDefault
+  Return format("{1}.ModifyCol({2}, {3}, {4})", gLVNameDefault, p*)
 }
 _LV_SetImageList(p) {
-  global ListviewNameDefault
-  Return format("{1}.SetImageList({2}, {3})", ListviewNameDefault, p*)
+  global gLVNameDefault
+  Return format("{1}.SetImageList({2}, {3})", gLVNameDefault, p*)
 }
 
 _NumGet(p) {
@@ -261,7 +261,7 @@ _NumPut(p) {
         Type := p[4]
       }
 
-      ParBuffer := Type ", " Number ", `r`n" Indentation "   " ParBuffer
+      ParBuffer := Type ", " Number ", `r`n" gIndentation "   " ParBuffer
 
       NextParameters := RegExReplace(VarOrAddress, "is)^\s*Numput\((.*)\)\s*$", "$1", &OutputVarCount)
       if (OutputVarCount = 0) {
@@ -316,10 +316,10 @@ _OnMessage(p) {
   ; OnMessage(MsgNumber, FunctionQ2T, MaxThreads)
   ; OnMessage({1}, {2}, {3})
   If (p.Has(1) and p.Has(2) and p[1] != "" and p[2] != "") {
-    ;OnMessageMap.%p[1]% := p[2]
+    ;gmOnMessageMap.%p[1]% := p[2]
     ; 2024-06-28 change to key/val format for fix of Issue 136
     ; see addOnMessageCBArgs() in ConvertFuncs.ahk
-    OnMessageMap[string(p[1])] := p[2]
+    gmOnMessageMap[string(p[1])] := p[2]
     If (p.Has(3) and p[3] != "") {
       Return "OnMessage(" p[1] ", " p[2] ", " p[3] ")"
     }
@@ -327,7 +327,7 @@ _OnMessage(p) {
   }
   If (p.Has(2) and p[2] = "") {
     Try {
-      callback := OnMessageMap[string(p[1])] ;OnMessageMap.%p[1]%
+      callback := gmOnMessageMap[string(p[1])] ;gmOnMessageMap.%p[1]%
     } Catch {
       ; Didnt find lister to turn off
       Return "OnMessage(" p[1] ", " Chr(1000) Chr(1000) "CallBack_Placeholder" Chr(1000) Chr(1000) ", 0)"
@@ -338,7 +338,7 @@ _OnMessage(p) {
 }
 
 _RegExMatch(p) {
-  global aListMatchObject, aListPseudoArray
+  global gaList_MatchObj, gaList_PseudoArr
   ; V1: FoundPos := RegExMatch(Haystack, NeedleRegEx , OutputVar, StartingPos := 1)
   ; V2: FoundPos := RegExMatch(Haystack, NeedleRegEx , &OutputVar, StartingPos := 1)
 
@@ -356,19 +356,19 @@ _RegExMatch(p) {
       ; v1OutputVar.Value(1) -> v2OutputVar[1]
       ; The v1 methods Count and Mark are properties in v2.
       P[2] := ( Match[1] || Match[2] ? '"' Match[1] Match[2] ")" : '"' ) . Match[3] ; Remove the "O" from the options
-      aListMatchObject.Push(OutputVar)
+      gaList_MatchObj.Push(OutputVar)
     } else if RegExMatch(OrigPattern, '^"([^"(])*P([^"(])*\)(.*)$', &Match) {
       ; Mode 2 (position-and-length)
       ; v1OutputVar -> v2OutputVar.Len
       ; v1OutputVarPos1 -> v2OutputVar.Pos[1]
       ; v1OutputVarLen1 -> v2OutputVar.Len[1]
       P[2] := ( Match[1] || Match[2] ? '"' Match[1] Match[2] ")" : '"' ) . Match[3] ; Remove the "P" from the options
-      aListPseudoArray.Push({name: OutputVar "Len", newname: OutputVar '.Len'})
-      aListPseudoArray.Push({name: OutputVar "Pos", newname: OutputVar '.Pos'})
-      aListPseudoArray.Push({strict: true, name: OutputVar, newname: OutputVar ".Len"})
+      gaList_PseudoArr.Push({name: OutputVar "Len", newname: OutputVar '.Len'})
+      gaList_PseudoArr.Push({name: OutputVar "Pos", newname: OutputVar '.Pos'})
+      gaList_PseudoArr.Push({strict: true, name: OutputVar, newname: OutputVar ".Len"})
       for CaptName in CaptNames {
-        aListPseudoArray.Push({strict: true, name: OutputVar "Len" CaptName, newname: OutputVar '.Len["' CaptName '"]'})
-        aListPseudoArray.Push({strict: true, name: OutputVar "Pos" CaptName, newname: OutputVar '.Pos["' CaptName '"]'})
+        gaList_PseudoArr.Push({strict: true, name: OutputVar "Len" CaptName, newname: OutputVar '.Len["' CaptName '"]'})
+        gaList_PseudoArr.Push({strict: true, name: OutputVar "Pos" CaptName, newname: OutputVar '.Pos["' CaptName '"]'})
       }
     } else if RegExMatch(OrigPattern, 'i)^"[a-z``]*\)') ; Explicit options.
       || RegExMatch(OrigPattern, 'i)^"[^"]*[^a-z``]') { ; Explicit no options.
@@ -376,20 +376,20 @@ _RegExMatch(p) {
       ; v1OutputVar -> v2OutputVar[0]
       ; v1OutputVar1 -> v2OutputVar[1]
       ; 2024-06-22 AMB - Added regex property to be used in ConvertPseudoArray()
-      aListPseudoArray.Push({regex: true, name: OutputVar})
-      aListPseudoArray.Push({regex: true, strict: true, name: OutputVar, newname: OutputVar "[0]"})
-;      aListPseudoArray.Push({name: OutputVar})
-;      aListPseudoArray.Push({strict: true, name: OutputVar, newname: OutputVar "[0]"})
+      gaList_PseudoArr.Push({regex: true, name: OutputVar})
+      gaList_PseudoArr.Push({regex: true, strict: true, name: OutputVar, newname: OutputVar "[0]"})
+;      gaList_PseudoArr.Push({name: OutputVar})
+;      gaList_PseudoArr.Push({strict: true, name: OutputVar, newname: OutputVar "[0]"})
       for CaptName in CaptNames
-        aListPseudoArray.Push({strict: true, name: OutputVar CaptName, newname: OutputVar '["' CaptName '"]'})
+        gaList_PseudoArr.Push({strict: true, name: OutputVar CaptName, newname: OutputVar '["' CaptName '"]'})
     } else {
       ; Unknown mode. Unclear options, possibly variables obscuring the parameter.
       ; Treat as default mode?... The unhandled options O and P will make v2 throw anyway.
       ; 2024-06-22 AMB - Added regex property to be used in ConvertPseudoArray()
-      aListPseudoArray.Push({regex: true, name: OutputVar})
-      aListPseudoArray.Push({regex: true, strict: true, name: OutputVar, newname: OutputVar "[0]"})
-;      aListPseudoArray.Push({name: OutputVar})
-;      aListPseudoArray.Push({strict: true, name: OutputVar, newname: OutputVar "[0]"})
+      gaList_PseudoArr.Push({regex: true, name: OutputVar})
+      gaList_PseudoArr.Push({regex: true, strict: true, name: OutputVar, newname: OutputVar "[0]"})
+;      gaList_PseudoArr.Push({name: OutputVar})
+;      gaList_PseudoArr.Push({strict: true, name: OutputVar, newname: OutputVar "[0]"})
     }
     Out .= Format("RegExMatch({1}, {2}, &{3}, {4})", p*)
   } else {
@@ -399,79 +399,79 @@ _RegExMatch(p) {
 }
 
 _SB_SetText(p) {
-  global StatusBarNameDefault
-  Return format("{1}.SetText({2}, {3}, {4})", StatusBarNameDefault, p*)
+  global gSBNameDefault
+  Return format("{1}.SetText({2}, {3}, {4})", gSBNameDefault, p*)
 }
 _SB_SetParts(p) {
-  global StatusBarNameDefault
-  Out := StatusBarNameDefault ".SetParts("
+  global gSBNameDefault
+  Out := gSBNameDefault ".SetParts("
   for , v in p {
     Out .= v ", "
   }
   Return RTrim(Out, ", ") ")"
 }
 _SB_SetIcon(p) {
-  global StatusBarNameDefault, gFunctPar
-  Return format("{1}.SetIcon({2})", StatusBarNameDefault, gFunctPar)
+  global gSBNameDefault, gFuncParams
+  Return format("{1}.SetIcon({2})", gSBNameDefault, gFuncParams)
 }
 
 _TV_Add(p) {
-  global TreeViewNameDefault
-  Return format("{1}.Add({2}, {3}, {4})", TreeViewNameDefault, p*)
+  global gTVNameDefault
+  Return format("{1}.Add({2}, {3}, {4})", gTVNameDefault, p*)
 }
 _TV_Modify(p) {
-  global TreeViewNameDefault
-  Return format("{1}.Modify({2}, {3}, {4})", TreeViewNameDefault, p*)
+  global gTVNameDefault
+  Return format("{1}.Modify({2}, {3}, {4})", gTVNameDefault, p*)
 }
 _TV_Delete(p) {
-  global TreeViewNameDefault
-  Return format("{1}.Delete({2})", TreeViewNameDefault, p*)
+  global gTVNameDefault
+  Return format("{1}.Delete({2})", gTVNameDefault, p*)
 }
 _TV_GetSelection(p) {
-  global TreeViewNameDefault
-  Return format("{1}.GetSelection({2})", TreeViewNameDefault, p*)
+  global gTVNameDefault
+  Return format("{1}.GetSelection({2})", gTVNameDefault, p*)
 }
 _TV_GetParent(p) {
-  global TreeViewNameDefault
-  Return format("{1}.GetParent({2})", TreeViewNameDefault, p*)
+  global gTVNameDefault
+  Return format("{1}.GetParent({2})", gTVNameDefault, p*)
 }
 _TV_GetChild(p) {
-  global TreeViewNameDefault
-  Return format("{1}.GetChild({2})", TreeViewNameDefault, p*)
+  global gTVNameDefault
+  Return format("{1}.GetChild({2})", gTVNameDefault, p*)
 }
 _TV_GetPrev(p) {
-  global TreeViewNameDefault
-  Return format("{1}.GetPrev({2})", TreeViewNameDefault, p*)
+  global gTVNameDefault
+  Return format("{1}.GetPrev({2})", gTVNameDefault, p*)
 }
 _TV_GetNext(p) {
-  global TreeViewNameDefault
-  Return format("{1}.GetNext({2}, {3})", TreeViewNameDefault, p*)
+  global gTVNameDefault
+  Return format("{1}.GetNext({2}, {3})", gTVNameDefault, p*)
 }
 _TV_GetText(p) {
-  global TreeViewNameDefault
-  Return format("{2} := {1}.GetText({3})", TreeViewNameDefault, p*)
+  global gTVNameDefault
+  Return format("{2} := {1}.GetText({3})", gTVNameDefault, p*)
 }
 _TV_GetCount(p) {
-  global TreeViewNameDefault
-  Return format("{1}.GetCount()", TreeViewNameDefault)
+  global gTVNameDefault
+  Return format("{1}.GetCount()", gTVNameDefault)
 }
 _TV_SetImageList(p) {
-  global TreeViewNameDefault
-  Return format("{2} := {1}.SetImageList({3})", TreeViewNameDefault)
+  global gTVNameDefault
+  Return format("{2} := {1}.SetImageList({3})", gTVNameDefault)
 }
 
 _VarSetCapacity(p) {
-  global grePostFuncMatch, NL_Func, EOLComment_Func, noSideEffect
-  if noSideEffect {
+  global gfrePostFuncMatch, gNL_Func, gEOLComment_Func, gfNoSideEffect
+  if gfNoSideEffect {
     tmp1:="", tmp2:=""
-    lNL_Func        	:= &tmp1
+    lgNL_Func        	:= &tmp1
     lEOLComment_Func	:= &tmp2
   } else {
-    lNL_Func        	:= &NL_Func
-    lEOLComment_Func	:= &EOLComment_Func
+    lgNL_Func        	:= &gNL_Func
+    lEOLComment_Func	:= &gEOLComment_Func
   }
   %lEOLComment_Func%:=""
-  reM := grePostFuncMatch
+  reM := gfrePostFuncMatch
   if        (p[3] != "") {
     ; since even multiline continuation allows semicolon comments adding lEOLComment_Func shouldn't break anything, but if it does, add this hacky comment
       ;`{3} + 0*StrLen("V1toV2: comment")`, or when you can't add a 0 (to a buffer)
@@ -500,12 +500,12 @@ _VarSetCapacity(p) {
         num := reM[2]
         op2 := reM[3]
         if Trim(op1)="*" and Trim(num)="0" { ; move to the previous new line, remove regex matches
-          if %lNL_Func% {                       ; add a newline for multiple calls in a line
-            %lNL_Func%	.= "`r`n" ;;;;; but breaks other calls
+          if %lgNL_Func% {                       ; add a newline for multiple calls in a line
+            %lgNL_Func%	.= "`r`n" ;;;;; but breaks other calls
           }
           %lEOLComment_Func% .= " NB! if this is part of a control flow block without {}, please enclose this and the next line in {}!"
           p.Push(%lEOLComment_Func%)
-          %lNL_Func%	.= Format("{1} := Buffer({2}, {3}) `; {4}"   , p*)
+          %lgNL_Func%	.= Format("{1} := Buffer({2}, {3}) `; {4}"   , p*)
           ; DllCall("oleacc", "Ptr", VarSetCapacity(vC,8,0)*0 + &vC)
           %lEOLComment_Func% := ""
           retBuf	:= ""

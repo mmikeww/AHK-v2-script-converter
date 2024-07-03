@@ -25,6 +25,9 @@ Convert(ScriptString)
 ; 2024-06-26 andymbody - ADDED support for block masking
 ; all masking supported through \Convert\MaskCode.ahk
 
+   ; 2024-07-02 AMB, for support of MenuBar detection
+   global gMenuBarVar := getMenuBarName(ScriptString)
+
    if (!gUseMasking) ; turn on/off at top of script
       return _convertLines(ScriptString,doPost:=1)              ; test without masking
 
@@ -2381,7 +2384,7 @@ _MsgBox(p) {
       return Out
    }
 }
-
+;################################################################################
 _Menu(p) {
    global Orig_Line_NoComment
    global MenuList
@@ -2472,7 +2475,10 @@ _Menu(p) {
       if (menuNameLine = "Tray") {
          LineResult .= menuNameLine ":= A_TrayMenu`r`n" Indentation     ; initialize/declare systray object (only once)
       } else {
-         LineResult .= menuNameLine " := Menu()`r`n" Indentation        ; initialize/declare a new sub-menu
+         ; 2024-07-02, CHANGED, AMB - to support MenuBar detection and initialization
+         global gMenuBarVar     ; set prior to any conversion taking place, see getMenuBarName()
+         lineResult  .= (menuNameLine . " := Menu") . ((menuNameLine=gMenuBarVar) ? "Bar" : "") . ("()`r`n" . Indentation)
+         gMenuBarVar .= (menuNameLine=gMenuBarVar) ? "_iniDone" : "" ; flag initialization complete
       }
       menuList .= menuNameLine "|"                                      ; keep track of sub-menu roots
    }
@@ -2570,7 +2576,7 @@ _Menu(p) {
 
    return LineResult
 }
-
+;################################################################################
 _OnExit(p) {
    ;V1 OnExit,Func,AddRemove
    if RegexMatch(Orig_ScriptString, "\n(\s*)" p[1] ":\s") {
@@ -4277,4 +4283,16 @@ ConvertEscapedQuotesInStr(srcStr)
        }
    }
    return ; code
+}
+;################################################################################
+getMenuBarName(srcStr)
+;################################################################################
+{
+; 2024-07-02 ADDED, AMB - for detection and initialization of MenuBar...
+;   when the menu is created prior to GUI official declaration
+;   not perfect - requires 'gui' to be in the name of script gui control, which is common
+   needle := '(?im)^\h*\w*GUI\w*\b,?\h*\bMENU\b\h*,\h*(\w+)'
+   if (RegExMatch(srcStr, needle, &m))
+      return m[1]
+   return ''
 }

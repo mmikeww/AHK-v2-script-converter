@@ -69,6 +69,7 @@ _convertLines(ScriptString, doPost:=!gUseMasking)               ; 2024-06-26 REN
    global GuiNameDefault
    global GuiList
    global GuiVList	; Used to list all variable names defined in a Gui
+   global GuiActiveFont := ""
    global GuiControlCount := 0
    global MenuList
    global MenuCBChecks := map()                         ; 2024-06-26 AMB, for fix #131
@@ -1610,6 +1611,7 @@ _Gui(p) {
    global oScriptString	; array of all the lines
    global O_Index	; current index of the lines
    global GuiVList
+   global GuiActiveFont
    global mGuiCObject
    ;preliminary version
 
@@ -1772,6 +1774,7 @@ _Gui(p) {
          Return LineResult GuiNameLine ".MarginX := " ToStringExpr(Var2) ", " GuiNameLine ".MarginY := " ToStringExpr(Var3)
       }  else if (var1 = "Font") {
          var1 := "SetFont"
+         GuiActiveFont := ToStringExpr(Var2) ", " ToStringExpr(Var3)
       } else if (var1 = "New") {
          return Trim(LineResult,"`n")
       }
@@ -1901,6 +1904,7 @@ _Gui(p) {
 
 _GuiControl(p) {
    global GuiNameDefault
+   global GuiActiveFont
    SubCommand := RegExMatch(p[1], "i)^\s*[^:]*?\s*:\s*(.*)$", &newSubCommand) = 0 ? Trim(p[1]) : newSubCommand[1]
    GuiName := RegExMatch(p[1], "i)^\s*([^:]*?)\s*:\s*.*$", &newGuiName) = 0 ? GuiNameDefault : newGuiName[1]
    ControlID := Trim(p[2])
@@ -2051,7 +2055,11 @@ _GuiControl(p) {
    } else if (SubCommand = "ChooseString") {
       Return ControlObject ".Choose(" ToExp(Value) ")"
    } else if (SubCommand = "Font") {
-      Return ";to be implemented"
+      if (GuiActiveFont != "") {
+         Return ControlObject ".SetFont(" GuiActiveFont ")"
+      } else {
+         Return "; V1toV2: Use " ControlObject ".SetFont(Options, FontName)"
+      }
    } else if (RegExMatch(SubCommand, "^[+-].*")) {
       Return ControlObject ".Options(" ToExp(SubCommand) ")"
    }

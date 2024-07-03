@@ -167,7 +167,7 @@ ButtonConvert(*)
     DllCall("QueryPerformanceCounter", "Int64*", &CounterBefore := 0)
     V2Edit.Text := Convert(V1Edit.Text)
     DllCall("QueryPerformanceCounter", "Int64*", &CounterAfter := 0)
-    SB.SetText("Conversion completed in " Format("{:.4f}", (CounterAfter - CounterBefore) / freq * 1000) "ms", 4) 
+    SB.SetText("Conversion completed in " Format("{:.4f}", (CounterAfter - CounterBefore) / freq * 1000) "ms", 4)
 }
 ButtonGenerateTest(*)
 {
@@ -756,7 +756,9 @@ GuiTest(strV1Script:="")
     GuiYOpt := (GuiY!="") ? " y" ((GuiY<0) ? 0 : (GuiY+GuiHeight>SysGet(79)) ? SysGet(79)-GuiHeight : GuiY) : ""
 
     ; Display the window. The OS will notify the script whenever the user performs an eligible action:
-    MyGui.Show("h" GuiHeight " w" GuiWidth GuiXOpt GuiYOpt)
+;    MyGui.Show("h" GuiHeight " w" GuiWidth GuiXOpt GuiYOpt)
+    iniH := A_ScreenHeight-150, iniW := A_ScreenWidth - 100     ; 2024-07-02 prevent controls from being being clipped at screen edges
+    MyGui.Show("h" iniH " w" iniW GuiXOpt GuiYOpt " maximize")
     sleep(500)
     UserClicked := true
 

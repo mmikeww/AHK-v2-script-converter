@@ -281,6 +281,10 @@ _convertLines(ScriptString, doPost:=!gUseMasking)               ; 2024-06-26 REN
          Line := LineFuncV2
       }
 
+      ; Add warning for Array.MinIndex()
+      if (Line ~= "([^(\s]*\.)ϨMinIndex\(placeholder\)Ϩ")
+         EOLComment .= ' `; V1toV2: Not perfect fix, fails on cases like [ , "Should return 2"]'
+
       ; Remove case from switch to ensure conversion works
       CaseValue := ""
       if RegExMatch(Line, "i)^\s*(?:case .*?|default):(?!=)", &Equation) {
@@ -1031,6 +1035,10 @@ _convertLines(ScriptString, doPost:=!gUseMasking)               ; 2024-06-26 REN
       code := "OnClipboardChange(ClipChanged)`r`n" . ConvertLabel2Func(code, "OnClipboardChange", "Type", "ClipChanged"
                                                    , [{NeedleRegEx: "i)^(.*)\b\QA_EventInfo\E\b(.*)$", Replacement: "$1Type$2"}])
    }
+
+   ; Fix MinIndex() and MaxIndex() for arrays
+   code := RegExReplace(code, "i)([^(\s]*\.)ϨMaxIndex\(placeholder\)Ϩ", '$1Length != 0 ? $1Length : ""')
+   code := RegExReplace(code, "i)([^(\s]*\.)ϨMinIndex\(placeholder\)Ϩ", '$1Length != 0 ? 1 : ""') ; Can be dont in 4ArrayMethods.ahk, but done here to add EOLComment
 
    ; trim the very last newline from end of code string
    if (SubStr(code, -2) = "`r`n")

@@ -17,6 +17,10 @@ global ArrayMethodsToConvertM := OrderedMap(
     "*_InsertAt"
   , "Remove(Keys*)",
     "*_RemoveAt"
+  , "MaxIndex()" ,
+    Chr(1000) "MaxIndex(placeholder)" Chr(1000)
+  , "MinIndex()" ,
+    Chr(1000) "MinIndex(placeholder)" Chr(1000)
   )
 
 _InsertAt(p) {

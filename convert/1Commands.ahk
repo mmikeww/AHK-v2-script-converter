@@ -498,20 +498,24 @@ global gmAhkCmdsToConvert := OrderedMap(
     return false
   }
 
-  _SendMessage(p){
-   if (p[3] ~= "^&.*"){
-      p[3] := SubStr(p[3],2)
-      Out := format('if (type(' p[3] ')="Buffer"){ `;V1toV2 If statement may be removed depending on type parameter`n`r' gIndentation '   ErrorLevel := SendMessage({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9})', p*)
-      Out := RegExReplace(Out, "[\s\,]*\)$", ")")
-      Out .= format('`n`r' gIndentation '} else{`n`r' gIndentation '   ErrorLevel := SendMessage({1}, {2}, StrPtr({3}), {4}, {5}, {6}, {7}, {8}, {9})', p*)
-      Out := RegExReplace(Out, "[\s\,]*\)$", ")")
-      Out .= '`n`r' gIndentation "}"
-      return Out
-   }
-   if (p[3] ~= "^`".*") {
-      p[3] := 'StrPtr(' p[3] ')'
-   }
+  _SendMessage(p) {
 
-   Out := format("ErrorLevel := SendMessage({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9})", p*)
-   Return RegExReplace(Out, "[\s\,]*\)$", ")")
+
+  if (p[3] ~= "^&.*"){
+    p[3] := SubStr(p[3],2)
+    Out := format('if (type(' . p[3] . ')="Buffer"){ `;V1toV2 If statement may be removed depending on type parameter`n`r' . gIndentation
+                  . ' ErrorLevel := SendMessage({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9})', p*)
+    Out := RegExReplace(Out, "[\s\,]*\)$", ")")
+    Out .= format('`n`r' . gIndentation . '} else{`n`r' . gIndentation
+                  . ' ErrorLevel := SendMessage({1}, {2}, StrPtr({3}), {4}, {5}, {6}, {7}, {8}, {9})', p*)
+    Out := RegExReplace(Out, "[\s\,]*\)$", ")")
+    Out .= '`n`r' . gIndentation . "}"
+    return Out
+  }
+  if (p[3] ~= "^`".*") {
+    p[3] := 'StrPtr(' . p[3] . ')'
+  }
+
+  Out := format("ErrorLevel := SendMessage({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9})", p*)
+  Return RegExReplace(Out, "[\s\,]*\)$", ")")
 }

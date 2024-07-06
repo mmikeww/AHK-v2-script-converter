@@ -504,7 +504,8 @@ global gmAhkCmdsToConvert := OrderedMap(
       Out := format('if (type(' p[3] ')="Buffer"){ `;V1toV2 If statement may be removed depending on type parameter`n`r' gIndentation '
       ErrorLevel := SendMessage({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9})', p*)
       Out := RegExReplace(Out, "[\s\,]*\)$", ")")
-      Out .= format('`n`r' gIndentation '} else{`n`r' gIndentation '   ErrorLevel := SendMessage({1}, {2}, StrPtr({3}), {4}, {5}, {6}, {7}, {8}, {9})', p*)
+      Out .= format('`n`r' gIndentation '} else{`n`r' gIndentation '
+      ErrorLevel := SendMessage({1}, {2}, StrPtr({3}), {4}, {5}, {6}, {7}, {8}, {9})', p*)
       Out := RegExReplace(Out, "[\s\,]*\)$", ")")
       Out .= '`n`r' gIndentation "}"
       return Out

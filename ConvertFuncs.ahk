@@ -1581,7 +1581,6 @@ _Gui(p) {
    global gTVNameDefault
    global gSBNameDefault
    global gGuiList
-   global gUseLastName
    global gOrig_ScriptStr       ; array of all the lines
    global gOScriptStr           ; array of all the lines
    global gO_Index              ; current index of the lines
@@ -1608,15 +1607,11 @@ _Gui(p) {
          } else {
             loop {
                if !InStr(gGuiList, gGuiNameDefault A_Index) {
-                  GuiNameLine := gGuiNameDefault A_Index
+                  GuiNameLine := gGuiNameDefault := gGuiNameDefault A_Index
                   break
                }
             }
-            gUseLastName := True
          }
-      } else if gUseLastName {
-         RegExMatch(gGuiList, "([^|]*)\|$", &match)
-         GuiNameLine := match[1]
       } else if RegExMatch(GuiLine, "i)^\s*Gui\s*[\s,]\s*[^,\s]*:.*$") {
          GuiNameLine := RegExReplace(GuiLine, "i)^\s*Gui\s*[\s,]\s*([^,\s]*):.*$", "$1", &RegExCount1)
          GuiLine := RegExReplace(GuiLine, "i)^(\s*Gui\s*[\s,]\s*)([^,\s]*):(.*)$", "$1$3", &RegExCount1)

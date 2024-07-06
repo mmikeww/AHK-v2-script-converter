@@ -1044,7 +1044,7 @@ subLoopFunctions(ScriptString, Line, &retV2, &gotFunc) {
       gFuncParams := oResult.Parameters
 
       ConvertList := gmAhkFuncsToConvert
-      if RegExMatch(oResult.Pre, "(\w+)\.$", &Match) {
+      if RegExMatch(oResult.Pre, "((?:\w+)|(?:\[.*\])|(?:{.*}))\.$", &Match) {
          ObjectName := Match[1]
          If RegExMatch(ScriptString, "i)(?<!\w)(\Q" ObjectName "\E)\s*:=\s*(\[|(Array|StrSplit)\()") { ; Type Array().
             ConvertList := gmAhkArrMethsToConvert

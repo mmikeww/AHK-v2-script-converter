@@ -40,7 +40,7 @@
     - use asterisk * and a function name to call, for custom processing when the params dont directly match up
 */
 
-global CommandsToConvertM := OrderedMap(
+global gmAhkCmdsToConvert := OrderedMap(
     "BlockInput,OptionT2E" ,
     "BlockInput({1})"
   , "DriveSpaceFree,OutputVar,PathT2E" ,
@@ -488,7 +488,7 @@ global CommandsToConvertM := OrderedMap(
   )
 
   FindCommandDefinitions(Command, &v1:=unset, &v2:=unset) {
-    for v1_, v2_ in CommandsToConvertM {
+    for v1_, v2_ in gmAhkCmdsToConvert {
       if (v1_ ~= "i)^\s*\Q" Command "\E\s*(,|$)") {
         v1 := v1_
         v2 := v2_
@@ -501,11 +501,11 @@ global CommandsToConvertM := OrderedMap(
   _SendMessage(p){
    if (p[3] ~= "^&.*"){
       p[3] := SubStr(p[3],2)
-      Out := format('if (type(' p[3] ')="Buffer"){ `;V1toV2 If statement may be removed depending on type parameter`n`r' Indentation '   ErrorLevel := SendMessage({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9})', p*)
+      Out := format('if (type(' p[3] ')="Buffer"){ `;V1toV2 If statement may be removed depending on type parameter`n`r' gIndentation '   ErrorLevel := SendMessage({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9})', p*)
       Out := RegExReplace(Out, "[\s\,]*\)$", ")")
-      Out .= format('`n`r' Indentation '} else{`n`r' Indentation '   ErrorLevel := SendMessage({1}, {2}, StrPtr({3}), {4}, {5}, {6}, {7}, {8}, {9})', p*)
+      Out .= format('`n`r' gIndentation '} else{`n`r' gIndentation '   ErrorLevel := SendMessage({1}, {2}, StrPtr({3}), {4}, {5}, {6}, {7}, {8}, {9})', p*)
       Out := RegExReplace(Out, "[\s\,]*\)$", ")")
-      Out .= '`n`r' Indentation "}"
+      Out .= '`n`r' gIndentation "}"
       return Out
    }
    if (p[3] ~= "^`".*") {

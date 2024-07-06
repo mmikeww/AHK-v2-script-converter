@@ -10,7 +10,7 @@
 ; 2024-04-08, andymbody
 ;   Moved LoopReg keywords to a dedicated map
 ;   ... so they can be treated differently
-global KeywordsToRenameM := OrderedMap(
+global gmAhkKeywdsToRename := OrderedMap(
     "A_LoopFileFullPath" ,
     "A_LoopFilePath"
   , "A_LoopFileLongPath" ,
@@ -40,9 +40,9 @@ global KeywordsToRenameM := OrderedMap(
   )
 
 ; 2024-04-08, andymbody
-;   Separated these from KeywordsToRenameM
+;   Separated these from gmAhkKeywdsToRename
 ;   ... so they can be treated differently
-global LoopRegKeywords := OrderedMap(
+global gmAhkLoopRegKeywds := OrderedMap(
     "A_LoopRegKey `"\`" A_LoopRegSubKey" ,
     "A_LoopRegKey"
   , "A_LoopRegKey . `"\`" . A_LoopRegSubKey" ,

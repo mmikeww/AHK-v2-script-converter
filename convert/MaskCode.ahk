@@ -10,7 +10,7 @@
 
 global	  gTagChar		:= chr(0x2605)
 		, gFuncPtn		:= buildPtn_FUNC(), gClassPtn := buildPtn_CLS()
-		, gLCPtn		:= '(*UCP)(?m)(^\h*;|\h+;).*'															; line comments
+		, gLCPtn		:= '(*UCP)(?m)(?<=\s|);[^\v]*'															; line comment (allows lead ws to be consumed already)
 		, gBCPtn		:= '(*UCP)(?m)^\h*(/\*((?>[^*/]+|\*[^/]|/[^*])*)(?>(?-2)(?-1))*(?:\*/|\Z))'				; block comments
 		, gQSPtn		:= '(*UCP)(?m)(?:`'`'|`'(?>[^`'\v]+(?:(?<=``)`')?)+`'|""|"(?>[^"\v]+(?:(?<=``)")?)+")'	; quoted string	(UPDATED 2024-06-17)
 		, gMQSPtn		:= buildPtn_MStr()																		; v1 multiline string (non expression)
@@ -380,7 +380,7 @@ class MLSTR extends PreMask
 			else
 			{
 				blkLines		:= StrSplit(blk, "`n", "`r")
-				nDeclare		:= '^(\h*[_a-z]\w*\h*=)'	; non-expression equals
+				nDeclare		:= '^(?i)(\h*[_a-z]\w*\h*=)'	; non-expression equals
 				varEquals		:= RegExReplace(blk, '(?s)' nDeclare '.*$', '$1')
 				ExpVarEquals	:= RegExReplace(varEquals, '=', ':=',,1)
 				newStr			:= ''
@@ -502,7 +502,7 @@ class MLSTR extends PreMask
 ; CLASS-BLOCK pattern of my own design
 
 	opt 		:= '(*UCP)(?im)'										; pattern options
-	LC			:= '(?:(?:\h*;|(?<=\h);).*)'							; line comment (allows lead space to be consumed already)
+	LC			:= '(?:(?<=\s|);[^\v]*)'								; line comment (allows lead ws to be consumed already)
 	tagChar 	:= (IsSet(gTagChar)) ? gTagChar : chr(0x2605)
 	TG			:= '(?:#TAG' tagChar '\w+' tagChar '#)'					; mask tags
 	CT			:= '(?:' . LC . '|' . TG . ')*'							; optional line comment OR tag
@@ -523,7 +523,7 @@ class MLSTR extends PreMask
 ; supports class methods also (can begin with underscore)
 
 	opt 		:= '(*UCP)(?im)'										; pattern options
-	LC			:= '(?:(?:\h*;|(?<=\h);).*)'							; line comment (allows lead space to be consumed already)
+	LC			:= '(?:(?<=\s|);[^\v]*)'								; line comment (allows lead ws to be consumed already)
 	tagChar 	:= (IsSet(gTagChar)) ? gTagChar : chr(0x2605)
 	TG			:= '(?:#TAG' tagChar '\w+' tagChar '#)'					; mask tags
 	CT			:= '(?:' . LC . '|' . TG . ')*'							; optional line comment OR tag
@@ -537,22 +537,23 @@ class MLSTR extends PreMask
 ;	A_Clipboard := pattern
 	return		pattern
 }
-
-
 ;################################################################################
 																  buildPtn_MSTR()
 ;################################################################################
 {
-	opt 		:= '(*UCP)(?s)'											; pattern options
-	LC			:= '(?:(?:\h*;|(?<=\h);).*)'							; line comment (allows lead space to be consumed already)
+; Multi-line string block
+; non-expression version [ = ], not [ := ]
+
+	opt 		:= '(*UCP)(?ims)'										; pattern options
+	LC			:= '(?:(?<=\s|);[^\v]*)'								; line comment (allows lead ws to be consumed already)
 	tagChar 	:= (IsSet(gTagChar)) ? gTagChar : chr(0x2605)
 	TG			:= '(?:#TAG' tagChar '\w+' tagChar '#)'					; mask tags
-	CT			:= '(?:' . LC . '|' . TG . ')*'							; optional line comment OR tag
-	TCT			:= '(?>\s*' . CT . ')*'									; optional trailing comment or tag (MUST BE ATOMIC)
-	var			:= '(?<var>[_a-z]\w*)\h*='								; var	- variable name
-	body		:= '\R+(?<blk>\((?<guts>(?>.+?)+?)\R+\h*\))'			; body	- block body with parentheses and guts
-	pattern		:= opt . var . TCT . body
-	A_Clipboard := pattern
+	CT			:= '(?<CT>(?:\s*(?:' LC '|' TG '))*)\h*'				; optional line comment OR tag
+	var			:= '(?<var>[_a-z]\w*)\h*=\h*'							; var	- variable name
+	body		:= '\R+\h*(?<blk>\((?<guts>(?>.+?)+?)\R+\h*\))'			; body	- block body with parentheses and guts
+	pattern		:= opt . var . CT . body
+	; (*UCP)(?ims)(?<var>[_a-z]\w*)\h*=\h*(?<CT>(?:\s*(?:(?:(?<=\s|);[^\v]*)|(?:#TAG?\w+?#)))*)\h*\R+\h*(?<blk>\((?<guts>(?>.+?)+?)\R+\h*\))
+;	A_Clipboard := pattern
+;	ExitApp
 	return pattern
 }
-

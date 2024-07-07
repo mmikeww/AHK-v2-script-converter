@@ -1,19 +1,18 @@
 ﻿; 2026-06-26 ADDED by andymbody to support code block masking
-; currently supports nested classes and functions (as wells as block/line comments and quoted strings for v1 or v2)
+; supports nested classes and functions (as wells as block/line comments and quoted strings for v1 or v2)
 ; will add more support for other code blocks, AHK funcs, etc as needed
-; all regex needles were designed to support masking tags. Feel free to contact me on AHK forum if I can assist with edits
-
-
-; The FORMAT of this file was CREATED WITH TABS OF 4.
-;	Please do NOT change this to spaces or a different number of chars... Thanks!
+; 2024-07-07 ADDED support for masking multi-line string blocks, removal of block/line comments, string blocks
+; All regex needles were designed to support masking tags. Feel free to contact me on AHK forum if I can assist with edits
 
 
 global	  gTagChar		:= chr(0x2605)
-		, gFuncPtn		:= buildPtn_FUNC(), gClassPtn := buildPtn_CLS()
-		, gLCPtn		:= '(*UCP)(?m)(?<=\s|);[^\v]*'															; line comment (allows lead ws to be consumed already)
+		, gFuncPtn		:= buildPtn_FUNC()																		; function block (supports nesting)
+		, gClassPtn		:= buildPtn_CLS()																		; class	   block (supports nesting)
+		, gMQSPtn		:= buildPtn_MStr()																		; v1 multi-line string-block (non expression)
+		; 2024-07-07 AMB, CHANGED to bypass escaped semicolon
+		, gLCPtn		:= '(*UCP)(?m)(?<=\s|)(?<!``);[^\v]*'													; line comment (allows lead ws to be consumed already)
 		, gBCPtn		:= '(*UCP)(?m)^\h*(/\*((?>[^*/]+|\*[^/]|/[^*])*)(?>(?-2)(?-1))*(?:\*/|\Z))'				; block comments
 		, gQSPtn		:= '(*UCP)(?m)(?:`'`'|`'(?>[^`'\v]+(?:(?<=``)`')?)+`'|""|"(?>[^"\v]+(?:(?<=``)")?)+")'	; quoted string	(UPDATED 2024-06-17)
-		, gMQSPtn		:= buildPtn_MStr()																		; v1 multiline string (non expression)
 ;		, gBracePtn		:= '(\{(?>[^}{]+|(?-1))*\})'															; nested brace blocks (for future support)
 
 ;################################################################################
@@ -149,7 +148,7 @@ class NodeMap
 				{
 					mCode := m[], doPreMask_remove(&mCode)					; remove premask of comments and strings
 					;node.taggedCode	:= mCode						 	; (not used)
-					node.ConvCode	:= _convertLines(mCode,finalize:=1)		; now convert code to v2
+					node.ConvCode := _convertLines(mCode,finalize:=1)		; now convert code to v2
 					code := RegExReplace(code, "\Q" mCode "\E", tag,,1,pos)
 				}
 			}
@@ -416,6 +415,7 @@ class MLSTR extends PreMask
 ; 2024-06-30 ADDED, AMB
 ; masks multiline strings
 ; MLSTR class is custom masking and convert class for multiline strings
+; called from Before_LineConverts() of ConvertFuncs.ahk
 
 	doPreMask(&code)	; restore is handled in Convert() of ConvertFuncs.ahk
 	MLSTR.MaskAll(&code, 'MQS', gMQSPtn)
@@ -427,7 +427,7 @@ class MLSTR extends PreMask
 {
 ; 2024-06-30 ADDED, AMB
 ; restore multiline strings
-; called from Convert() of ConvertFuncs.ahk
+; called from After_LineConverts() of ConvertFuncs.ahk
 
 	MLSTR.RestoreAll(&code, 'MQS')	; converts multiline string code as part of restore
 	return
@@ -440,6 +440,7 @@ class MLSTR extends PreMask
 ; 2024-06-02 UPDATED
 ; 2024-06-26 MOVED from ConvertFuncs.ahk. Just a proxy now
 ; masks quoted-strings
+
 	PreMask.MaskQS(&code)
 	return
 }
@@ -450,6 +451,7 @@ class MLSTR extends PreMask
 ; 2024-04-08 ADDED, andymbody
 ; 2024-06-26 MOVED from ConvertFuncs.ahk. Just a proxy now
 ; restores orig strings that were masked by maskStrings()
+
 	PreMask.RestoreQS(&code)
 	return
 }
@@ -457,7 +459,8 @@ class MLSTR extends PreMask
 																maskBlocks(&code)
 ;################################################################################
 {
-; proxy to mask classes and functions
+; proxy func to mask classes and functions
+
 	NodeMap.MaskBlocks(&code)
 	return
 }
@@ -465,7 +468,8 @@ class MLSTR extends PreMask
 															 restoreBlocks(&code)
 ;################################################################################
 {
-; proxy to restore classes and functions
+; proxy func to restore classes and functions
+
 	NodeMap.RestoreBlocks(&code)
 	return
 }
@@ -496,13 +500,47 @@ class MLSTR extends PreMask
 	return
 }
 ;################################################################################
+																  removeBCs(code)
+;################################################################################
+{
+; 2024-07-07 AMB, ADDED - remove block comments from passed code
+
+	return RegExReplace(code,gBCPtn)	; remove block comments
+}
+;################################################################################
+																  removeLCs(code)
+;################################################################################
+{
+; 2024-07-07 AMB, ADDED - remove line comments from passed code
+
+	return RegExReplace(code,gLCPtn)	; remove line  comments
+}
+;################################################################################
+															 removeComments(code)
+;################################################################################
+{
+; 2024-07-07 AMB, ADDED - remove block and line comments from passed code
+
+	code := removeBCs(code)				; remove block comments
+	return	removeLCs(code)				; remove line  comments
+}
+;################################################################################
+																removeMLStr(code)
+;################################################################################
+{
+; 2024-07-07 AMB, ADDED - remove multi-line strings from passed code
+
+	return RegExReplace(code, gMQSPtn)
+}
+;################################################################################
 																   buildPtn_CLS()
 ;################################################################################
 {
-; CLASS-BLOCK pattern of my own design
+; CLASS-BLOCK pattern
 
+	; 2024-07-07 UPDATED comment needle to bypass escaped semicolon
 	opt 		:= '(*UCP)(?im)'										; pattern options
-	LC			:= '(?:(?<=\s|);[^\v]*)'								; line comment (allows lead ws to be consumed already)
+	LC			:= '(?:(?<=\s|)(?<!``);[^\v]*)'							; line comment (allows lead ws to be consumed already)
 	tagChar 	:= (IsSet(gTagChar)) ? gTagChar : chr(0x2605)
 	TG			:= '(?:#TAG' tagChar '\w+' tagChar '#)'					; mask tags
 	CT			:= '(?:' . LC . '|' . TG . ')*'							; optional line comment OR tag
@@ -519,16 +557,16 @@ class MLSTR extends PreMask
 																  buildPtn_FUNC()
 ;################################################################################
 {
-; FUNCTION-BLOCK pattern of my own design
-; supports class methods also (can begin with underscore)
+; FUNCTION-BLOCK pattern - supports class methods also
 
+	; 2024-07-07 UPDATED comment needle to bypass escaped semicolon
 	opt 		:= '(*UCP)(?im)'										; pattern options
-	LC			:= '(?:(?<=\s|);[^\v]*)'								; line comment (allows lead ws to be consumed already)
+	LC			:= '(?:(?<=\s|)(?<!``);[^\v]*)'							; line comment (allows lead ws to be consumed already)
 	tagChar 	:= (IsSet(gTagChar)) ? gTagChar : chr(0x2605)
 	TG			:= '(?:#TAG' tagChar '\w+' tagChar '#)'					; mask tags
 	CT			:= '(?:' . LC . '|' . TG . ')*'							; optional line comment OR tag
 	TCT			:= '(?>\s*' . CT . ')*'									; optional trailing comment or tag (MUST BE ATOMIC)
-	exclude		:= '(?:\b(?:IF|WHILE|LOOP)\b)(?=\()\K|'					; \K|		- cool trick I made to prevent If/While/Loop from being captured
+	exclude		:= '(?:\b(?:IF|WHILE|LOOP)\b)(?=\()\K|'					; \K|		- added to prevent If/While/Loop from being captured
 	fName		:= '(?<fName>[_a-z]\w*)'								; fName		- captures function/method name
 	fArgG		:= '(?<fArgG>\((?<Args>(?>[^()]|\((?&Args)\))*+)\))'	; fArgG		- argument group (in parenth), Args - indv args (allows multiline span)
 	declare		:= fName . fArgG . TCT									; declare	- function declaration
@@ -543,21 +581,20 @@ class MLSTR extends PreMask
 {
 ; Multi-line string block
 ; non-expression version [ = ], not [ := ]
-; does not support block comments between declaration and opening parenthesis
+; does not currently support block comments between declaration and opening parenthesis
 ;	can using masking to support them, or update needle to support raw block comments
 
-	; 2024-07-06, UPDATED for better performance
+	; 2024-07-07, UPDATED for better performance, updated comment needle to bypass escaped semicolon
 	opt 		:= '(*UCP)(?ims)'												; pattern options
-	LC			:= '(?:(?<=\s);[^\v]*)'											; line comment (allows lead ws to be consumed already)
+	LC			:= '(?:(?<=\s)(?<!``);[^\v]*)'									; line comment (allows lead ws to be consumed already)
 	tagChar 	:= (IsSet(gTagChar)) ? gTagChar : chr(0x2605)
 	TG			:= '(?:#TAG' tagChar '\w+' tagChar '#)'							; mask tags
 	CT			:= '(?<CT>(?:\s*+(?:' LC '|' TG '))*)'							; optional line comment OR tag
 	var			:= '(?<var>[_a-z]\w*)\h*=\h*'									; var	- variable name
 	body		:= '\h*\R+(?<blk>\h*\((?<guts>(?:\R*(?>[^\v]*))*?)\R+\h*+\))'	; body	- block body with parentheses and guts
 	pattern		:= opt . var . CT . body
-	; changed to line-at-a-time vs character-at-a-time -> 4-5 times faster, only fooled if original code syntax is incorrect
-	; (*UCP)(?ims)(?<var>[_a-z]\w*)\h*=\h*(?<CT>(?:\s*+(?:(?:(?<=\s);[^\v]*)|(?:#TAG★\w+★#)))*+)\h*\R+(?<blk>\h*\((?<guts>(?:\R*(?>[^\v]*))*?)\R+\h*+\))
+	; changed to line-at-a-time rather than char-at-a-time -> 4-5 times faster, only fooled if original code syntax is incorrect
+	; (*UCP)(?ims)(?<var>[_a-z]\w*)\h*=\h*(?<CT>(?:\s*+(?:(?:(?<=\s)(?<!``);[^\v]*)|(?:#TAG★\w+★#)))*+)\h*\R+(?<blk>\h*\((?<guts>(?:\R*(?>[^\v]*))*?)\R+\h*+\))
 ;	A_Clipboard := pattern
-;	ExitApp
 	return pattern
 }

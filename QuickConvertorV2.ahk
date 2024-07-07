@@ -613,7 +613,7 @@ GuiTest(strV1Script:="")
     SB.SetParts(300, 300, 300)  ; Create four parts in the bar (the fourth part fills all the remaining width).
 
     ; Add folders and their subfolders to the tree. Display the status in case loading takes a long time:
-    M := Gui("ToolWindow -SysMenu Disabled AlwaysOnTop", "Loading the tree..."), M.Show("w200 h0")
+    M := Gui("ToolWindow -SysMenu Disabled AlwaysOnTop", "Loading the tree..."), M.Show("y100 w200 h0")
 
     if TestFailing and TestMode{
         DirList := AddSubFoldersToTree(A_ScriptDir "/tests", Map())

@@ -1,4 +1,4 @@
-; 2026-06-26 ADDED by andymbody to support code block masking
+﻿; 2026-06-26 ADDED by andymbody to support code block masking
 ; currently supports nested classes and functions (as wells as block/line comments and quoted strings for v1 or v2)
 ; will add more support for other code blocks, AHK funcs, etc as needed
 ; all regex needles were designed to support masking tags. Feel free to contact me on AHK forum if I can assist with edits
@@ -543,16 +543,20 @@ class MLSTR extends PreMask
 {
 ; Multi-line string block
 ; non-expression version [ = ], not [ := ]
+; does not support block comments between declaration and opening parenthesis
+;	can using masking to support them, or update needle to support raw block comments
 
-	opt 		:= '(*UCP)(?ims)'										; pattern options
-	LC			:= '(?:(?<=\s|);[^\v]*)'								; line comment (allows lead ws to be consumed already)
+	; 2024-07-06, UPDATED for better performance
+	opt 		:= '(*UCP)(?ims)'												; pattern options
+	LC			:= '(?:(?<=\s);[^\v]*)'											; line comment (allows lead ws to be consumed already)
 	tagChar 	:= (IsSet(gTagChar)) ? gTagChar : chr(0x2605)
-	TG			:= '(?:#TAG' tagChar '\w+' tagChar '#)'					; mask tags
-	CT			:= '(?<CT>(?:\s*(?:' LC '|' TG '))*)\h*'				; optional line comment OR tag
-	var			:= '(?<var>[_a-z]\w*)\h*=\h*'							; var	- variable name
-	body		:= '\R+\h*(?<blk>\((?<guts>(?>.+?)+?)\R+\h*\))'			; body	- block body with parentheses and guts
+	TG			:= '(?:#TAG' tagChar '\w+' tagChar '#)'							; mask tags
+	CT			:= '(?<CT>(?:\s*+(?:' LC '|' TG '))*)'							; optional line comment OR tag
+	var			:= '(?<var>[_a-z]\w*)\h*=\h*'									; var	- variable name
+	body		:= '\h*\R+(?<blk>\h*\((?<guts>(?:\R*(?>[^\v]*))*?)\R+\h*+\))'	; body	- block body with parentheses and guts
 	pattern		:= opt . var . CT . body
-	; (*UCP)(?ims)(?<var>[_a-z]\w*)\h*=\h*(?<CT>(?:\s*(?:(?:(?<=\s|);[^\v]*)|(?:#TAG?\w+?#)))*)\h*\R+\h*(?<blk>\((?<guts>(?>.+?)+?)\R+\h*\))
+	; changed to line-at-a-time vs character-at-a-time -> 4-5 times faster, only fooled if original code syntax is incorrect
+	; (*UCP)(?ims)(?<var>[_a-z]\w*)\h*=\h*(?<CT>(?:\s*+(?:(?:(?<=\s);[^\v]*)|(?:#TAG★\w+★#)))*+)\h*\R+(?<blk>\h*\((?<guts>(?:\R*(?>[^\v]*))*?)\R+\h*+\))
 ;	A_Clipboard := pattern
 ;	ExitApp
 	return pattern

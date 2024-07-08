@@ -4,7 +4,6 @@
 ; to do: strsplit (old command)
 ; requires should change the version :D
 global   dbg         := 0
-global   gUseMasking := 1       ; 2024-06-26 - set to 0 to test without masking applied
 
 #Include lib/ClassOrderedMap.ahk
 #Include lib/dbg.ahk
@@ -39,6 +38,17 @@ Convert(ScriptString)            ; MAIN ENTRY POINT for conversion process
 Before_LineConverts(&code)
 {
    ;####  Please place CALLS TO YOUR FUNCTIONS here - not boilerplate code  #####
+
+   ; must be initialized prior to entering _convertLines()
+   global gUseMasking := 1  ; 2024-06-26 - set to 0 to test without masking applied
+
+   ; 2024-07-07 AMB, ADDED - for label renaming support
+   global gAllFuncNames := getFuncNames(code)  ; comma-delim stringList of all function names
+   ; captures all v1 labels from script...
+   ;  ... converts v1 names to v2 compatible...
+   ;  ... and places them in gmAllLabelsV1toV2 map for easy access
+   global gmAllLabelsV1toV2 := map()
+   getScriptLabels(code)
 
    ; 2024-07-02 AMB, for support of MenuBar detection
    global gMenuBarName := getMenuBarName(code)           ; name of GUI main menubar
@@ -1565,11 +1575,11 @@ _FileSetTime(p) {
 }
 ;################################################################################
 _Gosub(p) {
-   ; Need to convert label into a function
-   if RegexMatch(gOrig_ScriptStr, "\n(\s*)" p[1] ":\s") {
-      gaList_LblsToFuncO.Push({label: p[1], parameters: ""})
-   }
-   Return trim(p[1]) "()"
+   ; 2024-07-07 AMB UPDATED - as part of label-to-function naming
+   v1LabelName  := p[1]
+   v2FuncName   := trim(getV2Name(v1LabelName))
+   gaList_LblsToFuncO.Push({label: v1LabelName, parameters: "", NewFunctionName: v2FuncName})
+   Return v2FuncName . "()"
 }
 ;################################################################################
 _Gui(p) {
@@ -1647,7 +1657,8 @@ _Gui(p) {
 
          ControlObject := InStr(ControlName, SubStr(Var2, 1, 4)) ? "ogc" ControlName : "ogc" Var2 ControlName
          gmGuiCtrlObj[ControlName] := ControlObject
-         if (Var2 != "Pic" and Var2 != "Picture" and Var2 != "Text" and Var2 != "Button" and Var2 != "Link" and Var2 != "Progress" and Var2 != "GroupBox" and Var2 != "Statusbar" and Var2 != "ActiveX") {   ; Exclude Controls from the submit (this generates an error)
+         if (Var2 != "Pic" and Var2 != "Picture" and Var2 != "Text" and Var2 != "Button" and Var2 != "Link" and Var2 != "Progress"
+            and Var2 != "GroupBox" and Var2 != "Statusbar" and Var2 != "ActiveX") {   ; Exclude Controls from the submit (this generates an error)
             if (gmGuiVList.Has(GuiNameLine)) {
                gmGuiVList[GuiNameLine] .= "`r`n" ControlName
             } else {
@@ -1686,9 +1697,11 @@ _Gui(p) {
                   aEventRename[A_Index].NewFunctionName := gmAltLabel[aEventRename[A_Index].oldlabel]
                   ; Alternative label is available
                } else {
-                  gaList_LblsToFuncO.Push({label: aEventRename[A_Index].oldlabel, parameters: aEventRename[A_Index].parameters, NewFunctionName: GetV2Label(aEventRename[A_Index].NewFunctionName)})
+                  gaList_LblsToFuncO.Push({label: aEventRename[A_Index].oldlabel
+                     , parameters: aEventRename[A_Index].parameters
+                     , NewFunctionName: getV2Name(aEventRename[A_Index].NewFunctionName)})
                }
-               LineResult .= GuiNameLine ".OnEvent(`"" aEventRename[A_Index].event "`", " GetV2Label(aEventRename[A_Index].NewFunctionName) ")`r`n"
+               LineResult .= GuiNameLine ".OnEvent(`"" aEventRename[A_Index].event "`", " getV2Name(aEventRename[A_Index].NewFunctionName) ")`r`n"
             }
          }
       }
@@ -1856,8 +1869,8 @@ _Gui(p) {
          }
          V1GuiControlEvent := ControlEvent = "Change" ? "Normal" : ControlEvent
          V1GuiControlEvent := V1GuiControlEvent = "Click" ? "Normal" : ControlEvent
-         LineResult .= "`r`n" gIndentation ControlObject ".OnEvent(`"" ControlEvent "`", " GetV2Label(ControlLabel) ".Bind(`"" V1GuiControlEvent "`"))"
-         gaList_LblsToFuncO.Push({label: ControlLabel, parameters: 'A_GuiEvent := "", GuiCtrlObj := "", Info := "", *', NewFunctionName: GetV2Label(ControlLabel)})
+         LineResult .= "`r`n" gIndentation ControlObject ".OnEvent(`"" ControlEvent "`", " getV2Name(ControlLabel) ".Bind(`"" V1GuiControlEvent "`"))"
+         gaList_LblsToFuncO.Push({label: ControlLabel, parameters: 'A_GuiEvent := "", GuiCtrlObj := "", Info := "", *', NewFunctionName: getV2Name(ControlLabel)})
       }
       if (ControlHwnd != "") {
          LineResult .= "`r`n" gIndentation ControlHwnd " := " ControlObject ".hwnd"
@@ -3689,7 +3702,7 @@ ConvertLabel2Func(ScriptString, Label, Parameters := "", NewFunctionName := "", 
    if (NewFunctionName = "") {   ; Use Labelname if no FunctionName is defined
       NewFunctionName := Label
    }
-   NewFunctionName := GetV2Label(NewFunctionName)
+   NewFunctionName := getV2Name(NewFunctionName)
    loop gOScriptStr.Length {
       Line := gOScriptStr[A_Index]
 
@@ -3738,11 +3751,13 @@ ConvertLabel2Func(ScriptString, Label, Parameters := "", NewFunctionName := "", 
             Result .= LabelPointer = 1 ? "} `; V1toV2: Added Bracket before hotkey or Hotstring`r`n" : ""
             LabelPointer := 0
             RegexPointer := 0
-         } else if (RegExMatch(RestString, "is)^(|;[^\n]*\n)*[\s`n`r\t]*\}?[\s`n`r\t]*([^;`n`r\s\{}\[\]\=:]+?\:\s).*") > 0 and RegExMatch(gOScriptStr[A_Index - 1], "is)^[\s`n`r\t]*(return|exitapp|exit|reload).*") > 0) {   ; Label
+         } else if (RegExMatch(RestString, "is)^(|;[^\n]*\n)*[\s`n`r\t]*\}?[\s`n`r\t]*([^;`n`r\s\{}\[\]\=:]+?\:\s).*") > 0
+               and RegExMatch(gOScriptStr[A_Index - 1], "is)^[\s`n`r\t]*(return|exitapp|exit|reload).*") > 0) {   ; Label
             Result .= LabelPointer = 1 ? "} `; V1toV2: Added Bracket before label`r`n" : ""
             LabelPointer := 0
             RegexPointer := 0
-         } else if (RegExMatch(RestString, "is)^[\s`n`r\t]*\}?[\s`n`r\t]*(`;[^\r\n]*|)([\s\n\r\t]*)$") > 0 and RegExMatch(gOScriptStr[A_Index - 1], "is)^[\s`n`r\t]*(return).*") > 0) {   ; Label
+         } else if (RegExMatch(RestString, "is)^[\s`n`r\t]*\}?[\s`n`r\t]*(`;[^\r\n]*|)([\s\n\r\t]*)$") > 0
+               and RegExMatch(gOScriptStr[A_Index - 1], "is)^[\s`n`r\t]*(return).*") > 0) {   ; Label
             Result .= LabelPointer = 1 ? "} `; V1toV2: Added bracket in the end`r`n" : ""
             LabelPointer := 0
             RegexPointer := 0
@@ -3855,10 +3870,12 @@ AddBracket(ScriptString) {
             if (RegExMatch(RestString, "is)^[\s\n\r\t]*((:[\s\*\?BCKOPRSIETXZ0-9]*:|)[^;\n\r\{}\[\]\=:]+?\:\:).*") > 0) {   ; Hotkey or string
                Result .= "} `; V1toV2: Added Bracket before hotkey or Hotstring`r`n"
                HotkeyPointer := 0
-            } else if (RegExMatch(RestString, "is)^[\s\n\r\t]*((:[\s\*\?BCKOPRSIETXZ0-9]*:|)[^;\n\r\s\{}\[\:]+?\:\:?\s).*") > 0 and RegExMatch(gOScriptStr[A_Index - 1], "is)^[\s\n\r\t]*(return|exitapp|exit|reload).*") > 0) {   ; Label
+            } else if (RegExMatch(RestString, "is)^[\s\n\r\t]*((:[\s\*\?BCKOPRSIETXZ0-9]*:|)[^;\n\r\s\{}\[\:]+?\:\:?\s).*") > 0
+                  and RegExMatch(gOScriptStr[A_Index - 1], "is)^[\s\n\r\t]*(return|exitapp|exit|reload).*") > 0) {   ; Label
                Result .= "} `; V1toV2: Added Bracket before label`r`n"
                HotkeyPointer := 0
-            } else if (RegExMatch(RestString, "is)^[\s\n\r\t]*(`;[^\r\n]*|)([\s\n\r\t]*)$") > 0 and RegExMatch(gOScriptStr[A_Index - 1], "is)^[\s\n\r\t]*(return|exitapp|exit|reload).*") > 0) {   ; Label
+            } else if (RegExMatch(RestString, "is)^[\s\n\r\t]*(`;[^\r\n]*|)([\s\n\r\t]*)$") > 0
+                  and RegExMatch(gOScriptStr[A_Index - 1], "is)^[\s\n\r\t]*(return|exitapp|exit|reload).*") > 0) {   ; Label
                Result .= "} `; V1toV2: Added bracket in the end`r`n"
                HotkeyPointer := 0
             } else if (RegExMatch(RestString, "is)^[\s\n\r\t]*(#hotif).*") > 0){ ; #Hotif statement
@@ -3873,9 +3890,10 @@ AddBracket(ScriptString) {
       }
 
       ; Convert wrong labels
-      if RegexMatch(Line, "is)^\s*([^:\s\t,\{\}\[\]\(\)]+):(\s.*|)$") {
-         Label := GetV2Label(RegExReplace(Line, "is)(^\s*)([^:\s\t,\{\}\[\]\(\)]+):(\s.*|)$", "$2"))
-         Line := Regexreplace(Line, "is)(^\s*)([^:\s\t,\{\}\[\]\(\)]+):(\s.*$|$)", "$1" Label ":$3")
+      ; 2024-07-07 AMB CHANGED to detect all v1 valid characters, and convert to valid v2 labels
+      if (v1Label := getV1Label(Line)) {
+         Label    := getV2Name(v1Label) . ":"
+         Line     := RegexReplace(Line, "(\h*)\Q" v1Label "\E(.*)", "$1" Label "$2")
       }
 
       RestString := SubStr(RestString, InStr(RestString, "`n") + 1)
@@ -3892,7 +3910,8 @@ AddBracket(ScriptString) {
 /**
  * Creates a Map of labels who can be replaced by other labels (if labels are defined above each other)
  * @param {*} ScriptString string containing a script of multiple lines
- */
+ * 2024-07-07, UPDATED to use common getV1Label() function that covers detection of all valid v1 label chars
+*/
 GetAltLabelsMap(ScriptString) {
    gOScriptStr := StrSplit(ScriptString, "`n", "`r")
    LabelPrev := ""
@@ -3900,10 +3919,14 @@ GetAltLabelsMap(ScriptString) {
    loop gOScriptStr.Length {
       Line := gOScriptStr[A_Index]
 
-      if (RegExMatch(Line, "i)^(\s*;).*") or RegExMatch(Line, "i)^(\s*)$")) {   ; comment or empty
-         continue
-      } else if (RegExMatch(Line, "is)^[\s\t]*([^;`n`r\s\{}\[\]\=:]+?\:)\s*(;.*|)$") > 0) {   ; Label (no oneline)
-         Label := RegExReplace(Line, "is)^[\s\t]*([^;`n`r\s\{}\[\]\=:]+?)\:\s*(;.*|)$", "$1")
+;      if (RegExMatch(Line, "i)^(\s*;).*") or RegExMatch(Line, "i)^(\s*)$")) {   ; comment or empty
+;         continue
+;      } else if (RegExMatch(Line, "is)^[\s\t]*([^;`n`r\s\{}\[\]\=:]+?\:)\s*(;.*|)$") > 0) {   ; Label (no oneline)
+;         Label := RegExReplace(Line, "is)^[\s\t]*([^;`n`r\s\{}\[\]\=:]+?)\:\s*(;.*|)$", "$1")
+      if (trim(removeLCs(line))='') {     ; remove any line comments and whitespace
+         continue ; is blank line or line comment
+      } else if (v1Label := getV1Label(line)) {
+         Label := SubStr(v1Label, 1, -1) ; remove colon
          Result .= Label "-" LabelPrev "`r`n"
          if (LabelPrev = "") {
             LabelPrev := Label
@@ -3920,12 +3943,6 @@ GetAltLabelsMap(ScriptString) {
    ;     MsgBox(k "-" v)
    ; }
    return mAltLabels
-}
-;################################################################################
-; Corrects labels by adding "_" before it if it is not allowed. Other rules can be added later on like replacement of forbidden characters
-GetV2Label(LabelName) {
-   NewLabelName := RegExReplace(LabelName, "^(\d.*)", "_$1")   ; adds "_" before label if first char is number
-   return NewLabelName
 }
 ;################################################################################
 /**
@@ -4149,4 +4166,118 @@ getMenuBarName(srcStr) {
    if (RegExMatch(srcStr, needle, &m))
       return m[1]
    return ''
+}
+;################################################################################
+getV1Label(srcStr, returnColon:=true) {
+; 2024-07-07 AMB, ADDED
+; srcStr label MUST HAVE TRAILING COLON to be considered valid
+; returns extracted label if it resembles a valid v1 label
+
+   srcStr := trim(removeLCs(srcStr))   ; remove line comments and trim ws
+   if ((srcStr ~= '(?<!:):$') && !(srcStr~='(?:,|\h|``(?!;)(?!%))'))
+      return ((returnColon) ? srcStr : SubStr(srcStr, 1, -1))
+   return ''   ; not a valid v1 label
+}
+;################################################################################
+getV2Name(v1LabelName)
+{
+; 2024-07-07 AMB, ADDED - Replaces GetV2Label()
+
+   nameNoColon := RegExReplace(v1LabelName, "^(.*):", "$1") ; remove any colon if present
+   return (gmAllLabelsV1toV2.Has(nameNoColon)) ? gmAllLabelsV1toV2[nameNoColon] : nameNoColon
+}
+;;################################################################################
+;; Corrects labels by adding "_" before it if it is not allowed. Other rules can be added later on like replacement of forbidden characters
+;GetV2Label(LabelName) {
+;   NewLabelName := RegExReplace(LabelName, "^(\d.*)", "_$1")   ; adds "_" before label if first char is number
+;   return NewLabelName
+;}
+;################################################################################
+_getUniqueV2Name(srcName)
+{
+; 2024-07-07 AMB, ADDED - Ensures name is unique (to support v1 label to v2 func naming)
+
+   global gAllFuncNames
+   holdName := newName := srcName
+   ; keep renaming until unique name is created
+   while(InStr(gAllFuncNames, newName . ",")) {
+      newName := holdName . "_" . A_Index+1
+   }
+   gAllFuncNames .= newName . ","   ; add new name to global funcName list
+   return newName
+}
+;################################################################################
+_convV1LblToV2FuncName(srcStr, returnColon:=true) {
+; 2024-07-07 AMB, ADDED
+; srcStr label MUST HAVE TRAILING COLON to be considered valid
+; returns valid v2 label with or without colon based on flag [returnColon]
+; makes sure returned name is unique and does not conflict with existing function names
+
+   ; makes sure it is a valid v1 label first
+   if (!v1Label := getV1Label(srcStr))
+      return ''
+
+   ; convert to valid v2 label
+   LabelName   := RegExReplace(v1Label, "^(.*):$", "$1")   ; remove colon if present
+   newName     := ""
+   Loop Parse LabelName {
+      char     := A_LoopField    ; inspect one char at a time
+      needle   := (A_Index=1) ? "(?i)(?:[^[:ascii:]]|[a-z_])" : "(?i)(?:[^[:ascii:]]|\w)" ; is char valid v2 char?
+      newName  .= ((char~=needle) ? char : ((A_Index=1 && char~="\d") ? "_" char : "_"))  ; replace invalid chars
+   }
+   newName := (LabelName=newName) ? newName : _getUniqueV2Name(newName)
+   return (newName . ((newName!="" && returnColon) ? ":" : ""))
+}
+;;################################################################################
+;isValidV2Label(srcStr, returnColon:=true, fix:=false) {
+;; 2024-07-07 AMB, ADDED
+;; srcStr label MUST HAVE TRAILING COLON to be considered valid
+;; returns extracted label if it is a valid V2 label
+;;  or returns a label that has been corrected (if requested)
+;;  or returns empty string if invalid
+
+;   srcStr := trim(removeLCs(srcStr))   ; remove line comments and trim ws
+;   if ((srcStr~="i)^(?:[^[:ascii:]]|[a-z_])(?:[^[:ascii:]]|\w)*:$"))
+;      ; is already valid v2 name
+;      return ((returnColon) ? srcStr : SubStr(srcStr, 1, -1))
+;   else if (fix)
+;      ; not valid v2 name - convert
+;      return _convV1LblToV2FuncName(srcStr, returnColon)
+;   return ''
+;}
+;;################################################################################
+;v1LblToV2FuncName(labelName) {
+;; 2024-07-07 AMB, ADDED
+
+;   labelName := RegExReplace(labelName, "^(.*):", "$1")  ; remove any trailing colon (for consistency)
+;   return _convV1LblToV2FuncName(LabelName . ":", returnColon:=false) ; pass a colon, but do not have it returned
+;}
+;################################################################################
+getScriptLabels(code)
+{
+; 2024-07-07 AMB, ADDED - captures all v1 labels from script...
+;  ... converts v1 names to v2 compatible...
+;  ... and places them in gmAllLabelsV1toV2 map for easy access
+
+   global gmAllLabelsV1toV2 := map()
+
+   contents := code                    ; script contents
+   contents := removeBCs(contents)     ; remove BLOCK comments only
+   contents := removeMLStr(contents)   ; remove multiline strings
+
+   ; convert v1 labelNames to v2 compatible, store as map in gmAllLabelsV1toV2
+   corrections := ''
+   for idx, lineStr in StrSplit(contents, '`n', '`r') {
+      if ((v1Label := getV1Label(lineStr, returnColon:=true)) && (v2Name := _convV1LblToV2FuncName(v1Label, false)))
+      {
+         v1LabelName := RegExReplace(v1Label, "^(.*):$", "$1")  ; remove trailing colon
+         gmAllLabelsV1toV2[v1LabelName] := v2Name               ; name has no colon
+;         corrections .= "`n[ " . v1Label . " ]`t[ " . v2Name . " ]"    ; for debugging
+      }
+   }
+;   ; for debugging
+;   if (corrections) {
+;      MsgBox "[" corrections "]"
+;   }
+   return
 }

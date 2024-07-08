@@ -40,6 +40,26 @@
     - use asterisk * and a function name to call, for custom processing when the params dont directly match up
 */
 
+global gAhkCmdsToRemove := "
+   (
+      #AllowSameLineComments
+      #CommentFlag
+      #Delimiter
+      #DerefChar
+      #EscapeChar
+      #LTrim
+      #MaxMem
+      #NoEnv
+      SetBatchLines
+      SetFormat
+      SoundGetWaveVolume
+      SoundSetWaveVolume
+      SplashImage
+      A_FormatInteger
+      A_FormatFloat
+      AutoTrim
+   )"
+
 global gmAhkCmdsToConvert := OrderedMap(
     "BlockInput,OptionT2E" ,
     "BlockInput({1})"
@@ -486,8 +506,8 @@ global gmAhkCmdsToConvert := OrderedMap(
   , "#Warn,WarningType,WarningMode" ,
     "*_HashtagWarn"
   )
-
-  FindCommandDefinitions(Command, &v1:=unset, &v2:=unset) {
+;################################################################################
+FindCommandDefinitions(Command, &v1:=unset, &v2:=unset) {
     for v1_, v2_ in gmAhkCmdsToConvert {
       if (v1_ ~= "i)^\s*\Q" Command "\E\s*(,|$)") {
         v1 := v1_
@@ -497,25 +517,3 @@ global gmAhkCmdsToConvert := OrderedMap(
     }
     return false
   }
-
-  _SendMessage(p) {
-
-
-  if (p[3] ~= "^&.*"){
-    p[3] := SubStr(p[3],2)
-    Out := format('if (type(' . p[3] . ')="Buffer"){ `;V1toV2 If statement may be removed depending on type parameter`n`r' . gIndentation
-                  . ' ErrorLevel := SendMessage({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9})', p*)
-    Out := RegExReplace(Out, "[\s\,]*\)$", ")")
-    Out .= format('`n`r' . gIndentation . '} else{`n`r' . gIndentation
-                  . ' ErrorLevel := SendMessage({1}, {2}, StrPtr({3}), {4}, {5}, {6}, {7}, {8}, {9})', p*)
-    Out := RegExReplace(Out, "[\s\,]*\)$", ")")
-    Out .= '`n`r' . gIndentation . "}"
-    return Out
-  }
-  if (p[3] ~= "^`".*") {
-    p[3] := 'StrPtr(' . p[3] . ')'
-  }
-
-  Out := format("ErrorLevel := SendMessage({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9})", p*)
-  Return RegExReplace(Out, "[\s\,]*\)$", ")")
-}

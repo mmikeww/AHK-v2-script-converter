@@ -386,7 +386,7 @@ class Scintilla extends Gui.Custom {
         If (this.AutoSizeNumberMargin)
             this.MarginWidth(0, 33, scn) ; number margin 0, with default style 33
         
-        If (this.CustomSyntaxHighlighting && WinExist("Quick Convertor V2")) {
+        If (this.CustomSyntaxHighlighting && IsSet(modType)) {
             
             data := this.scn_data(scn) ; prep data for DLL calls
             ; wordList := this.makeWordLists()
@@ -408,9 +408,11 @@ class Scintilla extends Gui.Custom {
                 
             }
             
-            Else If (scn.modType & modType.BeforeDelete)
-                this.DeleteRoutine(scn, data)
-            Else if (scn.modType & modType.DeleteText)
+            Else If (scn.modType & modType.BeforeDelete) {
+                ; Prefixed with try to prevent warnings
+                ; Seems fails randomly (mostly works however)
+                try this.DeleteRoutine(scn, data)
+            } Else if (scn.modType & modType.DeleteText)
                 this.ChunkColoring(scn, data, this._wordList) ; redo coloring after delete
         
             If (scn.wmmsg_txt = "StyleNeeded") {

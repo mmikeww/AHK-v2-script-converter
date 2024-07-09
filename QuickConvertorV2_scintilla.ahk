@@ -42,7 +42,7 @@
     (Scintilla) ; Init class, or simply #INCLUDE the extension-lib at the top.
 }
 { ;VARIABLES:
-    global icons, TestMode, TestFailing, FontSize, ViewExpectedCode, GuiWidth, GuiHeight
+    global icons, TestMode, TestFailing, FontSize, ViewExpectedCode, GuiWidth, GuiHeight, GuiHwnd
 
     ; TreeRoot will be the root folder for the TreeView.
     ;   Note: Loading might take a long time if an entire drive such as C:\ is specified.
@@ -660,8 +660,10 @@ V2Edit.Doc.ptr := ptr
 V2Edit.Tab.Use := false ; use spaces instad of tabs
 V2Edit.Tab.Width := 4 ; number of spaces for a tab
 
-V2ExpectedEdit := MyGui.Add("Edit", "x1000 ym w600 H100 vvCodeV2Expected +Multi +WantTab +0x100", "")  ; Add a fairly wide edit control at the top of the window.
-V2ExpectedEdit.OnEvent("Change",Edit_Change)
+; V2ExpectedEdit := MyGui.Add("Edit", "x1000 ym w600 H100 vvCodeV2Expected +Multi +WantTab +0x100", "")  ; Add a fairly wide edit control at the top of the window.
+; V2ExpectedEdit.OnEvent("Change",Edit_Change)
+V2ExpectedEdit := MyGui.AddScintilla("x1000 ym w600 vvCodeV2Expected DefaultOpt LightTheme")
+V2ExpectedEdit.callback := Edit_Change
 
 
 ButtonRunV2 := MyGui.AddPicButton("w24 h24", "mmcndmgr.dll","icon33 h23")
@@ -758,6 +760,7 @@ MyGui.Opt("+MinSize450x200")
 MyGui.OnEvent("DropFiles",Gui_DropFiles)
 ; Display the window. The OS will notify the script whenever the user performs an eligible action:
 MyGui.Show("h" GuiHeight " w" GuiWidth)
+GuiHwnd := MyGui.Hwnd
 sleep(500)
 UserClicked := true
 
@@ -1225,7 +1228,6 @@ MyExit:
     IniWrite(TestFailing,        IniFile, Section, "TestFailing")
     IniWrite(TreeViewWidth,      IniFile, Section, "TreeViewWidth")
     IniWrite(ViewExpectedCode,   IniFile, Section, "ViewExpectedCode")
-    ExitApp
     Return
 }
 ~LButton::      ; Keep track of charet position

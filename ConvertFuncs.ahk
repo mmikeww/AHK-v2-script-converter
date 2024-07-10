@@ -198,20 +198,10 @@ _convertLines(ScriptString, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to ac
                gaScriptStrsUsed.Delimiter := dMatch[1]
          }
       }
-      if !RegExMatch(Line, "i)^\h*#(CommentFlag|EscapeChar|DerefChar|Delimiter)\h+.") and !InCont {
-         if HasProp(gaScriptStrsUsed, "EscapeChar") {
-            Line := StrReplace(Line, gaScriptStrsUsed.EscapeChar, "``")
-         }
-         if HasProp(gaScriptStrsUsed, "CommentFlag") {
-            Line := RegExReplace(Line, "(?<!``)\Q" gaScriptStrsUsed.CommentFlag "\E", ";")
-         }
-         if HasProp(gaScriptStrsUsed, "DerefChar") {
-            Line := RegExReplace(Line, "(?<!``)\Q" gaScriptStrsUsed.DerefChar "\E", "%")
-         }
-         if HasProp(gaScriptStrsUsed, "Delimiter") {
-            ;char := HasProp(gaScriptStrsUsed, "EscapeChar") ? gaScriptStrsUsed.EscapeChar : "``"
-            Line := RegExReplace(Line, "(?<!``)\Q" gaScriptStrsUsed.Delimiter "\E", ",")
-         }
+      if !RegExMatch(Line, "i)^\h*#(CommentFlag|EscapeChar|DerefChar|Delimiter)\h+.") and !InCont 
+         and HasProp(gaScriptStrsUsed, "CommentFlag") {
+         char := HasProp(gaScriptStrsUsed, "EscapeChar") ? gaScriptStrsUsed.EscapeChar : "``"
+         Line := RegExReplace(Line, "(?<!\Q" char "\E)\Q" gaScriptStrsUsed.CommentFlag "\E", ";")
       }
 
       if RegExMatch(Line, "(\s+`;.*)$", &EOLComment)
@@ -255,6 +245,18 @@ _convertLines(ScriptString, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to ac
       }
 
       gOrig_Line := Line
+
+      if !RegExMatch(Line, "i)^\h*#(CommentFlag|EscapeChar|DerefChar|Delimiter)\h+.") and !InCont {
+         if HasProp(gaScriptStrsUsed, "EscapeChar") {
+            Line := StrReplace(Line, gaScriptStrsUsed.EscapeChar, "``")
+         }
+         if HasProp(gaScriptStrsUsed, "DerefChar") {
+            Line := RegExReplace(Line, "(?<!``)\Q" gaScriptStrsUsed.DerefChar "\E", "%")
+         }
+         if HasProp(gaScriptStrsUsed, "Delimiter") {
+            Line := RegExReplace(Line, "(?<!``)\Q" gaScriptStrsUsed.Delimiter "\E", ",")
+         }
+      }
 
       ; Fix lines with preceeding }
       LinePrefix := ""

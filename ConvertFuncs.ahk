@@ -199,14 +199,14 @@ _convertLines(ScriptString, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to ac
          }
       }
       if !RegExMatch(Line, "i)^\h*#(CommentFlag|EscapeChar|DerefChar|Delimiter)\h+.") and !InCont {
-         if HasProp(gaScriptStrsUsed, "CommentFlag") {
-            Line := StrReplace(Line, gaScriptStrsUsed.CommentFlag, ";")
-         }
          if HasProp(gaScriptStrsUsed, "EscapeChar") {
             Line := StrReplace(Line, gaScriptStrsUsed.EscapeChar, "``")
          }
+         if HasProp(gaScriptStrsUsed, "CommentFlag") {
+            Line := RegExReplace(Line, "(?<!``)\Q" gaScriptStrsUsed.CommentFlag "\E", ";")
+         }
          if HasProp(gaScriptStrsUsed, "DerefChar") {
-            Line := StrReplace(Line, gaScriptStrsUsed.DerefChar, "%")
+            Line := RegExReplace(Line, "(?<!``)\Q" gaScriptStrsUsed.DerefChar "\E", "%")
          }
          if HasProp(gaScriptStrsUsed, "Delimiter") {
             ;char := HasProp(gaScriptStrsUsed, "EscapeChar") ? gaScriptStrsUsed.EscapeChar : "``"

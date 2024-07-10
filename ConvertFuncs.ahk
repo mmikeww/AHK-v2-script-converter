@@ -181,6 +181,39 @@ _convertLines(ScriptString, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to ac
       FirstChar := SubStr(Trim(Line), 1, 1)
       FirstTwo := SubStr(LTrim(Line), 1, 2)
       ;msgbox, FirstChar=%FirstChar%`nFirstTwo=%FirstTwo%
+
+      ; Save directive values needed in later conversions
+      If RegExMatch(Line, "i)^\h*#(CommentFlag|EscapeChar|DerefChar|Delimiter)\h+.", &match) and InCont = false {
+         if (match[1] = "CommentFlag") {
+            if RegExMatch(Line, "i)#CommentFlag\h+(.{1,15})\h*$", &dMatch)
+               gaScriptStrsUsed.CommentFlag := dMatch[1]
+         } else if (match[1] = "EscapeChar") {
+            if RegExMatch(Line, "i)#EscapeChar\h+(.)\h*$", &dMatch) and dMatch != "``"
+               gaScriptStrsUsed.EscapeChar := dMatch[1]
+         } else if (match[1] = "DerefChar") {
+            if RegExMatch(Line, "i)#DerefChar\h+(.)\h*$", &dMatch)
+               gaScriptStrsUsed.DerefChar := dMatch[1]
+         } else if (match[1] = "Delimiter") {
+            if RegExMatch(Line, "i)#Delimiter\h+(.)\h*$", &dMatch)
+               gaScriptStrsUsed.Delimiter := dMatch[1]
+         }
+      }
+      if !RegExMatch(Line, "i)^\h*#(CommentFlag|EscapeChar|DerefChar|Delimiter)\h+.") and !InCont {
+         if HasProp(gaScriptStrsUsed, "CommentFlag") {
+            Line := StrReplace(Line, gaScriptStrsUsed.CommentFlag, ";")
+         }
+         if HasProp(gaScriptStrsUsed, "EscapeChar") {
+            Line := StrReplace(Line, gaScriptStrsUsed.EscapeChar, "``")
+         }
+         if HasProp(gaScriptStrsUsed, "DerefChar") {
+            Line := StrReplace(Line, gaScriptStrsUsed.DerefChar, "%")
+         }
+         if HasProp(gaScriptStrsUsed, "Delimiter") {
+            ;char := HasProp(gaScriptStrsUsed, "EscapeChar") ? gaScriptStrsUsed.EscapeChar : "``"
+            Line := RegExReplace(Line, "(?<!``)\Q" gaScriptStrsUsed.Delimiter "\E", ",")
+         }
+      }
+
       if RegExMatch(Line, "(\s+`;.*)$", &EOLComment)
       {
          EOLComment := EOLComment[1]

@@ -1,4 +1,5 @@
-﻿; Demonstrate fix for label-to-func naming conflicts
+
+; Demonstrate fix for label-to-func naming conflicts
 
 renaming label below will cause name conflict with this exisitng function
 Go_here_1()

@@ -17,4 +17,3 @@ global ; V1toV2: Made function global
 InitVars()
 Return
 } ; V1toV2: Added bracket in the end
-

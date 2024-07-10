@@ -42,8 +42,9 @@ Before_LineConverts(&code)
    ; must be initialized prior to entering _convertLines()
    global gUseMasking := 1  ; 2024-06-26 - set to 0 to test without masking applied
 
-   ; 2024-07-07 AMB, ADDED - for label renaming support
-   global gAllFuncNames := getFuncNames(code)  ; comma-delim stringList of all function names
+   ; 2024-07-09 AMB, UPDATED - for label renaming support
+   global gAllFuncNames     := getFuncNames(code)       ; comma-delim stringList of all function names
+   global gAllV1LabelNames  := getV1LabelNames(&code)   ; comma-delim stringList of all orig v1 label names
    ; captures all v1 labels from script...
    ;  ... converts v1 names to v2 compatible...
    ;  ... and places them in gmAllLabelsV1toV2 map for easy access
@@ -1022,6 +1023,7 @@ FinalizeConvert(&code)
       code := SubStr(code, 1, -2)
 
    try code := AddBracket(code)         ; Add Brackets to Hotkeys
+   try code := UpdateGotoFunc(code)     ; Update Goto Label when Label is converted to a func
    try code := UpdateGoto(code)         ; Update Goto Label when Label is converted to a func
    try code := FixOnMessage(code)       ; Fix turning off OnMessage when defined after turn off
    addMenuCBArgs(&code)                 ; 2024-06-26, AMB - Fix #131
@@ -1644,16 +1646,17 @@ _Gui(p) {
       Var3 := p[3]
       Var4 := p[4]
 
-      if RegExMatch(Var3, "\bg[\w]*\b") {
-         ; Remove the goto option g....
-         ControlLabel := RegExReplace(Var3, "^.*\bg([\w]*)\b.*$", "$1")
-         gaList_LblsToFuncC.Push(ControlLabel)
-         Var3 := RegExReplace(Var3, "^(.*)\bg([\w]*)\b(.*)$", "$1$3")
+      ; 2024-07-09 AMB, UPDATED needles to support all valid v1 label chars
+      if RegExMatch(Var3, "i)^[^g]*\bg([^,\h``]+).*$") {
+         ; Record and remove gLabel
+         ControlLabel := RegExReplace(Var3, "i)^[^g]*\bg([^,\h``]+).*$", "$1")  ; get glabel name
+         gaList_LblsToFuncC.Push(ControlLabel)                                  ; save label name
+         Var3 := RegExReplace(Var3, "i)^([^g]*)\bg([^,\h``]+)(.*)$", "$1$3")      ; remove glabel
       } else if (Var2 = "Button") {
          ControlLabel := GuiOldName var2 RegExReplace(Var4, "[\s&]", "")
       }
-      if RegExMatch(Var3, "\bv[\w]*\b") {
-         ControlName := RegExReplace(Var3, "^.*\bv([\w]*)\b.*$", "$1")
+      if RegExMatch(Var3, "i)\bv[\w]*\b") {
+         ControlName := RegExReplace(Var3, "i)^.*\bv([\w]*)\b.*$", "$1")
 
          ControlObject := InStr(ControlName, SubStr(Var2, 1, 4)) ? "ogc" ControlName : "ogc" Var2 ControlName
          gmGuiCtrlObj[ControlName] := ControlObject
@@ -3789,7 +3792,7 @@ ConvertLabel2Func(ScriptString, Label, Parameters := "", NewFunctionName := "", 
    }
 
    ; 2024-06-13 AMB - part of fix #193
-   result := trim(result, '`r`n')   ; first trim all blank lines from end of string
+   result := RTrim(result, '`r`n')   ; first trim all blank lines from end of string
    if (LabelPointer = 1) {
       Result .= "`r`n} `; Added bracket in the end"     ; edited
    }
@@ -3803,6 +3806,14 @@ ConvertLabel2Func(ScriptString, Label, Parameters := "", NewFunctionName := "", 
  * @param {*} ScriptString string containing a script of multiple lines
  */
 AddBracket(ScriptString) {
+
+   ; 2024-07-09 AMB, ADDED - fix for trailing CRLF issue
+   ; capture any trailing blank lines at end of string
+   ; they will be added back prior to returning converted string
+   happyTrails := ''
+   if (RegExMatch(ScriptString, '.*(\R+)$', &m))
+      happyTrails := m[1]
+
    gOScriptStr := StrSplit(ScriptString, "`n", "`r")
    Result := ""
    HotkeyPointer := 0   ; active searching for the end of the hotkey
@@ -3904,7 +3915,7 @@ AddBracket(ScriptString) {
       Result .= "`r`n} `; V1toV2: Added bracket in the end`r`n"
    }
 
-   return Result
+   return RTrim(Result, "`r`n") . happyTrails
 }
 ;################################################################################
 /**
@@ -3947,22 +3958,59 @@ GetAltLabelsMap(ScriptString) {
 ;################################################################################
 /**
  * Converts Goto Label for label that have been converted to funcs
+ * 2024-07-09 AMB, CHANGED - added support for label renaming that avoids conflicts
  */
-UpdateGoto(ScriptString) {
-   If gaList_LblsToFuncC.Length = 0
+UpdateGotoFunc(ScriptString)    ; the old UpdateGoto
+{
+   If (gaList_LblsToFuncC.Length = 0)
       return ScriptString
-   FixedScript := ""
+
+   ; 2024-07-09 AMB, ADDED - fix for trailing CRLF issue
+   ; capture any trailing blank lines at end of string
+   ; they will be added back prior to returning converted string
+   happyTrails := ''
+   if (RegExMatch(ScriptString, '.*(\R+)$', &m))
+      happyTrails := m[1]
+
+   retScript  := ""
    loop parse ScriptString, "`n", "`r" {
-      If !InStr(A_LoopField, "Goto", "On") { ; Case sensitive because converter always converts to "Goto"
-         FixedScript .= A_LoopField "`r`n"
+      line  := A_LoopField
+      If !InStr(line, "Goto", "On") { ; Case sensitive because converter always converts to "Goto"
+         retScript .= line . "`r`n"
          continue
       }
-      for , LabelName in gaList_LblsToFuncC {
-         ;If InStr(A_LoopField, 'Goto("' LabelName '")')
-         FixedScript .= StrReplace(A_LoopField, 'Goto("' LabelName '")', LabelName "()`r`n")
+      for , v1Label in gaList_LblsToFuncC {
+         v2LabelName    := getV2Name(v1Label)    ; rename to v2 compatible without conflict
+         retScript      .= StrReplace(line, 'Goto("' v1Label '")', v2LabelName "()`r`n")
       }
    }
-   Return FixedScript
+   return RTrim(retScript, "`r`n") . happyTrails  ; add back just the trailing CRLFs that code came in with
+}
+;################################################################################
+UpdateGoto(ScriptString) {
+; 2024-07-09, ADDED support for renaming of regular goto labels
+
+   ; 2024-07-09 AMB - fix for trailing CRLF issue
+   ; capture any trailing blank lines at end of string
+   ; they will be added back prior to returning converted string
+   happyTrails := ''
+   if (RegExMatch(ScriptString, '.*(\R+)$', &m))
+      happyTrails := m[1]
+
+   retScript  := ""
+   loop parse ScriptString, "`n", "`r" {
+      line      := A_LoopField
+         ; if no goto command on this line, record line as is
+      If (!InStr(line, "Goto", "On")) { ; Case sensitive because converter always converts to "Goto"
+         retScript .= line . "`r`n"
+         continue
+      }
+      ; has a goto on this line, make sure label name is v2 compatible
+      v1Label       := RegExReplace(line, 'i)^[^g]*goto\("([^"]+)"\).*', '$1')
+      v2LabelName   := getV2Name(v1Label)
+      retScript     .= StrReplace(line, 'Goto("' v1Label '")', 'Goto("' v2LabelName '")`r`n')
+   }
+   return RTrim(retScript, "`r`n") . happyTrails   ; add back just the trailing CRLFs that code came in with
 }
 ;################################################################################
 /**
@@ -3972,7 +4020,15 @@ UpdateGoto(ScriptString) {
 FixOnMessage(ScriptString) { ; TODO: If callback *still* isn't found, add this comment  `; V1toV2: Put callback to turn off in param 2
    if !InStr(ScriptString, Chr(1000) Chr(1000) "CallBack_Placeholder" Chr(1000) Chr(1000))
       Return ScriptString
-   FixedScript := ""
+
+   ; 2024-07-09 AMB - fix for trailing CRLF issue
+   ; capture any trailing blank lines at end of string
+   ; they will be added back prior to returning converted string
+   happyTrails := ''
+   if (RegExMatch(ScriptString, '.*(\R+)$', &m))
+      happyTrails := m[1]
+
+   retScript := ""
    loop parse ScriptString, "`n", "`r" {
       Line := A_LoopField
       for i, v in gmOnMessageMap {
@@ -3980,9 +4036,9 @@ FixOnMessage(ScriptString) { ; TODO: If callback *still* isn't found, add this c
             Line := StrReplace(Line, "ϨϨCallBack_PlaceholderϨϨ", v,, &OutputVarCount)
          }
       }
-      FixedScript .= Line "`r`n"
+      retScript .= Line "`r`n"
    }
-   Return FixedScript
+   return RTrim(retScript, "`r`n") . happyTrails   ; add back just the trailing CRLFs that code came in with
 }
 ;################################################################################
 ConvertDblQuotesAMB(&Line, eqRSide) {
@@ -4193,17 +4249,28 @@ getV2Name(v1LabelName)
 ;   return NewLabelName
 ;}
 ;################################################################################
-_getUniqueV2Name(srcName)
+_getUniqueV2Name(v1LabelName)
 {
-; 2024-07-07 AMB, ADDED - Ensures name is unique (to support v1 label to v2 func naming)
+; 2024-07-07 AMB, ADDED - Ensures name is unique (support for v1 to v2 label naming)
+; 2024-07-09 AMB, UPDATED to check existing label names also
 
-   global gAllFuncNames
-   holdName := newName := srcName
+   global gAllFuncNames, gAllV1LabelNames
+
+   holdName := newName := v1LabelName
+   ; if labelName is already being used by another label or function, change the name
    ; keep renaming until unique name is created
-   while(InStr(gAllFuncNames, newName . ",")) {
+   while(InStr(gAllFuncNames, newName . ",") || InStr(gAllV1LabelNames, newName . ",") ) {
       newName := holdName . "_" . A_Index+1
    }
-   gAllFuncNames .= newName . ","   ; add new name to global funcName list
+   ; add to labelName list if not already
+   if (!InStr(gAllV1LabelNames, newName . ",")) {
+      gAllV1LabelNames .= newName . ","
+   }
+   ; TO DO - add support for v1 to v2 function naming
+;   ; add to function list if not already
+;   if (!InStr(gAllFuncNames, newName . ",")) {
+;      gAllFuncNames .= newName . ","
+;   }
    return newName
 }
 ;################################################################################
@@ -4253,6 +4320,17 @@ _convV1LblToV2FuncName(srcStr, returnColon:=true) {
 ;   return _convV1LblToV2FuncName(LabelName . ":", returnColon:=false) ; pass a colon, but do not have it returned
 ;}
 ;################################################################################
+getV1LabelNames(&code)
+{
+   v1LabelNames := ""
+   for idx, line in StrSplit(code, "`n", "`r") {
+      if (v1Label := getV1Label(line, returnColon:=false)) {
+         v1LabelNames .= v1Label . ","
+      }
+   }
+   return v1LabelNames
+}
+;################################################################################
 getScriptLabels(code)
 {
 ; 2024-07-07 AMB, ADDED - captures all v1 labels from script...
@@ -4275,9 +4353,9 @@ getScriptLabels(code)
 ;         corrections .= "`n[ " . v1Label . " ]`t[ " . v2Name . " ]"    ; for debugging
       }
    }
-;   ; for debugging
-;   if (corrections) {
-;      MsgBox "[" corrections "]"
-;   }
+   ; for debugging
+   if (corrections) {
+ ;     MsgBox "[" corrections "]"
+   }
    return
 }

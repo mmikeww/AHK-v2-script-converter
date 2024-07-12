@@ -143,26 +143,28 @@ class NodeMap
 			; if node is a class
 			if (node.cType='CLS')
 			{
-				tag := ("tag_CLS_" pos), node.tagId := tag
+				tagChar	:= (IsSet(gTagChar)) ? gTagChar : chr(0x2605)
+				tag		:= '#TAG' tagChar '_CLS_' pos tagChar '#', node.tagId := tag
 				if ((p:=RegExMatch(code, gClassPtn, &m, pos))=pos)			; node position is known and specific
 				{
 					mCode := m[], doPreMask_remove(&mCode)					; remove premask of comments and strings
 					;node.taggedCode	:= mCode						 	; (not used)
 					node.ConvCode := _convertLines(mCode,finalize:=1)		; now convert code to v2
-					code := RegExReplace(code, "\Q" mCode "\E", tag,,1,pos)
+					code := RegExReplace(code, "\Q" m[] "\E", tag,,1,pos)
 				}
 			}
 
 			; if node is a function
 			else if (node.cType='FUNC')
 			{
-				tag := ("tag_FUNC_" pos), node.tagId := tag
+				tagChar	:= (IsSet(gTagChar)) ? gTagChar : chr(0x2605)
+				tag		:= '#TAG' tagChar '_FUNC_' pos tagChar '#', node.tagId := tag
 				if ((p:=RegExMatch(code, gFuncPtn, &m, pos))=pos)			; node position is known and specific
 				{
 					mCode := m[], doPreMask_remove(&mCode)					; remove premask of comments and strings
 					;node.taggedCode	:= mCode						 	; (not used)
 					node.ConvCode	:= _convertLines(mCode,finalize:=1)		; now convert code to v2
-					code := RegExReplace(code, "\Q" mCode "\E", tag,,1,pos)
+					code := RegExReplace(code, "\Q" m[] "\E", tag,,1,pos)
 				}
 			}
 		}

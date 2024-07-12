@@ -39,12 +39,13 @@ Before_LineConverts(&code)
 {
    ;####  Please place CALLS TO YOUR FUNCTIONS here - not boilerplate code  #####
 
-   ; must be initialized prior to entering _convertLines()
-   global gUseMasking := 1  ; 2024-06-26 - set to 0 to test without masking applied
+   ; initialize all global vars here so ALL code has access to them
+   setGlobals()
 
    ; 2024-07-09 AMB, UPDATED - for label renaming support
-   global gAllFuncNames     := getFuncNames(code)       ; comma-delim stringList of all function names
-   global gAllV1LabelNames  := getV1LabelNames(&code)   ; comma-delim stringList of all orig v1 label names
+   ; these must also be declared global here because they are being updated here
+   global gAllFuncNames    := getFuncNames(code)       ; comma-delim stringList of all function names
+   global gAllV1LabelNames := getV1LabelNames(&code)   ; comma-delim stringList of all orig v1 label names
    ; captures all v1 labels from script...
    ;  ... converts v1 names to v2 compatible...
    ;  ... and places them in gmAllLabelsV1toV2 map for easy access
@@ -52,9 +53,9 @@ Before_LineConverts(&code)
    getScriptLabels(code)
 
    ; 2024-07-02 AMB, for support of MenuBar detection
-   global gMenuBarName := getMenuBarName(code)           ; name of GUI main menubar
+   global gMenuBarName     := getMenuBarName(code)           ; name of GUI main menubar
 
-   ; turn on/off at top of script
+   ; turn masking on/off at top of SetGlobals()
    if (gUseMasking)
    {
       ; 2024-07-01 ADDED, AMB - For fix of #74
@@ -64,15 +65,14 @@ Before_LineConverts(&code)
       ; convert and mask classes and functions
       maskBlocks(&code)                                   ; see MaskCode.ahk
    }
-
-	return   ; code by reference
+   return   ; code by reference
 }
 ;################################################################################
 After_LineConverts(&code)
 {
    ;####  Please place CALLS TO YOUR FUNCTIONS here - not boilerplate code  #####
 
-   ; turn on/off at top of script
+   ; turn masking on/off at top of SetGlobals()
    if (gUseMasking)
    {
       ; remove masking from classes, functions, multiline string
@@ -82,81 +82,88 @@ After_LineConverts(&code)
    }
 
    ; inspect to see whether your code is best placed here or in FinalizeConvert()
-	; operations that must be performed last
+   ; operations that must be performed last
    FinalizeConvert(&code)                 ; perform all final operations
-	return
+   return    ; code by reference
+}
+
+;################################################################################
+setGlobals()
+{
+; 2024-07-11 AMB, ADDED dedicated function for global declarations
+;  ... so that they can be initialized prior to any other code...
+;  ... this is being done to fix a bug between global masking and onMessage handling
+;  ... and so all code within script has access to these globals prior to _convertLines() call
+
+   global gUseMasking            := 1           ; 2024-06-26 - set to 0 to test without masking applied
+   global gAllFuncNames          := ""          ; 2024-07-07 - comma-deliminated string holding the names of all functions
+   global gAllV1LabelNames       := ""          ; 2024-07-09 - comma-deliminated string holding the names of all v1 labels
+   global gmAllLabelsV1toV2      := map()       ; 2024-07-07 - map holding v1 labelNames (key) and their new v2 labelName (value)
+   global gMenuBarName           := ""          ; 2024-07-02 - holds the name of the main gui menubar
+
+   global gaScriptStrsUsed       := Array()     ; Keeps an array of interesting strings used in the script
+   global gaList_PseudoArr       := Array()     ; list of strings that should be converted from pseudoArray to Array
+   global gaList_MatchObj        := Array()     ; list of strings that should be converted from Match Object V1 to Match Object V2
+   global gaList_LblsToFuncO     := Array()     ; array of objects with the properties [label] and [parameters] that should be converted from label to Function
+   global gaList_LblsToFuncC     := Array()     ; List of labels that were converted to funcs
+   global gOrig_Line             := ""
+   global gOrig_Line_NoComment   := ""
+   global gOScriptStr            := ""          ; array of all the lines
+   global gO_Index               := 0           ; current index of the lines
+   global gIndentation           := ""
+   global gSingleIndent          := ""
+   global gGuiNameDefault        := "myGui"
+   global gGuiList               := "|"
+   global gmGuiVList             := Map()       ; Used to list all variable names defined in a Gui
+   global gGuiActiveFont         := ""
+   global gGuiControlCount       := 0
+   global gMenuList              := "|"
+   global gmMenuCBChecks         := map()       ; 2024-06-26 AMB, for fix #131
+   global gmGuiCtrlType          := map()       ; Create a map to return the type of control
+   global gmGuiCtrlObj           := map()       ; Create a map to return the object of a control
+   global gUseLastName           := False       ; Keep track of if we use the last set name in gGuiList
+   global gmOnMessageMap         := map()       ; Create a map of OnMessage listeners
+   global gNL_Func               := ""          ; _Funcs can use this to add New Previous Line
+   global gEOLComment_Func       := ""          ; _Funcs can use this to add comments at EOL
+   global gfrePostFuncMatch      := False       ; ... to know their regex matched
+   global gfNoSideEffect         := False       ; ... to not change global variables
+
+   global gLVNameDefault         := "LV"
+   global gTVNameDefault         := "TV"
+   global gSBNameDefault         := "SB"
+   global gFuncParams
+
+   global gAhkCmdsToRemove, gmAhkCmdsToConvert, gmAhkFuncsToConvert, gmAhkMethsToConvert
+         , gmAhkArrMethsToConvert, gmAhkKeywdsToRename, gmAhkLoopRegKeywds
+
 }
 ;################################################################################
 ; MAIN CONVERSION LOOP - handles each line separately
 _convertLines(ScriptString, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to accommodate masking
 ;################################################################################
 {
-   global gaScriptStrsUsed    := Array()     ; Keeps an array of interesting strings used in the script
-   gaScriptStrsUsed.ErrorLevel:= InStr(ScriptString, "ErrorLevel")
-   global gaList_PseudoArr    := Array()     ; list of strings that should be converted from pseudoArray to Array
-   global gaList_MatchObj     := Array()     ; list of strings that should be converted from Match Object V1 to Match Object V2
-   global gaList_LblsToFuncO  := Array()     ; array of objects with the properties [label] and [parameters] that should be converted from label to Function
-   global gaList_LblsToFuncC  := Array()     ; List of labels that were converted to funcs
-   global gmAltLabel          := GetAltLabelsMap(ScriptString)   ; Create a map of labels who are identical
-   global gOrig_Line
-   global gOrig_Line_NoComment
-   global gOrig_ScriptStr     := ScriptString
-   global gOScriptStr                        ; array of all the lines
-   global gO_Index            := 0           ; current index of the lines
-   global gIndentation
-   global gSingleIndent       := RegExMatch(ScriptString, "(^|[\r\n])( +|\t)", &gSingleIndent) ? gSingleIndent[2] : "    " ; First spaces or single tab found.
-   global gGuiNameDefault     := "myGui"
-   global gGuiList            := "|"
-   global gmGuiVList          := Map()       ; Used to list all variable names defined in a Gui
-   global gGuiActiveFont      := ""
-   global gGuiControlCount    := 0
-   global gMenuList           := "|"
-   global gmMenuCBChecks      := map()       ; 2024-06-26 AMB, for fix #131
-   global gmGuiCtrlType       := map()       ; Create a map to return the type of control
-   global gmGuiCtrlObj        := map()       ; Create a map to return the object of a control
-   global gUseLastName        := False       ; Keep track of if we use the last set name in gGuiList
-   global gmOnMessageMap      := map()       ; Create a map of OnMessage listeners
-   global gNL_Func            := ""          ; _Funcs can use this to add New Previous Line
-   global gEOLComment_Func    := ""          ; _Funcs can use this to add comments at EOL
-   global gfrePostFuncMatch   := False       ; ... to know their regex matched
-   global gfNoSideEffect      := False       ; ... to not change global variables
-
-   global gLVNameDefault      := "LV"
-   global gTVNameDefault      := "TV"
-   global gSBNameDefault      := "SB"
-   global gFuncParams
-
-   global gmAhkCmdsToConvert, gmAhkFuncsToConvert, gmAhkMethsToConvert
-         , gmAhkArrMethsToConvert, gmAhkKeywdsToRename, gmAhkLoopRegKeywds
+   ; 2024-07-11 AMB, Globals are now declared/initialize in SetGlobals()...
+   ;  ... so that all functions can have access to them prior to this function being called
+   ;  ... this fixes masking issue with OnMessage
+   global gmAltLabel             := GetAltLabelsMap(ScriptString)   ; Create a map of labels who are identical
+   global gOrig_Line_NoComment   := ""
+   global gOrig_ScriptStr        := ScriptString
+   global gOScriptStr            := ""             ; array of all the lines
+   global gO_Index               := 0              ; current index of the lines
+   global gIndentation           := ""
+   global gSingleIndent          := RegExMatch(ScriptString, "(^|[\r\n])( +|\t)", &gSingleIndent) ? gSingleIndent[2] : "    " ; First spaces or single tab found.
+   global gNL_Func               := ""             ; _Funcs can use this to add New Previous Line
+   global gEOLComment_Func       := ""             ; _Funcs can use this to add comments at EOL
 
    ; Splashtexton and Splashtextoff is removed, but alternative gui code is available
-   global ahkCmdsToRemove := "
-   (
-      #AllowSameLineComments
-      #CommentFlag
-      #Delimiter
-      #DerefChar
-      #EscapeChar
-      #LTrim
-      #MaxMem
-      #NoEnv
-      SetBatchLines
-      SetFormat
-      SoundGetWaveVolume
-      SoundSetWaveVolume
-      SplashImage
-      A_FormatInteger
-      A_FormatFloat
-      AutoTrim
-   )"
 
-   ScriptOutput   := ""
-   lastLine       := ""
-   InCommentBlock := false
-   InCont         := 0
-   Cont_String    := 0
-   gOScriptStr    := {}
-   gOScriptStr    := StrSplit(ScriptString, "`n", "`r")
+   ScriptOutput                  := ""
+   lastLine                      := ""
+   InCommentBlock                := false
+   InCont                        := 0
+   Cont_String                   := 0
+   gaScriptStrsUsed.ErrorLevel   := InStr(ScriptString, "ErrorLevel")
+   gOScriptStr                   := StrSplit(ScriptString, "`n", "`r")
 
    ; parse each line of the input script
    Loop
@@ -173,18 +180,18 @@ _convertLines(ScriptString, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to ac
 
       Skip := false
 
-      Line := O_Loopfield
-      gOrig_Line := Line
-      RegExMatch(Line, "^(\s*)", &gIndentation)
+      Line          := O_Loopfield
+      gOrig_Line    := Line
+      RegExMatch(Line, "^(\h*)", &gIndentation)
       gIndentation := gIndentation[1]
       ;msgbox, % "Line:`n" Line "`n`nIndentation=[" gIndentation "]`nStrLen(gIndentation)=" StrLen(gIndentation)
-      FirstChar := SubStr(Trim(Line), 1, 1)
-      FirstTwo := SubStr(LTrim(Line), 1, 2)
+      FirstChar     := SubStr(Trim(Line), 1, 1)
+      FirstTwo      := SubStr(LTrim(Line), 1, 2)
       ;msgbox, FirstChar=%FirstChar%`nFirstTwo=%FirstTwo%
-      if RegExMatch(Line, "(\s+`;.*)$", &EOLComment)
+      if RegExMatch(Line, "(\h+`;.*)$", &EOLComment)
       {
          EOLComment := EOLComment[1]
-         Line := RegExReplace(Line, "(\s+`;.*)$", "")
+         Line       := RegExReplace(Line, "(\h+`;.*)$", "")
          ;msgbox, % "Line:`n" Line "`n`nEOLComment:`n" EOLComment
       } else if (FirstChar == ";")
       {
@@ -908,7 +915,7 @@ _convertLines(ScriptString, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to ac
          ; Remove lines we can't use
       If CommandMatch = 0 && !InCommentBlock
       {
-         Loop Parse, ahkCmdsToRemove, "`n", "`r"
+         Loop Parse, gAhkCmdsToRemove, "`n", "`r"
          {
             If InStr(gOrig_Line, A_LoopField)
             {
@@ -4171,21 +4178,23 @@ addMenuCBArgs(&code) {
 
    ; add menu args to callback functions
    nCommon := '^\h*(?<fName>[_a-z]\w*)(?<fArgG>\((?<Args>(?>[^()]|\((?&Args)\))*+)'
+   m := [], declare := []
    for key, val in gmMenuCBChecks
    {
        nTargFunc := RegExReplace(gFuncPtn, 'i)\Q?<fName>[_a-z]\w*\E', key)
        if (pos := RegExMatch(code, nTargFunc, &m)) {
          nDeclare   := '(?im)' nCommon '\))(?<trail>.*)'
          nArgs      := '(?im)' nCommon '\K\)).*'
-         RegExMatch(m[], nDeclare, &declare)    ; get just declaration line
-         argList    := declare.fArgG, trail := declare.trail
-         if (instr(argList, 'A_ThisMenuItem') && instr(argList, 'A_ThisMenuItemPos') && instr(argList, 'MyMenu'))
-            continue ; skip converted labels
-         newArgs    := '(A_ThisMenuItem:="", A_ThisMenuItemPos:="", A_ThisMenu:=""' . ((m.Args='') ? ')' : ', ' SubStr(argList,2))
-         ;arg        := (argList ~= '\(\h*\)') ? '*)' : ',*)'               ; add * or place it at the end of arg list
-         ;addArgs    := RegExReplace(m[], nArgs, arg . trail,, 1)
-         addArgs    := RegExReplace(m[],  '\Q' argList '\E', newArgs,,1)    ; replace function args
-         code       := RegExReplace(code, '\Q' m[] '\E', addArgs,,, pos)    ; replace function within the code
+         if (RegExMatch(m[], nDeclare, &declare)) { ; get just declaration line
+            argList    := declare.fArgG, trail := declare.trail
+            if (instr(argList, 'A_ThisMenuItem') && instr(argList, 'A_ThisMenuItemPos') && instr(argList, 'MyMenu'))
+               continue ; skip converted labels
+            newArgs    := '(A_ThisMenuItem:="", A_ThisMenuItemPos:="", A_ThisMenu:=""' . ((m.Args='') ? ')' : ', ' SubStr(argList,2))
+            ;arg        := (argList ~= '\(\h*\)') ? '*)' : ',*)'               ; add * or place it at the end of arg list
+            ;addArgs    := RegExReplace(m[], nArgs, arg . trail,, 1)
+            addArgs    := RegExReplace(m[],  '\Q' argList '\E', newArgs,,1)    ; replace function args
+            code       := RegExReplace(code, '\Q' m[] '\E', addArgs,,, pos)    ; replace function within the code
+         }
        }
    }
    return ; code by reference
@@ -4196,19 +4205,21 @@ addOnMessageCBArgs(&code) {
 
    ; add menu args to callback functions
    nCommon := '^\h*(?<fName>[_a-z]\w*)(?<fArgG>\((?<Args>(?>[^()]|\((?&Args)\))*+)'
+   m := [], declare := []
    for key, funcName in gmOnMessageMap
    {
        nTargFunc := RegExReplace(gFuncPtn, 'i)\Q?<fName>[_a-z]\w*\E', funcName)
        if (pos := RegExMatch(code, nTargFunc, &m)) {
          nDeclare   := '(?im)' nCommon '\))(?<trail>.*)'
          nArgs      := '(?im)' nCommon '\K\)).*'
-         RegExMatch(m[], nDeclare, &declare)    ; get just declaration line
-         argList    := declare.fArgG, trail := declare.trail
-         cleanArgs  := RegExReplace(argList, '(?i)(?:\b(?:wParam|lParam|msg|hwnd)\b(\h*,\h*)?)+')
-         ;newArgs   := '(wParam:="", lParam:="", msg:="", hwnd:=""' . ((cleanArgs='()') ? ')' : ', ' SubStr(cleanArgs,2))
-         newArgs    := '(wParam, lParam, msg, hwnd' . ((cleanArgs='()') ? ')' : ', ' SubStr(cleanArgs,2))
-         addArgs    := RegExReplace(m[],  '\Q' argList '\E', newArgs,,1)    ; replace function args
-         code       := RegExReplace(code, '\Q' m[] '\E', addArgs,,, pos)    ; replace function within the code
+         if (RegExMatch(m[], nDeclare, &declare)) { ; get just declaration line
+            argList    := declare.fArgG, trail := declare.trail
+            cleanArgs  := RegExReplace(argList, '(?i)(?:\b(?:wParam|lParam|msg|hwnd)\b(\h*,\h*)?)+')
+            ;newArgs   := '(wParam:="", lParam:="", msg:="", hwnd:=""' . ((cleanArgs='()') ? ')' : ', ' SubStr(cleanArgs,2))
+            newArgs    := '(wParam, lParam, msg, hwnd' . ((cleanArgs='()') ? ')' : ', ' SubStr(cleanArgs,2))
+            addArgs    := RegExReplace(m[],  '\Q' argList '\E', newArgs,,1)    ; replace function args
+            code       := RegExReplace(code, '\Q' m[] '\E', addArgs,,, pos)    ; replace function within the code
+         }
        }
    }
    return ; code by reference

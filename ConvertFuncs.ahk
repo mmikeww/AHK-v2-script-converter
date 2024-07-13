@@ -3988,7 +3988,12 @@ UpdateGotoFunc(ScriptString)    ; the old UpdateGoto
       }
       for , v1Label in gaList_LblsToFuncC {
          v2LabelName    := getV2Name(v1Label)    ; rename to v2 compatible without conflict
-         retScript      .= StrReplace(line, 'Goto("' v1Label '")', v2LabelName "()`r`n")
+         if InStr(line, v1Label)
+            retScript      .= StrReplace(line, 'Goto("' v1Label '")', v2LabelName "()`r`n")
+         else {
+            retScript .= line . "`r`n"
+            break
+         }
       }
    }
    return RTrim(retScript, "`r`n") . happyTrails  ; add back just the trailing CRLFs that code came in with

@@ -41,7 +41,7 @@
     #Include <_GuiCtlExt>
 }
 { ;VARIABLES:
-    global icons, TestMode, TestFailing, FontSize, ViewExpectedCode, GuiWidth, GuiHeight
+    global icons, TestMode, TestFailing, FontSize, ViewExpectedCode, GuiIsMaximised, GuiWidth, GuiHeight
 
     ; TreeRoot will be the root folder for the TreeView.
     ;   Note: Loading might take a long time if an entire drive such as C:\ is specified.
@@ -51,6 +51,7 @@
     IniFile := "QuickConvertorV2.ini"
     Section := "Convertor"
     FontSize            := IniRead(IniFile, Section, "FontSize", 10)
+    GuiIsMaximised      := IniRead(IniFile, Section, "GuiIsMaximised", 1)
     GuiHeight           := IniRead(IniFile, Section, "GuiHeight", 500)
     GuiWidth            := IniRead(IniFile, Section, "GuiWidth", 800)
     GuiX                := IniRead(IniFile, Section, "GuiX", "")
@@ -562,6 +563,8 @@ Gui_Size(thisGui, MinMax, Width, Height)  ; Expand/Shrink ListView and TreeView 
     DllCall("LockWindowUpdate", "Uint",0)
     thisGui.GetPos(&GuiX,&GuiY)
     thisGui.GetClientPos(,,&GuiW,&GuiH)
+    GuiIsMaximised := WinGetMinMax(thisGui.title)
+    IniWrite(GuiIsMaximised, "QuickConvertorV2.ini", "Convertor", "GuiIsMaximised")
     IniWrite(GuiW, "QuickConvertorV2.ini", "Convertor", "GuiWidth")
     IniWrite(GuiH, "QuickConvertorV2.ini", "Convertor", "GuiHeight")
     IniWrite(GuiX, "QuickConvertorV2.ini", "Convertor", "GuiX")
@@ -577,6 +580,8 @@ Gui_Close(thisGui){
     FileAppend(V1Edit.Text,FileTempScript)
     thisGui.GetPos(&GuiX,&GuiY)
     thisGui.GetClientPos(,,&GuiW,&GuiH)
+    GuiIsMaximised := WinGetMinMax(thisGui.title)
+    IniWrite(GuiIsMaximised, "QuickConvertorV2.ini", "Convertor", "GuiIsMaximised")
     IniWrite(GuiW, "QuickConvertorV2.ini", "Convertor", "GuiWidth")
     IniWrite(GuiH, "QuickConvertorV2.ini", "Convertor", "GuiHeight")
     IniWrite(GuiX, "QuickConvertorV2.ini", "Convertor", "GuiX")
@@ -613,7 +618,7 @@ GuiTest(strV1Script:="")
     SB.SetParts(300, 300, 300)  ; Create four parts in the bar (the fourth part fills all the remaining width).
 
     ; Add folders and their subfolders to the tree. Display the status in case loading takes a long time:
-    M := Gui("ToolWindow -SysMenu Disabled AlwaysOnTop", "Loading the tree..."), M.Show("y100 w200 h0")
+    M := Gui("ToolWindow -SysMenu Disabled AlwaysOnTop", "Loading the tree..."), M.Show("w200 h0")
 
     if TestFailing and TestMode{
         DirList := AddSubFoldersToTree(A_ScriptDir "/tests", Map())
@@ -756,9 +761,13 @@ GuiTest(strV1Script:="")
     GuiYOpt := (GuiY!="") ? " y" ((GuiY<0) ? 0 : (GuiY+GuiHeight>SysGet(79)) ? SysGet(79)-GuiHeight : GuiY) : ""
 
     ; Display the window. The OS will notify the script whenever the user performs an eligible action:
-;    MyGui.Show("h" GuiHeight " w" GuiWidth GuiXOpt GuiYOpt)
-    iniH := A_ScreenHeight-150, iniW := A_ScreenWidth - 100     ; 2024-07-02 prevent controls from being being clipped at screen edges
-    MyGui.Show("h" iniH " w" iniW GuiXOpt GuiYOpt " maximize")
+    GuiMaximise := GuiIsMaximised ? " maximize" : ""
+    MyGui.Show("h" GuiHeight " w" GuiWidth GuiXOpt GuiYOpt GuiMaximise)
+
+    ; 2024-07-02 prevent controls from being being clipped at screen edges
+    ; If you experience screen clipping uncomment below
+    ;iniH := A_ScreenHeight-150, iniW := A_ScreenWidth - 100
+    ;MyGui.Show("h" iniH " w" iniW GuiXOpt GuiYOpt GuiMaximise)
     sleep(500)
     UserClicked := true
 
@@ -1152,6 +1161,8 @@ On_WM_MOVE(wParam, lParam, msg, hwnd){
         if (thisGui.title = "Quick Convertor V2"){
             thisGui.GetPos(&GuiX,&GuiY)
             thisGui.GetClientPos(,,&GuiW,&GuiH)
+            GuiIsMaximised := WinGetMinMax(thisGui.title)
+            IniWrite(GuiIsMaximised, "QuickConvertorV2.ini", "Convertor", "GuiIsMaximised")
             IniWrite(GuiW, "QuickConvertorV2.ini", "Convertor", "GuiWidth")
             IniWrite(GuiH, "QuickConvertorV2.ini", "Convertor", "GuiHeight")
             IniWrite(GuiX, "QuickConvertorV2.ini", "Convertor", "GuiX")

@@ -138,12 +138,14 @@
    ; 2024-07-01, ADDED, AMB - ensure source file has CRLF (no LF terminators)
    ;    this is to avoid read issue by VisualDiff
    ; create new v1 source file that guarantees CRLF terminators
-   SplitPath(FN, &FName, &dir, &ext, &FnNoExt, &drv)
-   unique       := FormatTime(A_Now, 'MMddHHmmss')
-   newPath      := dir "\" FnNoExt "_AHKv1v2_" unique "." ext
+   SplitPath(FNOut,, &dir)                                          ; get output directory
+   SplitPath(FN,,, &ext, &FnNoExt)                                  ; get original source fileName and extension
+   unique       := FormatTime(, 'MMddHHmmss')                       ; Remove A_Now - for fix #250
+   unique       := RegExReplace(unique, '\D*')                      ; remove any chars that are not digits - Fix #250
+   tempPath     := dir "\" FnNoExt "_AHKv1v2_" unique "." ext       ; create path for temp file
    tempRead     := FileRead(FN)                                     ; read orignal source file
    tempRead     := RegExReplace(tempRead, '(?m)(?<!\r)\n', '`r`n')  ; convert any LF to CRLF
-   FN           := newPath                                          ; ensure VisualDiff knows about new source file
+   FN           := tempPath                                         ; ensure VisualDiff knows about new source file
 
    inscript     := tempRead ;FileRead(FN)
    outscript    := Convert(inscript)
@@ -156,7 +158,10 @@
    MyMsg        .= "Would you like to see the changes made?"
    result       := MsgBox(MyMsg,"", 68)
    if (result = "Yes") {
-      FileAppend(tempRead, newPath)     ; save CRLF temp file for VisualDiff read
+      tempfile  := FileOpen(tempPath, "w", "utf-8")
+      tempfile.Write(tempRead)                                      ; changed from FileAppend (for consistancy)
+      tempfile.Close()
+;      FileAppend(tempRead, tempPath)                                ; save CRLF temp file for VisualDiff read
       Sleep(1000)
       Run("diff\VisualDiff.exe diff\VisualDiff.ahk `"" . FN . "`" `"" . FNOut . "`"")
    }

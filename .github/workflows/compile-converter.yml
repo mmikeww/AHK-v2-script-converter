@@ -1,0 +1,28 @@
+name: Build Binary and release
+
+on: # Only run when a release is created
+  push:
+    tags:
+      - '*'
+
+permissions:
+  contents: write
+
+jobs:
+  BuildAndRelease:
+    name: Build and Release
+    runs-on: windows-latest
+    steps:
+      - name: Checkout # Get repository
+        uses: actions/checkout@v2
+
+      - name: Ahk2Exe # Build binary
+        id: ahk2exe
+        uses: CCCC-L/Action-Ahk2Exe@main
+        with:
+          in: QuickConvertorV2.ahk # TODO: v2converter.ahk
+          
+      - name: Release # Upload binary to most recent release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: QuickConvertorV2.exe

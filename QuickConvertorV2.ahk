@@ -39,6 +39,11 @@
 { ;INCLUDES:
     #Include ConvertFuncs.ahk
     #Include <_GuiCtlExt>
+    DirCreate(A_ScriptDir "\AutoHotKey Exe")
+    if !FileExist(A_ScriptDir "\AutoHotKey Exe\AutoHotkeyV1.exe")
+        FileInstall(".\AutoHotKey Exe\AutoHotkeyV1.exe", A_ScriptDir "\AutoHotKey Exe\AutoHotkeyV1.exe")
+    if !FileExist(A_ScriptDir "\AutoHotKey Exe\AutoHotkeyV2.exe")
+        FileInstall(".\AutoHotKey Exe\AutoHotkeyV2.exe", A_ScriptDir "\AutoHotKey Exe\AutoHotkeyV2.exe")
 }
 { ;VARIABLES:
     global icons, TestMode, TestFailing, FontSize, ViewExpectedCode, GuiIsMaximised, GuiWidth, GuiHeight
@@ -72,7 +77,7 @@
     {
       case 0:  ;IF NO ARGUMENTS THEN LOOK UP SOURCE FILE AND USE DEFAULT OUTPUT FILE
       {
-         FileTempScript := A_ScriptDir "\Tests\TempScript.ah1"
+         FileTempScript := A_IsCompiled ? A_ScriptDir "\TempScript.ah1" : A_ScriptDir "\Tests\TempScript.ah1"
       }
       case 1: ;IF ONE ARGUMENT THEN ASSUME THE ARUGMENT IS THE SOURCE FILE (FN) AND USE DEFAULT OUTPUT FILE
       {
@@ -281,6 +286,10 @@ CloseV2E(*)
 }
 CompDiffV2(*)
 {
+    if A_IsCompiled { ; TODO: This should be removed
+        MsgBox("Not available on compiled version, please download repository or use an online tool", "Diffing not available", 0x30)
+        Return
+    }
     if (CheckBoxViewSymbols.Value){
         MenuShowSymols()
     }
@@ -573,7 +582,7 @@ Gui_Size(thisGui, MinMax, Width, Height)  ; Expand/Shrink ListView and TreeView 
 }
 
 Gui_Close(thisGui){
-    FileTempScript := A_ScriptDir "\Tests\TempScript.ah1"
+    FileTempScript := A_IsCompiled ? A_ScriptDir "\TempScript.ah1" : A_ScriptDir "\Tests\TempScript.ah1"
     if (FileExist(FileTempScript)){
         FileDelete(FileTempScript)
     }
@@ -715,8 +724,12 @@ GuiTest(strV1Script:="")
     ; MyGui.OnEvent("Escape", (*) => ExitApp())
 
     FileMenu := Menu()
-    FileMenu.Add "Run Yunit tests", (*) => Run('"' A_ScriptDir "\AutoHotKey Exe\AutoHotkeyV2.exe" '" "' A_ScriptDir '\Tests\Tests.ahk"')
-    FileMenu.Add "Open test folder", (*) => Run(TreeRoot)
+    if !A_IsCompiled {
+        FileMenu.Add "Run Yunit tests", (*) => Run('"' A_ScriptDir "\AutoHotKey Exe\AutoHotkeyV2.exe" '" "' A_ScriptDir '\Tests\Tests.ahk"')
+        FileMenu.Add "Open test folder", (*) => Run(TreeRoot)
+    } else {
+        FileMenu.Add "Delete all temp files", FileDeleteTemp
+    }
     FileMenu.Add()
     FileMenu.Add( "E&xit", (*) => ExitApp())
     SettingsMenu := Menu()
@@ -742,7 +755,8 @@ GuiTest(strV1Script:="")
     HelpMenu.Add("Open Github", (*)=>Run("https://github.com/mmikeww/AHK-v2-script-converter"))
     Menus := MenuBar()
     Menus.Add("&File", FileMenu)  ; Attach the two submenus that were created above.
-    Menus.Add("&Settings", SettingsMenu)
+    if !A_IsCompiled
+        Menus.Add("&Settings", SettingsMenu)
     Menus.Add("&View", ViewMenu)
     Menus.Add( "&Reload", (*) => (Gui_Close(MyGui),Reload()))
     Menus.Add( "Test", TestMenu)
@@ -840,6 +854,12 @@ MenuShowSymols(*)
     ViewMenu.ToggleCheck("Show Symols")
     CheckBoxViewSymbols.Value := !CheckBoxViewSymbols.Value
     ViewSymbols()
+}
+FileDeleteTemp(*)
+{
+    try DirDelete(A_ScriptDir "\AutoHotKey Exe", true)
+    try FileDelete("TempScript.ah1")
+    ExitApp
 }
 MenuTestMode(*)
 {
@@ -1110,7 +1130,7 @@ XButton1::
 }
 XButton2::
 {
-    FileTempScript := A_ScriptDir "\Tests\TempScript.ah1"
+    FileTempScript := A_IsCompiled ? A_ScriptDir "\TempScript.ah1" : A_ScriptDir "\Tests\TempScript.ah1"
     if (FileExist(FileTempScript)){
         FileDelete(FileTempScript)
     }

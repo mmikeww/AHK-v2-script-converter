@@ -2944,6 +2944,8 @@ _StringMid(p) {
       return format("{1} := SubStr({2}, {3})", p*)
    else if IsEmpty(p[5])
       return format("{1} := SubStr({2}, {3}, {4})", p*)
+   else if IsEmpty(p[4]) && SubStr(p[5], 2, 1) = "L"
+      return Format("{1} := SubStr({2}, 1, {3})", p*)
    else
    {
       ;msgbox, % p[5] "`n" SubStr(p[5], 1, 2)

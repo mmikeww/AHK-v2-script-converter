@@ -65,6 +65,7 @@ Before_LineConverts(&code)
       ; convert and mask classes and functions
       maskBlocks(&code)                                   ; see MaskCode.ahk
    }
+
    return   ; code by reference
 }
 ;################################################################################
@@ -84,6 +85,7 @@ After_LineConverts(&code)
    ; inspect to see whether your code is best placed here or in FinalizeConvert()
    ; operations that must be performed last
    FinalizeConvert(&code)                 ; perform all final operations
+
    return    ; code by reference
 }
 
@@ -96,10 +98,10 @@ setGlobals()
 ;  ... and so all code within script has access to these globals prior to _convertLines() call
 
    global gUseMasking            := 1           ; 2024-06-26 - set to 0 to test without masking applied
-   global gAllFuncNames          := ""          ; 2024-07-07 - comma-deliminated string holding the names of all functions
-   global gAllV1LabelNames       := ""          ; 2024-07-09 - comma-deliminated string holding the names of all v1 labels
-   global gmAllLabelsV1toV2      := map()       ; 2024-07-07 - map holding v1 labelNames (key) and their new v2 labelName (value)
    global gMenuBarName           := ""          ; 2024-07-02 - holds the name of the main gui menubar
+   global gAllFuncNames          := ""          ; 2024-07-07 - comma-deliminated string holding the names of all functions
+   global gmAllLabelsV1toV2      := map()       ; 2024-07-07 - map holding v1 labelNames (key) and their new v2 labelName (value)
+   global gAllV1LabelNames       := ""          ; 2024-07-09 - comma-deliminated string holding the names of all v1 labels
 
    global gaScriptStrsUsed       := Array()     ; Keeps an array of interesting strings used in the script
    global gaList_PseudoArr       := Array()     ; list of strings that should be converted from pseudoArray to Array
@@ -127,11 +129,10 @@ setGlobals()
    global gEOLComment_Func       := ""          ; _Funcs can use this to add comments at EOL
    global gfrePostFuncMatch      := False       ; ... to know their regex matched
    global gfNoSideEffect         := False       ; ... to not change global variables
-
    global gLVNameDefault         := "LV"
    global gTVNameDefault         := "TV"
    global gSBNameDefault         := "SB"
-   global gFuncParams
+   global gFuncParams            := ""
 
    global gAhkCmdsToRemove, gmAhkCmdsToConvert, gmAhkFuncsToConvert, gmAhkMethsToConvert
          , gmAhkArrMethsToConvert, gmAhkKeywdsToRename, gmAhkLoopRegKeywds
@@ -144,18 +145,17 @@ _convertLines(ScriptString, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to ac
 {
    ; 2024-07-11 AMB, Globals are now declared/initialize in SetGlobals()...
    ;  ... so that all functions can have access to them prior to this function being called
-   ;  ... this fixes masking issue with OnMessage
-   global gmAltLabel             := GetAltLabelsMap(ScriptString)   ; Create a map of labels who are identical
-   global gOrig_Line_NoComment   := ""
+   ;  ... moving them fixes masking issue with OnMessage
+   global gmAltLabel             := GetAltLabelsMap(ScriptString)       ; Create a map of labels who are identical
    global gOrig_ScriptStr        := ScriptString
-   global gOScriptStr            := ""             ; array of all the lines
-   global gO_Index               := 0              ; current index of the lines
+   global gOrig_Line_NoComment   := ""
+   global gOScriptStr            := StrSplit(ScriptString, "`n", "`r")  ; array for all the lines
+   global gO_Index               := 0                                   ; current index of the lines
    global gIndentation           := ""
-   global gSingleIndent          := RegExMatch(ScriptString, "(^|[\r\n])( +|\t)", &gSingleIndent) ? gSingleIndent[2] : "    " ; First spaces or single tab found.
-   global gNL_Func               := ""             ; _Funcs can use this to add New Previous Line
-   global gEOLComment_Func       := ""             ; _Funcs can use this to add comments at EOL
-
-   ; Splashtexton and Splashtextoff is removed, but alternative gui code is available
+   global gSingleIndent          := (RegExMatch(ScriptString, "(^|[\r\n])( +|\t)", &ws)) ? ws[2] : "    " ; First spaces or single tab found
+   global gNL_Func               := ""                                  ; _Funcs can use this to add New Previous Line
+   global gEOLComment_Func       := ""                                  ; _Funcs can use this to add comments at EOL
+   global gaScriptStrsUsed
 
    ScriptOutput                  := ""
    lastLine                      := ""
@@ -163,7 +163,6 @@ _convertLines(ScriptString, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to ac
    InCont                        := 0
    Cont_String                   := 0
    gaScriptStrsUsed.ErrorLevel   := InStr(ScriptString, "ErrorLevel")
-   gOScriptStr                   := StrSplit(ScriptString, "`n", "`r")
 
    ; parse each line of the input script
    Loop
@@ -402,7 +401,7 @@ _convertLines(ScriptString, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to ac
          If (!RegexMatch(Line, "\h*\w+(\((?>[^)(]+|(?-1))*\))")) ; not a func
          {
             Line := Equation[1], val := Equation[2]
-            ConvertDblQuotesAMB(&Line, val)
+            ConvertDblQuotes2(&Line, val)
          }
          else if (InStr(RegExReplace(Line, "\w*(\((?>[^)(]+|(?-1))*\))"), '""'))
          {
@@ -414,7 +413,7 @@ _convertLines(ScriptString, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to ac
                funcArray.push(match[])
                val := StrReplace(val, match[], Chr(1000) "FUNC_" funcArray.Length Chr(1000),,, 1)
             }
-            ConvertDblQuotesAMB(&Line, val)
+            ConvertDblQuotes2(&Line, val)
             for i, v in funcArray {
                Line := StrReplace(Line, Chr(1000) "FUNC_" i Chr(1000), v)
             }
@@ -3991,11 +3990,12 @@ UpdateGotoFunc(ScriptString)    ; the old UpdateGoto
       for , v1Label in gaList_LblsToFuncC {
          v2LabelName    := getV2Name(v1Label)    ; rename to v2 compatible without conflict
          if InStr(line, v1Label)
-            retScript      .= StrReplace(line, 'Goto("' v1Label '")', v2LabelName "()`r`n")
+            retScript   .= StrReplace(line, 'Goto("' v1Label '")', v2LabelName "()`r`n")
          else {
-            retScript .= line . "`r`n"
+            retScript   .= line . "`r`n"
             break
          }
+;         retScript      .= StrReplace(line, 'Goto("' v1Label '")', v2LabelName "()`r`n")
       }
    }
    return RTrim(retScript, "`r`n") . happyTrails  ; add back just the trailing CRLFs that code came in with
@@ -4055,7 +4055,7 @@ FixOnMessage(ScriptString) { ; TODO: If callback *still* isn't found, add this c
    return RTrim(retScript, "`r`n") . happyTrails   ; add back just the trailing CRLFs that code came in with
 }
 ;################################################################################
-ConvertDblQuotesAMB(&Line, eqRSide) {
+ConvertDblQuotes2(&Line, eqRSide) {
 ; 2024-06-13 andymbody - ADDED/CHANGED
 ; provides conversion of double quotes (multiple styles)
 
@@ -4067,16 +4067,16 @@ ConvertDblQuotesAMB(&Line, eqRSide) {
       m := []
       while (pos := RegexMatch(eqRSide, '"``""', &m)) {
          masks.push(m[])
-         eqRSide := StrReplace(eqRSide, m[], Chr(1000) "Q_" masks.Length Chr(1000),,, 1)
+         eqRSide := StrReplace(eqRSide, m[], Chr(0x2605) "Q_" masks.Length Chr(0x2605),,, 1)
       }
 
-   ; escaped quotes within a string ("" to `")
+   ; escaped quotes within a string ("" to `" and """ to `"")
       eqRSide := ConvertEscapedQuotesInStr(eqRSide)
       ; mask temporarily to avoid conflicts with other conversions below
       m := []
-      while (pos := RegexMatch(eqRSide, '"``""', &m)) {
+      while (pos := RegexMatch(eqRSide, '``""?+', &m)) {
          masks.push(m[])
-         eqRSide := StrReplace(eqRSide, m[], Chr(1000) "Q_" masks.Length Chr(1000),,, 1)
+         eqRSide := StrReplace(eqRSide, m[], Chr(0x2605) "Q_" masks.Length Chr(0x2605),,, 1)
       }
 
    ; forced quotes around char-string
@@ -4084,7 +4084,7 @@ ConvertDblQuotesAMB(&Line, eqRSide) {
 
    ; remove masks
       for i, v in masks
-         eqRSide := StrReplace(eqRSide, Chr(1000) "Q_" i Chr(1000), v)
+         eqRSide := StrReplace(eqRSide, Chr(0x2605) "Q_" i Chr(0x2605), v)
 
    ; update line with conversion
    line .= eqRSide
@@ -4092,32 +4092,41 @@ ConvertDblQuotesAMB(&Line, eqRSide) {
 }
 ;################################################################################
 ConvertEscapedQuotesInStr(srcStr) {
-; 2024-06-13 andymbody - ADDED
-; convert each double quote found in srcStr ("" to `")
+; 2024-06-13 AMB - ADDED
+; 2024-07-15 AMB - UPDATED to fix issue 253
+; escaped quotes within a string ("" to `" and """ to `"")
 
-   pos := 1, tempStr := ""
-   while (pos := RegExMatch(srcStr, '(?<!")"([^"\v]+""[^"\v]+)+"(?!")', &m, pos))
+   retStr := '', idx := 1, inStrg := 0
+   Loop
    {
-      srcLen := StrLen(srcStr), curLen := StrLen(tempStr)
-      ; add any chars that are to the left of the match
-      if (curLen=0)
-         tempStr .= SubStr(srcStr, 1, pos-1)
-      ; add any chars that are between matches
-      if ((curLen > 0) && (curLen < srcLen))
-         tempStr .= SubStr(srcStr, curLen+1, (pos-curLen)-1)
-      ; convert each "" to `"
-      qSplit := StrSplit(m[], '""')   ; makes separation easy
-      for i, v in qSplit
-         tempStr .= ((A_Index=1) ? '' : '``"') . v
-      ; set new search position (in case there is more than one string on line)
-      pos += m.len
+      ; if reached end of string, exit loop
+      if (idx>StrLen(srcStr))
+         break
+
+      curChar := SubStr(srcStr, idx, 1)     ; get next character
+
+      ; if reached a DQ and not already in a quoted string, flag now in quoted string
+      if (curChar='"' && !inStrg) {
+         inStrg := 1, retStr .= curChar, idx++
+      }
+      ; if reached a DQ and already in a quoted string, check for 3 DQs, convert if found, and flag close quoted string
+      else if (curChar='"' && inStrg && subStr(srcStr, idx, 3) = '"""') {
+         inStrg := 0, retStr .= '``""', idx+=3
+      }
+      ; if reached a DQ and already in a quoted string, check for 2 DQs, convert if found
+      else if (curChar='"' && inStrg && subStr(srcStr, idx, 2) = '""') {
+         inStrg := 1, retStr .= '``"', idx+=2
+      }
+      ; if reached a DQ and already in a quoted string, and none of the above are true, this should be the closing DQ
+      else if (curChar='"' && inStrg) {
+         inStrg := 0, retStr .= '"', idx++
+      }
+      ; if not a DQ, just add char to return string
+      else {
+         retStr .= curChar, idx++
+      }
    }
-
-   ; add any trailing chars
-   srcLen := StrLen(srcStr), curLen := StrLen(tempStr)
-   tempStr .= SubStr(srcStr, curLen+1, (srcLen-curLen)+1)
-
-   return (tempStr) ? tempStr : srcStr
+   return retStr
 }
 ;################################################################################
 RemoveNewKeyword(line) {

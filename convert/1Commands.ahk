@@ -40,6 +40,7 @@
     - use asterisk * and a function name to call, for custom processing when the params dont directly match up
 */
 
+; SplashTextOn and SplashTextOff are removed, but alternative gui code is available
 global gAhkCmdsToRemove := "
    (
       #AllowSameLineComments

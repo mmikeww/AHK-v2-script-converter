@@ -940,7 +940,7 @@ _convertLines(ScriptString, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to ac
       If Skip
       {
          ;msgbox Skipping`n%Line%
-         Line := format("; REMOVED: {1}", Line)
+         Line := format("; V1toV2: Removed {1}", Line)
       }
 
       Line := PreLine Line
@@ -1917,7 +1917,7 @@ _GuiControl(p) {
          PreSelected := ""
          If (SubStr(Value, 1, 1) = "|") {
             Value := SubStr(Value, 2)
-            Out .= ControlObject ".Delete() `;Clean the list`r`n" gIndentation
+            Out .= ControlObject ".Delete() `; V1toV2: Clean the list`r`n" gIndentation
          }
          ObjectValue := "["
          Loop Parse Value, "|", " "
@@ -1941,7 +1941,7 @@ _GuiControl(p) {
          PreSelected := ""
          If (SubStr(Value, 1, 1) = "|") {
             Value := SubStr(Value, 2)
-            Out .= ControlObject ".Delete() `;Clean the list`r`n" gIndentation
+            Out .= ControlObject ".Delete() `; V1toV2: Clean the list`r`n" gIndentation
          }
          ObjectValue := "["
          Loop Parse Value, "|", " "
@@ -1974,7 +1974,7 @@ _GuiControl(p) {
          PreSelected := ""
          If (SubStr(Value, 1, 1) = "|") {
             Value := SubStr(Value, 2)
-            Out .= ControlObject ".Delete() `;Clean the list`r`n" gIndentation
+            Out .= ControlObject ".Delete() `; V1toV2: Clean the list`r`n" gIndentation
          }
          ObjectValue := "["
          Loop Parse Value, "|", " "
@@ -2084,10 +2084,10 @@ _GuiControlGet(p) {
       Out := ControlObject ".GetPos(&" OutputVar "X, &" OutputVar "Y, &" OutputVar "W, &" OutputVar "H)"
    } else if (SubCommand = "Focus") {
       ; not correct
-      Out := "; " OutputVar " := ControlGetFocus() `; Not really the same, this returns the HWND..."
+      Out := "; " OutputVar " := ControlGetFocus() `; V1toV2: Not really the same, this returns the HWND..."
    } else if (SubCommand = "FocusV") {
       ; not correct MyGui.FocusedCtrl
-      Out := "; " OutputVar " := " GuiName ".FocusedCtrl `; Not really the same, this returns the focused gui control object..."
+      Out := "; " OutputVar " := " GuiName ".FocusedCtrl `; V1toV2: Not really the same, this returns the focused gui control object..."
    } else if (SubCommand = "Enabled") {
       Out := OutputVar " := " ControlObject ".Enabled"
    } else if (SubCommand = "Visible") {
@@ -2669,7 +2669,7 @@ _SoundGet(p) {
    } else if (ComponentType = "mute") {
       out := Format("{1} := SoundGetMute({2}, {4})", p*)
    } else {
-      out := Format(";REMOVED CV2 {1} := SoundGet{3}({2}, {4})", p*)
+      out := Format("; V1toV2: REMOVED CV2 {1} := SoundGet{3}({2}, {4})", p*)
    }
    Return RegExReplace(Out, "[\s\,]*\)$", ")")
 }
@@ -2691,7 +2691,7 @@ _SoundSet(p) {
       p[1] := InStr(p[1], "+") ? "`"" p[1] "`"" : p[1]
       out := Format("SoundSetVolume({1}, {2}, {4})", p*)
    } else {
-      out := Format(";REMOVED CV2 Soundset{3}({1}, {2}, {4})", p*)
+      out := Format("; V1toV2: REMOVED CV2 Soundset{3}({1}, {2}, {4})", p*)
    }
    Return RegExReplace(Out, "[\s\,]*\)$", ")")
 }
@@ -2799,7 +2799,7 @@ _Progress(p) {
 _Random(p) {
    ; v1: Random, OutputVar, Min, Max
    if (p[1] = "") {
-      Return "; REMOVED Random reseed"
+      Return "; V1toV2: Removed Random reseed"
    }
    Out := format("{1} := Random({2}, {3})", p*)
    Return RegExReplace(Out, "[\s\,]*\)$", ")")
@@ -2969,7 +2969,7 @@ _StringReplace(p) {
    ; v2
    ; ReplacedStr := StrReplace(Haystack, Needle [, ReplaceText, CaseSense, OutputVarCount, Limit])
    global gIndentation, gSingleIndent
-   comment := "; StrReplace() is not case sensitive`r`n" gIndentation "; check for StringCaseSense in v1 source script`r`n"
+   comment := "; V1toV2: StrReplace() is not case sensitive`r`n" gIndentation "; check for StringCaseSense in v1 source script`r`n"
    comment .= gIndentation "; and change the CaseSense param in StrReplace() if necessary`r`n"
 
    if IsEmpty(p[4]) && IsEmpty(p[5])
@@ -3068,7 +3068,7 @@ _Transform(p) {
    if (p[2] ~= "i)^(BitShiftRight)") {
       Return format("{1} := {3}>>{4}", p*)
    }
-   Return format("; Removed : Transform({1}, {2}, {3}, {4})", p*)
+   Return format("; V1toV2: Removed : Transform({1}, {2}, {3}, {4})", p*)
 }
 ;################################################################################
 _WinGetActiveStats(p) {
@@ -3214,7 +3214,7 @@ _HashtagWarn(p) {
    Out := "#Warn "
    if (p[1] != "") {
       if (p[1] ~= "^((Use(Env|Unset(Local|Global)))|ClassOverwrite)$") { ; UseUnsetLocal, UseUnsetGlobal, UseEnv, ClassOverwrite
-         Out := "; REMOVED: " Out p[1]
+         Out := "; V1toV2: Removed " Out p[1]
          if p[2] != ""
             Out .= ", " p[2]
          Return Out
@@ -3803,7 +3803,7 @@ ConvertLabel2Func(ScriptString, Label, Parameters := "", NewFunctionName := "", 
    ; 2024-06-13 AMB - part of fix #193
    result := RTrim(result, '`r`n')   ; first trim all blank lines from end of string
    if (LabelPointer = 1) {
-      Result .= "`r`n} `; Added bracket in the end"     ; edited
+      Result .= "`r`n} `; V1toV2: Added bracket in the end"     ; edited
    }
    result .= happyTrails    ; add ONLY original trailing blank lines back
 
@@ -3840,7 +3840,7 @@ AddBracket(ScriptString) {
          if (HotkeyPointer = 1) {
             if RegExMatch(RestString, "is)^\s*([\w]+?\([^\)]*\)[\s\n\r]*(`;[^\r\n]*|)([\s\n\r]*){).*") {   ; Function declaration detection
                ; not bulletproof perfect, but a start
-               Result .= "} `; Added bracket before function`r`n"
+               Result .= "} `; V1toV2: Added bracket before function`r`n"
                HotkeyPointer := 0
             }
          }

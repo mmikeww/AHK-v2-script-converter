@@ -30,4 +30,4 @@ GuiClose(*)  ; Indicate that the script should exit automatically when the windo
 { ; V1toV2: Added bracket
 global ; V1toV2: Made function global
 ExitApp()
-} ; Added bracket in the end
+} ; V1toV2: Added bracket in the end

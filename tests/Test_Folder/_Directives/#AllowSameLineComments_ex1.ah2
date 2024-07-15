@@ -1,1 +1,1 @@
-; REMOVED: #AllowSameLineComments
+; V1toV2: Removed #AllowSameLineComments

@@ -25,4 +25,4 @@ Exit(A_GuiEvent := "", GuiCtrlObj := "", Info := "", *)
 { ; V1toV2: Added bracket
 global ; V1toV2: Made function global
 ExitApp()
-} ; Added bracket in the end
+} ; V1toV2: Added bracket in the end

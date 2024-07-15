@@ -1,1 +1,1 @@
-; REMOVED: #EscapeChar NewChar
+; V1toV2: Removed #EscapeChar NewChar

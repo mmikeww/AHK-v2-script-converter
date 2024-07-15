@@ -28,7 +28,7 @@ global ; V1toV2: Made function global
 MsgBox("hotkey pressed")
 Init_Vars()
 Return
-} ; Added bracket before function
+} ; V1toV2: Added bracket before function
 
 Init_Vars_3()
 { ; V1toV2: Added bracket

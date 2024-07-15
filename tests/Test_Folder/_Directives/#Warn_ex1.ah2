@@ -1,13 +1,13 @@
-; REMOVED: #Warn UseUnsetGlobal
+; V1toV2: Removed #Warn UseUnsetGlobal
 x := y
 MsgBox(x)
 
-; REMOVED: #Warn UseEnv
+; V1toV2: Removed #Warn UseEnv
 temp := ""
 MsgBox(temp)
 
 
-; REMOVED: #Warn ClassOverwrite
+; V1toV2: Removed #Warn ClassOverwrite
 class MyClass {
     prop := "Hello, I am a class property."
 }

@@ -1767,7 +1767,7 @@ class ConvertTests
          )"
       expected := "
          (Join`r`n
-                                 ; REMOVED: #NoEnv
+                                 ; V1toV2: Removed #NoEnv
                                  FileAppend("hi", "*")
          )"
       ; first test that our expected code actually produces the same results in v2
@@ -1793,7 +1793,7 @@ class ConvertTests
          )"
       expected := "
          (Join`r`n
-                                 ; REMOVED: SetFormat, integerfast, H
+                                 ; V1toV2: Removed SetFormat, integerfast, H
                                  FileAppend("hi", "*")
          )"
       ; first test that our expected code actually produces the same results in v2
@@ -3120,7 +3120,7 @@ class ConvertTests
       expected := "
          (Join`r`n
                                  var := "1"
-                                 ; REMOVED:    #NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
+                                 ; V1toV2: Removed    #NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
          )"
       ; first test that our expected code actually produces the same results in v2
       if (this.test_exec = true) {

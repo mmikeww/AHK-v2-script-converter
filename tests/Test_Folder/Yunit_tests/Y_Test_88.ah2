@@ -1,2 +1,2 @@
 var := "1"
-; REMOVED:    #NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
+; V1toV2: Removed    #NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.

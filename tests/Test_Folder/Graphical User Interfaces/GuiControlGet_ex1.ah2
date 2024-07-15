@@ -15,4 +15,4 @@ If (_Type = 1) {
 } else {
   MsgBox("You Selected Option 2")
 }
-} ; Added bracket in the end
+} ; V1toV2: Added bracket in the end

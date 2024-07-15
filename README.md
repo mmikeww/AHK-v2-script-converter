@@ -26,6 +26,13 @@ However, this project is way more ambitious that I originally thought, and __it 
 3. Look over the Visual Diff to manually inspect the changes
 ![screenshot](https://github.com/mmikeww/AHK-v2-script-converter/blob/master/images/screenshot.jpg)
 
+## Post conversion
+If you find that the script does not work, please go through the troubleshooting steps below
+1. Review all comments, they are prefixed with `; V1toV2: ` and can provide fixes on code that the converter can't handle
+2. Check [issues](https://github.com/mmikeww/AHK-v2-script-converter/issues), if others users have experienced this issue we create potential fixes before we implement it.
+3. If nobody has experienced your issue, [create a new one](https://github.com/mmikeww/AHK-v2-script-converter/issues/new/choose)
+4. Finally ask for help! Either on the [discussions page](https://github.com/mmikeww/AHK-v2-script-converter/discussions/categories/q-a-conversion-help) or at [AHK forums](https://www.autohotkey.com/boards/viewforum.php?f=82)
+
 ## Note
 The `AutoHotKey Exe\AutoHotKeyV2.exe` file (as well as the `tests\Tests.exe` file) is simply a renamed copy of the `AutoHotkey32.exe` (v2.0.11) interpreter file. The interpreter alone does nothing without passing a script to it. But here, we take advantage of the [default scriptfile feature](https://lexikos.github.io/v2/docs/Scripts.htm#defaultfile) where the `Tests.exe` file will look for a file named `Tests.ahk` and automatically run it. You can make changes to the `.ahk` file and then just run the `.exe`. The reason for doing this is because most people will still have AHK v1 installed and associated with `*.ahk` files. So it would be inconvenient to run this converter without some workarounds. Likewise, the `diff\VisualDiff.exe` file (as well as the `AutoHotKey Exe\AutoHotKeyV1.exe` file) is just a renamed `AutoHotkeyU32-v1.1.24.02.exe`
 
@@ -54,8 +61,8 @@ Here are a few ways you can help:
 And of course, create a Pull Request with your changed code
 
 # Credits
-- Frankie who created the [original v2 converter](https://autohotkey.com/board/topic/65333-v2-script-converter/)
-- Uberi for his [updates to the original](https://autohotkey.com/board/topic/65333-v2-script-converter/?p=419671)
+- Frankie who created the [original v2 converter](https://www.autohotkey.com/board/topic/65333-v2-script-converter/)
+- Uberi for his [updates to the original](https://www.autohotkey.com/board/topic/65333-v2-script-converter/?p=419671)
 - [Mergely](https://github.com/wickedest/Mergely) for the javascript diff library
 - Aurelain's [Exo](https://autohotkey.com/boards/viewtopic.php?t=5714) for the interface to run the javascript in an AHK gui
 - Mmikeww and AHK_User updated the script to start working in V2-Beta

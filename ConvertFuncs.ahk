@@ -4074,7 +4074,7 @@ ConvertDblQuotes2(&Line, eqRSide) {
       eqRSide := ConvertEscapedQuotesInStr(eqRSide)
       ; mask temporarily to avoid conflicts with other conversions below
       m := []
-      while (pos := RegexMatch(eqRSide, '"``""', &m)) {
+      while (pos := RegexMatch(eqRSide, '``""', &m) || pos := RegexMatch(eqRSide, '``"', &m)) {
          masks.push(m[])
          eqRSide := StrReplace(eqRSide, m[], Chr(0x2605) "Q_" masks.Length Chr(0x2605),,, 1)
       }

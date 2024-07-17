@@ -8,9 +8,9 @@ A_Clipboard ; clipboard
 
 
 
-; REMOVED: local
+; V1toV2: Removed local
 
-; REMOVED: local ; local
+; V1toV2: Removed local ; local
 
 ; local
 

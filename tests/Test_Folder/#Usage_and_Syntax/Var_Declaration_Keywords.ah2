@@ -14,7 +14,7 @@ ExplicitGlobalDefault() {
 ExplicitGlobalDefault()
 
 ForceLocalAndAssumeStatic() {
-; REMOVED: 	local
+; V1toV2: Removed 	local
 	static
 
 	global global1

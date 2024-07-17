@@ -16,10 +16,10 @@ F5::
 global ; V1toV2: Made function global
 OnMessage(0x0201, WM_LBUTTONDOWN, 0)
 Return
-} ; Added bracket before function
+} ; V1toV2: Added bracket before function
 
 GuiClose(*)
 { ; V1toV2: Added bracket
 global ; V1toV2: Made function global
 ExitApp()
-} ; Added bracket in the end
+} ; V1toV2: Added bracket in the end

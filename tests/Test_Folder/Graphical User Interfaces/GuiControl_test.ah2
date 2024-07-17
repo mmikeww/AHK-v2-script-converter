@@ -58,7 +58,7 @@ ogcMyCheckBox.Value := 1
 ogcMyRadio.Text := "true"
 ogcMyDropDownList.Add(["test"])
 ogcmyListBox.Add(["test1", "test2"])
-ogcMyComboBox.Delete() ;Clean the list
+ogcMyComboBox.Delete() ; V1toV2: Clean the list
 ogcMyComboBox.Add(["test1", "test2"])
 ogcMyLink.Text := "test"
 ogcMyHotkey.Value := "^!c"
@@ -68,7 +68,7 @@ ogcMySlider.Value += 10
 ogcMyProgress.Value += 10
 ogcMyGroupBox.Text := "test"
 ogcMyButton.Text := "test"
-ogcMyTab3.Delete() ;Clean the list
+ogcMyTab3.Delete() ; V1toV2: Clean the list
 ogcMyTab3.Add(["Test", "Test2", "Test3"])
 ogcMyStatusbar.SetText("Test")
 return
@@ -78,4 +78,4 @@ GuiClose(*)
 { ; V1toV2: Added bracket
 global ; V1toV2: Made function global
 ExitApp()
-} ; Added bracket in the end
+} ; V1toV2: Added bracket in the end

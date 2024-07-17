@@ -16,4 +16,4 @@ Go_here_1()
 { ; V1toV2: Added bracket
 global ; V1toV2: Made function global
 Go_here_1_3()
-} ; Added bracket in the end
+} ; V1toV2: Added bracket in the end

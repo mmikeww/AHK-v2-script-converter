@@ -3440,7 +3440,7 @@ class ConvertTests
       expected := "
          (Join`r`n
                                  OldStr := "The_quick_brown_fox"
-                                 ; StrReplace() is not case sensitive
+                                 ; V1toV2: StrReplace() is not case sensitive
                                  ; check for StringCaseSense in v1 source script
                                  ; and change the CaseSense param in StrReplace() if necessary
                                  NewStr := StrReplace(OldStr, "_",,,, 1)
@@ -3471,7 +3471,7 @@ class ConvertTests
       expected := "
          (Join`r`n
                                  OldStr := "The quick brown fox"
-                                 ; StrReplace() is not case sensitive
+                                 ; V1toV2: StrReplace() is not case sensitive
                                  ; check for StringCaseSense in v1 source script
                                  ; and change the CaseSense param in StrReplace() if necessary
                                  NewStr := StrReplace(OldStr, A_Space, "+",,, 1)
@@ -3502,7 +3502,7 @@ class ConvertTests
       expected := "
          (Join`r`n
                                  OldStr := "The quick brown fox"
-                                 ; StrReplace() is not case sensitive
+                                 ; V1toV2: StrReplace() is not case sensitive
                                  ; check for StringCaseSense in v1 source script
                                  ; and change the CaseSense param in StrReplace() if necessary
                                  NewStr := StrReplace(OldStr, A_Space, "+")
@@ -3533,7 +3533,7 @@ class ConvertTests
       expected := "
          (Join`r`n
                                  OldStr := "The quick brown fox"
-                                 ; StrReplace() is not case sensitive
+                                 ; V1toV2: StrReplace() is not case sensitive
                                  ; check for StringCaseSense in v1 source script
                                  ; and change the CaseSense param in StrReplace() if necessary
                                  NewStr := StrReplace(OldStr, A_Space)
@@ -3564,7 +3564,7 @@ class ConvertTests
       expected := "
          (Join`r`n
                                  OldStr := "The quick brown fox"
-                                 ; StrReplace() is not case sensitive
+                                 ; V1toV2: StrReplace() is not case sensitive
                                  ; check for StringCaseSense in v1 source script
                                  ; and change the CaseSense param in StrReplace() if necessary
                                  NewStr := StrReplace(OldStr, A_Space, "+",, &ErrorLevel)
@@ -3625,7 +3625,7 @@ class ConvertTests
       expected := "
          (Join`r`n
                                  OldStr := "The quick brown fox"
-                                 ; StrReplace() is not case sensitive
+                                 ; V1toV2: StrReplace() is not case sensitive
                                  ; check for StringCaseSense in v1 source script
                                  ; and change the CaseSense param in StrReplace() if necessary
                                  NewStr := StrReplace(OldStr, " ", "+")
@@ -4947,7 +4947,7 @@ class ConvertTests
       expected := "
          (Join`r`n
                                  list := "one,two,three"
-                                 ; StrReplace() is not case sensitive
+                                 ; V1toV2: StrReplace() is not case sensitive
                                  ; check for StringCaseSense in v1 source script
                                  ; and change the CaseSense param in StrReplace() if necessary
                                  list := StrReplace(list, ",", ",",, &ErrorLevel)

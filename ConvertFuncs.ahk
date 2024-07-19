@@ -939,7 +939,11 @@ _convertLines(ScriptString, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to ac
       If Skip
       {
          ;msgbox Skipping`n%Line%
-         Line := format("; V1toV2: Removed {1}", Line)
+         if (Line ~= "Sound(Get)|(Set)Wave") {
+            Line := format("; V1toV2: Not currently supported -> {1}", Line)
+         } else {
+            Line := format("; V1toV2: Removed {1}", Line)
+         }
       }
 
       Line := PreLine Line
@@ -2668,7 +2672,7 @@ _SoundGet(p) {
    } else if (ComponentType = "mute") {
       out := Format("{1} := SoundGetMute({2}, {4})", p*)
    } else {
-      out := Format("; V1toV2: REMOVED CV2 {1} := SoundGet{3}({2}, {4})", p*)
+      out := Format("; V1toV2: Not currently supported -> CV2 {1} := SoundGet{3}({2}, {4})", p*)
    }
    Return RegExReplace(Out, "[\s\,]*\)$", ")")
 }
@@ -2690,7 +2694,7 @@ _SoundSet(p) {
       p[1] := InStr(p[1], "+") ? "`"" p[1] "`"" : p[1]
       out := Format("SoundSetVolume({1}, {2}, {4})", p*)
    } else {
-      out := Format("; V1toV2: REMOVED CV2 Soundset{3}({1}, {2}, {4})", p*)
+      out := Format("; V1toV2: Not currently supported -> CV2 Soundset{3}({1}, {2}, {4})", p*)
    }
    Return RegExReplace(Out, "[\s\,]*\)$", ")")
 }

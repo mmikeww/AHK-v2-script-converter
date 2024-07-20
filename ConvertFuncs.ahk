@@ -1534,25 +1534,26 @@ _FileRead(p) {
 }
 ;################################################################################
 _FileReadLine(p) {
-   global gIndentation
+   global gIndentation, gSingleIndent
    ; FileReadLine, OutputVar, Filename, LineNum
    ; Not really a good alternative, inefficient but the result is the same
 
-;   Return p[1] " := StrSplit(FileRead(" p[2] "),`"``n`",`"``r`")[" P[3] "]"
+   if gaScriptStrsUsed.ErrorLevel {
+   indent := gIndentation = "" ? gSingleIndent : gIndentation
 
-   ; 2024-06-28, AMB Issue #20
-   ; is this proper conversion?
-   newLine  := '`r`n'   . gIndentation
-   lineTab  := newLine  . '`t'
-   cmd :=       'try {'
-            .   lineTab     . 'Global ErrorLevel := 0'
-            .   lineTab     . p[1] . ' := StrSplit(FileRead(' p[2] '),`"``n`",`"``r`")[' P[3] ']'
-            .   newLine     . '} Catch {'
-            .   lineTab     . p[1] . ' := ""'
-            .   lineTab     . 'ErrorLevel := 1'
-            .   newLine     . '}'
+   cmd := ; Very bulky solution, only way for errorlevel
+   (
+   gIndentation 'try {`r`n'
+   gIndentation indent 'Global ErrorLevel := 0, ' p[1] ' := StrSplit(FileRead(' p[2] '),`"``n`",`"``r`")[' p[3] ']`r`n'
+   gIndentation '} Catch {`r`n'
+   gIndentation indent p[1] ' := "", ErrorLevel := 1`r`n'
+   gIndentation '}'
+   )
 
    Return cmd
+   } else {
+      Return p[1] " := StrSplit(FileRead(" p[2] "),`"``n`",`"``r`")[" P[3] "]"
+   }
 }
 ;################################################################################
 _FileSelect(p) {

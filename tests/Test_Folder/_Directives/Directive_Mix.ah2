@@ -1,7 +1,7 @@
-; REMOVED: #CommentFlag NewString
-; REMOVED: #EscapeChar _
-; REMOVED: #DerefChar #
-; REMOVED: #Delimiter /
+; V1toV2: Removed #CommentFlag NewString
+; V1toV2: Removed #EscapeChar _
+; V1toV2: Removed #DerefChar #
+; V1toV2: Removed #Delimiter /
 
 Var := "String"
 

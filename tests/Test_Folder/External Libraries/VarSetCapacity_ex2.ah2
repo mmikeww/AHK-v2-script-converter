@@ -1,1 +1,1 @@
-vTarget := Buffer(RequestedCapacity, FillByte) ; V1toV2: if 'vTarget' is a UTF-16 string, use 'VarSetStrCapacity(&vTarget, RequestedCapacity)'
+vTarget := Buffer(RequestedCapacity, FillByte) ; V1toV2: if 'vTarget' is a UTF-16 string, use 'VarSetStrCapacity(&vTarget, RequestedCapacity)' and replace all instances of 'vTarget.Ptr' with 'StrPtr(vTarget)'

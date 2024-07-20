@@ -125,6 +125,7 @@ setGlobals()
    global gmGuiCtrlObj           := map()       ; Create a map to return the object of a control
    global gUseLastName           := False       ; Keep track of if we use the last set name in gGuiList
    global gmOnMessageMap         := map()       ; Create a map of OnMessage listeners
+   global gmVarSetCapacityMap    := map()       ; A list of VarSetCapacity variables, with definition type
    global gNL_Func               := ""          ; _Funcs can use this to add New Previous Line
    global gEOLComment_Func       := ""          ; _Funcs can use this to add comments at EOL
    global gfrePostFuncMatch      := False       ; ... to know their regex matched
@@ -1071,6 +1072,7 @@ FinalizeConvert(&code)
    try code := UpdateGotoFunc(code)     ; Update Goto Label when Label is converted to a func
    try code := UpdateGoto(code)         ; Update Goto Label when Label is converted to a func
    try code := FixOnMessage(code)       ; Fix turning off OnMessage when defined after turn off
+   try code := FixVarSetCapacity(code)  ; &buf -> buf.Ptr   &vssc -> StrPtr(vssc)
    addMenuCBArgs(&code)                 ; 2024-06-26, AMB - Fix #131
    addOnMessageCBArgs(&code)            ; 2024-06-28, AMB - Fix #136
 
@@ -4092,6 +4094,35 @@ FixOnMessage(ScriptString) { ; TODO: If callback *still* isn't found, add this c
       retScript .= Line "`r`n"
    }
    return RTrim(retScript, "`r`n") . happyTrails   ; add back just the trailing CRLFs that code came in with
+}
+;################################################################################
+/**
+ * Updates VarSetCapacity target var
+ * &BufferObj -> BufferObj.Ptr
+ * &VarSetStrCapacityObj -> StrPtr(VarSetStrCapacityObj)
+ */
+FixVarSetCapacity(ScriptString) {
+   retScript := ""
+   happyTrails := ''
+   if (RegExMatch(ScriptString, '.*(\R+)$', &m))
+      happyTrails := m[1]
+
+   loop parse ScriptString, "`n", "`r" {
+      Line := A_LoopField
+      if RegExMatch(Line, "(?<!VarSetStrCapacity\()(?<=\W)&(\w+)", &match) {
+         for vName, vType in gmVarSetCapacityMap {
+            ;MsgBox "v: " vName "`nm1: " match[1]
+            if (vName = match[1]) {
+               if (vType = "B")
+                  Line := StrReplace(Line, "&" match[1], match[1] ".Ptr")
+               else if (vType = "V")
+                  Line := StrReplace(Line, "&" match[1], "StrPtr(" match[1] ")")
+            }
+         }
+      }
+      retScript .= Line "`r`n"
+   }
+   return RTrim(retScript, "`r`n") . happyTrails
 }
 ;################################################################################
 ConvertDblQuotes2(&Line, eqRSide) {

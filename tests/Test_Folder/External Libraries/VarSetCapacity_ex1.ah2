@@ -1,1 +1,1 @@
-VarSetStrCapacity(&MyVar, 10240000) ; V1toV2: if 'MyVar' is NOT a UTF-16 string, use 'MyVar := Buffer(10240000)'
+VarSetStrCapacity(&MyVar, 10240000) ; V1toV2: if 'MyVar' is NOT a UTF-16 string, use 'MyVar := Buffer(10240000)' and replace all instances of 'StrPtr(MyVar)' with 'MyVar.Ptr'

@@ -118,9 +118,10 @@ _DllCall(p) {
       p[A_Index] := '"' p[A_Index] '"'
     }
     NeedleRegEx := "(\*\s*0\s*\+\s*)(&)(\w*)" ; *0+&var split into 3 groups (*0+), (&), and (var)
-    if (p[A_Index] ~= "^&") {                       ; Remove the & parameter
-      p[A_Index] := SubStr(p[A_Index], 2)
-    } else if RegExMatch(p[A_Index], NeedleRegEx) { ; even if it's behind a *0 var assignment preceding it
+    ;if (p[A_Index] ~= "^&") {                       ; Remove the & parameter
+    ;  p[A_Index] := SubStr(p[A_Index], 2)
+    ;} else 
+    if RegExMatch(p[A_Index], NeedleRegEx) { ; even if it's behind a *0 var assignment preceding it
       gfNoSideEffect := 1
       subLoopFunctions(ScriptString:=p[A_Index], Line:=p[A_Index], &v2:="", &gotFunc:=False)
       gfNoSideEffect := 0
@@ -479,7 +480,8 @@ _VarSetCapacity(p) {
       ; retStr := Format('RegExReplace("{1} := Buffer({2}, {3}) ``; {4}", " ``;.*$")', p*)
     varA  	:= Format("{1}"                           , p*)
     retStr	:= Format("VarSetStrCapacity(&{1}, {2})"  , p*)
-    %lEOLComment_Func% .= format("V1toV2: if '{1}' is a UTF-16 string, use '{2}'", varA, retStr)
+    %lEOLComment_Func% .= format("V1toV2: if '{1}' is a UTF-16 string, use '{2}' and replace all instances of '{1}.Ptr' with 'StrPtr({1})'", varA, retStr)
+    gmVarSetCapacityMap.Set(p[1], "B")
     if not reM {
       retBuf	:= Format("{1} := Buffer({2}, {3})"     , p*)
       dbgTT(3, "@_VarSetCapacity: 3 args, plain", Time:=3,id:=5,x:=-1,y:=-1)
@@ -522,7 +524,8 @@ _VarSetCapacity(p) {
     dbgTT(3, "@_VarSetCapacity: 2 args", Time:=3,id:=5,x:=-1,y:=-1)
     varA  	:= Format("{1}"                           , p*)
     retBuf	:= Format("{1} := Buffer({2})"            , p*)
-    %lEOLComment_Func% .= format("V1toV2: if '{1}' is NOT a UTF-16 string, use '{2}'", varA, retBuf)
+    %lEOLComment_Func% .= format("V1toV2: if '{1}' is NOT a UTF-16 string, use '{2}' and replace all instances of 'StrPtr({1})' with '{1}.Ptr'", varA, retBuf)
+    gmVarSetCapacityMap.Set(p[1], "V")
     if not reM {
       retStr	:= Format("VarSetStrCapacity(&{1}, {2})"  , p*)
     } else {
@@ -534,7 +537,8 @@ _VarSetCapacity(p) {
     dbgTT(3, "@_VarSetCapacity: fallback", Time:=3,id:=5,x:=-1,y:=-1)
     varA  	:= Format("{1}", p*)
     retStr	:= Format("VarSetStrCapacity(&{1}, {2})"        , p*)
-    %lEOLComment_Func% .= format("V1toV2: if '{1}' is a UTF-16 string, use '{2}'", varA, retStr)
+    %lEOLComment_Func% .= format("V1toV2: if '{1}' is a UTF-16 string, use '{2}' and replace all instances of '{1}.Ptr' with 'StrPtr({1})'", varA, retStr)
+    gmVarSetCapacityMap.Set(p[1], "B")
     if not reM {
       retBuf	:= Format("{1} := Buffer({2}, {3})"           , p*)
     } else {

@@ -1,4 +1,5 @@
-﻿#NoEnv
+﻿#Requires AutoHotkey v1.1
+#NoEnv
 #MaxMem 4095
 #SingleInstance Off
 SetWorkingDir %A_ScriptDir%
@@ -408,7 +409,7 @@ LabelOnExit:
 	}
 	; 2024-07-01 ADDED, AMB - delete temp source file
 	; part of fix to prevent errors when reading files with LF rather than CRLF
-	if (srcFilePath~="_AHKv1v2_\d{10}\.ahk$") {
+	if (srcFilePath~="_AHKv1v2_\d{10}\.(ahk)|(ah1)$") {
 		FileDelete % srcFilePath
 	}
 	FileDelete, temp.html
@@ -435,7 +436,7 @@ OnMessageClosure(wParam, lParam, msg, hwnd){
 ;###################################################################################################
 ;############################################   A P I   ############################################
 ;###################################################################################################
-#Include %A_ScriptDir%\lib\Exo\FileObject.ahk
-#Include %A_ScriptDir%\lib\Exo\WB_onKey.ahk
-#Include %A_ScriptDir%\lib\Exo\API.ahk
+#Include %A_ScriptDir%\lib\Exo\FileObject.ah1
+#Include %A_ScriptDir%\lib\Exo\WB_onKey.ah1
+#Include %A_ScriptDir%\lib\Exo\API.ah1
 

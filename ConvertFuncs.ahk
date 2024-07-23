@@ -2992,7 +2992,11 @@ _StringMid(p) {
       ;msgbox, % p[5] "`n" SubStr(p[5], 1, 2)
       ; any string that starts with 'L' is accepted
       if (StrUpper(SubStr(p[5], 2, 1) = "L"))
-         return format("{1} := SubStr(SubStr({2}, 1, {3}), -{4})", p*)
+         ; Very ugly fix, but handles pseudo characters
+         ; (When StartChar is larger than InputVar on L mode)
+         ; Use below for shorter but more error prone conversion
+         ; return format("{1} := SubStr(SubStr({2}, 1, {3}), -{4})", p*)
+         return format("{1} := SubStr(SubStr({2}, 1, {3}), StrLen({2}) >= {3} ? -{4} : StrLen({2})-{3})", p*)
       else
       {
          out := format("if (SubStr({5}, 1, 1) = `"L`")", p*) . "`r`n"

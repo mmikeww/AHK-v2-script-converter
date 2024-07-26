@@ -170,7 +170,6 @@
       A_Args[2] := RTrim(A_Args[2], "\")
       idx := 0
       for , ext in RecurseExts {
-         MsgBox A_Args[2] "\*." ext
          loop files, A_Args[2] "\*." ext, "RF" {
             inscript     := FileRead(A_LoopFileFullPath)
             outscript    := Convert(inscript)
@@ -192,8 +191,8 @@
 ;##### HOTKEYS: #####
 ;######################################################################################################################
 ; EXIT APPLICATION; EXIT APPLICATION; EXIT APPLICATION
-Esc::
-{ ;Exit application - Using either <Esc> Hotkey or Goto("MyExit")
+~Esc::
+{ ;Exit application - Using <Esc> Hotkey
    ExitApp
    Return
 }

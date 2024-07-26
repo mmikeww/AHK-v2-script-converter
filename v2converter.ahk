@@ -128,7 +128,8 @@
       FNOut := RegExReplace(FN, "\.[^.]*?$", MyOutExt)   ;***USE OUTPUT EXTENSION OPTION***
    }
 
-   if (!FileExist(FN) && A_Args[1] != "-r")
+   if (A_Args[1] = "-r" && !A_Args.Has(2)) 
+      || (!FileExist(FN) && A_Args[1] != "-r")
    {
       MyMsg := "Source source file not found.`n"
       MyMsg .= "  Will exit because source file was not found. Error BB`n"

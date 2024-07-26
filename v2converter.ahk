@@ -1,6 +1,5 @@
 { ;FILE_NAME  My_v2converter.ahk - v2 -
 ; Language:       English
-; Platform:       Windows11
 ; Author:         guest3456
 ; Update to v2converter.ahk (DrReflex)
 ; Script Function: AHK version 1 to version 2 converter
@@ -11,9 +10,8 @@
 ;                   2. My_v2conterter.ahk with parameter 1 set to
 ;       Chose the file you want to convert in the file select dialog
 ;       A msgbox will popup telling you the script finished converting
-;       If you gave the file MyScript.ahk, the output file will be MyScript_v2new.ahk
+;       If you gave the file MyScript.ahk, the output file will be MyScript_newV2.ahk
 ;
-; Uses format.ahk
 ; =============================================================================
 ; OTHER THINGS TO ADD:
 ;
@@ -23,15 +21,15 @@
 }
 { ;DIRECTIVES AND SETTINGS
    #Requires AutoHotkey >=2.0-<2.1  ; Requires AHK v2 to run this script
-   #SingleInstance Force			      ; Recommended so only one copy is runnnig at a time
-   SendMode "Input"  				        ; Recommended for new scripts due to its superior speed and reliability.
-   SetWorkingDir A_ScriptDir  	    ; Ensures a consistent starting directory.
+   #SingleInstance Force			   ; Recommended so only one copy is running at a time
+   SetWorkingDir A_ScriptDir  	   ; Ensures a consistent starting directory.
 }
 { ;CLASSES:
 }
 { ;VARIABLES:
    global dbg:=0
    global StartPath := A_ScriptDir ; FileSelect starting directory, useful if mass converting
+   global RecurseExts := ["ahk", "ah1", "ahkl"] ; List of file extensions to convert when using -r
 }
 { ;INCLUDES:
    #Include ConvertFuncs.ahk
@@ -66,10 +64,12 @@
             MyMsg := "Flags:`n`n"
             MyMsg .= "  -i  --input    The name of the v1 file you want to convert`n"
             MyMsg .= "  -o  --output   The name of converted v2 file`n"
+            MyMsg .= "  -r  --recurse  The path of the directory to recursively convert`n"
             MyMsg .= "  If no path is given script location is used`n`n`n"
             MyMsg .= "Variables (set by editing script):`n`n"
             MyMsg .= "  StartPath      The starting location of the file selection`n"
-            MyMsg .= "  MyOutExt       The extension of the converted file"
+            MyMsg .= "  MyOutExt       The extension of the converted file`n"
+            MyMsg .= "  RecurseExts    A list of extensions to convert when using -r"
             MsgBox MyMsg
             ExitApp
          }
@@ -78,6 +78,7 @@
       case 2: ;IF ONLY TWO ARGUMENTS THEN IF A_Args[1] IS NOT input THEN ERROR
       {       ;ELSE A_Args[2] IS FN
          if (A_Args[1] = "-i" || A_Args[1] = "--input")
+            || (A_Args[1] = "-r" || A_Args[1] = "--recurse")
             FN := A_Args[2]
       }
       case 4:
@@ -124,59 +125,75 @@
 
    If !FNOut
    {
-      FNOut := SubStr(FN, 1, StrLen(FN)-4) . MyOutExt   ;***USE OUTPUT EXTENSION OPTION***
+      FNOut := RegExReplace(FN, "\.[^.]*?$", MyOutExt)   ;***USE OUTPUT EXTENSION OPTION***
    }
 
-   if (!FileExist(FN))
+   if (A_Args[1] = "-r" && !A_Args.Has(2)) 
+      || (!FileExist(FN) && A_Args[1] != "-r")
    {
       MyMsg := "Source source file not found.`n"
       MyMsg .= "  Will exit because source file was not found. Error BB`n"
       MsgBox MyMsg
       ExitApp
    }
+   if (A_Args.Has(1) && A_Args[1] != "-r") {
+      ; 2024-07-01, ADDED, AMB - ensure source file has CRLF (no LF terminators)
+      ;    this is to avoid read issue by VisualDiff
+      ; create new v1 source file that guarantees CRLF terminators
+      SplitPath(FNOut,, &dir)                                          ; get output directory
+      SplitPath(FN,,, &ext, &FnNoExt)                                  ; get original source fileName and extension
+      unique       := FormatTime(, 'MMddHHmmss')                       ; Remove A_Now - for fix #250
+      unique       := RegExReplace(unique, '\D*')                      ; remove any chars that are not digits - Fix #250
+      tempPath     := dir "\" FnNoExt "_AHKv1v2_" unique "." ext       ; create path for temp file
+      tempRead     := FileRead(FN)                                     ; read orignal source file
+      tempRead     := RegExReplace(tempRead, '(?m)(?<!\r)\n', '`r`n')  ; convert any LF to CRLF
+      FN           := tempPath                                         ; ensure VisualDiff knows about new source file
 
-   ; 2024-07-01, ADDED, AMB - ensure source file has CRLF (no LF terminators)
-   ;    this is to avoid read issue by VisualDiff
-   ; create new v1 source file that guarantees CRLF terminators
-   SplitPath(FNOut,, &dir)                                          ; get output directory
-   SplitPath(FN,,, &ext, &FnNoExt)                                  ; get original source fileName and extension
-   unique       := FormatTime(, 'MMddHHmmss')                       ; Remove A_Now - for fix #250
-   unique       := RegExReplace(unique, '\D*')                      ; remove any chars that are not digits - Fix #250
-   tempPath     := dir "\" FnNoExt "_AHKv1v2_" unique "." ext       ; create path for temp file
-   tempRead     := FileRead(FN)                                     ; read orignal source file
-   tempRead     := RegExReplace(tempRead, '(?m)(?<!\r)\n', '`r`n')  ; convert any LF to CRLF
-   FN           := tempPath                                         ; ensure VisualDiff knows about new source file
+      inscript     := tempRead ;FileRead(FN)
+      outscript    := Convert(inscript)
+      outfile      := FileOpen(FNOut, "w", "utf-8")
+      outfile.Write(outscript)
+      outfile.Close()
 
-   inscript     := tempRead ;FileRead(FN)
-   outscript    := Convert(inscript)
-   outfile      := FileOpen(FNOut, "w", "utf-8")
-   outfile.Write(outscript)
-   outfile.Close()
-
-   MyMsg        := "Conversion complete.`n`n"
-   MyMsg        .= "New file saved as:`n" . FNOut . "`n`n"
-   MyMsg        .= "Would you like to see the changes made?"
-   result       := MsgBox(MyMsg,"", 68)
-   if (result = "Yes") {
-      tempfile  := FileOpen(tempPath, "w", "utf-8")
-      tempfile.Write(tempRead)                                      ; changed from FileAppend (for consistancy)
-      tempfile.Close()
-;      FileAppend(tempRead, tempPath)                                ; save CRLF temp file for VisualDiff read
-      Sleep(1000)
-      Run("diff\VisualDiff.exe diff\VisualDiff.ahk `"" . FN . "`" `"" . FNOut . "`"")
+      MyMsg        := "Conversion complete.`n`n"
+      MyMsg        .= "New file saved as:`n" . FNOut . "`n`n"
+      MyMsg        .= "Would you like to see the changes made?"
+      result       := MsgBox(MyMsg,"", 68)
+      if (result = "Yes") {
+         tempfile  := FileOpen(tempPath, "w", "utf-8")
+         tempfile.Write(tempRead)                                      ; changed from FileAppend (for consistancy)
+         tempfile.Close()
+   ;      FileAppend(tempRead, tempPath)                                ; save CRLF temp file for VisualDiff read
+         Sleep(1000)
+         Run("diff\VisualDiff.exe diff\VisualDiff.ahk `"" . FN . "`" `"" . FNOut . "`"")
+      }
+   } else {
+      A_Args[2] := RTrim(A_Args[2], "\")
+      idx := 0
+      for , ext in RecurseExts {
+         loop files, A_Args[2] "\*." ext, "RF" {
+            inscript     := FileRead(A_LoopFileFullPath)
+            outscript    := Convert(inscript)
+            FNOut        := RegExReplace(A_LoopFileFullPath, "\.[^.]*?$", MyOutExt)
+            outfile      := FileOpen(FNOut, "w", "utf-8")
+            outfile.Write(outscript)
+            outfile.Close()
+            idx++
+         }
+      }
+      MsgBox("Converted " idx " files`nPlease check changes made to ensure accuracy")
    }
    ExitApp
 } ;MAIN PROGRAM - ENDS HERE *******************************************************************************************
 ;######################################################################################################################
 ;##### FUNCTIONS(): #####
 ;######################################################################################################################
-#include ConvertFuncs.ahk
 ;######################################################################################################################
 ;##### HOTKEYS: #####
 ;######################################################################################################################
 ; EXIT APPLICATION; EXIT APPLICATION; EXIT APPLICATION
-Esc::
-{ ;Exit application - Using either <Esc> Hotkey or Goto("MyExit")
+~Esc::
+{ ;Exit application - Using <Esc> Hotkey
    ExitApp
    Return
 }

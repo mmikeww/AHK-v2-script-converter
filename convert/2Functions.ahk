@@ -237,6 +237,11 @@ _NumPut(p) {
   p[2] := StrReplace(StrReplace(p[2], "`r"), "`n")
   p[3] := StrReplace(StrReplace(p[3], "`r"), "`n")
   p[4] := StrReplace(StrReplace(p[4], "`r"), "`n")
+  ; Get size from VarSetCapacity
+  ; Only for NumPut, if this is common for enough other functions a global solution may be required
+  for i, param in p {
+    p[i] := RegExReplace(param, "i)VarSetCapacity\(.+?\)", "($0).Size")
+  }
   if InStr(p[2], "Numput(") {
     ParBuffer := ""
     loop {

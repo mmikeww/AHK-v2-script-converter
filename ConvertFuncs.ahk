@@ -2557,12 +2557,14 @@ _Menu(p) {
    }
    if (RegExCount4) {
       if (Var2 = "Add") {
+         if Var4 = ""
+            Var4 := Var3
          gMenuList .= menuNameLine "->" var3 "|"        ; 2024-06-08 ADDED for fix #179 (unique parent->child id tag)
          FunctionName := RegExReplace(Var4, "&", "")    ; Removes & from labels
          if gmAltLabel.Has(FunctionName) {
             FunctionName := gmAltLabel[FunctionName]
          } else if RegexMatch(gOrig_ScriptStr, "\n(\s*)" Var4 ":\s") {
-            gaList_LblsToFuncO.Push({label: Var4, parameters: "A_ThisMenuItem, A_ThisMenuItemPos, MyMenu", NewFunctionName: FunctionName})
+            gaList_LblsToFuncO.Push({label: Var4, parameters: 'A_ThisMenuItem := "", A_ThisMenuItemPos := "", MyMenu := "", *', NewFunctionName: FunctionName})
          }
          if Var4 != "" {
             ; 2024-06-26 ADDED by AMB for fix #131

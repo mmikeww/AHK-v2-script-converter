@@ -15,7 +15,7 @@ ogcButtonExitThisExample.OnEvent("Click", Exit.Bind("Normal"))
 myGui.Show()
 return
 
-MenuHandler(A_ThisMenuItem, A_ThisMenuItemPos, MyMenu)
+MenuHandler(A_ThisMenuItem := "", A_ThisMenuItemPos := "", MyMenu := "", *)
 { ; V1toV2: Added bracket
 global ; V1toV2: Made function global
 return

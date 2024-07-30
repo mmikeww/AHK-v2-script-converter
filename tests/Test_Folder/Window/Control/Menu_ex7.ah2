@@ -120,7 +120,7 @@ myGui.Title := "Menu Convertor Stress Test"
 myGui.Show("w640")
 Return
 
-MenuHandler(A_ThisMenuItem, A_ThisMenuItemPos, MyMenu)
+MenuHandler(A_ThisMenuItem := "", A_ThisMenuItemPos := "", MyMenu := "", *)
 { ; V1toV2: Added bracket
 global ; V1toV2: Made function global
 MsgBox("You selected `"" A_ThisMenuItem "`".")

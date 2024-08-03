@@ -205,7 +205,7 @@ _convertLines(ScriptString, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to ac
                gaScriptStrsUsed.Delimiter := dMatch[1]
          }
       }
-      if !RegExMatch(Line, "i)^\h*#(CommentFlag|EscapeChar|DerefChar|Delimiter)\h+.") and !InCont 
+      if !RegExMatch(Line, "i)^\h*#(CommentFlag|EscapeChar|DerefChar|Delimiter)\h+.") and !InCont
          and HasProp(gaScriptStrsUsed, "CommentFlag") {
          char := HasProp(gaScriptStrsUsed, "EscapeChar") ? gaScriptStrsUsed.EscapeChar : "``"
          Line := RegExReplace(Line, "(?<!\Q" char "\E)\Q" gaScriptStrsUsed.CommentFlag "\E", ";")
@@ -434,15 +434,14 @@ _convertLines(ScriptString, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to ac
       }
       else if (RegexMatch(Line, "(?i)^(\h*[a-z_][a-z_0-9]*\h*[:*\.]=\h*)(.*)", &Equation) && InStr(Line, '""')) ; Line is a variable assignment, and has ""
       {
+         ; 2024-08-02 AMB, Fix 272
+         maskStrings(&line), Line := Equation[1], val := Equation[2]
          If (!RegexMatch(Line, "\h*\w+(\((?>[^)(]+|(?-1))*\))")) ; not a func
          {
-            Line := Equation[1], val := Equation[2]
             ConvertDblQuotes2(&Line, val)
          }
          else if (InStr(RegExReplace(Line, "\w*(\((?>[^)(]+|(?-1))*\))"), '""'))
          {
-            Line := Equation[1]
-            val := Equation[2]
             funcArray := []
             while (pos := RegexMatch(val, "\w+(\((?>[^)(]+|(?-1))*\))", &match))
             {
@@ -454,6 +453,7 @@ _convertLines(ScriptString, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to ac
                Line := StrReplace(Line, Chr(1000) "FUNC_" i Chr(1000), v)
             }
          }
+         restoreStrings(&line)
       }
 
       ; -------------------------------------------------------------------------------
@@ -2685,7 +2685,7 @@ _SendMessage(p) {
    if (p[3] ~= "^`".*") {
      p[3] := 'StrPtr(' . p[3] . ')'
    }
- 
+
    Out := format("ErrorLevel := SendMessage({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9})", p*)
    Return RegExReplace(Out, "[\s\,]*\)$", ")")
  }

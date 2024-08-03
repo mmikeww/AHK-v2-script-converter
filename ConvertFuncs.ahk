@@ -2382,10 +2382,11 @@ _MsgBox(p) {
    ; v2
    ; Result := MsgBox(Text, Title, Options)
    Check_IfMsgBox()
-   if RegExMatch(p[1], "i)^(0x)?\d*\s*$") && (p.Extra.OrigArr.Length > 1) {
+   if (RegExMatch(p[1], "i)^(0x)?\d*\s*$") && (p.Extra.OrigArr.Length > 1)) {
       options := p[1]
       if ( p.Length = 4 && (IsEmpty(p[4]) || IsNumber(p[4])) ) {
-         text := ToExp(p[3])
+         ; 2024-08-03 AMB, ADDED support for multiline text that may include variables
+         text := (mlStr := isMLStr(p[3])) ? mlStr : ToExp(p[3])
          if (!IsEmpty(p[4]))
             options .= " T" p[4]
          title := ToExp(p[2])
@@ -2402,8 +2403,11 @@ _MsgBox(p) {
       }
       return Out
    } else {
+      ; 2024-08-03 AMB, ADDED support for multiline text that may include variables
+      if (mlStr := isMLStr(p[1]))
+         return "MsgBox" . mlStr
       p[1] := p.Extra.OrigStr
-      Out := format("MsgBox({1})", p[1] = "" ? "" : ToExp(p[1]))
+      Out := format("MsgBox({1})", (p[1]="") ? "" : ToExp(p[1]))
       if Check_IfMsgBox() {
          Out := "msgResult := " Out
       }
@@ -4482,4 +4486,17 @@ getScriptLabels(code)
  ;     MsgBox "[" corrections "]"
    }
    return
+}
+;################################################################################
+isMLStr(srcStr)
+{
+; 2024-08-03 AMB, ADDED
+; used to convert multiline strings (that may contain variables) to multiline expression
+
+   ; if is a multiline string
+   if (RegExMatch(srcStr, '(?s)^(\R+\(\R+)(.+)((?:\r\n)+\))$', &mML))
+      return mML[1] . ToExp(mML[2]) . mML[3]
+;      return mML[1] . ToStringExpr(mML[2]) . mML[3]
+   else
+      return ""
 }

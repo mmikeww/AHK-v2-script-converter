@@ -771,7 +771,11 @@ _convertLines(ScriptString, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to ac
                      Param.Push(oParam[A_index])
 
                   ; Checks for continuation section
-                  if (gOScriptStr.Length > gO_Index and (SubStr(Trim(gOScriptStr[gO_Index + 1]), 1, 1) = "(" or RegExMatch(Trim(gOScriptStr[gO_Index + 1]), "i)^\s*\((?:\s*(?(?<=\s)(?!;)|(?<=\())(\bJoin\S*|[^\s)]+))*(?<!:)(?:\s+;.*)?$"))) {
+                  nContSect := 'i)^\s*\((?:\s*(?(?<=\s)(?!;)|(?<=\())(\bJoin\S*|[^\s)]+))*(?<!:)(?:\s+;.*)?$'
+                  if (gOScriptStr.Length > gO_Index
+;                     && (SubStr(Trim(gOScriptStr[gO_Index + 1]), 1, 1) = "("
+                     && (Trim(gOScriptStr[gO_Index + 1]) = "("
+                     || RegExMatch(Trim(gOScriptStr[gO_Index + 1]), nContSect))) {
 
                      ContSect := oParam[oParam.Length] "`r`n"
 
@@ -782,10 +786,11 @@ _convertLines(ScriptString, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to ac
                         }
                         LineContSect := gOScriptStr[gO_Index]
                         FirstChar := SubStr(Trim(LineContSect), 1, 1)
-                        if ((A_index = 1) && (FirstChar != "(" or !RegExMatch(LineContSect, "i)^\s*\((?:\s*(?(?<=\s)(?!;)|(?<=\())(\bJoin\S*|[^\s)]+))*(?<!:)(?:\s+;.*)?$"))) {
+                        if ((A_index = 1)
+                           && (FirstChar != "("
+                           || !RegExMatch(LineContSect, nContSect))) {
                            ; no continuation section found
                            gO_Index--
-                           return ""
                         }
                         if (FirstChar == ")") {
 

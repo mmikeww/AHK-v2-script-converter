@@ -4,11 +4,14 @@
 ; 2024-07-07 ADDED support for masking multi-line string blocks, removal of block/line comments, string blocks
 ; All regex needles were designed to support masking tags. Feel free to contact me on AHK forum if I can assist with edits
 
-
 global	  gTagChar		:= chr(0x2605)
 		, gFuncPtn		:= buildPtn_FUNC()																		; function block (supports nesting)
 		, gClassPtn		:= buildPtn_CLS()																		; class	   block (supports nesting)
 		, gMQSPtn		:= buildPtn_MStr()																		; v1 multi-line string-block (non expression)
+		, gIFPtn		:= buildPtn_IF()																		; 2024-08-06 AMB, ADDED
+		, gLblPtn		:= buildPtn_Label()																		; 2024-08-06 AMB, ADDED
+		, gHotkeyPtn	:= buildPtn_Hotkey()																	; 2024-08-06 AMB, ADDED
+		, gHotStrPtn	:= '^:(?<Opts>[^:]+)*:(?<Trig>[^:]+)::'													; 2024-08-06 AMB, ADDED
 		; 2024-07-07 AMB, CHANGED to bypass escaped semicolon
 		, gLCPtn		:= '(*UCP)(?m)(?<=\s|)(?<!``);[^\v]*'													; line comment (allows lead ws to be consumed already)
 		, gBCPtn		:= '(*UCP)(?m)^\h*(/\*((?>[^*/]+|\*[^/]|/[^*])*)(?>(?-2)(?-1))*(?:\*/|\Z))'				; block comments
@@ -614,6 +617,90 @@ class MLSTR extends PreMask
 	return RegExReplace(code, gMQSPtn)
 }
 ;################################################################################
+														   IsValidV1Label(srcStr)
+;################################################################################
+{
+; returns extracted label if it resembles a valid v1 label
+; does not verify that it is a valid v2 label (see validV2Label for that)
+
+	removeLCs(&srcStr), srcStr := trim(srcStr)   ; remove line comments and trim ws
+	; return just the label if it resembles a valid v1 label
+	if ((srcStr ~= '(?<!:):$') && !(srcStr~='(?:,|\h|``(?!;)(?!%))'))
+		return srcStr
+	return ''			; not a valid v1 label
+}
+;################################################################################
+																 buildPtn_Label()
+;################################################################################
+{
+; Label
+; 2024-08-06 AMB, ADDED
+
+;	opt 		:= '(*UCP)(?im)'										; pattern options
+	opt 		:= '(*UCP)(?i)'										; pattern options
+	LC			:= '(?:(?<=\s)(?<!``);[^\v]*)'							; line comment (allows lead ws to be consumed already)
+	tagChar 	:= (IsSet(gTagChar)) ? gTagChar : chr(0x2605)
+	TG			:= '(?:#TAG' tagChar '\w+' tagChar '#)'					; mask tags
+;	CT			:= '(?<CT>(?:\h*+(?:' LC '|' TG ')))'					; line-comment OR tag
+	CT			:= '(?<CT>(?:\h*+(?>' LC '|' TG ')))'					; line-comment OR tag
+	trail		:= '(?<trail>' . CT . '|\h*(?=\v|$))'					; line-comment, tag, or end of line
+	declare		:= '^\h*(?<name>[^;,\s``]+)(?<!:):(?!:)'				; label declaration
+	pattern		:= opt . declare . trail
+;	A_Clipboard := pattern
+	return pattern
+}
+;################################################################################
+																buildPtn_HotKey()
+;################################################################################
+{
+; hotkey
+; 2024-08-06, ADDED
+
+;	opt 		:= '(?im)'								; pattern options
+	opt 		:= '(?i)'								; pattern options
+;;	LC			:= '(?:(?<=\s)(?<!``);[^\v]*)'					; line comment (allows lead ws to be consumed already)
+;	LC			:= '(?>(?<=\s)(?<!``);[^\v]*)'					; line comment (allows lead ws to be consumed already)
+;	tagChar 	:= (IsSet(gTagChar)) ? gTagChar : chr(0x2605)
+;;	TG			:= '(?:#TAG' tagChar '\w+' tagChar '#)'			; mask tags
+;	TG			:= '(?>#TAG' tagChar '\w+' tagChar '#)'			; mask tags
+;;	CT			:= '(?<CT>(?:\h*+(?:' LC '|' TG ')))'			; line-comment OR tag
+;;	CT			:= '(?<CT>(?:\h*+(?>' LC '|' TG ')))'			; line-comment OR tag
+;	CT			:= '(?<CT>(?>\h*+(?>' LC '|' TG ')))'			; line-comment OR tag
+;	trail		:= '(?<trail>' . CT . '|\h*(?=\v|$))'			; line-comment, tag, or end of line
+;;	declare		:= '^\h*\*?~?[#!^+]*[^:]*::'					; hotkey declaration
+;;	declare		:= '^\h*+(?:(?<!\s);|[^;:\v])[^ :\v]+::'
+;	colon		:= ':(?!:)(?!=)'
+;;	declare		:= '^\h*+(?>(?<!\s);|' . colon . '|[^;:\s])+::'		; hotkey declaration
+;;	declare		:= '^\h*+(?:(?<!\s);' . '|[^;:\s])+::'		; hotkey declaration
+;;	declare		:= '^\h*+(?>(?<!\s);' . '|[^;:\s])+::'		; hotkey declaration
+;;	declare		:= '^\h*+(?:[^;:\s]+(?<!\s);|[^;:]*:|[^;:\s]+)::'
+;;	declare		:= '^\h*+~?[#!+^]*(?>:::|``?;::|[^;:\s]+::)'
+;	declare		:= '^\h*+(?:\$|~)?(?:[<>]?[*#!+^])*(?>:::|\.::|``?;::|([^.;:\s]+)(?:\h+(?:&\h+)?(?-1))*::)'
+;	pattern		:= opt . declare . '.*'
+
+	k01		:= '(?:[$~]?\*?)'												; special
+	k02		:= '(?:[<>]?[!^+#]*)*'											; modifiers short
+	k03		:= '[a-z0-9]'													; alpha-numeric
+	k04		:= "[.?)(\][}{$|+*^:\\'``-]"									; regex special
+	k05		:= '(?:``;|[/<>,"~!@#%&=_])'									; symbols
+	k06		:= '(?:[lrm]?(?:alt|c(?:on)?tro?l|shift|win|button)(?:\h+up)?)'	; modifiers long
+	k07		:= 'numpad(?:\d|end|add)'										; numpad keys
+	k08		:= 'wheel(?:up|down)'											; numpad keys
+	k09		:= '(?:f|joy)\d+'												; function keys or joystick button
+	k10		:= '(?:(?:appskey|bkspc|(?:back)?space|del|delete|end|enter|esc(?:ape)?|home|pgdn|pgdn|pause|tab|up|dn|down|left|right|(?:caps|scroll)lock)(?:\h+up)?)'
+	repeat	:= '(?:\h+(?:&\h+)?(?1))*'
+;	pattern	:= opt '^\h*' k01 '(' k02 '(?:' k03 '|' k04 '|' k05 '|' k06 '|' k07 '|' k08 '|' k09 '|' k10 '))' . repeat . '::.*'
+;	pattern	:= '^\h*' k01 '(' k02 '(?:' k03 '|' k04 '|' k05 '|' k06 '|' k07 '|' k08 '|' k09 '|' k10 '))' . repeat . '::' ;.*'
+;	pattern	:= '^\s*' k01 '(' k02 '(?:' k03 '|' k04 '|' k05 '|' k06 '|' k07 '|' k08 '|' k09 '|' k10 '))' . repeat . '::' ;.*'
+;	pattern	:= opt '^\s*' k01 '(' k02 '(?:' k03 '|' k04 '|' k05 '|' k06 '|' k07 '|' k08 '|' k09 '|' k10 '))' . repeat . '::.*'
+	pattern	:= opt '^\s*' k01 '(' k02 '(?:' k03 '|' k04 '|' k05 '|' k06 '|' k07 '|' k08 '|' k09 '|' k10 '))' . repeat . '::' ;.*'
+	; (*UCP)(?im)^\h*(?:[$~]?\*?)((?:[<>]?[!^+#]*)*(?:[a-z0-9]|[.?)(\][}{$|+*^:\\'`-]|(?:`;|[/<>,"~!@#%&=_])|(?:[lrm]?(?:alt|c(?:on)?tro?l|shift|win|button)(?:\h+up)?)|numpad(?:\d|end)|wheel(?:up|down)|(?:f|joy)\d+|(?:(?:appskey|bkspc|backspace|del|delete|end|enter|esc(?:ape)?|home|pgdn|pgdn|pause|tab|up|dn|down|left|right|(?:caps|scroll)lock)(?:\h+up)?)))(?:\h+(&\h+)?(?1))*::.*
+
+;	A_Clipboard := pattern
+;	ExitApp
+	return pattern
+}
+;################################################################################
 																   buildPtn_CLS()
 ;################################################################################
 {
@@ -670,12 +757,58 @@ class MLSTR extends PreMask
 	LC			:= '(?:(?<=\s)(?<!``);[^\v]*)'									; line comment (allows lead ws to be consumed already)
 	tagChar 	:= (IsSet(gTagChar)) ? gTagChar : chr(0x2605)
 	TG			:= '(?:#TAG' tagChar '\w+' tagChar '#)'							; mask tags
-	CT			:= '(?<CT>(?:\s*+(?:' LC '|' TG '))*)'							; optional line comment OR tag
+;	CT			:= '(?<CT>(?:\s*+(?:' LC '|' TG '))*)'							; optional line comment OR tag
+	CT			:= '(?<CT>(?:\s*+(?>' LC '|' TG '))*)'							; optional line comment OR tag
 	var			:= '(?<var>[_a-z]\w*)\h*=\h*'									; var	- variable name
 	body		:= '\h*\R+(?<blk>\h*\((?<guts>(?:\R*(?>[^\v]*))*?)\R+\h*+\))'	; body	- block body with parentheses and guts
 	pattern		:= opt . var . CT . body
 	; changed to line-at-a-time rather than char-at-a-time -> 4-5 times faster, only fooled if original code syntax is incorrect
 	; (*UCP)(?ims)(?<var>[_a-z]\w*)\h*=\h*(?<CT>(?:\s*+(?:(?:(?<=\s)(?<!``);[^\v]*)|(?:#TAG★\w+★#)))*+)\h*\R+(?<blk>\h*\((?<guts>(?:\R*(?>[^\v]*))*?)\R+\h*+\))
 ;	A_Clipboard := pattern
+	return pattern
+}
+;################################################################################
+																	buildPtn_IF()
+;################################################################################
+{
+; IF block
+; 2024-08-06 AMB, ADDED - WORK IN PROGRESS
+
+	opt 	:= '(*UCP)(?im)'												; pattern options
+	noPth	:= '(?:.*)'														; no parentheses
+	noBB	:= noPth														; no braces block
+	;LC		:= '(?:(?:\h*;|(?<=\h);).*)'									; line comment (allows lead space to be consumed already
+	LC		:= '(?:(?<=\s)(?<!``);[^\v]*)'									; line comment (allows lead space to be consumed already
+	tagChar := (IsSet(gTagChar)) ? gTagChar : chr(0x2605)
+;	TG		:= '(?:#TAG' tagChar '[_a-z]+\d+' tagChar '#)'					; mask tags
+	TG		:= '(?:#TAG' tagChar '\w+' tagChar '#)'							; mask tags
+	CT		:= '(?:' . LC . '|' . TG . ')*'									; optional line comment OR tag
+	TCT		:= '(?>\s*' . CT . ')*'											; optional trailing comment or tag (MUST BE ATOMIC)
+
+	; IF portion
+	ifPth	:= '(?<ifPth>(?:!*\s*)*\((?<ifPC>(?>[^()]|\((?&ifPC)\))*+)\))'	; ifPth		- (optional) parentheses, ifPC - parentheses contents (allows multiline span)
+	ifArg	:= '(?<ifArg>(?:\h*' . ifPth . ')|(?:\h+' . noPth . '))' . TCT	; ifArg		- arguments (conditions and optional trailing comments/tags)
+	ifBB	:= '(?<ifBB>\{(?<ifBBC>(?>[^{}]|\{(?&ifBBC)})*+)})'				; ifBB		- (optional) block with braces, ifBBC - brace block contents
+	ifBlk	:= '(?<ifBlk>\s+(?:' . ifBB . '|' . noBB . '))'					; ifBlk		- block (either brace block or single line)
+	ifStr	:= '(?<ifStr>\h*\bIF\b' . ifArg . ifBlk . ')'					; ifStr		- IF block string
+	ifBLCT	:= '(?<ifBLCT>' . TCT . ')'										; ifBLCT	- (optional) trailing blank lines, comments and tags
+	; ELSEIF portion
+	efPth	:= '(?<efPth>(?:!*\s*)*\((?<efPC>(?>[^()]|\((?&efPC)\))*+)\))'	; efPth		- (optional) parentheses, efPC - parentheses contents (allows multiline span)
+	efArg	:= '(?<efArg>(?:\h*' . efPth . ')|(?:\h+' . noPth . '))' . TCT	; efArg		- arguments (conditions and optional trailing comments/tags)
+	efBB	:= '(?<efBB>\{(?<efBBC>(?>[^{}]|\{(?&efBBC)})*+)})'				; efBB		- (optional) block with braces (only captures last ELSEIF), efBBC - brace block contents
+	efBlk	:= '(?<efBlk>\s+(?:' . efBB . '|' . noBB . '))'					; efBlk		- block (either brace block or single line)
+	efStr	:= '(?<efStr>\bELSE\h+IF\b' . efArg . efBlk . ')'				; efStr		- ELSEIF block string
+	efBLCT	:= '(?<efBLCT>' . TCT . ')'										; efBLCT	- (optional) trailing blank lines, comments and tags
+	; ELSE portion
+	eBB		:= '(?<eBB>\{(?<eBBC>(?>[^{}]|\{(?&eBBC)})*+)})'				; eBB		- (optional) block with braces, eBBC - brace block contents
+	eBlk	:= '(?<eBlk>\s+(?:(?:' . eBB . ')|(?:' . noBB . ')))'			; eBlk		- block (either brace block or single line)
+	eStr	:= '(?<eStr>\s*\bELSE\b' . eBLK . ')'							; eStr		- ELSE block string
+;	pattern := opt . ifStr . ifBLCT . '(' . efStr . efBLCT . '|' . eStr . ')*'
+
+;	A_Clipboard := pattern
+;	ExitApp
+
+	; 2024-06-18 - simplified version - work in progress
+	pattern := '(?im)^\h*\bIF\b(?<all>(?>(?>\h*(!?\((?>[^)(]+|(?-1))*\))|[^;&|{\v]+|\s*(?>and|or|&&|\|\|))+)(?<brc>\s*\{(?>[^}{]+|(?-1))*\}))((\s*\bELSE IF\b(?&all))*)((\s*\bELSE\b(?&brc))*)'
 	return pattern
 }

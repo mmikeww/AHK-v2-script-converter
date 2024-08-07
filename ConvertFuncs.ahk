@@ -769,7 +769,7 @@ _convertLines(ScriptString, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to ac
                   Loop oParam.Length
                      Param.Push(oParam[A_index])
 
-                  ; Checks for continuation section
+               ; Checks for continuation section
                ;################################################################################
                ; 2024-08-06 AMB - UPDATED to fix #277
                   nContSect := 'i)^\s*\((?:\s*(?(?<=\s)(?!;)|(?<=\())(\bJoin\S*|[^\s)]+))*(?<!:)(?:\s+;.*)?$'
@@ -1449,7 +1449,6 @@ _ControlGet(p) {
          Out .= gIndentation p[1] " .= o" p[1] "[A_Index] `r`n"
          Out .= gIndentation "}"
       }
-
    }
 
    Return RegExReplace(Out, "[\s\,]*\)$", ")")
@@ -3481,17 +3480,17 @@ V1ParSplit(String) {
 V1ParSplitFunctions(String, FunctionTarget := 1) {
    ; Will try to extract the function of the given line
    ; Created by Ahk_user
-   oResult := Array()   ; Array to store result Pre func params post
-   oIndex := 1   ; index of array
-   InArray := 0
-   InApostrophe := false
-   InQuote := false
-   Hook_Status := 0
+   oResult          := Array()      ; Array to store result Pre func params post
+   oIndex           := 1            ; index of array
+   InArray          := 0
+   InApostrophe     := false
+   InQuote          := false
+   Hook_Status      := 0
 
-   FunctionNumber := 0
-   Searchstatus := 0
-   HE_Index := 0
-   oString := StrSplit(String)
+   FunctionNumber   := 0
+   Searchstatus     := 0
+   HE_Index         := 0
+   oString          := StrSplit(String)
    oResult.Push("")
 
    Loop oString.Length
@@ -3535,25 +3534,25 @@ V1ParSplitFunctions(String, FunctionTarget := 1) {
             break
          }
       }
-      oResult[oIndex] := oResult[oIndex] Char
+      oResult[oIndex]       := oResult[oIndex] Char
    }
    if (Searchstatus = 0) {
-      oResult.Pre := String
-      oResult.Func := ""
-      oResult.Parameters := ""
-      oResult.Post := ""
-      oResult.Separator := ""
-      oResult.Found := 0
+      oResult.Pre           := String
+      oResult.Func          := ""
+      oResult.Parameters    := ""
+      oResult.Post          := ""
+      oResult.Separator     := ""
+      oResult.Found         := 0
 
    } else {
-      oResult.Pre := SubStr(String, 1, F_Index - 1)
-      oResult.Func := SubStr(String, F_Index, H_Index - F_Index)
-      oResult.Parameters := SubStr(String, H_Index + 1, HE_Index - H_Index - 1)
-      oResult.Post := SubStr(String, HE_Index + 1)
-      oResult.Separator := SubStr(String, F_Index - 1, 1)
-      oResult.Found := 1
+      oResult.Pre           := SubStr(String, 1, F_Index - 1)
+      oResult.Func          := SubStr(String, F_Index, H_Index - F_Index)
+      oResult.Parameters    := SubStr(String, H_Index + 1, HE_Index - H_Index - 1)
+      oResult.Post          := SubStr(String, HE_Index + 1)
+      oResult.Separator     := SubStr(String, F_Index - 1, 1)
+      oResult.Found         := 1
    }
-   oResult.Hook_Status := Hook_Status
+   oResult.Hook_Status      := Hook_Status
    return oResult
 }
 ;################################################################################
@@ -3819,7 +3818,6 @@ ConvertLabel2Func(ScriptString, Label, Parameters := "", NewFunctionName := "", 
 
       if (LabelPointer = 1 || RegexPointer = 1) {
          if (RegExMatch(RestString, "is)^\s*([\w]+?\([^\)]*\)\s*(`;[^\v]*|)(\s*){).*")) {   ; Function declaration detection
-;         if (RegExMatch(RestString, "is)^\s*([\w]+?\([^\)]*\)[\s\n\r]*(`;[^\r\n]*|)([\s\n\r]*){).*")) {   ; Function declaration detection
             ; not bulletproof perfect, but a start
             Result .= LabelPointer = 1 ? "} `; V1toV2: Added bracket before function`r`n" : ""
             LabelPointer := 0
@@ -3829,14 +3827,12 @@ ConvertLabel2Func(ScriptString, Label, Parameters := "", NewFunctionName := "", 
       if (RegExMatch(Line, "i)^(\s*;).*") || RegExMatch(Line, "i)^(\s*)$")) {   ; comment or empty
          ; Do nothing
       } else if (line ~= gHotStrPtn || line ~= gHotkeyPtn) {   ; Hotkey or Hotstring
-;      } else if (RegExMatch(Line, "i)^\s*[\s`n`r\t]*([^;`n`r\s\{}\[\]\=:]+?\:\:).*") > 0) {   ; Hotkey or Hotstring
          if (LabelPointer = 1 || RegexPointer = 1) {
             Result .= LabelPointer = 1 ? "} `; V1toV2: Added Bracket before hotkey or Hotstring`r`n" : ""
             LabelPointer := 0
             RegexPointer := 0
          }
          if (line ~= gHotStrPtn || line ~= gHotkeyPtn) {    ; Hotkey or Hotstring
-;         if (RegExMatch(Line, "i)^\s*[\s`n`r\t]*([^;`n`r\s\{}\[\]\=:]+?\:\:\s*[^\s;].+)") > 0) {    ; Hotkey or Hotstring
             ; oneline detected do noting
             LabelPointer := 0
             RegexPointer := 0
@@ -3852,21 +3848,16 @@ ConvertLabel2Func(ScriptString, Label, Parameters := "", NewFunctionName := "", 
       }
       if (LabelPointer = 1 || RegexPointer = 1) {
          if (RestString ~= gHotStrPtn || RestString ~= gHotkeyPtn) {   ; Hotkey or Hotstring
-;         if (RegExMatch(RestString, "is)^[\s`n`r\t]*([^;`n`r\s\{}\[\]\=:]+?\:\:).*") > 0) {   ; Hotkey or Hotstring
             Result .= LabelPointer = 1 ? "} `; V1toV2: Added Bracket before hotkey or Hotstring`r`n" : ""
             LabelPointer := 0
             RegexPointer := 0
          } else if (RegExMatch(RestString, "is)^(|;[^\n]*\n)*\s*\}?\s*([^;\s\{}\[\]\=:]+?\:\s).*") > 0
-               && RegExMatch(gOScriptStr[A_Index - 1], "is)^\s*(return|exitapp|exit|reload).*") > 0) {   ; Label
-;         } else if (RegExMatch(RestString, "is)^(|;[^\n]*\n)*[\s`n`r\t]*\}?[\s`n`r\t]*([^;`n`r\s\{}\[\]\=:]+?\:\s).*") > 0
-;               && RegExMatch(gOScriptStr[A_Index - 1], "is)^[\s`n`r\t]*(return|exitapp|exit|reload).*") > 0) {   ; Label
+                 && RegExMatch(gOScriptStr[A_Index - 1], "is)^\s*(return|exitapp|exit|reload).*") > 0) {   ; Label
             Result .= LabelPointer = 1 ? "} `; V1toV2: Added Bracket before label`r`n" : ""
             LabelPointer := 0
             RegexPointer := 0
          } else if (RegExMatch(RestString, "is)^\s*\}?\s*(`;[^\v]*|)(\s*)$") > 0
-               && RegExMatch(gOScriptStr[A_Index - 1], "is)^\s*(return).*") > 0) {   ; Label
-;         } else if (RegExMatch(RestString, "is)^[\s`n`r\t]*\}?[\s`n`r\t]*(`;[^\r\n]*|)([\s\n\r\t]*)$") > 0
-;               && RegExMatch(gOScriptStr[A_Index - 1], "is)^[\s`n`r\t]*(return).*") > 0) {   ; Label
+                 && RegExMatch(gOScriptStr[A_Index - 1], "is)^\s*(return).*") > 0) {   ; Label
             Result .= LabelPointer = 1 ? "} `; V1toV2: Added bracket in the end`r`n" : ""
             LabelPointer := 0
             RegexPointer := 0
@@ -3892,9 +3883,8 @@ ConvertLabel2Func(ScriptString, Label, Parameters := "", NewFunctionName := "", 
             }
          }
       }
-      RestString := SubStr(RestString, InStr(RestString, "`n") + 1)
-      Result .= Line
-      Result .= "`r`n"
+      RestString    := SubStr(RestString, InStr(RestString, "`n") + 1)
+      Result        .= Line . "`r`n"
    }
 
    ; 2024-06-13 AMB - part of fix #193
@@ -3937,7 +3927,6 @@ AddBracket(ScriptString) {
       if (CommentCode=0) {
          if (HotkeyPointer = 1) {
             if (RegExMatch(RestString, "is)^\s*([\w]+?\([^\)]*\)\s*(`;[^\v]*|)(\s*){).*")) {   ; Function declaration detection
-;            if (RegExMatch(RestString, "is)^\s*([\w]+?\([^\)]*\)[\s\n\r]*(`;[^\r\n]*|)([\s\n\r]*){).*")) {   ; Function declaration detection
                ; not bulletproof perfect, but a start
                Result .= "} `; V1toV2: Added bracket before function`r`n"
                HotkeyPointer := 0
@@ -3946,13 +3935,11 @@ AddBracket(ScriptString) {
          if (RegExMatch(Line, "i)^(\s*;).*") || RegExMatch(Line, "i)^(\s*)$")) {   ; comment or empty
             ; Do nothing
          } else if (line ~= gHotStrPtn || line ~= gHotkeyPtn) {   ; Hotkey or Hotstring
-;         } else if (RegExMatch(Line, "i)^\s*[\s\n\r\t]*((:[\s\*\?BCKOPRSIETXZ0-9]*:|)[^;\n\r\{}\[\:]+?\:\:).*") > 0) {   ; Hotkey or Hotstring
             if (HotkeyPointer = 1) {
                Result .= "} `; V1toV2: Added Bracket before hotkey or Hotstring`r`n"
                HotkeyPointer := 0
             }
             if (line ~= gHotStrPtn . '\h*[^\s;]+' || line ~= gHotkeyPtn . '\h*[^\s;]+') {   ; is command on same line as hotkey/hotstring ?
-;            if (RegExMatch(Line, "i)^\s*[\s\n\r\t]*((:[\s\*\?BCKOPRSIETXZ0-9]*:|)[^;\n\r\{}\[\:]+?\:\:\s*[^\s;].+)") > 0) {
                ; oneline detected do noting
             } else {
                ; Hotkey detected start searching for start
@@ -3965,7 +3952,6 @@ AddBracket(ScriptString) {
                if (RegExMatch(Line, "i)^\s*([{\(]).*")) {   ; Hotkey is already good :)
                   HotkeyPointer := 0
                } else if (RegExMatch(RestString, "is)^\s*([\w]+?\([^\)]*\)\s*(`;[^\v]*|)(\s*){).*")) {   ; Function declaration detection
-;               } else if (RegExMatch(RestString, "is)^\s*([\w]+?\([^\)]*\)[\s\n\r]*(`;[^\r\n]*|)([\s\n\r]*){).*")) {   ; Function declaration detection
                   ; Named Function Hotkeys do not need brackets
                   ; https://lexikos.github.io/v2/docs/Hotstrings.htm
                   ; Maybe add an * to the function?
@@ -3980,7 +3966,6 @@ AddBracket(ScriptString) {
                      }
                   }
                   RegExReplace(RestString, "is)^(\s*)([\w]+?\([^\)]*\)\s*(`;[^\v]*|)(\s*){).*", "$1")
-;                  RegExReplace(RestString, "is)^(\s*)([\w]+?\([^\)]*\)[\s\n\r]*(`;[^\r\n]*|)([\s\n\r]*){).*", "$1")
                   HotkeyPointer := 0
                } else {
                   Result .= "{ `; V1toV2: Added bracket`r`nglobal `; V1toV2: Made function global`r`n" ; Global - See #49
@@ -3990,24 +3975,18 @@ AddBracket(ScriptString) {
             }
          }
          if (HotkeyPointer = 1) {
-            if (RestString ~= gHotStrPtn || RestString ~= gHotkeyPtn) {
-;            if (RegExMatch(RestString, "is)^[\s\n\r\t]*((:[\s\*\?BCKOPRSIETXZ0-9]*:|)[^;\n\r\{}\[\]\=:]+?\:\:).*") > 0) {   ; Hotkey or string
+            if (RestString ~= gHotStrPtn || RestString ~= gHotkeyPtn) {   ; Hotkey or Hotstring
                Result .= "} `; V1toV2: Added Bracket before hotkey or Hotstring`r`n"
                HotkeyPointer := 0
             } else if (RegExMatch(RestString, "is)^\s*((:[\h\*\?BCKOPRSIETXZ0-9]*:|)[^;\s\{}\[\:]+?\:\:?\h).*") > 0
-                  && RegExMatch(gOScriptStr[A_Index - 1], "is)^\s*(return|exitapp|exit|reload).*") > 0) {   ; Label
-;            } else if (RegExMatch(RestString, "is)^[\s\n\r\t]*((:[\s\*\?BCKOPRSIETXZ0-9]*:|)[^;\n\r\s\{}\[\:]+?\:\:?\s).*") > 0
-;                  && RegExMatch(gOScriptStr[A_Index - 1], "is)^[\s\n\r\t]*(return|exitapp|exit|reload).*") > 0) {   ; Label
+                    && RegExMatch(gOScriptStr[A_Index - 1], "is)^\s*(return|exitapp|exit|reload).*") > 0) {   ; Label
                Result .= "} `; V1toV2: Added Bracket before label`r`n"
                HotkeyPointer := 0
             } else if (RegExMatch(RestString, "is)^\s*(`;[^\v]*|)(\s*)$") > 0
-                  && RegExMatch(gOScriptStr[A_Index - 1], "is)^\s*(return|exitapp|exit|reload).*") > 0) {   ; Label
-;            } else if (RegExMatch(RestString, "is)^[\s\n\r\t]*(`;[^\r\n]*|)([\s\n\r\t]*)$") > 0
-;                  && RegExMatch(gOScriptStr[A_Index - 1], "is)^[\s\n\r\t]*(return|exitapp|exit|reload).*") > 0) {   ; Label
+                    && RegExMatch(gOScriptStr[A_Index - 1], "is)^\s*(return|exitapp|exit|reload).*") > 0) {   ; Label
                Result .= "} `; V1toV2: Added bracket in the end`r`n"
                HotkeyPointer := 0
             } else if (RegExMatch(RestString, "is)^\s*(#hotif).*") > 0) { ; #Hotif statement
- ;           } else if (RegExMatch(RestString, "is)^[\s\n\r\t]*(#hotif).*") > 0) { ; #Hotif statement
                Result .= "} `; V1toV2: Added bracket in the end`r`n"
                HotkeyPointer := 0
             }
@@ -4025,9 +4004,8 @@ AddBracket(ScriptString) {
          Line     := RegexReplace(Line, "(\h*)\Q" v1Label "\E(.*)", "$1" Label "$2")
       }
 
-      RestString := SubStr(RestString, InStr(RestString, "`n") + 1)
-      Result .= Line
-      Result .= A_Index != gOScriptStr.Length ? "`r`n" : ""
+      RestString    := SubStr(RestString, InStr(RestString, "`n") + 1)
+      Result        .= Line . ((A_Index != gOScriptStr.Length) ? "`r`n" : "")
    }
    if (HotkeyPointer = 1) {
       Result .= "`r`n} `; V1toV2: Added bracket in the end`r`n"
@@ -4101,7 +4079,6 @@ UpdateGotoFunc(ScriptString)    ; the old UpdateGoto
             retScript   .= line . "`r`n"
             break
          }
-;         retScript      .= StrReplace(line, 'Goto("' v1Label '")', v2LabelName "()`r`n")
       }
    }
    return RTrim(retScript, "`r`n") . happyTrails  ; add back just the trailing CRLFs that code came in with
@@ -4404,12 +4381,6 @@ getV2Name(v1LabelName)
    nameNoColon := RegExReplace(v1LabelName, "^(.*):", "$1") ; remove any colon if present
    return (gmAllLabelsV1toV2.Has(nameNoColon)) ? gmAllLabelsV1toV2[nameNoColon] : nameNoColon
 }
-;;################################################################################
-;; Corrects labels by adding "_" before it if it is not allowed. Other rules can be added later on like replacement of forbidden characters
-;GetV2Label(LabelName) {
-;   NewLabelName := RegExReplace(LabelName, "^(\d.*)", "_$1")   ; adds "_" before label if first char is number
-;   return NewLabelName
-;}
 ;################################################################################
 _getUniqueV2Name(v1LabelName)
 {
@@ -4457,30 +4428,6 @@ _convV1LblToV2FuncName(srcStr, returnColon:=true) {
    newName := (LabelName=newName) ? newName : _getUniqueV2Name(newName)
    return (newName . ((newName!="" && returnColon) ? ":" : ""))
 }
-;;################################################################################
-;isValidV2Label(srcStr, returnColon:=true, fix:=false) {
-;; 2024-07-07 AMB, ADDED
-;; srcStr label MUST HAVE TRAILING COLON to be considered valid
-;; returns extracted label if it is a valid V2 label
-;;  or returns a label that has been corrected (if requested)
-;;  or returns empty string if invalid
-
-;   srcStr := trim(removeLCs(srcStr))   ; remove line comments and trim ws
-;   if ((srcStr~="i)^(?:[^[:ascii:]]|[a-z_])(?:[^[:ascii:]]|\w)*:$"))
-;      ; is already valid v2 name
-;      return ((returnColon) ? srcStr : SubStr(srcStr, 1, -1))
-;   else if (fix)
-;      ; not valid v2 name - convert
-;      return _convV1LblToV2FuncName(srcStr, returnColon)
-;   return ''
-;}
-;;################################################################################
-;v1LblToV2FuncName(labelName) {
-;; 2024-07-07 AMB, ADDED
-
-;   labelName := RegExReplace(labelName, "^(.*):", "$1")  ; remove any trailing colon (for consistency)
-;   return _convV1LblToV2FuncName(LabelName . ":", returnColon:=false) ; pass a colon, but do not have it returned
-;}
 ;################################################################################
 getV1LabelNames(&code)
 {

@@ -641,7 +641,6 @@ class MLSTR extends PreMask
 	LC			:= '(?:(?<=\s)(?<!``);[^\v]*)'							; line comment (allows lead ws to be consumed already)
 	tagChar 	:= (IsSet(gTagChar)) ? gTagChar : chr(0x2605)
 	TG			:= '(?:#TAG' tagChar '\w+' tagChar '#)'					; mask tags
-;	CT			:= '(?<CT>(?:\h*+(?:' LC '|' TG ')))'					; line-comment OR tag
 	CT			:= '(?<CT>(?:\h*+(?>' LC '|' TG ')))'					; line-comment OR tag
 	trail		:= '(?<trail>' . CT . '|\h*(?=\v|$))'					; line-comment, tag, or end of line
 	declare		:= '^\h*(?<name>[^;,\s``]+)(?<!:):(?!:)'				; label declaration
@@ -656,48 +655,27 @@ class MLSTR extends PreMask
 ; hotkey
 ; 2024-08-06, ADDED
 
-;	opt 		:= '(?im)'								; pattern options
-	opt 		:= '(?i)'								; pattern options
-;;	LC			:= '(?:(?<=\s)(?<!``);[^\v]*)'					; line comment (allows lead ws to be consumed already)
-;	LC			:= '(?>(?<=\s)(?<!``);[^\v]*)'					; line comment (allows lead ws to be consumed already)
-;	tagChar 	:= (IsSet(gTagChar)) ? gTagChar : chr(0x2605)
-;;	TG			:= '(?:#TAG' tagChar '\w+' tagChar '#)'			; mask tags
-;	TG			:= '(?>#TAG' tagChar '\w+' tagChar '#)'			; mask tags
-;;	CT			:= '(?<CT>(?:\h*+(?:' LC '|' TG ')))'			; line-comment OR tag
-;;	CT			:= '(?<CT>(?:\h*+(?>' LC '|' TG ')))'			; line-comment OR tag
-;	CT			:= '(?<CT>(?>\h*+(?>' LC '|' TG ')))'			; line-comment OR tag
-;	trail		:= '(?<trail>' . CT . '|\h*(?=\v|$))'			; line-comment, tag, or end of line
-;;	declare		:= '^\h*\*?~?[#!^+]*[^:]*::'					; hotkey declaration
-;;	declare		:= '^\h*+(?:(?<!\s);|[^;:\v])[^ :\v]+::'
-;	colon		:= ':(?!:)(?!=)'
-;;	declare		:= '^\h*+(?>(?<!\s);|' . colon . '|[^;:\s])+::'		; hotkey declaration
-;;	declare		:= '^\h*+(?:(?<!\s);' . '|[^;:\s])+::'		; hotkey declaration
-;;	declare		:= '^\h*+(?>(?<!\s);' . '|[^;:\s])+::'		; hotkey declaration
-;;	declare		:= '^\h*+(?:[^;:\s]+(?<!\s);|[^;:]*:|[^;:\s]+)::'
-;;	declare		:= '^\h*+~?[#!+^]*(?>:::|``?;::|[^;:\s]+::)'
-;	declare		:= '^\h*+(?:\$|~)?(?:[<>]?[*#!+^])*(?>:::|\.::|``?;::|([^.;:\s]+)(?:\h+(?:&\h+)?(?-1))*::)'
-;	pattern		:= opt . declare . '.*'
-
-	k01		:= '(?:[$~]?\*?)'												; special
-	k02		:= '(?:[<>]?[!^+#]*)*'											; modifiers short
+	opt 	:= '(?i)'														; pattern options
+	k01		:= '(?:[$~]?\*?)'												; special commands
+	k02		:= '(?:[<>]?[!^+#]*)*'											; modifiers - short
 	k03		:= '[a-z0-9]'													; alpha-numeric
-	k04		:= "[.?)(\][}{$|+*^:\\'``-]"									; regex special
-	k05		:= '(?:``;|[/<>,"~!@#%&=_])'									; symbols
-	k06		:= '(?:[lrm]?(?:alt|c(?:on)?tro?l|shift|win|button)(?:\h+up)?)'	; modifiers long
-	k07		:= 'numpad(?:\d|end|add)'										; numpad keys
-	k08		:= 'wheel(?:up|down)'											; numpad keys
-	k09		:= '(?:f|joy)\d+'												; function keys or joystick button
-	k10		:= '(?:(?:appskey|bkspc|(?:back)?space|del|delete|end|enter|esc(?:ape)?|home|pgdn|pgdn|pause|tab|up|dn|down|left|right|(?:caps|scroll)lock)(?:\h+up)?)'
-	repeat	:= '(?:\h+(?:&\h+)?(?1))*'
-;	pattern	:= opt '^\h*' k01 '(' k02 '(?:' k03 '|' k04 '|' k05 '|' k06 '|' k07 '|' k08 '|' k09 '|' k10 '))' . repeat . '::.*'
-;	pattern	:= '^\h*' k01 '(' k02 '(?:' k03 '|' k04 '|' k05 '|' k06 '|' k07 '|' k08 '|' k09 '|' k10 '))' . repeat . '::' ;.*'
-;	pattern	:= '^\s*' k01 '(' k02 '(?:' k03 '|' k04 '|' k05 '|' k06 '|' k07 '|' k08 '|' k09 '|' k10 '))' . repeat . '::' ;.*'
-;	pattern	:= opt '^\s*' k01 '(' k02 '(?:' k03 '|' k04 '|' k05 '|' k06 '|' k07 '|' k08 '|' k09 '|' k10 '))' . repeat . '::.*'
-	pattern	:= opt '^\s*' k01 '(' k02 '(?:' k03 '|' k04 '|' k05 '|' k06 '|' k07 '|' k08 '|' k09 '|' k10 '))' . repeat . '::' ;.*'
-	; (*UCP)(?im)^\h*(?:[$~]?\*?)((?:[<>]?[!^+#]*)*(?:[a-z0-9]|[.?)(\][}{$|+*^:\\'`-]|(?:`;|[/<>,"~!@#%&=_])|(?:[lrm]?(?:alt|c(?:on)?tro?l|shift|win|button)(?:\h+up)?)|numpad(?:\d|end)|wheel(?:up|down)|(?:f|joy)\d+|(?:(?:appskey|bkspc|backspace|del|delete|end|enter|esc(?:ape)?|home|pgdn|pgdn|pause|tab|up|dn|down|left|right|(?:caps|scroll)lock)(?:\h+up)?)))(?:\h+(&\h+)?(?1))*::.*
-
+	k04		:= "[.?)(\][}{$|+*^:\\'``-]"									; symbols 1 (regex special)
+	k05		:= '(?:``;|[/<>,"~!@#%&=_])'									; symbols 2
+	k06		:= '(?:[lrm]?(?:alt|c(?:on)?tro?l|shift|win|button)(?:\h+up)?)'	; modifiers - long
+	k07		:= 'numpad(?:\d|end|add)'										; numpad special
+	k08		:= 'wheel(?:up|down)'											; mouse
+	k09		:= '(?:f|joy)\d+'												; func keys or joystick button
+	k10		:= '(?:(?:appskey|bkspc|(?:back)?space|del|delete|'				; named keys
+			   . 'end|enter|esc(?:ape)?|home|pgdn|pgdn|pause|tab|'
+			   . 'up|dn|down|left|right|(?:caps|scroll)lock)(?:\h+up)?)'
+	repeat	:= '(?:\h+(?:&\h+)?(?1))*'										; allow repeated keys
+	pattern	:= opt '^\s*' k01 '(' k02 '(?:' k03 '|' k04 '|' k05 '|' k06
+			. '|' k07 '|' k08 '|' k09 '|' k10 '))' . repeat . '::' ;.*'
 ;	A_Clipboard := pattern
-;	ExitApp
+;	pattern := '(*UCP)(?im)^\h*(?:[$~]?\*?)((?:[<>]?[!^+#]*)*(?:[a-z0-9]|[.?)(\][}{$|+*^:\\'`-]'
+;		. '|(?:`;|[/<>,"~!@#%&=_])|(?:[lrm]?(?:alt|c(?:on)?tro?l|shift|win|button)(?:\h+up)?)|numpad(?:\d|end)|wheel(?:up|down)|(?:f|joy)\d+'
+;		. '|(?:(?:appskey|bkspc|backspace|del|delete|end|enter|esc(?:ape)?|home|pgdn|pgdn|pause|tab|up|dn|down|left|right|(?:caps|scroll)lock)'
+;		. '(?:\h+up)?)))(?:\h+(&\h+)?(?1))*::'
 	return pattern
 }
 ;################################################################################
@@ -777,10 +755,8 @@ class MLSTR extends PreMask
 	opt 	:= '(*UCP)(?im)'												; pattern options
 	noPth	:= '(?:.*)'														; no parentheses
 	noBB	:= noPth														; no braces block
-	;LC		:= '(?:(?:\h*;|(?<=\h);).*)'									; line comment (allows lead space to be consumed already
 	LC		:= '(?:(?<=\s)(?<!``);[^\v]*)'									; line comment (allows lead space to be consumed already
 	tagChar := (IsSet(gTagChar)) ? gTagChar : chr(0x2605)
-;	TG		:= '(?:#TAG' tagChar '[_a-z]+\d+' tagChar '#)'					; mask tags
 	TG		:= '(?:#TAG' tagChar '\w+' tagChar '#)'							; mask tags
 	CT		:= '(?:' . LC . '|' . TG . ')*'									; optional line comment OR tag
 	TCT		:= '(?>\s*' . CT . ')*'											; optional trailing comment or tag (MUST BE ATOMIC)
@@ -806,7 +782,6 @@ class MLSTR extends PreMask
 ;	pattern := opt . ifStr . ifBLCT . '(' . efStr . efBLCT . '|' . eStr . ')*'
 
 ;	A_Clipboard := pattern
-;	ExitApp
 
 	; 2024-06-18 - simplified version - work in progress
 	pattern := '(?im)^\h*\bIF\b(?<all>(?>(?>\h*(!?\((?>[^)(]+|(?-1))*\))|[^;&|{\v]+|\s*(?>and|or|&&|\|\|))+)(?<brc>\s*\{(?>[^}{]+|(?-1))*\}))((\s*\bELSE IF\b(?&all))*)((\s*\bELSE\b(?&brc))*)'

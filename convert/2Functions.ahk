@@ -113,7 +113,7 @@ _DllCall(p) {
   global gfNoSideEffect
   loop p.Length
   {
-    if (p[A_Index] ~= "i)^U?(Str|AStr|WStr|Int64|Int|Short|Char|Float|Double|Ptr)P?\*?$"){
+    if (p[A_Index] ~= "i)^U?(Str|AStr|WStr|Int64|Int|Short|Char|Float|Double|Ptr)P?\*?$") {
       ; Correction of old v1 DllCalls who forget to quote the types
       p[A_Index] := '"' p[A_Index] '"'
     }
@@ -121,22 +121,22 @@ _DllCall(p) {
     ;if (p[A_Index] ~= "^&") {                       ; Remove the & parameter
     ;  p[A_Index] := SubStr(p[A_Index], 2)
     ;} else 
-    if RegExMatch(p[A_Index], NeedleRegEx) { ; even if it's behind a *0 var assignment preceding it
+    if (RegExMatch(p[A_Index], NeedleRegEx)) { ; even if it's behind a *0 var assignment preceding it
       gfNoSideEffect := 1
       subLoopFunctions(ScriptString:=p[A_Index], Line:=p[A_Index], &v2:="", &gotFunc:=False)
       gfNoSideEffect := 0
       if (commentPos:=InStr(v2,"`;")) {
         v2 := SubStr(v2, 1, commentPos-1)
       }
-      if RegExMatch(v2, "VarSetStrCapacity\(&") {   ; guard var in StrPtr if UTF-16 passed as "Ptr"
-        if p.Has(A_Index-1) and (p[A_Index-1] = '"Ptr"') {
+      if (RegExMatch(v2, "VarSetStrCapacity\(&")) {   ; guard var in StrPtr if UTF-16 passed as "Ptr"
+        if (p.Has(A_Index-1) && (p[A_Index-1] = '"Ptr"')) {
           p[A_Index] := RegExReplace(p[A_Index],      NeedleRegEx,"$1StrPtr($3)")
           dbgTT(3, "@DllCall: 1StrPtr", Time:=3,id:=9)
         } else {
           p[A_Index] := RegExReplace(p[A_Index],      NeedleRegEx,"$1$3")
           dbgTT(3, "@DllCall: 2NotPtr", Time:=3,id:=9)
         }
-      } else if RegExMatch(v2, "Buffer\("){         ; leave only the variable,  _VarSetCapacity(p) should place the rest on a new line before this
+      } else if (RegExMatch(v2, "Buffer\(")) {         ; leave only the variable,  _VarSetCapacity(p) should place the rest on a new line before this
           p[A_Index] := RegExReplace(p[A_Index], ".*" NeedleRegEx,"$3")
           dbgTT(3, "@DllCall: 3Buff", Time:=3,id:=9)
       } else {
@@ -144,7 +144,8 @@ _DllCall(p) {
           dbgTT(3, "@DllCall: 4Else", Time:=3,id:=9)
       }
     }
-    if (((A_Index !=1) and (mod(A_Index, 2) = 1)) and (InStr(p[A_Index - 1], "*`"") or InStr(p[A_Index - 1], "*`'") or InStr(p[A_Index - 1], "P`"") or InStr(p[A_Index - 1], "P`'"))) {
+    if (((A_Index !=1) && (mod(A_Index, 2) = 1)) && (InStr(p[A_Index - 1], "*`"")
+       || InStr(p[A_Index - 1], "*`'") || InStr(p[A_Index - 1], "P`"") || InStr(p[A_Index - 1], "P`'"))) {
       p[A_Index] := "&" p[A_Index]
       if (!InStr(p[A_Index], ":=")) {
         ; Disabled for now because of issue #54, but this can result in undefined variables...
@@ -220,10 +221,10 @@ _LV_SetImageList(p) {
 _NumGet(p) {
   ;V1: NumGet(VarOrAddress , Offset := 0, Type := "UPtr")
   ;V2: NumGet(Source, Offset, Type)
-  if (p[2] = "" and p[3] = "") {
+  if (p[2] = "" && p[3] = "") {
     p[2] := '"UPtr"'
   }
-  if (p[3] = "" and InStr(p[2],"A_PtrSize")) {
+  if (p[3] = "" && InStr(p[2],"A_PtrSize")) {
     p[3] := '"UPtr"'
   }
   Out := "NumGet(" P[1] ", " p[2] ", " p[3] ")"
@@ -242,7 +243,7 @@ _NumPut(p) {
   for i, param in p {
     p[i] := RegExReplace(param, "i)VarSetCapacity\(.+?\)", "($0).Size")
   }
-  if InStr(p[2], "Numput(") {
+  if (InStr(p[2], "Numput(")) {
     ParBuffer := ""
     loop {
       p[1] := Trim(p[1])
@@ -309,7 +310,7 @@ _NumPut(p) {
 
 _Object(p) {
   Parameters := ""
-  Function := p.Has(2) ? "Map" : "Object" ; If parameters are used, a map object is intended
+  Function := (p.Has(2)) ? "Map" : "Object" ; If parameters are used, a map object is intended
   Loop p.Length
   {
     Parameters .= Parameters = "" ? p[A_Index] : ", " p[A_Index]
@@ -321,17 +322,17 @@ _Object(p) {
 _OnMessage(p) {
   ; OnMessage(MsgNumber, FunctionQ2T, MaxThreads)
   ; OnMessage({1}, {2}, {3})
-  If (p.Has(1) and p.Has(2) and p[1] != "" and p[2] != "") {
+  if (p.Has(1) && p.Has(2) && p[1] != "" && p[2] != "") {
     ;gmOnMessageMap.%p[1]% := p[2]
     ; 2024-06-28 change to key/val format for fix of Issue 136
     ; see addOnMessageCBArgs() in ConvertFuncs.ahk
     gmOnMessageMap[string(p[1])] := p[2]
-    If (p.Has(3) and p[3] != "") {
+    if (p.Has(3) && p[3] != "") {
       Return "OnMessage(" p[1] ", " p[2] ", " p[3] ")"
     }
     Return "OnMessage(" p[1] ", " p[2] ")"
   }
-  If (p.Has(2) and p[2] = "") {
+  if (p.Has(2) && p[2] = "") {
     Try {
       callback := gmOnMessageMap[string(p[1])] ;gmOnMessageMap.%p[1]%
     } Catch {
@@ -357,13 +358,13 @@ _RegExMatch(p) {
       pos += Match.Len, CaptNames.Push(Match[1])
 
     Out := ""
-    if RegExMatch(OrigPattern, '^"([^"(])*O([^"(])*\)(.*)$', &Match) {
+    if (RegExMatch(OrigPattern, '^"([^"(])*O([^"(])*\)(.*)$', &Match)) {
       ; Mode 3 (match object)
       ; v1OutputVar.Value(1) -> v2OutputVar[1]
       ; The v1 methods Count and Mark are properties in v2.
       P[2] := ( Match[1] || Match[2] ? '"' Match[1] Match[2] ")" : '"' ) . Match[3] ; Remove the "O" from the options
       gaList_MatchObj.Push(OutputVar)
-    } else if RegExMatch(OrigPattern, '^"([^"(])*P([^"(])*\)(.*)$', &Match) {
+    } else if (RegExMatch(OrigPattern, '^"([^"(])*P([^"(])*\)(.*)$', &Match)) {
       ; Mode 2 (position-and-length)
       ; v1OutputVar -> v2OutputVar.Len
       ; v1OutputVarPos1 -> v2OutputVar.Pos[1]
@@ -376,7 +377,7 @@ _RegExMatch(p) {
         gaList_PseudoArr.Push({strict: true, name: OutputVar "Len" CaptName, newname: OutputVar '.Len["' CaptName '"]'})
         gaList_PseudoArr.Push({strict: true, name: OutputVar "Pos" CaptName, newname: OutputVar '.Pos["' CaptName '"]'})
       }
-    } else if RegExMatch(OrigPattern, 'i)^"[a-z``]*\)') ; Explicit options.
+    } else if (RegExMatch(OrigPattern, 'i)^"[a-z``]*\)')) ; Explicit options.
       || RegExMatch(OrigPattern, 'i)^"[^"]*[^a-z``]') { ; Explicit no options.
       ; Mode 1 (Default)
       ; v1OutputVar -> v2OutputVar[0]
@@ -468,58 +469,58 @@ _TV_SetImageList(p) {
 
 _VarSetCapacity(p) {
   global gfrePostFuncMatch, gNL_Func, gEOLComment_Func, gfNoSideEffect
-  if gfNoSideEffect {
+  if (gfNoSideEffect) {
     tmp1:="", tmp2:=""
-    lgNL_Func        	:= &tmp1
-    lEOLComment_Func	:= &tmp2
+    lgNL_Func           := &tmp1
+    lEOLComment_Func    := &tmp2
   } else {
-    lgNL_Func        	:= &gNL_Func
-    lEOLComment_Func	:= &gEOLComment_Func
+    lgNL_Func           := &gNL_Func
+    lEOLComment_Func   := &gEOLComment_Func
   }
   %lEOLComment_Func%:=""
   reM := gfrePostFuncMatch
-  if        (p[3] != "") {
+  if (p[3] != "") {
     ; since even multiline continuation allows semicolon comments adding lEOLComment_Func shouldn't break anything, but if it does, add this hacky comment
       ;`{3} + 0*StrLen("V1toV2: comment")`, or when you can't add a 0 (to a buffer)
       ; p.Push("V1toV2: comment")
       ; retStr := Format('RegExReplace("{1} := Buffer({2}, {3}) ``; {4}", " ``;.*$")', p*)
-    varA  	:= Format("{1}"                           , p*)
-    retStr	:= Format("VarSetStrCapacity(&{1}, {2})"  , p*)
+    varA   := Format("{1}"                           , p*)
+    retStr := Format("VarSetStrCapacity(&{1}, {2})"  , p*)
     %lEOLComment_Func% .= format("V1toV2: if '{1}' is a UTF-16 string, use '{2}' and replace all instances of '{1}.Ptr' with 'StrPtr({1})'", varA, retStr)
     gmVarSetCapacityMap.Set(p[1], "B")
-    if not reM {
-      retBuf	:= Format("{1} := Buffer({2}, {3})"     , p*)
+    if (!reM) {
+      retBuf := Format("{1} := Buffer({2}, {3})"     , p*)
       dbgTT(3, "@_VarSetCapacity: 3 args, plain", Time:=3,id:=5,x:=-1,y:=-1)
     } else {
-      if        reM.Count = 1 { ; just in case, min should be 2
+      if (reM.Count = 1) { ; just in case, min should be 2
         p.Push(reM[])
-        retBuf	:= Format("({1} := Buffer({2}, {3})).Size{4}", p*)
+        retBuf   := Format("({1} := Buffer({2}, {3})).Size{4}", p*)
         dbgTT(3, "@_VarSetCapacity: 3 args, Regex 1 group", Time:=3,id:=5,x:=-1,y:=-1)
-      } else if reM.Count = 2 { ; one operator and a number, e.g. *0
+      } else if (reM.Count = 2) { ; one operator and a number, e.g. *0
         ; op  := reM[1]
         ; num := reM[2]
         ; if Trim(op) = "//"
         p.Push(reM[])
-        retBuf	:= Format("({1} := Buffer({2}, {3})).Size{4}", p*)
+        retBuf   := Format("({1} := Buffer({2}, {3})).Size{4}", p*)
         dbgTT(3, "@_VarSetCapacity: 3 args, Regex 2 groups", Time:=3,id:=5,x:=-1,y:=-1)
-      } else if reM.Count = 3 { ; op1, number, op2, e.g. *0+
+      } else if (reM.Count = 3) { ; op1, number, op2, e.g. *0+
         op1 := reM[1]
         num := reM[2]
         op2 := reM[3]
-        if Trim(op1)="*" and Trim(num)="0" { ; move to the previous new line, remove regex matches
-          if %lgNL_Func% {                       ; add a newline for multiple calls in a line
-            %lgNL_Func%	.= "`r`n" ;;;;; but breaks other calls
+        if (Trim(op1)="*" && Trim(num)="0") { ; move to the previous new line, remove regex matches
+          if (%lgNL_Func%) {                       ; add a newline for multiple calls in a line
+            %lgNL_Func% .= "`r`n" ;;;;; but breaks other calls
           }
           %lEOLComment_Func% .= " NB! if this is part of a control flow block without {}, please enclose this and the next line in {}!"
           p.Push(%lEOLComment_Func%)
-          %lgNL_Func%	.= Format("{1} := Buffer({2}, {3}) `; {4}"   , p*)
+          %lgNL_Func% .= Format("{1} := Buffer({2}, {3}) `; {4}"   , p*)
           ; DllCall("oleacc", "Ptr", VarSetCapacity(vC,8,0)*0 + &vC)
           %lEOLComment_Func% := ""
-          retBuf	:= ""
+          retBuf := ""
           dbgTT(3, "@_VarSetCapacity: 3 args, Regex 3 groups, NEWLINE", Time:=3,id:=5,x:=-1,y:=-1)
         } else {
           p.Push(reM[])
-          retBuf	:= Format("({1} := Buffer({2}, {3})).Size{4}", p*)
+          retBuf := Format("({1} := Buffer({2}, {3})).Size{4}", p*)
           dbgTT(3, "@_VarSetCapacity: 3 args, Regex 3 groups", Time:=3,id:=5,x:=-1,y:=-1)
         }
       }
@@ -527,28 +528,28 @@ _VarSetCapacity(p) {
     Return retBuf
   } else if (p[3]  = "") {
     dbgTT(3, "@_VarSetCapacity: 2 args", Time:=3,id:=5,x:=-1,y:=-1)
-    varA  	:= Format("{1}"                           , p*)
-    retBuf	:= Format("{1} := Buffer({2})"            , p*)
+    varA   := Format("{1}"                           , p*)
+    retBuf := Format("{1} := Buffer({2})"            , p*)
     %lEOLComment_Func% .= format("V1toV2: if '{1}' is NOT a UTF-16 string, use '{2}' and replace all instances of 'StrPtr({1})' with '{1}.Ptr'", varA, retBuf)
     gmVarSetCapacityMap.Set(p[1], "V")
-    if not reM {
-      retStr	:= Format("VarSetStrCapacity(&{1}, {2})"  , p*)
+    if (!reM) {
+      retStr := Format("VarSetStrCapacity(&{1}, {2})"  , p*)
     } else {
       p.Push(reM[])
-      retStr	:= Format("VarSetStrCapacity(&{1}, {2}){4}"  , p*)
+      retStr := Format("VarSetStrCapacity(&{1}, {2}){4}"  , p*)
     }
     Return retStr
   } else {
     dbgTT(3, "@_VarSetCapacity: fallback", Time:=3,id:=5,x:=-1,y:=-1)
-    varA  	:= Format("{1}", p*)
-    retStr	:= Format("VarSetStrCapacity(&{1}, {2})"        , p*)
+    varA   := Format("{1}", p*)
+    retStr := Format("VarSetStrCapacity(&{1}, {2})"        , p*)
     %lEOLComment_Func% .= format("V1toV2: if '{1}' is a UTF-16 string, use '{2}' and replace all instances of '{1}.Ptr' with 'StrPtr({1})'", varA, retStr)
     gmVarSetCapacityMap.Set(p[1], "B")
-    if not reM {
-      retBuf	:= Format("{1} := Buffer({2}, {3})"           , p*)
+    if (!reM) {
+      retBuf := Format("{1} := Buffer({2}, {3})"           , p*)
     } else {
       p.Push(reM[])
-      retBuf	:= Format("({1} := Buffer({2}, {3}).Size){4}" , p*)
+      retBuf := Format("({1} := Buffer({2}, {3}).Size){4}" , p*)
     }
     Return retBuf
   }

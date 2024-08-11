@@ -77,8 +77,7 @@
       }
       case 2: ;IF ONLY TWO ARGUMENTS THEN IF A_Args[1] IS NOT input THEN ERROR
       {       ;ELSE A_Args[2] IS FN
-         if (A_Args[1] = "-i" || A_Args[1] = "--input")
-            || (A_Args[1] = "-r" || A_Args[1] = "--recurse")
+         if (A_Args[1] = "-i" || A_Args[1] = "--input") || (A_Args[1] = "-r" || A_Args[1] = "--recurse")
             FN := A_Args[2]
       }
       case 4:
@@ -104,9 +103,9 @@
    FN    := Trim(FN)
    FNOut := Trim(FNOut)
 
-   If !FN
+   If (!FN)
    {
-      if A_Args.Length > 0 {
+      if (A_Args.Length) {
          MyMsg := ""
          For args in A_Args
          {
@@ -115,7 +114,7 @@
          MyMsg := "At least one of the above passed commandline parameters is invalid.`n"
          MyMsg .= "  Please make sure the parameters are correct and try again.`n"
          MyMsg .= "  Will exit due to parameter error: Error 48"
-      } else {  ;IF _A_Args.Length = 0
+      } else {  ;IF A_Args.Length = 0
          MyMsg := "No source file specified.`n"
          MyMsg .= "  Will exit due to lack of source file: Error AA.`n"
       }
@@ -123,20 +122,20 @@
       ExitApp
    }
 
-   If !FNOut
+   If (!FNOut)
    {
       FNOut := RegExReplace(FN, "\.[^.]*?$", MyOutExt)   ;***USE OUTPUT EXTENSION OPTION***
    }
 
-   if (A_Args[1] = "-r" && !A_Args.Has(2)) 
-      || (!FileExist(FN) && A_Args[1] != "-r")
+   if (A_Args.Has(1) && A_Args[1] = "-r" && !A_Args.Has(2)) || (!FileExist(FN) && A_Args[1] != "-r")
    {
       MyMsg := "Source source file not found.`n"
       MyMsg .= "  Will exit because source file was not found. Error BB`n"
       MsgBox MyMsg
       ExitApp
    }
-   if (A_Args.Has(1) && A_Args[1] != "-r") {
+   if (!A_Args.length || (A_Args.Has(1) && A_Args[1] != "-r"))
+   {
       ; 2024-07-01, ADDED, AMB - ensure source file has CRLF (no LF terminators)
       ;    this is to avoid read issue by VisualDiff
       ; create new v1 source file that guarantees CRLF terminators
@@ -159,19 +158,21 @@
       MyMsg        .= "New file saved as:`n" . FNOut . "`n`n"
       MyMsg        .= "Would you like to see the changes made?"
       result       := MsgBox(MyMsg,"", 68)
-      if (result = "Yes") {
+      if (result = "Yes")
+      {
          tempfile  := FileOpen(tempPath, "w", "utf-8")
-         tempfile.Write(tempRead)                                      ; changed from FileAppend (for consistancy)
+         tempfile.Write(tempRead)                                      ; save CRLF temp file for VisualDiff read
          tempfile.Close()
-   ;      FileAppend(tempRead, tempPath)                                ; save CRLF temp file for VisualDiff read
          Sleep(1000)
          Run("diff\VisualDiff.exe diff\VisualDiff.ahk `"" . FN . "`" `"" . FNOut . "`"")
       }
-   } else {
+   } else if (A_Args.has(2)) {
       A_Args[2] := RTrim(A_Args[2], "\")
       idx := 0
-      for , ext in RecurseExts {
-         loop files, A_Args[2] "\*." ext, "RF" {
+      for , ext in RecurseExts
+      {
+         loop files, A_Args[2] "\*." ext, "RF"
+         {
             inscript     := FileRead(A_LoopFileFullPath)
             outscript    := Convert(inscript)
             FNOut        := RegExReplace(A_LoopFileFullPath, "\.[^.]*?$", MyOutExt)

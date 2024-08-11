@@ -1,10 +1,10 @@
 var := "val"
 
 if (var = "val")
-    MsgBox("
+    MsgBox
 (
-    1p simple
-)")
+"1p simple"
+)
 
 if (var = "val")
     MsgBox("
@@ -13,10 +13,10 @@ if (var = "val")
 )")
 
 if (var = "val")
-    MsgBox("
+    MsgBox(
 (
-    4p simple only text
-)", "title", 1)
+"4p simple only text"
+), "title", 1)
 
 if (var = "val")
     MsgBox("
@@ -25,10 +25,10 @@ if (var = "val")
 )", "title", 1)
 
 if (var = "val")
-    MsgBox("
+    MsgBox(
 (
-    4p simple with timeout
-)", "title", "1 T4")
+"4p simple with timeout"
+), "title", "1 T4")
 
 if (var = "val")
     MsgBox("

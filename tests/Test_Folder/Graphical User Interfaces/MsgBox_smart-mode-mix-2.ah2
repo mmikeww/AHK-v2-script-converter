@@ -1,7 +1,7 @@
-MsgBox("
+MsgBox
 (
-    1
-)")  ; 1-p
+1
+)  ; 1-p
 MsgBox("a, 22, 
 (
     33
@@ -12,15 +12,15 @@ MsgBox("", "22
 (
     
 )", 1)  ; 4-p mode
-MsgBox("
+MsgBox(
 (
-    33
-)", 22, 1)  ; 4-p mode
+33
+), 22, 1)  ; 4-p mode
 
-MsgBox("
+MsgBox(
 (
-    33
-)", 22, "1 T44")  ; 4-p
+33
+), 22, "1 T44")  ; 4-p
 MsgBox("
 (
     33

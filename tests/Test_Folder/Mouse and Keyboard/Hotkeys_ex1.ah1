@@ -1,3 +1,0 @@
-#n::
-Run Notepad
-return

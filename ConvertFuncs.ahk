@@ -1731,7 +1731,7 @@ _Gui(p) {
       if (RegExMatch(GuiOldName, "^oGui\d+$")) {
          GuiOldName := StrReplace(GuiOldName, "oGui")
       }
-      Var1 := RegExReplace(p[1], "i)^([^:]*):(.*)$", "$2")
+      Var1 := RegExReplace(p[1], "i)^([^:]*):\s*(.*)$", "$2")
       Var2 := p[2]
       Var3 := p[3]
       Var4 := p[4]

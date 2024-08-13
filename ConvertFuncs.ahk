@@ -229,6 +229,11 @@ _convertLines(ScriptString, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to ac
       ; Prelines is code that does not need to changes anymore, but coud prevent correct command conversion
       PreLine := ""
 
+      ; Code that gets appended to end of current line
+      ; Useful for code that requires something on the second line
+      ; !USE gIndentation!
+      PostLine := ""
+
       if (RegExMatch(Line, "^\s*([^,\s]*|[$~!^#+]*,)::.*$") && (FirstTwo != "::")) {
          LineNoHotkey := RegExReplace(Line, "(^\s*).+::(.*$)", "$2")
          if (LineNoHotkey != "") {
@@ -699,6 +704,30 @@ _convertLines(ScriptString, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to ac
          PreLine .= Equation[1]
          Line := Equation[3]
       }
+      If IsSet(linesInIf) && linesInIf != "" {
+         linesInIf++
+         ;MsgBox "Line: [" Line "]`nlinesInIf: [" linesInIf "]`nPreLine [" PreLine "]"
+         If (Trim(Line) ~= "i)else\s+if" || Trim(PreLine) ~= "i)else\s+if")
+            ; else if - reset search
+            linesInIf := 0
+         Else If (Trim(Line) = "")
+            ; line is comment or blank - reset search
+            linesInIf--
+         Else If (Trim(Line) ~= "i)else(?!\s+if)") 
+            || (SubStr(Trim(Line), 1, 1) = "{") ; Fails if { is on line further than next
+            || (linesInIf >= 2)
+            ; just else - cancel search
+            ; { on next line - "
+            ; search is too long - "
+            linesInIf := ""
+         Else If (PreLine ~= "i)\s*try" && !InStr(PreLine, "{")) {
+            PreLine := StrReplace(PreLine, "try", gIndentation "{`ntry")
+            PostLine .= "`n" gIndentation "}"
+         }
+      }
+      If (SubStr(Trim(Line), 1, 2) = "if" && !InStr(Line, "{"))
+         || (SubStr(Trim(PreLine), 1, 2) = "if")
+         linesInIf := 0
       if (RegExMatch(Line, "i)(^\s*)([a-z_][a-z_0-9]*)\s*\+=\s*(.*?)\s*,\s*([SMHD]\w*)(.*$)", &Equation)) {
 
          Line := Equation[1] Equation[2] " := DateAdd(" Equation[2] ", " ParameterFormat("ValueCBE2E", Equation[3]) ", '" Equation[4] "')" Equation[5]
@@ -987,7 +1016,7 @@ _convertLines(ScriptString, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to ac
          }
       }
 
-      Line := PreLine Line
+      Line := PreLine Line PostLine
 
       ; Add back LinePrefix if exists
       if (LinePrefix != "") {

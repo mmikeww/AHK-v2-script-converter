@@ -707,7 +707,7 @@ _convertLines(ScriptString, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to ac
       If IsSet(linesInIf) && linesInIf != "" {
          linesInIf++
          ;MsgBox "Line: [" Line "]`nlinesInIf: [" linesInIf "]`nPreLine [" PreLine "]"
-         If (Trim(Line) ~= "i)else\s+if")
+         If (Trim(Line) ~= "i)else\s+if" || Trim(PreLine) ~= "i)else\s+if")
             ; else if - reset search
             linesInIf := 0
          Else If (Trim(Line) = "")
@@ -726,6 +726,7 @@ _convertLines(ScriptString, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to ac
          }
       }
       If (SubStr(Trim(Line), 1, 2) = "if" && !InStr(Line, "{"))
+         || (SubStr(Trim(PreLine), 1, 2) = "if")
          linesInIf := 0
       if (RegExMatch(Line, "i)(^\s*)([a-z_][a-z_0-9]*)\s*\+=\s*(.*?)\s*,\s*([SMHD]\w*)(.*$)", &Equation)) {
 

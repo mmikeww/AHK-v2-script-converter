@@ -2592,7 +2592,7 @@ class ConvertTests
       expected := "
          (Join`r`n
                                  InputVar := "The Red Fox"
-                                 out := SubStr(SubStr(InputVar, 1, 7), -3)
+                                 out := SubStr(SubStr(InputVar, 1, 7), StrLen(InputVar) >= 7 ? -3 : StrLen(InputVar)-7)
                                  FileAppend(out, "*")
          )"
                                  ; or two lines:
@@ -5347,11 +5347,11 @@ With continuation section.
 
       expected := "
          (Join`r`n
-MsgBox("
+MsgBox
 `(
-This is the 1-parameter method. Commas (,) do not need to be escaped.
-With continuation section.
-`)")
+"This is the 1-parameter method. Commas (,) do not need to be escaped.
+With continuation section."
+`)
 )"
 
       ; if (this.test_exec = true) {

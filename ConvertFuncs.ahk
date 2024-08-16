@@ -1570,9 +1570,9 @@ _FileRead(p) {
          OutputDebug("Conversion FileRead has not correct.`n")
       }
       ; To do: add encoding
-      Return format("{1} := Fileread({2}, {3})", p[1], ToExp(Filename), ToExp(Options))
+      Return format("{1} := FileRead({2}, {3})", p[1], ToExp(Filename), ToExp(Options))
    }
-   Return format("{1} := Fileread({2})", p[1], ToExp(p[2]))
+   Return format("{1} := FileRead({2})", p[1], ToExp(p[2]))
 }
 ;################################################################################
 _FileReadLine(p) {

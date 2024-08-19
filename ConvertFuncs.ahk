@@ -1702,6 +1702,7 @@ _Gui(p) {
       ControlLabel := ""
       ControlName := ""
       ControlObject := ""
+      GuiOpt := ""
 
       if (p[1] = "New" && gGuiList != "") {
          if (!InStr(gGuiList, gGuiNameDefault)) {
@@ -1759,8 +1760,7 @@ _Gui(p) {
             }
          }
       }
-      if (RegExMatch(Var3, "i)\b\+?\bhwnd[\w]*\b")) {
-         RegExMatch(Var3, "i)\+?HWND(.*?)(?:\s|$)", &match)
+      if (RegExMatch(Var3, "i)\+?HWND(.*?)(?:\s|$)", &match)) {
          ControlHwnd := match[1]
          Var3 := StrReplace(Var3, match[])
          if (ControlObject = "" && Var4 != "") {
@@ -1771,11 +1771,16 @@ _Gui(p) {
          }
          gmGuiCtrlObj["%" ControlHwnd "%"] := ControlObject
          gmGuiCtrlObj["% " ControlHwnd] := ControlObject
+      } else if (RegExMatch(Var2, "i)\+?HWND(.*?)(?:\s|$)", &match))
+         && (RegExMatch(Var1, "i)(?<!\w)New")) {
+            GuiOpt := Var3
+            GuiOpt := StrReplace(GuiOpt, match[])
+            LineSuffix .= gIndentation match[1] " := " GuiNameLine ".Hwnd"
       }
 
       if (!InStr(gGuiList, "|" GuiNameLine "|")) {
          gGuiList .= GuiNameLine "|"
-         LineResult := GuiNameLine " := Gui()`r`n" gIndentation
+         LineResult := GuiNameLine " := Gui(" GuiOpt ")`r`n" gIndentation
 
          ; Add the events if they are used.
          aEventRename := []
@@ -1854,7 +1859,7 @@ _Gui(p) {
          var1 := "SetFont"
          gGuiActiveFont := ToStringExpr(Var2) ", " ToStringExpr(Var3)
       } else if (var1 = "New") {
-         return Trim(LineResult,"`n")
+         return Trim(LineResult LineSuffix,"`n")
       }
 
       LineResult .= GuiNameLine "."

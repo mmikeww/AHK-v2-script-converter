@@ -606,6 +606,7 @@ GuiTest(strV1Script:="")
 
     ; Create the MyGui window and display the source directory (TreeRoot) in the title bar:
     MyGui := Gui("+Resize")  ; Allow the user to maximize or drag-resize the window.
+    Mygui.SetFont('s' FontSize)
     MyGui.Title := "Quick Convertor V2"
     MyGui.MarginX := "0", MyGui.MarginY := "0"
     ; Create an ImageList and put some standard system icons into it:

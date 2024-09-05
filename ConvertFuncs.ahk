@@ -126,6 +126,7 @@ setGlobals()
    global gUseLastName           := False       ; Keep track of if we use the last set name in gGuiList
    global gmOnMessageMap         := map()       ; Create a map of OnMessage listeners
    global gmVarSetCapacityMap    := map()       ; A list of VarSetCapacity variables, with definition type
+   global gmByRefParamMap        := map()       ; Map of FuncNames and ByRef params
    global gNL_Func               := ""          ; _Funcs can use this to add New Previous Line
    global gEOLComment_Func       := ""          ; _Funcs can use this to add comments at EOL
    global gfrePostFuncMatch      := False       ; ... to know their regex matched
@@ -629,7 +630,20 @@ _convertLines(ScriptString, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to ac
       ; this regex matches anything inside the parentheses () for both func definitions, and func calls :(
       {
          ; Changing the ByRef parameters to & signs.
-         Line := RegExReplace(Line, "i)(\bByRef\s+)", "&")
+         If RegExMatch(Line, "i)(\bByRef\s+)") {
+            ByRefTrackArray := [] ; for each param of a func, 1 if byef, 0 otherwise
+            params := MatchFunc[2]
+            while pos := RegExMatch(params, "[^,]+", &MatchFuncParams) {
+               if RegExMatch(params, "i)(\bByRef\s+)") {
+                  ByRefTrackArray.Push(true)
+               } else {
+                  ByRefTrackArray.Push(false)
+               }
+               params := StrReplace(params, MatchFuncParams[],,,, 1)
+            }
+            gmByRefParamMap.Set(MatchFunc[1], ByRefTrackArray)
+            Line := RegExReplace(Line, "i)(\bByRef\s+)", "&")
+         }
 
          AllParams := MatchFunc[2]
          ;msgbox, % "function line`n`nLine:`n" Line "`n`nAllParams:`n" AllParams
@@ -1106,6 +1120,7 @@ FinalizeConvert(&code)
    try code := UpdateGoto(code)         ; Update Goto Label when Label is converted to a func
    try code := FixOnMessage(code)       ; Fix turning off OnMessage when defined after turn off
    try code := FixVarSetCapacity(code)  ; &buf -> buf.Ptr   &vssc -> StrPtr(vssc)
+   try code := FixByRefParams(code)     ; Adds & to ByRef params in user func calls
    addMenuCBArgs(&code)                 ; 2024-06-26, AMB - Fix #131
    addOnMessageCBArgs(&code)            ; 2024-06-28, AMB - Fix #136
 
@@ -4197,6 +4212,43 @@ FixVarSetCapacity(ScriptString) {
          }
       }
       retScript .= Line "`r`n"
+   }
+   return RTrim(retScript, "`r`n") . happyTrails
+}
+;################################################################################
+/**
+ * Finds function calls with ByRef params
+ * and appends an &
+ */
+FixByRefParams(ScriptString) {
+   retScript := ""
+   happyTrails := ''
+   if (RegExMatch(ScriptString, '.*(\R+)$', &m))
+      happyTrails := m[1]
+   loop parse ScriptString, "`n", "`r" {
+      Line := A_LoopField
+      replacement := false
+      for func, v in gmByRefParamMap {
+         if RegExMatch(Line, "(^|.*\W)\Q" func "\E\((.*)\)", &match) ; Nested functions break and cont. sections this
+            && !InStr(Line, "&") { ; Not defining a function
+            retLine := match[1] func "("
+            params := match[2]
+            while pos := RegExMatch(params, "[^,]+", &MatchFuncParams) {
+               if v[A_Index] {
+                  retLine .= "&" LTrim(MatchFuncParams[]) ", "
+               } else {
+                  retLine .= MatchFuncParams[] ", "
+               }
+               params := StrReplace(params, MatchFuncParams[],,,, 1)
+            }
+            retLine := RTrim(retLine, ", ") ")"
+            replacement := true
+         }
+      }
+      if !replacement
+         retScript .= Line "`r`n"
+      else
+         retScript .= retLine "`r`n"
    }
    return RTrim(retScript, "`r`n") . happyTrails
 }

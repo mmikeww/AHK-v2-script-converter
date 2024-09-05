@@ -1753,7 +1753,8 @@ _Gui(p) {
       Var4 := p[4]
 
       ; 2024-07-09 AMB, UPDATED needles to support all valid v1 label chars
-      if (RegExMatch(Var3, "i)^[^g]*\bg([^,\h``]+).*$")) {
+      ; 2024-09-05 f2g: EDITED - Don't test Var3 for g-label if Var1 = "Show"
+      if (RegExMatch(Var3, "i)^[^g]*\bg([^,\h``]+).*$") && !InStr(Var1, "Show")) {
          ; Record and remove gLabel
          ControlLabel := RegExReplace(Var3, "i)^[^g]*\bg([^,\h``]+).*$", "$1")  ; get glabel name
          gaList_LblsToFuncC.Push(ControlLabel)                                  ; save label name

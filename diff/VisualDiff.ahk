@@ -10,8 +10,8 @@ if (A_Args.Length = 2) {
 	v1File := FileRead(A_Args[1])
 	v2File := FileRead(A_Args[2])
 } else {
-	vFile := "This is the AutoHotkey v1 side, the old code"
-	vFile := "This is the AutoHotkey v2 side, the new code"
+	v1File := "This is the AutoHotkey v1 side, the old code"
+	v2File := "This is the AutoHotkey v2 side, the new code"
 }
 
 wvc := WebView2.CreateControllerAsync(main.Hwnd).await2()

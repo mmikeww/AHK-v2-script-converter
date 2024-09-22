@@ -1,4 +1,5 @@
 #Include <WebView2\WebView2>
+#Requires AutoHotkey v2.0
 
 main := Gui(, "v1 -> v2 Diff")
 main.OnEvent('Close', (*) => ExitApp())

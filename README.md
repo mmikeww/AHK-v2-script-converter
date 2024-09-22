@@ -64,7 +64,8 @@ And of course, create a Pull Request with your changed code
 - Frankie who created the [original v2 converter](https://www.autohotkey.com/board/topic/65333-v2-script-converter/)
 - Uberi for his [updates to the original](https://www.autohotkey.com/board/topic/65333-v2-script-converter/?p=419671)
 - [Mergely](https://github.com/wickedest/Mergely) for the javascript diff library
-- Aurelain's [Exo](https://autohotkey.com/boards/viewtopic.php?t=5714) for the interface to run the javascript in an AHK gui
+- ~~Aurelain's [Exo](https://autohotkey.com/boards/viewtopic.php?t=5714) for the interface to run the javascript in an AHK gui~~
+- thqby's [ahk2_lib](https://github.com/thqby/ahk2_lib), specifically WebView2, which lets us display webpages in an AHK gui ([Licensed under MIT](https://github.com/thqby/ahk2_lib/blob/master/LICENSE))
 - Mmikeww and AHK_User updated the script to start working in V2-Beta
 - AHK_User (=dmtr99) Updated the code to be able to convert to the V2-Beta syntax and is currently working on it
 - I'm sure many others

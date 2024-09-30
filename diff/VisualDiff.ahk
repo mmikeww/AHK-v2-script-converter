@@ -43,6 +43,7 @@ injectMergely(force := false) {
 	if force
 		wv.reload(), Sleep(2000)
 	res := wv.ExecuteScriptAsync(
+		"document.getElementById('loading').remove();`r`n"
 		"let v1Code = '" sanitiseInput(v1File) "';`r`n"
 		"let v2Code = '" sanitiseInput(v2File) "';`r`n"
 		"const doc = new Mergely('#compare', {lhs: v1Code, rhs: v2Code});"

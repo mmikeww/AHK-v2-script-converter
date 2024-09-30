@@ -1,15 +1,55 @@
+<!DOCTYPE html>
 <html>
     <head>
         <script type="text/javascript" src="mergely.min.js"></script>
         <link type="text/css" rel="stylesheet" href="mergely.css" />
         <style>
+            #buttons {
+                height: 10%;
+                margin-bottom: 2%;
+            }
             #compare {
-                height: 100%;
+                height: 90vh;
             }
         </style>
     </head>
     <body>
+        <div id="buttons">
+            <button id="next" title="Next diff">Next diff</button>
+            <button id="prev" title="Previous diff">Prev diff</button>
+            <button id="cleardiff" title="Clear diffs">Clear diffs</button>
+            <button id="togglewrap" title="Toggle wrap">Toggle wrap</button>
+            <button id="scrollup" title="Scroll top">Scroll to top</button>
+            <button id="clear" title="Clear boxes">Clear boxes</button>
+        </div>
         <p id="loading">Loading Editor...<br>If this does not disappear after a few seconds press Ctrl + R</p>
         <div id="compare"></div>
+        <script>
+            document.getElementById('next').addEventListener('click', function () {
+                doc.scrollToDiff('next');
+            });
+
+            document.getElementById('prev').addEventListener('click', function () {
+                doc.scrollToDiff('prev');
+            });
+
+            document.getElementById('cleardiff').addEventListener('click', function () {
+                doc.unmarkup();
+            });
+
+            document.getElementById('togglewrap').addEventListener('click', function () {
+                doc.options({ wrap_lines: !doc.options().wrap_lines});
+            });
+
+            document.getElementById('scrollup').addEventListener('click', function () {
+                doc.scrollTo('lhs', 1);
+                doc.scrollTo('rhs', 1);
+            });
+
+            document.getElementById('clear').addEventListener('click', function () {
+                doc.clear('lhs');
+                doc.clear('rhs');
+            });
+        </script>
     </body>
 </html>

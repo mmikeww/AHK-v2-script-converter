@@ -4242,7 +4242,7 @@ FixByRefParams(ScriptString) {
       Line := A_LoopField
       replacement := false
       for func, v in gmByRefParamMap {
-         if RegExMatch(Line, "(^|.*\W)\Q" func "\E\((.*)\)", &match) ; Nested functions break and cont. sections this
+         if RegExMatch(Line, "(^|.*\W)\Q" func "\E\((.*)\)(.*?)$", &match) ; Nested functions break and cont. sections this
             && !InStr(Line, "&") { ; Not defining a function
             retLine := match[1] func "("
             params := match[2]
@@ -4254,7 +4254,7 @@ FixByRefParams(ScriptString) {
                }
                params := StrReplace(params, MatchFuncParams[],,,, 1)
             }
-            retLine := RTrim(retLine, ", ") ")"
+            retLine := RTrim(retLine, ", ") ")" match[3]
             replacement := true
          }
       }

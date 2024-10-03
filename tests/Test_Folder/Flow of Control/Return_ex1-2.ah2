@@ -4,3 +4,5 @@ MyFunc() {
 }
 
 MsgBox(MyFunc())
+
+MsgBox("Return, Test")

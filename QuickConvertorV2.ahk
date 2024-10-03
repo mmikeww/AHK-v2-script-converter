@@ -653,7 +653,17 @@ GuiTest(strV1Script:="")
     CheckBoxViewSymbols := MyGui.Add("CheckBox", "yp x+60", "Symbols")
     CheckBoxViewSymbols.StatusBar := "Display invisible symbols like spaces, tabs and linefeeds"
     CheckBoxViewSymbols.OnEvent("Click", ViewSymbols)
-    V1Edit := MyGui.Add("Edit", "x280 y0 w600 vvCodeV1 +Multi +WantTab +0x100", strV1Script)  ; Add a fairly wide edit control at the top of the window.
+    try {
+        V1Edit := MyGui.Add("Edit", "x280 y0 w600 vvCodeV1 +Multi +WantTab +0x100", strV1Script)  ; Add a fairly wide edit control at the top of the window.
+    } catch Error as e {
+        ; Failed to create control, likely because script is too large
+        msgResult := MsgBox("The v1 script control could not be created`nThis is likely due to the saved script being too large.`nAdding the script after pressing Yes should work`n`nRetry without loading script?", e.Message, 0x34)
+        if (msgResult = "Yes") {
+            V1Edit := MyGui.Add("Edit", "x280 y0 w600 vvCodeV1 +Multi +WantTab +0x100")
+        } else {
+            Reload
+        }
+    }
     V1Edit.OnEvent("Change",Edit_Change)
 
     ButtonRunV1 := MyGui.AddPicButton("w24 h24", "mmcndmgr.dll","icon33 h23")

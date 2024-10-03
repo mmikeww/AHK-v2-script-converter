@@ -44,10 +44,8 @@ injectMergely(*) {
 	Sleep(100)
 	;ToolTip "Sending Script"
 	res := wv.ExecuteScriptAsync(
-		"document.getElementById('loading').remove();`r`n"
-		"let v1Code = '" sanitiseInput(v1File) "';`r`n"
-		"let v2Code = '" sanitiseInput(v2File) "';`r`n"
-		"const doc = new Mergely('#compare', {lhs: v1Code, rhs: v2Code});"
+		"doc.lhs('" sanitiseInput(v1File) "');`r`n"
+		"doc.rhs('" sanitiseInput(v2File) "');`r`n"
 	)
 	;MsgBox res.await()
 }

@@ -22,7 +22,6 @@
             <button id="scrollup" title="Scroll top">Scroll to top</button>
             <button id="clear" title="Clear boxes">Clear boxes</button>
         </div>
-        <p id="loading">Loading Editor...<br>If this does not disappear after a few seconds press Ctrl + R</p>
         <div id="compare"></div>
         <script>
             document.getElementById('next').addEventListener('click', function () {
@@ -50,6 +49,8 @@
                 doc.clear('lhs');
                 doc.clear('rhs');
             });
+
+            const doc = new Mergely('#compare', {lhs: 'Loading v1 code', rhs: 'Loading v2 code'});
         </script>
     </body>
 </html>

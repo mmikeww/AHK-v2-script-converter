@@ -8,8 +8,7 @@
 ExecScript_v1(Script, Wait:=true)
 {
     shell := ComObject("WScript.Shell")
-    ;// the VisualDiff.exe file is just a renamed AHK v1.1.24.01 exe
-    exec := shell.Exec("..\diff\VisualDiff.exe /ErrorStdOut *")
+    exec := shell.Exec("..\AutoHotKey Exe\AutoHotkeyV1.exe /ErrorStdOut *")
     exec.StdIn.Write(Script)
     exec.StdIn.Close()
     if Wait
@@ -20,8 +19,7 @@ ExecScript_v1(Script, Wait:=true)
 ExecScript_v2(Script, Wait:=true)
 {
     shell := ComObject("WScript.Shell")
-    ;// the Tests.exe file is just a renamed AHK v2-beta.1 exe
-    exec := shell.Exec("Tests.exe /ErrorStdOut *")
+    exec := shell.Exec("..\AutoHotKey Exe\AutoHotkeyV2.exe /ErrorStdOut *")
     exec.StdIn.Write(Script)
     exec.StdIn.Close()
     if Wait

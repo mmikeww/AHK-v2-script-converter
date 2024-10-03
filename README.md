@@ -34,7 +34,7 @@ If you find that the script does not work, please go through the troubleshooting
 4. Finally ask for help! Either on the [discussions page](https://github.com/mmikeww/AHK-v2-script-converter/discussions/categories/q-a-conversion-help) or at [AHK forums](https://www.autohotkey.com/boards/viewforum.php?f=82)
 
 ## Note
-The `AutoHotKey Exe\AutoHotKeyV2.exe` file (as well as the `tests\Tests.exe` file) is simply a renamed copy of the `AutoHotkey32.exe` (v2.0.11) interpreter file. The interpreter alone does nothing without passing a script to it. But here, we take advantage of the [default scriptfile feature](https://lexikos.github.io/v2/docs/Scripts.htm#defaultfile) where the `Tests.exe` file will look for a file named `Tests.ahk` and automatically run it. You can make changes to the `.ahk` file and then just run the `.exe`. The reason for doing this is because most people will still have AHK v1 installed and associated with `*.ahk` files. So it would be inconvenient to run this converter without some workarounds. Likewise, the `diff\VisualDiff.exe` file (as well as the `AutoHotKey Exe\AutoHotKeyV1.exe` file) is just a renamed `AutoHotkeyU32-v1.1.24.02.exe`
+You may still have the AutoHotkey V1 binary associated with *.ahk files, the converter is written in V2 so please either [update AutoHotkey](https://www.autohotkey.com/download/) or open the repository in command prompt and run the following command: `"AutoHotKey Exe\AutoHotkeyV2.exe" QuickConvertorV2.ahk`
 
 # Known Issues
 The converter is not complete. That is, it does not detect all things that need to be changed to make sure the script works in v2. However, for the things that it DOES change, everything should hopefully work, except for the following. Here are the instances that are known to fail:
@@ -42,7 +42,7 @@ The converter is not complete. That is, it does not detect all things that need 
 2. Converting Gui is becoming better, the only big issue is the handling of the g-labels, the methods are completely different.
 
 # Contributing
-There is a lot of work to do and many commands and functions that still need to be changed. There are also many edge cases when trying to parse script code and convert it. Of course, whenever making changes to the code, you should be constantly running the unit tests to confirm that things are still working.  First run `QuickConvertorV2.ahk` with `Settings -> Testmode` on, make sure no tests fail. Then run the `tests\Tests.exe` file and pray for green.
+There is a lot of work to do and many commands and functions that still need to be changed. There are also many edge cases when trying to parse script code and convert it. Of course, whenever making changes to the code, you should be constantly running the unit tests to confirm that things are still working.  First run `QuickConvertorV2.ahk` with `Settings -> Testmode` on, make sure no tests fail. Then run the `tests\Tests.ahk` file and pray for green.
 
 Here are a few ways you can help:
 

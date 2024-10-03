@@ -2,8 +2,8 @@
 #Requires AutoHotkey v2.0
 
 main := Gui(, "v1 -> v2 Diff")
-main.OnEvent('Close', (*) => ExitApp())
-main.Show(Format('x{} y{} w{} h{}', 0, 0, A_ScreenWidth * 0.9, A_ScreenHeight * 0.9))
+main.OnEvent("Close", (*) => ExitApp())
+main.Show(Format("x{} y{} w{} h{}", 0, 0, A_ScreenWidth * 0.9, A_ScreenHeight * 0.9))
 WinMaximize(main.Title)
 
 if (A_Args.Length = 2) {
@@ -16,8 +16,8 @@ if (A_Args.Length = 2) {
 
 wvc := WebView2.CreateControllerAsync(main.Hwnd).await2()
 wv := wvc.CoreWebView2
-wv.Navigate(A_ScriptDir '\lib\template.html')
-
+wv.add_NavigationCompleted(injectMergely)
+wv.Navigate(A_ScriptDir "\lib\template.html")
 
 Sleep(1000) ; TODO: Receive message when wv is loaded and then call
 injectMergely()
@@ -25,7 +25,9 @@ injectMergely()
 #HotIf WinActive(main.Title)
 ^r:: {
 	ToolTip "Working"
-	injectMergely(true) ; If above does not load this can fix it
+	wv.reload()
+	Sleep(2000)
+	injectMergely() ; If above does not load this can fix it
 	ToolTip "Reloaded"
 	Sleep(2000)
 	ToolTip
@@ -38,10 +40,9 @@ sanitiseInput(str) {
 	return str
 }
 
-injectMergely(force := false) {
+injectMergely(*) {
+	Sleep(100)
 	;ToolTip "Sending Script"
-	if force
-		wv.reload(), Sleep(2000)
 	res := wv.ExecuteScriptAsync(
 		"document.getElementById('loading').remove();`r`n"
 		"let v1Code = '" sanitiseInput(v1File) "';`r`n"

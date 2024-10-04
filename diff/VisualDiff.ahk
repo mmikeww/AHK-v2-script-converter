@@ -1,7 +1,7 @@
 #Include <WebView2\WebView2>
 #Requires AutoHotkey v2.0
 
-main := Gui(, "v1 -> v2 Diff")
+main := Gui(, "AHK V1 -> V2 Coversion - Visual Diff")
 main.OnEvent("Close", (*) => ExitApp())
 main.Show(Format("x{} y{} w{} h{}", 0, 0, A_ScreenWidth * 0.9, A_ScreenHeight * 0.9))
 WinMaximize(main.Title)
@@ -18,9 +18,6 @@ wvc := WebView2.CreateControllerAsync(main.Hwnd).await2()
 wv := wvc.CoreWebView2
 wv.add_NavigationCompleted(injectMergely)
 wv.Navigate(A_ScriptDir "\lib\template.html")
-
-Sleep(1000) ; TODO: Receive message when wv is loaded and then call
-injectMergely()
 
 #HotIf WinActive(main.Title)
 ^r:: {

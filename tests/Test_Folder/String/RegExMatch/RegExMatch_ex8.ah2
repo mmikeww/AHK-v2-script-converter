@@ -24,5 +24,5 @@ Deref(Str)
             default:  out .= m[3]
         }
     }
-    return out SubStr(Str, (spo)<1 ? (spo)-1 : (spo))
+    return (AHKv1v2_Temp := out SubStr(Str, (spo)<1 ? (spo)-1 : (spo)), AHKv1v2_Temp) ; V1toV2: Wrapped Multi-statement return with parentheses
 }

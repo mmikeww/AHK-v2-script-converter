@@ -33,5 +33,5 @@ GetKeyChar(Key, WinTitle:=0)
     char := Buffer(4, 0) ; V1toV2: if 'char' is a UTF-16 string, use 'VarSetStrCapacity(&char, 4)' and replace all instances of 'char.Ptr' with 'StrPtr(char)'
     n := DllCall("ToUnicodeEx", "uint", vk, "uint", sc
 , "ptr", state.Ptr, "ptr", char.Ptr, "int", 2, "uint", 0, "ptr", hkl)
-    return StrGet(char.Ptr, n, "utf-16")
+    return (AHKv1v2_Temp := StrGet(char.Ptr, n, "utf-16"), AHKv1v2_Temp) ; V1toV2: Wrapped Multi-statement return with parentheses
 }

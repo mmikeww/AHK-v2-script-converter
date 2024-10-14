@@ -720,7 +720,7 @@ _convertLines(ScriptString, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to ac
          if (RegExMatch(Params, "^%\w+%$"))   ; if the var is wrapped in %%, then remove them
          {
             Params := SubStr(Params, 2, -1)
-            Line := gIndentation . "return " . Params . EOLComment   ; 'return' is the only command that we won't use a comma before the 1st param
+            Line := gIndentation . "return " . Params . EOLComment
          }
       }
 
@@ -729,6 +729,9 @@ _convertLines(ScriptString, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to ac
       else if (RegExMatch(Line, "i)(^\s*[\}]?\s*(else|while|if)[\s\(][^\{]*{\s*)(.*$)", &Equation)) {
          PreLine .= Equation[1]
          Line := Equation[3]
+      }
+      If RegExMatch(Line, "i)^(\s*Return\s*)(.*)", &Equation) && InStr(Equation[2], ",") {
+         Line := Equation[1] "(AHKv1v2_Temp := " Equation[2] ", AHKv1v2_Temp) `; V1toV2: Wrapped Multi-statement return with parentheses"
       }
       If IsSet(linesInIf) && linesInIf != "" {
          linesInIf++

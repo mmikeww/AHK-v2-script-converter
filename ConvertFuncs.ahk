@@ -235,7 +235,7 @@ _convertLines(ScriptString, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to ac
       ; !USE gIndentation!
       PostLine := ""
 
-      if (RegExMatch(Line, "^\s*([^,\s]*|[$~!^#+]*,)::.*$") && (FirstTwo != "::")) {
+      if (RegExMatch(Line, "((^\s*|\s*&\s*)([^,\s]*|[$~!^#+]*,))+::.*$") && (FirstTwo != "::")) {
          LineNoHotkey := RegExReplace(Line, "(^\s*).+::(.*$)", "$2")
          if (LineNoHotkey != "") {
             PreLine .= RegExReplace(Line, "^(\s*.+::).*$", "$1")

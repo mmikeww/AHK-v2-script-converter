@@ -5,4 +5,4 @@ MyFunc() {
 
 MsgBox % MyFunc()
 
-MsgBox("Return, Test")
+MsgBox, Return, Test

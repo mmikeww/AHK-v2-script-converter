@@ -4129,7 +4129,7 @@ UpdateGotoFunc(ScriptString)    ; the old UpdateGoto
    retScript  := ""
    loop parse ScriptString, "`n", "`r" {
       line  := A_LoopField
-      if (!InStr(line, "Goto", "On")) { ; Case sensitive because converter always converts to "Goto"
+      if (!InStr(line, "Goto", "On") or RegExMatch(Line, "^\s*;")) { ; Case sensitive because converter always converts to "Goto"
          retScript .= line . "`r`n"
          continue
       }
@@ -4160,7 +4160,7 @@ UpdateGoto(ScriptString) {
    loop parse ScriptString, "`n", "`r" {
       line      := A_LoopField
          ; if no goto command on this line, record line as is
-      if (!InStr(line, "Goto", "On")) { ; Case sensitive because converter always converts to "Goto"
+      if (!InStr(line, "Goto", "On") or RegExMatch(Line, "^\s*;")) { ; Case sensitive because converter always converts to "Goto"
          retScript .= line . "`r`n"
          continue
       }

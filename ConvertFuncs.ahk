@@ -629,9 +629,9 @@ _convertLines(ScriptString, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to ac
       ; -------------------------------------------------------------------------------
       ; Replace all switch variations with Switch SwitchValue
       ;
-      else if (RegExMatch(Line, "i)^\s*switch,?\s*\(?([^)]*)\)?\s*\{?", &Equation))
+      else if (RegExMatch(Line, "i)^\s*switch,?\s*([^{]*)\s*(\{?)", &Equation))
       {
-       Line := "Switch " Equation[1]
+       Line := "Switch " Equation[1] Equation[2]
       }
 
       ; -------------------------------------------------------------------------------

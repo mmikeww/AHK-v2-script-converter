@@ -3273,8 +3273,14 @@ _WinMove(p) {
 ;################################################################################
 _WinSet(p) {
 
-   if (p[1] = "AlwaysOnTop") {
-      p[2] := p[2] = "`"on`"" ? 1: p[2] = "`"off`"" ? 0 : p[2] = "`"toggle`"" ? -1 : p[2]
+   if (p[1] = "AlwaysOnTop" or p[1] = "TopMost") {
+      p[1] := "AlwaysOnTop" ; Convert TopMost
+      Switch p[2], False {
+         Case '"on"':     p[2] := 1
+         Case '"off"':    p[2] := 0
+         Case '"toggle"': p[2] := -1
+         Case '':         p[2] := -1
+      }
    }
    if (p[1] = "Bottom") {
       Out := format("WinMoveBottom({2}, {3}, {4}, {5}, {6})", p*)

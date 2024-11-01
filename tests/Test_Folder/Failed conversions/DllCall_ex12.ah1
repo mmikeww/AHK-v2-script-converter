@@ -1,6 +1,6 @@
 var := DllCall("Func"
      , "Str", "ABC" ; Comment
-     , "Str, "123"   ; Comment
+     , "Str", "123"   ; Comment
      , "Str", "DEF") ;Comment
 
 hCtrl := DllCall("CreateWindowEx"

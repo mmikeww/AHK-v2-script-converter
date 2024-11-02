@@ -1768,7 +1768,7 @@ _Gui(p) {
 
       ; 2024-07-09 AMB, UPDATED needles to support all valid v1 label chars
       ; 2024-09-05 f2g: EDITED - Don't test Var3 for g-label if Var1 = "Show"
-      if (RegExMatch(Var3, "i)^[^g]*\bg([^,\h``]+).*$") && !InStr(Var1, "Show")) {
+      if (RegExMatch(Var3, "i)^[^g]*\bg([^,\h``]+).*$") && !RegExMatch(Var1, "i)show|margin|font")) {
          ; Record and remove gLabel
          ControlLabel := RegExReplace(Var3, "i)^[^g]*\bg([^,\h``]+).*$", "$1")  ; get glabel name
          Var3 := RegExReplace(Var3, "i)^([^g]*)\bg([^,\h``]+)(.*)$", "$1$3")    ; remove glabel

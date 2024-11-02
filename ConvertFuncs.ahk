@@ -107,7 +107,7 @@ setGlobals()
    global gaList_PseudoArr       := Array()     ; list of strings that should be converted from pseudoArray to Array
    global gaList_MatchObj        := Array()     ; list of strings that should be converted from Match Object V1 to Match Object V2
    global gaList_LblsToFuncO     := Array()     ; array of objects with the properties [label] and [parameters] that should be converted from label to Function
-   global gaList_LblsToFuncC     := Array()     ; List of labels that were converted to funcs
+   global gaList_LblsToFuncC     := Array()     ; List of labels that were converted to funcs, automatically added when gaList_LblsToFuncO is pushed to
    global gOrig_Line             := ""
    global gOrig_Line_NoComment   := ""
    global gOScriptStr            := ""          ; array of all the lines
@@ -1107,10 +1107,12 @@ FinalizeConvert(&code)
 
    ; Convert labels listed in gaList_LblsToFuncO
    Loop gaList_LblsToFuncO.Length {
-      if (gaList_LblsToFuncO[A_Index].label)
+      if (gaList_LblsToFuncO[A_Index].label) {
          code := ConvertLabel2Func(code, gaList_LblsToFuncO[A_Index].label,    gaList_LblsToFuncO[A_Index].parameters
                , gaList_LblsToFuncO[A_Index].HasOwnProp("NewFunctionName")   ? gaList_LblsToFuncO[A_Index].NewFunctionName : ""
                , gaList_LblsToFuncO[A_Index].HasOwnProp("aRegexReplaceList") ? gaList_LblsToFuncO[A_Index].aRegexReplaceList : "")
+         gaList_LblsToFuncC.Push(gaList_LblsToFuncO[A_Index].HasOwnProp("NewFunctionName")   ? gaList_LblsToFuncO[A_Index].NewFunctionName : "")
+      }
    }
 
    ; convert labels for OnClipboardChange
@@ -1128,8 +1130,8 @@ FinalizeConvert(&code)
       code := SubStr(code, 1, -2)
 
    try code := AddBracket(code)         ; Add Brackets to Hotkeys
-   try code := UpdateGotoFunc(code)     ; Update Goto Label when Label is converted to a func
    try code := UpdateGoto(code)         ; Update Goto Label when Label is converted to a func
+   try code := UpdateGotoFunc(code)     ; Update Goto Label when Label is converted to a func
    try code := FixOnMessage(code)       ; Fix turning off OnMessage when defined after turn off
    try code := FixVarSetCapacity(code)  ; &buf -> buf.Ptr   &vssc -> StrPtr(vssc)
    try code := FixByRefParams(code)     ; Adds & to ByRef params in user func calls
@@ -1769,7 +1771,6 @@ _Gui(p) {
       if (RegExMatch(Var3, "i)^[^g]*\bg([^,\h``]+).*$") && !InStr(Var1, "Show")) {
          ; Record and remove gLabel
          ControlLabel := RegExReplace(Var3, "i)^[^g]*\bg([^,\h``]+).*$", "$1")  ; get glabel name
-         gaList_LblsToFuncC.Push(ControlLabel)                                  ; save label name
          Var3 := RegExReplace(Var3, "i)^([^g]*)\bg([^,\h``]+)(.*)$", "$1$3")    ; remove glabel
       } else if (Var2 = "Button") {
          ControlLabel := GuiOldName var2 RegExReplace(Var4, "[\s&]", "")
@@ -4141,9 +4142,10 @@ UpdateGotoFunc(ScriptString)    ; the old UpdateGoto
       }
       for , v1Label in gaList_LblsToFuncC {
          v2LabelName    := getV2Name(v1Label)    ; rename to v2 compatible without conflict
-         if (InStr(line, v1Label))
+         if (InStr(line, v1Label)) {
             retScript   .= StrReplace(line, 'Goto("' v1Label '")', v2LabelName "()`r`n")
-         else {
+            break
+         } else {
             retScript   .= line . "`r`n"
             break
          }

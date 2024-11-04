@@ -2758,7 +2758,7 @@ _Process(p) {
 _SendMessage(p) {
    if (p[3] ~= "^&.*") {
      p[3] := SubStr(p[3],2)
-     Out := format('if (type(' . p[3] . ')="Buffer") { `;V1toV2 If statement may be removed depending on type parameter`n`r'
+     Out := format('if (type(' . p[3] . ')="Buffer") { `; V1toV2: If statement may be removed depending on type parameter`n`r'
          . gIndentation . ' ErrorLevel := SendMessage({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9})', p*)
      Out := RegExReplace(Out, "[\s\,]*\)$", ")")
      Out .= format('`n`r' . gIndentation . '} else{`n`r'

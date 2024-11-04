@@ -1887,6 +1887,8 @@ _Gui(p) {
       }  else if (var1 = "Font") {
          var1 := "SetFont"
          gGuiActiveFont := ToStringExpr(Var2) ", " ToStringExpr(Var3)
+      } else if (Var1 = "Cancel") {
+         Var1 := "Hide"
       } else if (var1 = "New") {
          return Trim(LineResult LineSuffix,"`n")
       }

@@ -2220,6 +2220,7 @@ _GuiControlGet(p) {
 }
 ;################################################################################
 _Hotkey(p) {
+   LineSuffix := ""
 
    ;Convert label to function
 
@@ -2249,11 +2250,15 @@ _Hotkey(p) {
       if (P[2] = "on" || P[2] = "off" || P[2] = "Toggle" || P[2] ~= "^AltTab" || P[2] ~= "^ShiftAltTab") {
          p[2] := p[2] = "" ? "" : ToExp(p[2])
       }
+      if InStr(p[3], "UseErrorLevel") {
+         p[3] := Trim(StrReplace(p[3], "UseErrorLevel"))
+         LineSuffix := " `; V1toV2: Removed UseErrorLevel"
+      }
       p[3] := p[3] = "" ? "" : ToExp(p[3])
       Out := Format("Hotkey({1}, {2}, {3})", p*)
    }
    Out := RegExReplace(Out, "\s*`"`"\s*\)$", ")")
-   Return RegExReplace(Out, "[\s\,]*\)$", ")")
+   Return RegExReplace(Out, "[\s\,]*\)$", ")") LineSuffix
 }
 ;################################################################################
 _IfGreater(p) {

@@ -301,6 +301,14 @@ class PreMask
 	static RestoreQS(&code) {
 		PreMask.RestoreAll(&code, 'QS')
 	}
+	; PUBLIC - convenience/proxy method - mask function calls
+	static MaskFC(&code) {
+		PreMask.MaskCalls(&code)
+	}
+	; PUBLIC - convenience/proxy method - mask function calls
+	static RestoreFC(&code) {
+		PreMask.RestoreAll(&code, 'FC')
+	}
 
 	; PUBLIC - searches for pattern in code and masks the code
 	; used for block/line comments and strings (not for classes and functions)
@@ -336,6 +344,77 @@ class PreMask
 			mCode	:= m[]
 			oCode	:= PreMask.masklist[mCode].origCode		; get original code from mask object
 			code	:= StrReplace(code, mcode, oCode)		; replace - should only be 1 occurence
+		}
+	}
+
+	; PUBLIC - Mask function calls
+	static MaskCalls(&code) {
+		if !RegExMatch(code, "\w\(")
+			return code
+
+		maskStrings(&code)
+		codeSplit        := StrSplit(code)
+		codeArray        := [] ; functions, strings and params broken into chunks
+		functions        := 0  ; functions found so far
+		tempCode         := "" ; store chunk before pushing to codeArray
+		index            := 1  ; amount of chunks found including tempCode
+		validFunc        := 1  ; tracks if chars before func are valid
+		lastBracketValid := [] ; tracks if last bracket was a function
+		for , char in codeSplit {
+			If RegExMatch(char, "\w") {
+				if !validFunc {
+					codeArray.Push(tempCode)
+					tempCode := ""
+					index++
+				}
+				tempCode .= char
+				validFunc := 1
+			} else if (char = "(") {
+				tempCode .= char
+				validFunc ? lastBracketValid.Push(1) : lastBracketValid.Push(0)
+				validFunc := 0
+			} else if (char = ")" and lastBracketValid[lastBracketValid.Length]) {
+				tempCode .= char
+				lastBracketValid.Pop()
+				codeArray.Push(tempCode) ; index currently equals length
+				foundFunc := 0
+				chunkedFunc := []
+				finishedFunc := ""
+				while !foundFunc {
+					searchBack := index - A_Index
+					elemToCheck := codeArray[searchBack]
+					;MsgBox "elemToCheck: " elemToCheck
+					If RegExMatch(elemToCheck, "\w\(")
+						foundFunc := 1
+					chunkedFunc.Push(elemToCheck)
+				}
+				chunkedFunc.InsertAt(1, codeArray[index])
+				index := searchBack + 1
+				codeArray.RemoveAt(searchBack, codeArray.Length - searchBack + 1)
+				for , chunk in chunkedFunc {
+					finishedFunc := chunk finishedFunc ; chunkedFunc is stored backwards
+					;MsgBox "finishedFunc: " finishedFunc
+				}
+				functions++
+				tagChar := (IsSet(gTagChar)) ? gTagChar : chr(0x2605)
+				pref	:= '#TAG' . tagChar . 'FC' . '_' PreMask.GenUniqueID() '_'
+				trail	:= tagChar . '#'
+				tag     := pref . functions . trail
+				PreMask.masklist[tag]	:= PreMask(finishedFunc, tag, 'FC', '')
+				codeArray.InsertAt(searchBack, tag)
+				tempCode := ""
+			} else {
+				tempCode .= char
+				if (char = ")")
+					lastBracketValid.Pop()
+				validFunc := 0
+			}
+			;MsgBox "index: " index "`nvf: " validFunc "`nchar: " char "`ntempCode: " tempCode "`ncode: " code
+		}
+		codeArray.Push(tempCode)
+		code := ""
+		for , chunk in codeArray {
+			code .= chunk
 		}
 	}
 
@@ -546,6 +625,24 @@ class MLSTR extends PreMask
 ; proxy func to mask classes and functions
 
 	NodeMap.MaskBlocks(&code)
+	return
+}
+;################################################################################
+															 maskFuncCalls(&code)
+;################################################################################
+{
+; proxy func to mask function calls
+
+	PreMask.MaskFC(&code)
+	return
+}
+;################################################################################
+															 restoreFuncCalls(&code)
+;################################################################################
+{
+; proxy func to restore function calls
+
+	PreMask.RestoreFC(&code)
 	return
 }
 ;################################################################################

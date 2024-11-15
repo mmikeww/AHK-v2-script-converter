@@ -117,6 +117,7 @@ AddSubFoldersToTree(Folder, DirList, ParentItemID := 0,*)
     ; It also calls itself recursively to gather nested folders to any depth.
     Loop Files, Folder "\*.*", "DF"  ; Retrieve all of Folder's sub-folders.
     {
+        LoadingFileName.Text := A_LoopFileName
         If InStr( FileExist(A_LoopFileFullPath ), "D" ) {
             If (!TestFailing and A_LoopFileName = "Failed conversions")
                 continue ; Skip failed conversions when test mode if off
@@ -168,7 +169,9 @@ ButtonConvert(*)
     DllCall("QueryPerformanceCounter", "Int64*", &CounterBefore := 0)
     V2Edit.Text := Convert(V1Edit.Text)
     DllCall("QueryPerformanceCounter", "Int64*", &CounterAfter := 0)
-    SB.SetText("Conversion completed in " Format("{:.4f}", (CounterAfter - CounterBefore) / freq * 1000) "ms", 4)
+    time := Format("{:.4f}", (CounterAfter - CounterBefore) / freq * 1000)
+    SB.SetText("Conversion completed in " time "ms", 4)
+    Return time
 }
 ButtonGenerateTest(*)
 {
@@ -624,7 +627,9 @@ GuiTest(strV1Script:="")
 
     ; Add folders and their subfolders to the tree. Display the status in case loading takes a long time:
 ;    M := Gui("ToolWindow -SysMenu Disabled AlwaysOnTop", "Loading the tree..."), M.Show("w200 h0")
-    M := Gui("ToolWindow -SysMenu Disabled", "Loading the tree..."), M.Show("w200 h0")
+    M := Gui("ToolWindow -SysMenu Disabled", "Loading the tree...")
+    LoadingFileName := M.AddText("w200")
+    M.Show("w200")
 
     if TestMode{
         DirList := AddSubFoldersToTree(TreeRoot, Map())
@@ -740,9 +745,12 @@ GuiTest(strV1Script:="")
     SettingsMenu := Menu()
     SettingsMenu.Add("Testmode", MenuTestMode)
     SettingsMenu.Add("Include Failing", MenuTestFailing)
+    OutputMenu := Menu()
+    OutputMenu.Add("Remove converter comments", MenuRemoveComments)
     TestMenu := Menu()
     TestMenu.Add("AddBracketToHotkeyTest", (*) => V2Edit.Text := AddBracket(V1Edit.Text))
     TestMenu.Add("GetAltLabelsMap", (*) => V2Edit.Text := GetAltLabelsMap(V1Edit.Text))
+    TestMenu.Add("Performance Test", MenuPerformanceTest)
     ViewMenu := Menu()
     ViewMenu.Add("Zoom In`tCtrl+NumpadAdd", MenuZoomIn)
     ViewMenu.Add("Zoom Out`tCtrl+NumpadSub", MenuZoomOut)
@@ -762,6 +770,7 @@ GuiTest(strV1Script:="")
     Menus.Add("&File", FileMenu)  ; Attach the two submenus that were created above.
     if !A_IsCompiled
         Menus.Add("&Settings", SettingsMenu)
+    Menus.Add("&Output", OutputMenu)
     Menus.Add("&View", ViewMenu)
     Menus.Add( "&Reload", (*) => (Gui_Close(MyGui),Reload()))
     Menus.Add( "Test", TestMenu)
@@ -893,6 +902,12 @@ MenuTestFailing(*)
     TestFailing := !TestFailing
     IniWrite(TestFailing, "QuickConvertorV2.ini", "Convertor", "TestFailing")
 }
+MenuRemoveComments(*)
+{
+    global
+    V2Edit.Value := RegExReplace(V2Edit.Value, "m)^; V1toV2: [^;]*\n") ; for Removed X comments
+    V2Edit.Value := RegExReplace(V2Edit.Value, "; V1toV2: [^;]*")
+}
 MenuViewExpected(*)
 {
     CheckBoxV2E.Value := !CheckBoxV2E.Value
@@ -917,6 +932,21 @@ MenuViewTree(*)
     }
     MyGui.GetPos(,, &Width,&Height)
     Gui_Size(MyGui, 0, Width - 14, Height - 60)
+}
+MenuPerformanceTest(*)
+{
+    timeArr := []
+    timeMean := 0
+    Loop(250)
+    {
+        timeArr.Push(ButtonConvert())
+    }
+    for , time in timeArr
+    {
+        timeMean += time
+    }
+    MsgBox("Test Complete!`nDid 250 conversions in " Round(timeMean, 3) "ms`nAverage conversion was "
+    Round(timeMean /= 250, 3) "ms", "Test complete!")
 }
 MenuZoomIn(*)
 {

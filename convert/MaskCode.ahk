@@ -308,6 +308,7 @@ class PreMask
 	; PUBLIC - convenience/proxy method - mask function calls
 	static RestoreFC(&code) {
 		PreMask.RestoreAll(&code, 'FC')
+		PreMask.RestoreAll(&code, 'QS')
 	}
 
 	; PUBLIC - searches for pattern in code and masks the code
@@ -358,7 +359,7 @@ class PreMask
 		functions        := 0  ; functions found so far
 		tempCode         := "" ; store chunk before pushing to codeArray
 		index            := 1  ; amount of chunks found including tempCode
-		validFunc        := 1  ; tracks if chars before func are valid
+		validFunc        := 0  ; tracks if chars before func are valid
 		lastBracketValid := [] ; tracks if last bracket was a function
 		for , char in codeSplit {
 			If RegExMatch(char, "\w") {
@@ -374,6 +375,11 @@ class PreMask
 				validFunc ? lastBracketValid.Push(1) : lastBracketValid.Push(0)
 				validFunc := 0
 			} else if (char = ")" and lastBracketValid[lastBracketValid.Length]) {
+				if (codeSplit[A_Index - 1] = "(") {
+					codeArray.Push(tempCode)
+					index++
+					tempCode := ""
+				}
 				tempCode .= char
 				lastBracketValid.Pop()
 				codeArray.Push(tempCode) ; index currently equals length

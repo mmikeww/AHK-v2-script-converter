@@ -1162,6 +1162,9 @@ FinalizeConvert(&code)
 subLoopFunctions(ScriptString, Line, &retV2, &gotFunc) {
    global gFuncParams, gfrePostFuncMatch
    loop {
+      if !InStr(Line, "(")
+         break
+
       oResult := V1ParSplitfunctions(Line, A_Index)
 
       if (oResult.Found = 0) {

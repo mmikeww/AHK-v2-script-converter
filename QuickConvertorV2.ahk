@@ -1,4 +1,3 @@
-
 { ;FILE_NAME:  QuickConverterV2.ahk - v2 - Converts AutoHotkey v1.1 to v2.0
   ; REQUIRES: AutoHotkey v2.0+
   ; Language:       English
@@ -456,10 +455,10 @@ gui_AhkHelp(SearchString,Version:="V2")
     }
 
     if (Version="V1"){
-        URLSearch := "https://www.autohotkey.com/docs/search.htm?q="
+        URLSearch := "https://www.autohotkey.com/docs/v1/search.htm?q="
     }
     else{
-        URLSearch := "https://lexikos.github.io/v2/docs/search.htm?q="
+        URLSearch := "https://www.autohotkey.com/docs/v2/search.htm?q="
     }
     URL := URLSearch SearchString "&m=2"
 

@@ -112,7 +112,10 @@ AddSubFoldersToTree(Folder, DirList, ParentItemID := 0,*)
     ; It also calls itself recursively to gather nested folders to any depth.
     Loop Files, Folder "\*.*", "DF"  ; Retrieve all of Folder's sub-folders.
     {
+        LoadingFileName.Text := A_LoopFileName
         If InStr( FileExist(A_LoopFileFullPath ), "D" ){
+            If (!TestFailing and A_LoopFileName = "Failed conversions")
+                continue ; Skip failed conversions when test mode if off
             ItemID := TV.Add(A_LoopFileName, ParentItemID, icons.Folder)
         }
         else If InStr(A_LoopFileFullPath,".ah1"){
@@ -168,7 +171,9 @@ ButtonConvert(*)
     DllCall("QueryPerformanceCounter", "Int64*", &CounterBefore := 0)
     V2Edit.Text := Convert(V1Edit.Text)
     DllCall("QueryPerformanceCounter", "Int64*", &CounterAfter := 0)
-    SB.SetText("Conversion completed in " Format("{:.4f}", (CounterAfter - CounterBefore) / freq * 1000) "ms", 4) 
+    time := Format("{:.4f}", (CounterAfter - CounterBefore) / freq * 1000)
+    SB.SetText("Conversion completed in " time "ms", 4) 
+    return time
 }
 ButtonGenerateTest(*)
 {
@@ -455,10 +460,10 @@ gui_AhkHelp(SearchString,Version:="V2")
     }
 
     if (Version="V1"){
-        URLSearch := "https://www.autohotkey.com/docs/search.htm?q="
+        URLSearch := "https://www.autohotkey.com/docs/v1/search.htm?q="
     }
     else{
-        URLSearch := "https://lexikos.github.io/v2/docs/search.htm?q="
+        URLSearch := "https://www.autohotkey.com/docs/v2/search.htm?q="
     }
     URL := URLSearch SearchString "&m=2"
 
@@ -598,11 +603,10 @@ SB := MyGui.Add("StatusBar")
 SB.SetParts(300, 300, 300)  ; Create four parts in the bar (the fourth part fills all the remaining width).
 
 ; Add folders and their subfolders to the tree. Display the status in case loading takes a long time:
-M := Gui("ToolWindow -SysMenu Disabled AlwaysOnTop", "Loading the tree..."), M.Show("w200 h0")
-if TestFailing and TestMode{
-    DirList := AddSubFoldersToTree(A_ScriptDir "/tests", Map())
-}
-else if TestMode{
+M := Gui("ToolWindow -SysMenu Disabled", "Loading the tree...")
+LoadingFileName := M.AddText("w200")
+M.Show("w200")
+if TestMode{
     DirList := AddSubFoldersToTree(TreeRoot, Map())
 }
 else{
@@ -726,9 +730,12 @@ FileMenu.Add "E&xit", (*) => ExitApp()
 SettingsMenu := Menu()
 SettingsMenu.Add("Testmode", MenuTestMode)
 SettingsMenu.Add("Include Failing", MenuTestFailing)
+OutputMenu := Menu()
+OutputMenu.Add("Remove converter comments", MenuRemoveComments)
 TestMenu := Menu()
 TestMenu.Add("AddBracketToHotkeyTest", (*) => V2Edit.Text := AddBracket(V1Edit.Text))
 TestMenu.Add("GetAltLabelsMap", (*) => V2Edit.Text := GetAltLabelsMap(V1Edit.Text))
+TestMenu.Add("Performance Test", MenuPerformanceTest)
 ViewMenu := Menu()
 ViewMenu.Add("Zoom In`tCtrl+NumpadAdd", MenuZoomIn)
 ViewMenu.Add("Zoom Out`tCtrl+NumpadSub", MenuZoomOut)
@@ -747,6 +754,7 @@ HelpMenu.Add("Open Github", (*)=>Run("https://github.com/mmikeww/AHK-v2-script-c
 Menus := MenuBar()
 Menus.Add("&File", FileMenu)  ; Attach the two submenus that were created above.
 Menus.Add("&Settings", SettingsMenu)
+Menus.Add("&Output", OutputMenu)
 Menus.Add("&View", ViewMenu)
 Menus.Add "&Reload", (*) => Reload()
 Menus.Add( "Test", TestMenu)
@@ -762,17 +770,14 @@ MyGui.OnEvent("DropFiles",Gui_DropFiles)
 MyGui.Show("h" GuiHeight " w" GuiWidth)
 GuiHwnd := MyGui.Hwnd
 sleep(500)
-UserClicked := true
 
 if TestMode {
     TestMode := !TestMode
-    UserClicked := false
     MenuTestMode('')
 }
 
 if TestFailing {
     TestFailing := !TestFailing
-    UserClicked := false
     MenuTestFailing('')
 }
 
@@ -901,12 +906,6 @@ MenuTestMode(*)
         CheckBoxV2E.Visible := false
         ViewMenu.UnCheck("View Tree")
     }
-    if TestMode and UserClicked{
-        msgResult := MsgBox("In order for changes to take effect a reload is required.`n`nReload now?", "Reload Required", 68)
-        if (msgResult = "Yes")
-            MyExit(MyGui),Reload()
-    }
-    UserClicked := true
     IniWrite(TestMode, "QuickConvertorV2.ini", "Convertor", "TestMode")
     MyGui.GetPos(, , &Width, &Height)
     Gui_Size(MyGui, 0, Width-14, Height - 60)
@@ -916,13 +915,13 @@ MenuTestFailing(*)
     global
     SettingsMenu.ToggleCheck("Include Failing")
     TestFailing := !TestFailing
-    if TestFailing and TestMode and UserClicked{
-        msgResult := MsgBox("In order for changes to take effect a reload is required.`n`nReload now?", "Reload Required", 68)
-        if (msgResult = "Yes")
-            MyExit(MyGui),Reload()
-    }
-    UserClicked := true
     IniWrite(TestFailing, "QuickConvertorV2.ini", "Convertor", "TestFailing")
+}
+MenuRemoveComments(*)
+{
+    global
+    V2Edit.Text := RegExReplace(V2Edit.Text, "m)^; V1toV2: [^;]*\n") ; for Removed X comments
+    V2Edit.Text := RegExReplace(V2Edit.Text, "; V1toV2: [^;]*")
 }
 MenuViewExpected(*)
 {
@@ -948,6 +947,21 @@ MenuViewTree(*)
     }
     MyGui.GetPos(,, &Width,&Height)
     Gui_Size(MyGui, 0, Width - 14, Height - 60)
+}
+MenuPerformanceTest(*)
+{
+    timeArr := []
+    timeMean := 0
+    Loop(250)
+    {
+        timeArr.Push(ButtonConvert())
+    }
+    for , time in timeArr
+    {
+        timeMean += time
+    }
+    MsgBox("Test Complete!`nDid 250 conversions in " Round(timeMean, 3) "ms`nAverage conversion was "
+    Round(timeMean /= 250, 3) "ms", "Test complete!")
 }
 MenuZoomIn(*)
 {
@@ -1184,14 +1198,14 @@ ViewSymbols(*)
 {
     ViewMenu.ToggleCheck("Show Symols")
     if (CheckBoxViewSymbols.Value){
-        V1Edit.Value := StrReplace(StrReplace(StrReplace(StrReplace(V1Edit.Text,"`r","\r`r"),"`n","\n`n")," ","·"),"`t","→")
-        V2Edit.Value := StrReplace(StrReplace(StrReplace(StrReplace(V2Edit.Text,"`r","\r`r"),"`n","\n`n")," ","·"),"`t","→")
-        V2ExpectedEdit.Value := StrReplace(StrReplace(StrReplace(StrReplace(V2ExpectedEdit.Text,"`r","\r`r"),"`n","\n`n")," ","·"),"`t","→")
+        V1Edit.Text := StrReplace(StrReplace(StrReplace(StrReplace(V1Edit.Text,"`r","\r`r"),"`n","\n`n")," ","·"),"`t","→")
+        V2Edit.Text := StrReplace(StrReplace(StrReplace(StrReplace(V2Edit.Text,"`r","\r`r"),"`n","\n`n")," ","·"),"`t","→")
+        V2ExpectedEdit.Text := StrReplace(StrReplace(StrReplace(StrReplace(V2ExpectedEdit.Text,"`r","\r`r"),"`n","\n`n")," ","·"),"`t","→")
     }
     else{
-        V1Edit.Value := StrReplace(StrReplace(StrReplace(StrReplace(V1Edit.Text,"\r`r","`r"),"\n`r`n","`n"),"·"," "),"→","`t",)
-        V2Edit.Value := StrReplace(StrReplace(StrReplace(StrReplace(V2Edit.Text,"\r`r","`r"),"\n`r`n","`n"),"·"," "),"→","`t",)
-        V2ExpectedEdit.Value := StrReplace(StrReplace(StrReplace(StrReplace(V2ExpectedEdit.Text,"\r`r","`r"),"\n`r`n","`n"),"·"," "),"→","`t",)
+        V1Edit.Text := StrReplace(StrReplace(StrReplace(StrReplace(V1Edit.Text,"\r`r","`r"),"\n`r`n","`n"),"·"," "),"→","`t",)
+        V2Edit.Text := StrReplace(StrReplace(StrReplace(StrReplace(V2Edit.Text,"\r`r","`r"),"\n`r`n","`n"),"·"," "),"→","`t",)
+        V2ExpectedEdit.Text := StrReplace(StrReplace(StrReplace(StrReplace(V2ExpectedEdit.Text,"\r`r","`r"),"\n`r`n","`n"),"·"," "),"→","`t",)
     }
 }
 ViewV2E(*)

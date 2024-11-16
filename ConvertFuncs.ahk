@@ -461,15 +461,41 @@ _convertLines(ScriptString, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to ac
       }
       else if (RegexMatch(Line, "(?i)^(\h*[a-z_][a-z_0-9]*\h*[:*\.]=\h*)(.*)") && InStr(Line, '""')) ; Line is var assignment, and has ""
       {
+         ternary := 0
          ; Fixes issues with continuation sections
          Line := RegExReplace(Line, '""(\h*)\r\n', '"' Chr(0x2700) '"$1`r`n')
          maskFuncCalls(&Line)
          if (RegexMatch(Line, "(?i)^(\h*[a-z_][a-z_0-9]*\h*[:*\.]=\h*)(.*)", &Equation) && InStr(Line, '""')) {
             ; 2024-08-02 AMB, Fix 272
-            maskStrings(&line), Line := Equation[1], val := Equation[2]
-            if (!RegexMatch(Line, "\h*\w+(\((?>[^)(]+|(?-1))*\))")) ; not a func
-            {
-               ConvertDblQuotes2(&Line, val)
+            If (InStr(Line, "?") && InStr(Line, ":")) { ; Ternary
+               Line := Equation[1], val := Equation[2]
+               maskStrings(&val)
+               If (!InStr(val, "?") || !InStr(val, ":")) {
+                  ternary := 0
+                  Line := Line restoreStrings(&val)
+               } else {
+                  ternary := 1
+                  post := StrSplit(val, ":")
+                  pre := StrSplit(post[1], "?")
+
+                  expr := pre[1]
+                  ifTrue := pre[2]
+                  ifFalse := post[2]
+
+                  restoreStrings(&expr)
+                  ConvertDblQuotes2(&Line, expr "?")
+                  restoreStrings(&ifTrue)
+                  ConvertDblQuotes2(&Line, ifTrue ":")
+                  restoreStrings(&ifFalse)
+                  ConvertDblQuotes2(&Line, ifFalse)
+               }
+            }
+            If !ternary {
+               maskStrings(&line), Line := Equation[1], val := Equation[2]
+               if (!RegexMatch(Line, "\h*\w+(\((?>[^)(]+|(?-1))*\))")) ; not a func
+               {
+                  ConvertDblQuotes2(&Line, val)
+               }
             }
          }
          Line := RegExReplace(Line, Chr(0x2700))

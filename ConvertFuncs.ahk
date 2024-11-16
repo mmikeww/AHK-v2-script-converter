@@ -463,6 +463,7 @@ _convertLines(ScriptString, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to ac
       {
          ; Fixes issues with continuation sections
          Line := RegExReplace(Line, '""(\h*)\r\n', '"' Chr(0x2700) '"$1`r`n')
+         maskFuncCalls(&Line)
          if (RegexMatch(Line, "(?i)^(\h*[a-z_][a-z_0-9]*\h*[:*\.]=\h*)(.*)", &Equation) && InStr(Line, '""')) {
             ; 2024-08-02 AMB, Fix 272
             maskStrings(&line), Line := Equation[1], val := Equation[2]
@@ -470,22 +471,10 @@ _convertLines(ScriptString, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to ac
             {
                ConvertDblQuotes2(&Line, val)
             }
-            else if (InStr(RegExReplace(Line, "\w*(\((?>[^)(]+|(?-1))*\))"), '""'))
-            {
-               funcArray := []
-               while (pos := RegexMatch(val, "\w+(\((?>[^)(]+|(?-1))*\))", &match))
-               {
-                  funcArray.push(match[])
-                  val := StrReplace(val, match[], Chr(1000) "FUNC_" funcArray.Length Chr(1000),,, 1)
-               }
-               ConvertDblQuotes2(&Line, val)
-               for i, v in funcArray {
-                  Line := StrReplace(Line, Chr(1000) "FUNC_" i Chr(1000), v)
-               }
-            }
          }
          Line := RegExReplace(Line, Chr(0x2700))
          restoreStrings(&line)
+         restoreFuncCalls(&Line)
       }
 
       ; -------------------------------------------------------------------------------
@@ -1006,6 +995,38 @@ _convertLines(ScriptString, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to ac
                   Line := SkipLine
             }
          }
+
+      if InStr(Line, '""') && RegExReplace(Line, "\w\(",, &funcCount) != Line
+      {
+         maskFuncCalls(&Line)
+         maskStrings(&Line)
+         restoreFuncCalls(&Line)
+         Loop(funcCount) {
+            Line := RegExReplace(Line, '(?<!``)``"', Chr(0x2727)) ; (?<!`)`"
+            ;MsgBox "Loop`n" Line 
+            splitFunc := V1ParSplitFunctions(Line, A_Index)
+            ;MsgBox "1: " splitFunc.pre "`n2: " splitFunc.func "`n3: " splitFunc.parameters "`n4: " splitFunc.post
+            splitParams := splitFunc.parameters
+            maskFuncCalls(&splitParams)
+            maskStrings(&splitParams)
+            ;MsgBox "Pre Split`n" splitParams
+            splitParams := StrSplit(splitParams, ",")
+            Line := ""
+            for , param in splitParams {
+               restoreStrings(&param)
+               ConvertDblQuotes2(&Line, param)
+               Line .= ","
+            }
+            ;MsgBox "Converted Params`n" Line
+            Line := SubStr(Line, 1, StrLen(Line) - 1)
+            restoreFuncCalls(&Line)
+            ;MsgBox "Restored`n" Line
+            Line := splitFunc.pre splitFunc.func "(" Line ")" splitFunc.post
+         }
+         Line := StrReplace(Line, Chr(0x2727), '``"')
+         ;MsgBox "Constructed`n" Line
+         restoreStrings(&Line)
+      }
 
       if (RegexMatch(Line, "i)A_Caret(X|Y)", &Equation)) {
          if (RegexMatch(Line, "i)A_CaretX") && RegexMatch(Line, "i)A_CaretY")) {
@@ -3565,7 +3586,7 @@ V1ParSplit(String) {
 ; Output:
 ;   oResult - array
 ;       oResult.pre           text before the function
-;       oResult.function      function name
+;       oResult.func          function name
 ;       oResult.parameters    parameters of the function
 ;       oResult.post          text afther the function
 ;       oResult.separator     character before the function

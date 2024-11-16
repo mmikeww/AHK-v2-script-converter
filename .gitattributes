@@ -1,0 +1,4 @@
+# Display tests with ahk highlighting
+# Note: Highlighting is for v1
+*.ah1 linguist-language=AHK
+*.ah2 linguist-language=AHK

@@ -17,6 +17,8 @@ global gmAhkFuncsToConvert := OrderedMap(
      "*_DllCall"
   , "Func(FunctionNameQ2T)" ,
      "{1}"
+  , "Hotstring(String,Replacement,OnOffToggle)" ,
+    "*_Hotstring"
   , "InStr(Haystack,Needle,CaseSensitive,StartingPos,Occurrence)" ,
     "InStr({1}, {2}, {3}, {4}, {5})"
   , "RegExMatch(Haystack, NeedleRegEx, OutputVar, StartingPos)" ,
@@ -155,6 +157,21 @@ _DllCall(p) {
     ParBuffer .= A_Index=1 ? p[A_Index] : ", " p[A_Index]
   }
   Return "DllCall(" ParBuffer ")"
+}
+
+_Hotstring(p) {
+  global gaList_LblsToFuncO
+  if RegExMatch(p[1], '":') and p.Has(2) { 
+    p[2] := Trim(p[2], '"')
+    gaList_LblsToFuncO.Push({label: p[2], parameters: '*', NewFunctionName: getV2Name(p[2])})
+  }
+
+  Out := "Hotstring("
+  loop p.Length {
+    Out .= p[A_Index] ", "
+  }
+  Out .= ")"
+  Return RegExReplace(Out, "[\s\,]*\)$", ")")
 }
 
 _LV_Add(p) {

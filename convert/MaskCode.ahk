@@ -308,7 +308,6 @@ class PreMask
 	; PUBLIC - convenience/proxy method - mask function calls
 	static RestoreFC(&code) {
 		PreMask.RestoreAll(&code, 'FC')
-		PreMask.RestoreAll(&code, 'QS')
 	}
 
 	; PUBLIC - searches for pattern in code and masks the code
@@ -401,6 +400,7 @@ class PreMask
 					finishedFunc := chunk finishedFunc ; chunkedFunc is stored backwards
 					;MsgBox "finishedFunc: " finishedFunc
 				}
+				restoreStrings(&finishedFunc)
 				functions++
 				tagChar := (IsSet(gTagChar)) ? gTagChar : chr(0x2605)
 				pref	:= '#TAG' . tagChar . 'FC' . '_' PreMask.GenUniqueID() '_'
@@ -422,6 +422,7 @@ class PreMask
 		for , chunk in codeArray {
 			code .= chunk
 		}
+		restoreStrings(&code)
 	}
 
 	; override in sub-classes (for custom conversions)

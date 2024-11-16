@@ -4331,8 +4331,13 @@ FixByRefParams(ScriptString) {
       Line := A_LoopField
       replacement := false
       for func, v in gmByRefParamMap {
+         if (RegExMatch(Line, "(\h+`;.*)$", &EOLComment)) {
+            EOLComment := EOLComment[1]
+            Line       := RegExReplace(Line, "(\h+`;.*)$")
+         }
          if RegExMatch(Line, "(^|.*\W)\Q" func "\E\((.*)\)(.*?)$", &match) ; Nested functions break and cont. sections this
-            && !InStr(Line, "&") { ; Not defining a function
+            && !InStr(Line, "&") ; Not defining a function
+            && !RegExMatch(Line, "^\s*;") { ; Comment
             retLine := match[1] func "("
             params := match[2]
             while pos := RegExMatch(params, "[^,]+", &MatchFuncParams) {
@@ -4348,9 +4353,9 @@ FixByRefParams(ScriptString) {
          }
       }
       if !replacement
-         retScript .= Line "`r`n"
+         retScript .= Line EOLComment "`r`n"
       else
-         retScript .= retLine "`r`n"
+         retScript .= retLine EOLComment "`r`n"
    }
    return RTrim(retScript, "`r`n") . happyTrails
 }

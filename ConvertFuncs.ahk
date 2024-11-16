@@ -735,7 +735,12 @@ _convertLines(ScriptString, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to ac
          Line := Equation[3]
       }
       If RegExMatch(Line, "i)^(\s*Return\s*)(.*)", &Equation) && InStr(Equation[2], ",") {
-         Line := Equation[1] "(AHKv1v2_Temp := " Equation[2] ", AHKv1v2_Temp) `; V1toV2: Wrapped Multi-statement return with parentheses"
+         maskFuncCalls(&Line) ; Make code look nicer
+         maskStrings(&Line) ; By checking if comma is part of string or func
+         if InStr(Line, ",")
+            Line := Equation[1] "(AHKv1v2_Temp := " Equation[2] ", AHKv1v2_Temp) `; V1toV2: Wrapped Multi-statement return with parentheses"
+         restoreStrings(&Line)
+         restoreFuncCalls(&Line)
       }
       If IsSet(linesInIf) && linesInIf != "" {
          linesInIf++

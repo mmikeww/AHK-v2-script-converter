@@ -2,3 +2,12 @@
 # Note: Highlighting is for v1
 *.ah1 linguist-language=AHK
 *.ah2 linguist-language=AHK
+
+# Use CRLF for eol
+* text eol=crlf
+
+# Binary files (don't replace eol)
+*.dll binary
+*.exe binary
+*.png binary
+*.jpg binary

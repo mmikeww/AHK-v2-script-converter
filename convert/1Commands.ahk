@@ -27,7 +27,7 @@
     - param names ending in "V2VR" would convert an output variable name to a v2 VarRef
         basically it will just add an & at the start. so var -> &var
     - param names ending in "V2VRM" would convert an output variable name to a v2 VarRef
-        same as V2VR but adds a placeholder name if blank, its a mandatory param in v2
+        same as V2VR but adds a placeholder name if blank, only use if its mandatory param in v2
     - param names ending in "On2True" would convert an OnOff Parameter name to a Mode
         On  => True
         Off => False

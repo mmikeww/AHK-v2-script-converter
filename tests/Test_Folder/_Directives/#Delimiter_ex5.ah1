@@ -1,0 +1,3 @@
+#EscapeChar =
+#Delimiter -
+MsgBox- `-

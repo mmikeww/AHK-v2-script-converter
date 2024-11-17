@@ -261,14 +261,17 @@ _convertLines(ScriptString, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to ac
       gOrig_Line := Line
 
       if (!RegExMatch(Line, "i)^\h*#(CommentFlag|EscapeChar|DerefChar|Delimiter)\h+.") && !InCont) {
+         deref := "``"
          if (HasProp(gaScriptStrsUsed, "EscapeChar")) {
+            deref := gaScriptStrsUsed.EscapeChar
+            Line := StrReplace(Line, "``", "````")
             Line := StrReplace(Line, gaScriptStrsUsed.EscapeChar, "``")
          }
          if (HasProp(gaScriptStrsUsed, "DerefChar")) {
-            Line := RegExReplace(Line, "(?<!``)\Q" gaScriptStrsUsed.DerefChar "\E", "%")
+            Line := RegExReplace(Line, "(?<!\Q" deref "\E)\Q" gaScriptStrsUsed.DerefChar "\E", "%")
          }
          if (HasProp(gaScriptStrsUsed, "Delimiter")) {
-            Line := RegExReplace(Line, "(?<!``)\Q" gaScriptStrsUsed.Delimiter "\E", ",")
+            Line := RegExReplace(Line, "(?<!\Q" deref "\E)\Q" gaScriptStrsUsed.Delimiter "\E", ",")
          }
       }
 

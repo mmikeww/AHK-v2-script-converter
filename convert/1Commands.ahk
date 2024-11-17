@@ -26,6 +26,8 @@
         these will be wrapped in %%s, so   expr+1   is now    %expr+1%
     - param names ending in "V2VR" would convert an output variable name to a v2 VarRef
         basically it will just add an & at the start. so var -> &var
+    - param names ending in "V2VRM" would convert an output variable name to a v2 VarRef
+        same as V2VR but adds a placeholder name if blank, its a mandatory param in v2
     - param names ending in "On2True" would convert an OnOff Parameter name to a Mode
         On  => True
         Off => False
@@ -228,7 +230,7 @@ global gmAhkCmdsToConvert := OrderedMap(
     "if WinActive({1}, {2}, {3}, {4})"
   , "IfWinNotActive,titleT2E,textT2E,excltitleT2E,excltextT2E" ,
     "if !WinActive({1}, {2}, {3}, {4})"
-  , "ImageSearch,OutputVarXV2VR,OutputVarYV2VR,X1CBE2E,Y1CBE2E,X2CBE2E,Y2CBE2E,ImageFileT2E" ,
+  , "ImageSearch,OutputVarXV2VRM,OutputVarYV2VRM,X1CBE2E,Y1CBE2E,X2CBE2E,Y2CBE2E,ImageFileT2E" ,
     "ErrorLevel := !ImageSearch({1}, {2}, {3}, {4}, {5}, {6}, {7})"
   , "IniDelete,FilenameT2E,SectionT2E,KeyT2E" ,
     "IniDelete({1}, {2}, {3})"
@@ -266,7 +268,7 @@ global gmAhkCmdsToConvert := OrderedMap(
     "*_Pause"
   , "PixelGetColor,OutputVar,XCBE2E,YCBE2E,ModeT2E" ,
     "*_PixelGetColor"
-  , "PixelSearch,OutputVarXV2VR,OutputVarYV2VR,X1CBE2E,Y1CBE2E,X2CBE2E,Y2CBE2E,ColorIDCBE2E,VariationCBE2E,ModeT2E" ,
+  , "PixelSearch,OutputVarXV2VRM,OutputVarYV2VRM,X1CBE2E,Y1CBE2E,X2CBE2E,Y2CBE2E,ColorIDCBE2E,VariationCBE2E,ModeT2E" ,
     "*_PixelSearch"
   , "PostMessage,MsgCBE2E,wParamCBE2E,lParamCBE2E,ControlT2E,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E" ,
     "PostMessage({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8})"

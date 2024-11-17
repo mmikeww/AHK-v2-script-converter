@@ -104,6 +104,7 @@ setGlobals()
    global gAllV1LabelNames       := ""          ; 2024-07-09 - comma-deliminated string holding the names of all v1 labels
 
    global gaScriptStrsUsed       := Array()     ; Keeps an array of interesting strings used in the script
+   global gaWarnings             := Array()     ; Keeps track of global warning to add, see FinalizeConvert()
    global gaList_PseudoArr       := Array()     ; list of strings that should be converted from pseudoArray to Array
    global gaList_MatchObj        := Array()     ; list of strings that should be converted from Match Object V1 to Match Object V2
    global gaList_LblsToFuncO     := Array()     ; array of objects with the properties [label] and [parameters] that should be converted from label to Function
@@ -1174,6 +1175,12 @@ FinalizeConvert(&code)
 {
 ; 2024-06-27 ADDED, AMB
 ; Performs tasks that finalize overall conversion
+
+   ; Add global warnings
+   If gaWarnings.HasProp("AddedV2VRPlaceholder") && gaWarnings.AddedV2VRPlaceholder = 1 {
+      code := "; V1toV2: Some mandatory VarRefs replaced with AHKv1v2_vPlaceholder`r`n" code
+   }
+   ; Regex pcre2 here
 
    ; Convert labels listed in gaList_LblsToFuncO
    Loop gaList_LblsToFuncO.Length {
@@ -3746,16 +3753,20 @@ Format2(FormatStr, Values*) {
 ;//                var => var
 ;//          - param names ending in "V2VR" would convert an output variable name to a v2 VarRef
 ;//              basically it will just add an & at the start. so var -> &var
+;//          - param names ending in "V2VRM" would convert an output variable name to a v2 VarRef
+;//              same as V2VR but adds a placeholder name if blank, only use if its mandatory param in v2
 ;//          - any other param name will not be converted
 ;//              this means that the literal text of the parameter is unchanged
 ;//              this would be used for InputVar/OutputVar params, or whenever you want the literal text preserved
-; Converts Parameter to different format T2E T2QE Q2T CBE2E CBE2T Q2T V2VR
+; Converts Parameter to different format T2E T2QE Q2T CBE2E CBE2T Q2T V2VR V2VRM
 ParameterFormat(ParName, ParValue) {
    ParName := StrReplace(Trim(ParName), "*")  ; Remove the *, that indicate an array
    ParValue := Trim(ParValue)
-   if (ParName ~= "V2VR$") {
+   if (ParName ~= "V2VRM?$") {
       if (ParValue != "" && !InStr(ParValue, "&"))
          ParValue := "&" . ParValue
+      else if (ParName ~= "M$" && ParValue = "" && !InStr(ParValue, "&"))
+         ParValue := "&AHKv1v2_vPlaceholder", gaWarnings.AddedV2VRPlaceholder := 1
    } else if (ParName ~= "CBE2E$")            ; 'Can Be an Expression TO an Expression'
    {
       if (SubStr(ParValue, 1, 2) = "% ")      ; if this param expression was forced

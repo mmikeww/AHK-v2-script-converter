@@ -680,7 +680,7 @@ _convertLines(ScriptString, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to ac
             ByRefTrackArray := [] ; for each param of a func, 1 if byef, 0 otherwise
             params := MatchFunc[2]
             while pos := RegExMatch(params, "[^,]+", &MatchFuncParams) {
-               if RegExMatch(params, "i)(\bByRef\s+)") {
+               if RegExMatch(MatchFuncParams[], "i)(\bByRef\s+)") {
                   ByRefTrackArray.Push(true)
                } else {
                   ByRefTrackArray.Push(false)

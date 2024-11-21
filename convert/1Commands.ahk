@@ -153,7 +153,7 @@ global gmAhkCmdsToConvert := OrderedMap(
   , "FileInstall,SourceT2E,DestT2E,OverwriteT2E" ,
     "FileInstall({1}, {2}, {3})"
   , "FileMove,SourceT2E,DestPatternT2E,OverwriteT2E" ,
-    "FileMove({1}, {2}, {3})"
+    "*_FileMove"
   , "FileMoveDir,SourceT2E,DestT2E,FlagT2E" ,
     "DirMove({1}, {2}, {3})"
   , "FileRead,OutputVar,Filename" ,

@@ -1,4 +1,4 @@
-ErrorCount := MoveFilesAndFolders("C:\My Folder\*.*", "D:\Folder to receive all files & folders")
+ErrorCount := MoveFilesAndFolders("C:\a\*.*", "C:\b")
 if (ErrorCount != 0)
     MsgBox %ErrorCount% files/folders could not be moved.
 

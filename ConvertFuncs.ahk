@@ -1670,6 +1670,21 @@ _FileCopy(p) {
    Return RegExReplace(Out, "[\s\,]*\)", ")")
 }
 ;################################################################################
+_FileMove(p) {
+   global gaScriptStrsUsed
+   if (gaScriptStrsUsed.ErrorLevel) {
+      Out := format("Try{`r`n"
+      . gIndentation "   FileMove({1}, {2}, {3})`r`n"
+      . gIndentation "   ErrorLevel := 0`r`n"
+      . gIndentation "} Catch as Err {`r`n"
+      . gIndentation "   ErrorLevel := Err.Extra`r`n"
+      . gIndentation "}", p*)
+   } Else {
+      out := format("FileMove({1}, {2}, {3})", p*)
+   }
+   Return RegExReplace(Out, "[\s\,]*\)", ")")
+}
+;################################################################################
 _FileRead(p) {
    ; FileRead, OutputVar, Filename
    ; OutputVar := FileRead(Filename , Options)

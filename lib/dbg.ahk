@@ -32,3 +32,16 @@ TT(Text:="", Time:=.5,idTT:=1,X:=-1,Y:=-1) {
   }
   SetTimer () => ToolTip(,,,idTT), -Time*1000
 }
+
+dbgMsgBox(count := 0, squareWrap := 0, msg*) {
+  body := ""
+  for index, val in msg {
+    if count
+      body .= index ": "
+    if squareWrap
+      body .= "[" val "]`n"
+    else
+      body .= val "`n"
+  }
+  MsgBox body
+}

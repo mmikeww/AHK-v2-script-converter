@@ -184,7 +184,7 @@ global gmAhkCmdsToConvert := OrderedMap(
     "*_GuiControl"
   , "GuiControlGet,OutputVar,SubCommand,ControlID,Value" ,
     "*_GuiControlGet"
-  , "Gosub,Label" ,
+  , "Gosub,LabelCBE2E" ,
     "*_Gosub"
   , "Goto,LabelT2E" ,
     "Goto({1})"

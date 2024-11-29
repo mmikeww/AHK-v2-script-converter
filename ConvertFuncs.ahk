@@ -2660,6 +2660,9 @@ _Menu(p) {
 
    menuNameLine := Trim(menuNameLine)
 
+   If (Var2 = "UseErrorLevel")
+      return Format("; V1toV2: Removed {2} from Menu {1}", menuNameLine, Var2)
+
    ; 2024-06-08 andymbody   fix #179
    ; if systray root menu
    ; (menuNameLine "->" var3) should be a unique root->child id tag (hopefully)

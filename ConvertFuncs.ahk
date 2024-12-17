@@ -1795,10 +1795,14 @@ _FileSetTime(p) {
 ;################################################################################
 _Gosub(p) {
    ; 2024-07-07 AMB UPDATED - as part of label-to-function naming
+   EOLComment := ""
+   p[1] := RegExReplace(p[1], "%\s*([^%]+?)\s*$", "%$1%")
+   If InStr(p[1], "%")
+      EOLComment := " `; V1toV2: Some labels might not have converted to functions"
    v1LabelName  := p[1]
    v2FuncName   := trim(getV2Name(v1LabelName))
    gaList_LblsToFuncO.Push({label: v1LabelName, parameters: "", NewFunctionName: v2FuncName})
-   Return v2FuncName . "()"
+   Return v2FuncName . "()" . EOLComment
 }
 ;################################################################################
 _Gui(p) {

@@ -820,6 +820,44 @@ _convertLines(ScriptString, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to ac
          Line := RegExReplace(Line, "i)^(.*\s\?.*\:\s*)(\)|$)", '$1 ""$2')
       }
 
+      ; Fix quote object properties [{"A": "B"}] => [{A: "B"}]
+      if InStr(Line, "{") and InStr(Line, '"') and InStr(Line, ":") {
+         maskStrings(&Line)
+         if InStr(Line, "{") and !InStr(Line, '"') and InStr(Line, ":") {
+            codeSplit := StrSplit(Line)
+            codeArray := [] ; Chunks of pre object, name, value, closing
+            tempCode  := "" ; store chunk before pushing to codeArray
+            inObj     := 0  ; tracks if we're in an obj
+
+            for , char in codeSplit {
+               tempCode .= char
+               if (char = "{") {
+                  codeArray.Push(tempCode)
+                  tempCode := ""
+                  inObj++
+               } else if (char = ":" and inObj) {
+                  codeArray.Push(tempCode)
+                  tempCode := ""
+               } else if (char = "}") {
+                  codeArray.Push(tempCode)
+                  tempCode := ""
+                  inObj--
+               }
+            }
+            Line := ""
+            for , chunk in codeArray {
+               if RegExMatch(chunk, ":$") {
+                  restoreStrings(&chunk)
+                  chunk := RegExReplace(chunk, '"\s+\.\s+"')
+                  chunk := StrReplace(chunk, '"')
+               }
+
+               Line .= chunk
+            }
+         }
+         restoreStrings(&Line)
+      }
+
       LabelRedoCommandReplacing:
          ; -------------------------------------------------------------------------------
          ; Command replacing

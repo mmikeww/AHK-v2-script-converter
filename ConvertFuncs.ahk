@@ -1264,11 +1264,13 @@ FinalizeConvert(&code)
 ;    Set gfNoSideEffect to 1 to make some callable _Funcs to not change global vars
 subLoopFunctions(ScriptString, Line, &retV2, &gotFunc) {
    global gFuncParams, gfrePostFuncMatch
+   FuncsRemoved := 0 ; Number of functions that have been removed during conversion (e.g Arr.Length() -> Arr.Length)
    loop {
       if !InStr(Line, "(")
          break
 
-      oResult := V1ParSplitfunctions(Line, A_Index)
+      ;MsgBox FuncsRemoved
+      oResult := V1ParSplitfunctions(Line, A_Index - FuncsRemoved)
 
       if (oResult.Found = 0) {
          break
@@ -1312,6 +1314,7 @@ subLoopFunctions(ScriptString, Line, &retV2, &gotFunc) {
             }
          }
       }
+      StrReplace(Line, "()",,, &v1FuncCount)
       for v1, v2 in ConvertList
       {
          gfrePostFuncMatch := False
@@ -1372,6 +1375,11 @@ subLoopFunctions(ScriptString, Line, &retV2, &gotFunc) {
 
             retV2 := Line
             gotFunc:=True
+
+            ; TODO: make this count "(" instead, fixes removed funcs with params
+            ;       only breaks if script did Arr.Length(MeaninglessVar)
+            StrReplace(Line, "()",,, &v2FuncCount)
+            FuncsRemoved := Max(0, v1FuncCount - v2FuncCount)
 
             break ; Function/Method just found and processed.
          }

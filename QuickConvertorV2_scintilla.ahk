@@ -732,6 +732,7 @@ SettingsMenu.Add("Testmode", MenuTestMode)
 SettingsMenu.Add("Include Failing", MenuTestFailing)
 OutputMenu := Menu()
 OutputMenu.Add("Remove converter comments", MenuRemoveComments)
+OutputMenu.Add("Replace \n with \r\n", MenuFixLineEndings)
 TestMenu := Menu()
 TestMenu.Add("AddBracketToHotkeyTest", (*) => V2Edit.Text := AddBracket(V1Edit.Text))
 TestMenu.Add("GetAltLabelsMap", (*) => V2Edit.Text := GetAltLabelsMap(V1Edit.Text))
@@ -920,8 +921,13 @@ MenuTestFailing(*)
 MenuRemoveComments(*)
 {
     global
-    V2Edit.Text := RegExReplace(V2Edit.Text, "m)^; V1toV2: [^;]*\n") ; for Removed X comments
-    V2Edit.Text := RegExReplace(V2Edit.Text, "; V1toV2: [^;]*")
+    V2Edit.Text := RegExReplace(V2Edit.Text, "m)^; V1toV2: [^;\n]*\n") ; for Removed X comments
+    V2Edit.Text := RegExReplace(V2Edit.Text, "; V1toV2: [^;\n]*")
+}
+MenuFixLineEndings(*) {
+    global
+    V1Edit.Value := RegExReplace(V1Edit.Value, "(?<!\r)\n", "`r`n")
+    V2Edit.Value := RegExReplace(V2Edit.Value, "(?<!\r)\n", "`r`n")
 }
 MenuViewExpected(*)
 {

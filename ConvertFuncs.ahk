@@ -3930,7 +3930,9 @@ ConvertPseudoArray(ScriptStringInput, PseudoArrayName) {
       if (PseudoArrayName.HasOwnProp("regex") && PseudoArrayName.regex)
       {
          ; this is regexmatch array[0] - validate that array has been set -> (m&&m[0])
+         maskStrings(&ScriptStringInput)
          ScriptStringInput := RegExReplace(ScriptStringInput, "is)(?<!\w|&|\.)" ArrayName "(?!&|\w|%|\.|\[|\s*:=)", "(" ArrayName "&&" NewName ")")
+         restoreStrings(&ScriptStringInput)
       }
       else
       {

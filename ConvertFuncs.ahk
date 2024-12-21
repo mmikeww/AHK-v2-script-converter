@@ -2084,38 +2084,42 @@ _Gui(p) {
          }
          if (Var4 != "") {
             if (RegExMatch(Var2, "i)^tab[23]?$") || Var2 = "ListView" || Var2 = "DropDownList" || Var2 = "DDL" || Var2 = "ListBox" || Var2 = "ComboBox") {
-               ObjectValue := "["
-               ChooseString := ""
-               if (!InStr(Var3, "Choose") && InStr(Var4, "||")) ; ChooseN takes priority over ||
-               {
-                  ;################################################################################
-                  ; 2024-06-09 andymbody    fix for Gui_pr_137
-                  dPipes    := StrSplit(var4, "||")
-                  selIndex  := 0
-                  for idx, str in dPipes {
-                      if (idx=dPipes.length)
-                          break
-                      RegExReplace(str, "\|",,&curCount)
-                      selIndex += curCount+1
+               if RegExMatch(Var4, "%(.*)%", &match) {
+                  LineResult .= ', StrSplit(' match[1] ', "|")'
+                  LineSuffix .= " `; V1toV2: Check that this " Var2 " has the correct choose value"
+               } else {
+                  ObjectValue := "["
+                  ChooseString := ""
+                  if (!InStr(Var3, "Choose") && InStr(Var4, "||")) { ; ChooseN takes priority over ||
+                     ;################################################################################
+                     ; 2024-06-09 andymbody    fix for Gui_pr_137
+                     dPipes    := StrSplit(var4, "||")
+                     selIndex  := 0
+                     for idx, str in dPipes {
+                        if (idx=dPipes.length)
+                           break
+                        RegExReplace(str, "\|",,&curCount)
+                        selIndex += curCount+1
+                     }
+                     LineResult := RegexReplace(LineResult, "`"$", " Choose" selIndex "`"")
+                     if (Var3 = "")
+                        LineResult .= "`"Choose" selIndex "`""
+                     ;################################################################################
+                     Var4 := RTrim(StrReplace(Var4, "||", "|"), "|")
+                  } else if (InStr(Var3, "Choose")) {
+                     Var4 := RegexReplace(Var4, "\|+", "|") ; Replace all pipe groups, this breaks empty choices
                   }
-                  LineResult := RegexReplace(LineResult, "`"$", " Choose" selIndex "`"")
-                  if (Var3 = "")
-                     LineResult .= "`"Choose" selIndex "`""
-                  ;################################################################################
-                  Var4 := RTrim(StrReplace(Var4, "||", "|"), "|")
-               } else if (InStr(Var3, "Choose")) {
-                  Var4 := RegexReplace(Var4, "\|+", "|") ; Replace all pipe groups, this breaks empty choices
-               }
-               Loop Parse Var4, "|", " "
-               {
-                  if (RegExMatch(Var2, "i)^tab[23]?$") && A_LoopField = "") {
-                     ChooseString := "`" Choose" A_Index - 1 "`""
-                     continue
+                  Loop Parse Var4, "|", " "
+                  {
+                     if (RegExMatch(Var2, "i)^tab[23]?$") && A_LoopField = "") {
+                        ChooseString := "`" Choose" A_Index - 1 "`""
+                        continue
+                     }
+                     ObjectValue .= ObjectValue = "[" ? ToStringExpr(A_LoopField) : ", " ToStringExpr(A_LoopField)
                   }
-                  ObjectValue .= ObjectValue = "[" ? ToStringExpr(A_LoopField) : ", " ToStringExpr(A_LoopField)
+                  ObjectValue .= "]"
+                  LineResult .= ChooseString ", " ObjectValue
                }
-               ObjectValue .= "]"
-               LineResult .= ChooseString ", " ObjectValue
             } else {
                LineResult .= ", " ToStringExpr(Var4)
             }

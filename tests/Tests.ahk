@@ -5634,7 +5634,7 @@ ViewStringDiff(expected, converted)
 {
    FileAppend(expected, "expected.txt")
    FileAppend(converted, "converted.txt")
-   RunWait('..\diff\VisualDiff.exe ..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
+   RunWait('..\diff\VisualDiff.ahk "' . A_ScriptDir . '\expected.txt" "' . A_ScriptDir . '\converted.txt"')
    FileDelete("expected.txt")
    FileDelete("converted.txt")
 }

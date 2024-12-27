@@ -2897,8 +2897,8 @@ _PixelSearch(p) {
       FixedColour := RegExReplace(p[7], "i)0x(..)(..)(..)", "0x$3$2$1")
    } else msg := "", FixedColour := p[7]
    param8 := ""
-   Out := "ErrorLevel := !PixelSearch(" p[1] ", " p[2] ", " p[3] ", " p[4] ", " p[5] ", " p[6] ", " FixedColour
-   if (p[8] = "")
+   Out := Format("ErrorLevel := !PixelSearch({2}, {3}, {4}, {5}, {6}, {7}, {1}", FixedColour, p*)
+   if (p[8] != "")
       param8 := ", " p[8]
    Return Out param8 ")" msg
 }

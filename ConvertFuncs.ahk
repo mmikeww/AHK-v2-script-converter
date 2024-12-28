@@ -457,6 +457,10 @@ _convertLines(ScriptString, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to ac
       {
          Line := RTrim(Equation[1]) . ' := ""' . Equation[2]
       }
+      else if (RegExMatch(Line, ".+?\?.*:") and InStr(Line, '""'))
+      {
+         ConvertTernary(&Line)
+      }
       else if (RegexMatch(Line, "(?i)^(\h*[a-z_][a-z_0-9]*\h*[:*\.]=\h*)(.*)") && InStr(Line, '""')) ; Line is var assignment, and has ""
       {
          ternary := 0
@@ -4527,6 +4531,77 @@ ConvertEscapedQuotesInStr(srcStr) {
       }
    }
    return retStr
+}
+;################################################################################
+ConvertTernary(&Line, fromRecurse := 0) {
+   ;MsgBox Line
+   if fromRecurse {
+      ;MsgBox "in " Line
+      RegExMatch(Line, "^\s*\((.+)\)\s*$", &Match)
+      Line := Match[1]
+   }
+
+   InitLength := 0
+   If !IsSet(FinalLine)
+      static FinalLine := []
+   else
+      InitLength := FinalLine.Length
+
+   maskFuncCalls(&Line)
+   maskExprs(&Line)
+   maskStrings(&Line)
+
+   Line := StrReplace(Line, ":=", Chr(0x2727) "assign" Chr(0x2727)) ; We only do := as it uses a colon
+   LineSplit := StrSplit(Line, ",")
+
+   for , LinePart in LineSplit {
+      ternSplit := StrSplit(LinePart, "?") ; Split each equation
+
+      for , eq in ternSplit {
+         if InStr(eq, ":") {
+            tfSplit := StrSplit(eq, ":") ; true false split
+            if tfSplit.Length > 2 ; should never be more than 2
+               EOLComment .= " `; V1toV2: tfSplit has more than 2 parts, please report this to issues"
+
+            FinalLine.Push(ConvertRestoredTernary(tfSplit[1]) " : " ConvertRestoredTernary(tfSplit[2]))
+         } else {
+            FinalLine.Push(ConvertRestoredTernary(eq) " ? ")
+         }
+      }
+   }
+
+   Line := ""
+   if fromRecurse {
+      FinalLine[InitLength + 1] := "(" FinalLine[InitLength + 1]
+      FinalLine[FinalLine.Length] .= ")"
+   }
+   for idx, part in FinalLine
+      if idx > InitLength
+         Line .= part
+   Line := StrReplace(Line, Chr(0x2727) "assign" Chr(0x2727), ":=")
+   if fromRecurse
+      FinalLine.RemoveAt(InitLength + 1, FinalLine.Length - InitLength)
+   else
+      FinalLine := []
+
+   ConvertRestoredTernary(ternaryPart) {
+      restoreStrings(&ternaryPart)
+      restoreFuncCalls(&ternaryPart)
+      restoreExprs(&ternaryPart)
+
+      if !InStr(ternaryPart, '""')
+         return ternaryPart
+
+      if RegExMatch(ternaryPart, ".+?\?.*:") {
+         ConvertTernary(&ternaryPart, true)
+         return ternaryPart
+      }
+
+      convertedPart := ""
+      ConvertDblQuotes2(&convertedPart, ternaryPart)
+      ;MsgBox convertedPart
+      return convertedPart
+   }
 }
 ;################################################################################
 RemoveNewKeyword(line) {

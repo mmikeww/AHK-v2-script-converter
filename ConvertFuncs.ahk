@@ -4536,9 +4536,13 @@ ConvertEscapedQuotesInStr(srcStr) {
 ConvertTernary(&Line, fromRecurse := 0) {
    ;MsgBox Line
    if fromRecurse {
-      ;MsgBox "in " Line
-      RegExMatch(Line, "^\s*\((.+)\)\s*$", &Match)
-      Line := Match[1]
+      maskFuncCalls(&Line)
+      if RegExMatch(Line, "^\s*\((.+)\)\s*$", &Match)
+         Line := Match[1]
+      else {
+         restoreFuncCalls(&Line)
+         Return Line
+      }
    }
 
    InitLength := 0

@@ -858,6 +858,12 @@ _convertLines(ScriptString, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to ac
          restoreStrings(&Line)
       }
 
+      If RegExMatch(Line, "\w+\.\(") {
+         maskStrings(&Line)
+         Line := RegExReplace(Line, "(\w+)\.\(", "$1.Call(")
+         restoreStrings(&Line)
+      }
+
       LabelRedoCommandReplacing:
          ; -------------------------------------------------------------------------------
          ; Command replacing

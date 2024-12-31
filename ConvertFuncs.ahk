@@ -812,12 +812,12 @@ _convertLines(ScriptString, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to ac
       }
 
       ; Fixing ternary operations [var ?  : "1"] => [var ? "" : "1"]
-      if (RegExMatch(Line, "i)^(.*)(\s\?\s*\:\s*)(.*)$", &Equation)) {
-         Line := RegExReplace(Line, "i)^(.*\s*)\?\s*\:(\s*)(.*)$", '$1? "" :$3')
+      if (RegExMatch(Line, "im)^(.*)(\s\?\s*\:\s*)(.*)$", &Equation)) {
+         Line := RegExReplace(Line, "im)^(.*\s*)\?\s*\:(\s*)(.*)$", '$1? "" :$3')
       }
       ; Fixing ternary operations [var ? "1" : ] => [var ? "1" : ""]
-      if (RegExMatch(Line, "i)^(.*\s\?.*\:\s*)(\)|$)", &Equation)) {
-         Line := RegExReplace(Line, "i)^(.*\s\?.*\:\s*)(\)|$)", '$1 ""$2')
+      if (RegExMatch(Line, "im)(^|\n)(.*\s\?.*\:\s*)(\)|$)", &Equation)) {
+         Line := RegExReplace(Line, "im)^(.*\s\?.*\:\s*)(\)|$)", '$1 ""$2')
       }
 
       ; Fix quote object properties [{"A": "B"}] => [{A: "B"}]

@@ -1919,11 +1919,10 @@ _Gui(p) {
          GuiNameLine := "oGui" GuiNameLine
       }
       GuiOldName := GuiNameLine = "myGui" ? "" : GuiNameLine
-      if (RegExMatch(GuiOldName, "^oGui\d+$")) {
+      if (RegExMatch(GuiOldName, "^oGui\d+$"))
          GuiOldName := StrReplace(GuiOldName, "oGui")
-         if (HowGuiCreated[GuiOldName] ~= "New|Default")
-            GuiOldName := ""
-      }
+      if (GuiOldName != "" and HowGuiCreated[GuiOldName] ~= "New|Default")
+         GuiOldName := ""
 
       Var1 := RegExReplace(p[1], "i)^([^:]*):\s*(.*)$", "$2")
       Var2 := p[2]

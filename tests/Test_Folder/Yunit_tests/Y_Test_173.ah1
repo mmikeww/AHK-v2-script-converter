@@ -1,1 +1,0 @@
-WinGetTitle, Title, A

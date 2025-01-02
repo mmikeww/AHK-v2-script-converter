@@ -1,0 +1,18 @@
+_Mod := Mod(123, 100)
+_Exp := Exp(2)
+_Sqrt := Sqrt(2)
+_Log := Log(100)
+_Ln := Ln(100)
+_Round := Round(3.1415899999999999, 2)
+_Ceil := Ceil(3.1415899999999999)
+_Floor := Floor(3.1415899999999999)
+_Abs := Abs(-99)
+_Sin := Sin(90)
+_Cos := Cos(180)
+_Tan := Tan(270)
+_ASin := ASin(1)
+_ACos := ACos(1)
+_ATan := ATan(1)
+_Pow := 2**2
+
+MsgBox(_Mod "`n" _Exp "`n" _Sqrt "`n" _Log "`n" _Ln "`n" _Round "`n" _Ceil "`n" _Floor "`n" _Abs "`n" _Sin "`n" _Cos "`n" _Tan "`n" _ASin "`n" _ACos "`n" _ATan "`n" _Pow)

@@ -3379,7 +3379,7 @@ _Transform(p) {
       Return format("{1} := {3}**{4}", p*)
    }
    if (p[2] ~= "i)^(BitNot)") {
-      Return format("{1} := {3}~{4}", p*)
+      Return format("{1} := ~{3} `; V1toV2: Now always uses 64-bit signed integers", p*)
    }
    if (p[2] ~= "i)^(BitAnd)") {
       Return format("{1} := {3}&{4}", p*)

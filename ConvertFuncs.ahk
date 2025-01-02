@@ -5,8 +5,8 @@
 ; requires should change the version :D
 global   dbg         := 0
 
-#Include <ClassOrderedMap>
-#Include <dbg>
+#Include lib/ClassOrderedMap.ahk
+#Include lib/dbg.ahk
 #Include Convert/1Commands.ahk
 #Include Convert/2Functions.ahk
 #Include Convert/3Methods.ahk
@@ -4430,6 +4430,7 @@ FixVarSetCapacity(ScriptString) {
  */
 FixByRefParams(ScriptString) {
    retScript := ""
+   EOLComment := ""
    happyTrails := ''
    if (RegExMatch(ScriptString, '.*(\R+)$', &m))
       happyTrails := m[1]

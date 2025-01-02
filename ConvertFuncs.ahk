@@ -264,7 +264,7 @@ _convertLines(ScriptString, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to ac
          deref := "``"
          if (HasProp(gaScriptStrsUsed, "EscapeChar")) {
             deref := gaScriptStrsUsed.EscapeChar
-            Line := StrReplace(Line, "``", "````")
+            Line := StrReplace(Line, "``", "``````")
             Line := StrReplace(Line, gaScriptStrsUsed.EscapeChar, "``")
          }
          if (HasProp(gaScriptStrsUsed, "DerefChar")) {

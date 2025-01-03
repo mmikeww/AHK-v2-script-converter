@@ -2951,10 +2951,12 @@ _SendMessage(p) {
 _SetTimer(p) {
    if (p[2] = "Off") {
       Out := format("SetTimer({1},0)", p*)
+   } else if (p[2] = 0) {
+      Out := format("SetTimer({1},1)", p*) ; Change to 1, because 0 deletes timer instead of no delay
    } else {
       Out := format("SetTimer({1},{2},{3})", p*)
-      gaList_LblsToFuncO.Push({label: p[1], parameters: ""})
    }
+   gaList_LblsToFuncO.Push({label: p[1], parameters: ""})
 
    Return RegExReplace(Out, "[\s\,]*\)$", ")")
 }

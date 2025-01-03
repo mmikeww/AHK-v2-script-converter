@@ -764,6 +764,13 @@ _convertLines(ScriptString, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to ac
          PreLine .= Equation[1]
          Line := Equation[3]
       }
+
+      ; Remove [] from classes with no params
+      else if (RegExMatch(Line, "(.+)\[\](\s*{?)", &Equation)) {
+         If SubStr(Line, -1) = "{" or RegExMatch(gOScriptStr[gO_Index + 1], "\s*{")
+            Line := Equation[1] Equation[2]
+      }
+
       If RegExMatch(Line, "i)^(\s*Return\s*)(.*)", &Equation) && InStr(Equation[2], ",") {
          maskFuncCalls(&Line) ; Make code look nicer
          maskStrings(&Line) ; By checking if comma is part of string or func

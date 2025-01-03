@@ -2185,7 +2185,7 @@ _Gui(p) {
          gaList_LblsToFuncO.Push({label: ControlLabel, parameters: 'A_GuiEvent := "", GuiCtrlObj := "", Info := "", *', NewFunctionName: getV2Name(ControlLabel)})
       }
       if (ControlHwnd != "") {
-         LineResult .= "`r`n" gIndentation ControlHwnd " := " ControlObject ".hwnd"
+         LineResult .= ", " ControlHwnd " := " ControlObject ".hwnd"
       }
    }
    DebugWindow("LineResult:" LineResult "`r`n")

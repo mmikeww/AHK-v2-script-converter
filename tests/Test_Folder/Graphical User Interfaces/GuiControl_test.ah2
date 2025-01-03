@@ -1,8 +1,7 @@
 myGui := Gui()
 myGui.OnEvent("Close", GuiClose)
 ogcTextC := myGui.Add("Text", "vTextC", "First name:")
-ogcEditFirstName := myGui.Add("Edit", "vFirstName")
-test := ogcEditFirstName.hwnd  ; The ym option starts a new column of controls.
+ogcEditFirstName := myGui.Add("Edit", "vFirstName"), test := ogcEditFirstName.hwnd  ; The ym option starts a new column of controls.
 ogcPictureMyPic := myGui.Add("Picture", "vMyPic w20 h-1", "C:\Users\Dimitri\Pictures\Save24.png")
 
 ogcMyCheckBox := myGui.Add("CheckBox", "vMyCheckBox", "Option1")

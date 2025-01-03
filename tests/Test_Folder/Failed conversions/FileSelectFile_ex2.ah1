@@ -1,2 +1,0 @@
-FileSelectFile, MyVar
-MsgBox %ErrorLevel%

@@ -1812,10 +1812,17 @@ _FileSelect(p) {
    Line := format("{1} := FileSelect({2})", OutputVar, parameters)
    if (InStr(Options, "M")) {
       Line := format("{1} := FileSelect({2})", "o" OutputVar, parameters) "`r`n"
-      Line .= gIndentation "for FileName in o " OutputVar "`r`n"
+      Line .= gIndentation "for FileName in o" OutputVar "`r`n"
       Line .= gIndentation "{`r`n"
-      Line .= gIndentation OutputVar " .= A_index=2 ? `"``r`n`" : `"`"`r`n"
-      Line .= gIndentation OutputVar " .= A_index=1 ? FileName : Regexreplace(FileName,`"^.*\\([^\\]*)$`" ,`"$1`") `"``r``n`"`n"
+      Line .= gIndentation OutputVar " .= A_index=2 ? `"``r``n`" : `"`"`r`n"
+      Line .= gIndentation OutputVar " .= A_index=1 ? FileName : RegExReplace(FileName,`"^.*\\([^\\]*)$`" ,`"$1`") `"``r``n`"`r`n"
+      Line .= gIndentation "}"
+   }
+   if (gaScriptStrsUsed.ErrorLevel) {
+      Line .= "`r`n" gIndentation "if (" OutputVar " = `"`") {`r`n"
+      Line .= gIndentation "ErrorLevel := 1`r`n"
+      Line .= gIndentation "} else {`r`n"
+      Line .= gIndentation "ErrorLevel := 0`r`n"
       Line .= gIndentation "}"
    }
    return Line

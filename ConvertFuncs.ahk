@@ -149,23 +149,24 @@ _convertLines(ScriptString, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to ac
    ; 2024-07-11 AMB, Globals are now declared/initialize in SetGlobals()...
    ;  ... so that all functions can have access to them prior to this function being called
    ;  ... moving them fixes masking issue with OnMessage
-   global gmAltLabel             := GetAltLabelsMap(ScriptString)       ; Create a map of labels who are identical
-   global gOrig_ScriptStr        := ScriptString
-   global gOrig_Line_NoComment   := ""
-   global gOScriptStr            := StrSplit(ScriptString, "`n", "`r")  ; array for all the lines
-   global gO_Index               := 0                                   ; current index of the lines
-   global gIndentation           := ""
-   global gSingleIndent          := (RegExMatch(ScriptString, "(^|[\r\n])( +|\t)", &ws)) ? ws[2] : "    " ; First spaces or single tab found
-   global gNL_Func               := ""                                  ; _Funcs can use this to add New Previous Line
-   global gEOLComment_Func       := ""                                  ; _Funcs can use this to add comments at EOL
+   global gmAltLabel                := GetAltLabelsMap(ScriptString)       ; Create a map of labels who are identical
+   global gOrig_ScriptStr           := ScriptString
+   global gOrig_Line_NoComment      := ""
+   global gOScriptStr               := StrSplit(ScriptString, "`n", "`r")  ; array for all the lines
+   global gO_Index                  := 0                                   ; current index of the lines
+   global gIndentation              := ""
+   global gSingleIndent             := (RegExMatch(ScriptString, "(^|[\r\n])( +|\t)", &ws)) ? ws[2] : "    " ; First spaces or single tab found
+   global gNL_Func                  := ""                                  ; _Funcs can use this to add New Previous Line
+   global gEOLComment_Func          := ""                                  ; _Funcs can use this to add comments at EOL
    global gaScriptStrsUsed
 
-   ScriptOutput                  := ""
-   lastLine                      := ""
-   InCommentBlock                := false
-   InCont                        := 0
-   Cont_String                   := 0
-   gaScriptStrsUsed.ErrorLevel   := InStr(ScriptString, "ErrorLevel")
+   ScriptOutput                     := ""
+   lastLine                         := ""
+   InCommentBlock                   := false
+   InCont                           := 0
+   Cont_String                      := 0
+   gaScriptStrsUsed.ErrorLevel      := InStr(ScriptString, "ErrorLevel")
+   gaScriptStrsUsed.StringCaseSense := InStr(ScriptString, "StringCaseSense") ; Both command and A_ variable
 
    ; parse each line of the input script
    Loop

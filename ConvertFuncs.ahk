@@ -3314,31 +3314,32 @@ _StringReplace(p) {
    ; v2
    ; ReplacedStr := StrReplace(Haystack, Needle [, ReplaceText, CaseSense, OutputVarCount, Limit])
    global gIndentation, gSingleIndent
-   comment := "; V1toV2: StrReplace() is not case sensitive`r`n" gIndentation "; check for StringCaseSense in v1 source script`r`n"
-   comment .= gIndentation "; and change the CaseSense param in StrReplace() if necessary`r`n"
-
+   if gaScriptStrsUsed.StringCaseSense
+      CaseSense := " A_StringCaseSense"
+   else
+      CaseSense := ""
    if (IsEmpty(p[4]) && IsEmpty(p[5]))
-      Out := comment gIndentation . format("{1} := StrReplace({2}, {3},,,, 1)", p*)
+      Out := format("{2} := StrReplace({3}, {4},,{1},, 1)", CaseSense, p*)
    else if (IsEmpty(p[5]))
-      Out := comment gIndentation . format("{1} := StrReplace({2}, {3}, {4},,, 1)", p*)
+      Out := format("{2} := StrReplace({3}, {4}, {5},{1},, 1)", CaseSense, p*)
    else
    {
       p5char1 := SubStr(p[5], 1, 1)
       ; MsgBox(p[5] "`n" p5char1)
 
       if (p[5] = "UseErrorLevel")   ; UseErrorLevel also implies ReplaceAll
-         Out := comment gIndentation . format("{1} := StrReplace({2}, {3}, {4},, &ErrorLevel)", p*)
+         Out := format("{2} := StrReplace({3}, {4}, {5},{1}, &ErrorLevel)", CaseSense, p*)
       else if (p5char1 = "1") || (StrUpper(p5char1) = "A")
       ; if the first char of the ReplaceAll param starts with '1' or 'A'
       ; then all of those imply 'replace all'
       ; https://github.com/Lexikos/AutoHotkey_L/blob/master/source/script2.cpp#L7033
-         Out := comment gIndentation . format("{1} := StrReplace({2}, {3}, {4})", p*)
+         Out := format("{2} := StrReplace({3}, {4}, {5},{1})", CaseSense, p*)
       else
       {
-         Out := comment gIndentation . "if (not " ToExp(p[5]) ")"
-         Out .= "`r`n" . gIndentation . gSingleIndent . format("{1} := StrReplace({2}, {3}, {4},,, 1)", p*)
+         Out := "if (not " ToExp(p[5]) ")"
+         Out .= "`r`n" . gIndentation . gSingleIndent . format("{2} := StrReplace({3}, {4}, {5},{1},, 1)", CaseSense, p*)
          Out .= "`r`n" . gIndentation . "else"
-         Out .= "`r`n" . gIndentation . gSingleIndent . format("{1} := StrReplace({2}, {3}, {4},, &ErrorLevel)", p*)
+         Out .= "`r`n" . gIndentation . gSingleIndent . format("{2} := StrReplace({3}, {4}, {5},{1}, &ErrorLevel)", CaseSense, p*)
       }
    }
    Return RegExReplace(Out, "[\s\,]*\)$", ")")

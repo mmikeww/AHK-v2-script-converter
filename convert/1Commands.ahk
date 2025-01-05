@@ -213,11 +213,11 @@ global gmAhkCmdsToConvert := OrderedMap(
   , "IfLessOrEqual,var,valueT2QE" ,
     "*_IfLessOrEqual"
   , "IfInString,var,valueT2E" ,
-    "if InStr({1}, {2})"
+    "*_IfInString"
   , "IfMsgBox,ButtonNameT2E" ,
     "if (msgResult = {1})"
   , "IfNotInString,var,valueT2E" ,
-    "if !InStr({1}, {2})"
+    "*_IfNotInString"
   , "IfExist,fileT2E" ,
     "if FileExist({1})"
   , "IfNotExist,fileT2E" ,

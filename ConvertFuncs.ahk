@@ -2478,6 +2478,20 @@ _IfLessOrEqual(p) {
       return format("if (StrCompare({1}, {2}) <= 0)", p*)
 }
 ;################################################################################
+_IfInString(p) {
+   global gaScriptStrsUsed
+   CaseSense := gaScriptStrsUsed.StringCaseSense ? "A_StringCaseSense" : ""
+   Out := Format("if InStr({2}, {3}, {1})", CaseSense, p*)
+   return RegExReplace(Out, "[\s,]*\)", ")")
+}
+;################################################################################
+_IfNotInString(p) {
+   global gaScriptStrsUsed
+   CaseSense := gaScriptStrsUsed.StringCaseSense ? "A_StringCaseSense" : ""
+   Out := Format("if !InStr({2}, {3}, {1})", CaseSense, p*)
+   return RegExReplace(Out, "[\s,]*\)", ")")
+}
+;################################################################################
 _Input(p) {
    Out := format("ih{1} := InputHook({2},{3},{4}), ih{1}.Start(), ih{1}.Wait(), {1} := ih{1}.Input", p*)
    Return out := RegExReplace(Out, "[\s\,]*\)", ")")

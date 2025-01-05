@@ -13,3 +13,6 @@ MsgBox(msg)
 
 msg := StrReplace("aA", "A", , A_StringCaseSense)
 MsgBox(msg)
+
+msg := InStr("aA", "A", A_StringCaseSense)
+MsgBox(msg)

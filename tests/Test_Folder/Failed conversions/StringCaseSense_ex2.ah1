@@ -13,3 +13,6 @@ MsgBox % msg
 
 msg := StrReplace("aA", "A")
 MsgBox % msg
+
+msg := InStr("aA", "A")
+MsgBox % msg

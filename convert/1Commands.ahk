@@ -367,7 +367,7 @@ global gmAhkCmdsToConvert := OrderedMap(
   , "StatusBarWait,BarTextT2E,Timeout,Part,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E" ,
     " StatusBarWait({1}, {2}, {3}, {4}, {5}, {6})"
   , "StringCaseSense,OnOffLocaleOn2True" ,
-    "A_StringCaseSense := {1}"
+    "*_StringCaseSense"
   , "StringGetPos,OutputVar,InputVar,SearchTextT2E,SideT2E,OffsetCBE2E" ,
     "*_StringGetPos"
   , "StringLen,OutputVar,InputVar" ,

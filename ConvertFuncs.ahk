@@ -3222,6 +3222,12 @@ _Run(p) {
    Return RegExReplace(Out, "[\s\,]*\)$", ")")
 }
 ;################################################################################
+_StringCaseSense(p) {
+   if p[1] = "Locale"    ; In conversions locale is treated as off
+      p[1] := '"Locale"' ; this is just for is script checks in expressions, (and no unset var warnings)
+   return "A_StringCaseSense := " p[1]
+}
+;################################################################################
 _StringLower(p) {
    if (p[3] = '"T"')
       return format("{1} := StrTitle({2})", p*)

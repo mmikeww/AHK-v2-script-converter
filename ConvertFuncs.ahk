@@ -149,23 +149,24 @@ _convertLines(ScriptString, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to ac
    ; 2024-07-11 AMB, Globals are now declared/initialize in SetGlobals()...
    ;  ... so that all functions can have access to them prior to this function being called
    ;  ... moving them fixes masking issue with OnMessage
-   global gmAltLabel             := GetAltLabelsMap(ScriptString)       ; Create a map of labels who are identical
-   global gOrig_ScriptStr        := ScriptString
-   global gOrig_Line_NoComment   := ""
-   global gOScriptStr            := StrSplit(ScriptString, "`n", "`r")  ; array for all the lines
-   global gO_Index               := 0                                   ; current index of the lines
-   global gIndentation           := ""
-   global gSingleIndent          := (RegExMatch(ScriptString, "(^|[\r\n])( +|\t)", &ws)) ? ws[2] : "    " ; First spaces or single tab found
-   global gNL_Func               := ""                                  ; _Funcs can use this to add New Previous Line
-   global gEOLComment_Func       := ""                                  ; _Funcs can use this to add comments at EOL
+   global gmAltLabel                := GetAltLabelsMap(ScriptString)       ; Create a map of labels who are identical
+   global gOrig_ScriptStr           := ScriptString
+   global gOrig_Line_NoComment      := ""
+   global gOScriptStr               := StrSplit(ScriptString, "`n", "`r")  ; array for all the lines
+   global gO_Index                  := 0                                   ; current index of the lines
+   global gIndentation              := ""
+   global gSingleIndent             := (RegExMatch(ScriptString, "(^|[\r\n])( +|\t)", &ws)) ? ws[2] : "    " ; First spaces or single tab found
+   global gNL_Func                  := ""                                  ; _Funcs can use this to add New Previous Line
+   global gEOLComment_Func          := ""                                  ; _Funcs can use this to add comments at EOL
    global gaScriptStrsUsed
 
-   ScriptOutput                  := ""
-   lastLine                      := ""
-   InCommentBlock                := false
-   InCont                        := 0
-   Cont_String                   := 0
-   gaScriptStrsUsed.ErrorLevel   := InStr(ScriptString, "ErrorLevel")
+   ScriptOutput                     := ""
+   lastLine                         := ""
+   InCommentBlock                   := false
+   InCont                           := 0
+   Cont_String                      := 0
+   gaScriptStrsUsed.ErrorLevel      := InStr(ScriptString, "ErrorLevel")
+   gaScriptStrsUsed.StringCaseSense := InStr(ScriptString, "StringCaseSense") ; Both command and A_ variable
 
    ; parse each line of the input script
    Loop
@@ -2477,6 +2478,20 @@ _IfLessOrEqual(p) {
       return format("if (StrCompare({1}, {2}) <= 0)", p*)
 }
 ;################################################################################
+_IfInString(p) {
+   global gaScriptStrsUsed
+   CaseSense := gaScriptStrsUsed.StringCaseSense ? "A_StringCaseSense" : ""
+   Out := Format("if InStr({2}, {3}, {1})", CaseSense, p*)
+   return RegExReplace(Out, "[\s,]*\)", ")")
+}
+;################################################################################
+_IfNotInString(p) {
+   global gaScriptStrsUsed
+   CaseSense := gaScriptStrsUsed.StringCaseSense ? "A_StringCaseSense" : ""
+   Out := Format("if !InStr({2}, {3}, {1})", CaseSense, p*)
+   return RegExReplace(Out, "[\s,]*\)", ")")
+}
+;################################################################################
 _Input(p) {
    Out := format("ih{1} := InputHook({2},{3},{4}), ih{1}.Start(), ih{1}.Wait(), {1} := ih{1}.Input", p*)
    Return out := RegExReplace(Out, "[\s\,]*\)", ")")
@@ -3207,6 +3222,12 @@ _Run(p) {
    Return RegExReplace(Out, "[\s\,]*\)$", ")")
 }
 ;################################################################################
+_StringCaseSense(p) {
+   if p[1] = "Locale"    ; In conversions locale is treated as off
+      p[1] := '"Locale"' ; this is just for is script checks in expressions, (and no unset var warnings)
+   return "A_StringCaseSense := " p[1]
+}
+;################################################################################
 _StringLower(p) {
    if (p[3] = '"T"')
       return format("{1} := StrTitle({2})", p*)
@@ -3222,10 +3243,12 @@ _StringUpper(p) {
 }
 ;################################################################################
 _StringGetPos(p) {
-   global gIndentation
+   global gIndentation, gaScriptStrsUsed
+
+   CaseSense := gaScriptStrsUsed.StringCaseSense ? " A_StringCaseSense" : ""
 
    if (IsEmpty(p[4]) && IsEmpty(p[5]))
-      return format("{1} := InStr({2}, {3}) - 1", p*)
+      return RegExReplace(format("{2} := InStr({3}, {4},{1}) - 1", CaseSense, p*), "[\s,]*\)", ")")
 
    ; modelled off of:
    ; https://github.com/Lexikos/AutoHotkey_L/blob/9a88309957128d1cc701ca83f1fc5cca06317325/source/script.cpp#L14732
@@ -3250,31 +3273,31 @@ _StringGetPos(p) {
          {
             ; only add occurrences param to InStr func if occurrences > 1
             if (isInteger(occurrences) && (occurrences > 1))
-               return format("{1} := InStr({2}, {3},, -1*(({5})+1), -" . occurrences . ") - 1", p*)
+               return format("{2} := InStr({3}, {4},{1}, -1*(({6})+1), -" . occurrences . ") - 1", CaseSense, p*)
             else
-               return format("{1} := InStr({2}, {3},, -1*(({5})+1)) - 1", p*)
+               return format("{2} := InStr({3}, {4},{1}, -1*(({6})+1)) - 1", CaseSense, p*)
          } else
          {
             if (isInteger(occurrences) && (occurrences > 1))
-               return format("{1} := InStr({2}, {3},, ({5})+1, " . occurrences . ") - 1", p*)
+               return format("{2} := InStr({3}, {4},{1}, ({6})+1, " . occurrences . ") - 1", CaseSense, p*)
             else
-               return format("{1} := InStr({2}, {3},, ({5})+1) - 1", p*)
+               return format("{2} := InStr({3}, {4},{1}, ({6})+1) - 1", CaseSense, p*)
          }
       } else if (p[4] = 1)
       {
          ; in v1 if occurrences param = "R" or "1" conduct search right to left
          ; "1" sounds weird but its in the v1 source, see link above
-         return format("{1} := InStr({2}, {3},, -1*(({5})+1)) - 1", p*)
+         return format("{2} := InStr({3}, {4},{1}, -1*(({6})+1)) - 1", CaseSense, p*)
       } else if (p[4] = "")
       {
-         return format("{1} := InStr({2}, {3},, ({5})+1) - 1", p*)
+         return format("{2} := InStr({3}, {4},{1}, ({6})+1) - 1", CaseSense, p*)
       } else
       {
          ; msgbox( p.Length "`n" p[1] "`n" p[2] "`n" p[3] "`n[" p[4] "]`n[" p[5] "]")
          ; else then a variable was passed (containing the "L#|R#" string),
          ;      or literal text converted to expr, something like:   "L" . A_Index
          ; output something anyway even though it won't work, so that they can see something to fix
-         return format("{1} := InStr({2}, {3},, ({5})+1, {4}) - 1", p*)
+         return format("{2} := InStr({3}, {4},{1}, ({6})+1, {5}) - 1", CaseSense, p*)
       }
    }
 }
@@ -3313,31 +3336,32 @@ _StringReplace(p) {
    ; v2
    ; ReplacedStr := StrReplace(Haystack, Needle [, ReplaceText, CaseSense, OutputVarCount, Limit])
    global gIndentation, gSingleIndent
-   comment := "; V1toV2: StrReplace() is not case sensitive`r`n" gIndentation "; check for StringCaseSense in v1 source script`r`n"
-   comment .= gIndentation "; and change the CaseSense param in StrReplace() if necessary`r`n"
-
+   if gaScriptStrsUsed.StringCaseSense
+      CaseSense := " A_StringCaseSense"
+   else
+      CaseSense := ""
    if (IsEmpty(p[4]) && IsEmpty(p[5]))
-      Out := comment gIndentation . format("{1} := StrReplace({2}, {3},,,, 1)", p*)
+      Out := format("{2} := StrReplace({3}, {4},,{1},, 1)", CaseSense, p*)
    else if (IsEmpty(p[5]))
-      Out := comment gIndentation . format("{1} := StrReplace({2}, {3}, {4},,, 1)", p*)
+      Out := format("{2} := StrReplace({3}, {4}, {5},{1},, 1)", CaseSense, p*)
    else
    {
       p5char1 := SubStr(p[5], 1, 1)
       ; MsgBox(p[5] "`n" p5char1)
 
       if (p[5] = "UseErrorLevel")   ; UseErrorLevel also implies ReplaceAll
-         Out := comment gIndentation . format("{1} := StrReplace({2}, {3}, {4},, &ErrorLevel)", p*)
+         Out := format("{2} := StrReplace({3}, {4}, {5},{1}, &ErrorLevel)", CaseSense, p*)
       else if (p5char1 = "1") || (StrUpper(p5char1) = "A")
       ; if the first char of the ReplaceAll param starts with '1' or 'A'
       ; then all of those imply 'replace all'
       ; https://github.com/Lexikos/AutoHotkey_L/blob/master/source/script2.cpp#L7033
-         Out := comment gIndentation . format("{1} := StrReplace({2}, {3}, {4})", p*)
+         Out := format("{2} := StrReplace({3}, {4}, {5},{1})", CaseSense, p*)
       else
       {
-         Out := comment gIndentation . "if (not " ToExp(p[5]) ")"
-         Out .= "`r`n" . gIndentation . gSingleIndent . format("{1} := StrReplace({2}, {3}, {4},,, 1)", p*)
+         Out := "if (not " ToExp(p[5]) ")"
+         Out .= "`r`n" . gIndentation . gSingleIndent . format("{2} := StrReplace({3}, {4}, {5},{1},, 1)", CaseSense, p*)
          Out .= "`r`n" . gIndentation . "else"
-         Out .= "`r`n" . gIndentation . gSingleIndent . format("{1} := StrReplace({2}, {3}, {4},, &ErrorLevel)", p*)
+         Out .= "`r`n" . gIndentation . gSingleIndent . format("{2} := StrReplace({3}, {4}, {5},{1}, &ErrorLevel)", CaseSense, p*)
       }
    }
    Return RegExReplace(Out, "[\s\,]*\)$", ")")

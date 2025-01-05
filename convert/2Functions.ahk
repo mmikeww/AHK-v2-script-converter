@@ -20,13 +20,13 @@ global gmAhkFuncsToConvert := OrderedMap(
   , "Hotstring(String,Replacement,OnOffToggle)" ,
     "*_Hotstring"
   , "InStr(Haystack,Needle,CaseSensitive,StartingPos,Occurrence)" ,
-    "InStr({1}, {2}, {3}, {4}, {5})"
+    "*_InStr"
   , "RegExMatch(Haystack, NeedleRegEx, OutputVar, StartingPos)" ,
     "*_RegExMatch"
   , "RegExReplace(Haystack,NeedleRegEx,Replacement,OutputVarCountV2VR,Limit,StartingPos)" ,
     "RegExReplace({1}, {2}, {3}, {4}, {5}, {6})"
   , "StrReplace(Haystack,Needle,ReplaceText,OutputVarCountV2VR,Limit)" ,
-    "StrReplace({1}, {2}, {3}, , {4}, {5})"
+    "*_StrReplace"
   , "SubStr(String, StartingPos, Length)" ,
     "SubStr({1}, {2}, {3})"
   , "RegisterCallback(FunctionNameQ2T,Options,ParamCount,EventInfo)" ,
@@ -172,6 +172,13 @@ _Hotstring(p) {
   }
   Out .= ")"
   Return RegExReplace(Out, "[\s\,]*\)$", ")")
+}
+
+_InStr(p) {
+  global gaScriptStrsUsed
+  p[3] := p[3] = "" and gaScriptStrsUsed.StringCaseSense ? "A_StringCaseSense" : p[3]
+  Out := Format("InStr({1}, {2}, {3}, {4}, {5})", p*)
+  return RegExReplace(Out, "[\s,]*\)", ")")
 }
 
 _LV_Add(p) {
@@ -420,6 +427,13 @@ _RegExMatch(p) {
     Out := Format("RegExMatch({1}, {2}, , {4})", p*)
   }
   Return RegExReplace(Out, "[\s\,]*\)$", ")")
+}
+
+_StrReplace(p) {
+  global gaScriptStrsUsed
+  CaseSense := gaScriptStrsUsed.StringCaseSense ? "A_StringCaseSense" : ""
+  Out := Format("StrReplace({2}, {3}, {4}, {1}, {5}, {6})", CaseSense, p*)
+  return RegExReplace(Out, "[\s,]*\)", ")")
 }
 
 _SB_SetText(p) {

@@ -213,11 +213,11 @@ global gmAhkCmdsToConvert := OrderedMap(
   , "IfLessOrEqual,var,valueT2QE" ,
     "*_IfLessOrEqual"
   , "IfInString,var,valueT2E" ,
-    "if InStr({1}, {2})"
+    "*_IfInString"
   , "IfMsgBox,ButtonNameT2E" ,
     "if (msgResult = {1})"
   , "IfNotInString,var,valueT2E" ,
-    "if !InStr({1}, {2})"
+    "*_IfNotInString"
   , "IfExist,fileT2E" ,
     "if FileExist({1})"
   , "IfNotExist,fileT2E" ,
@@ -366,8 +366,8 @@ global gmAhkCmdsToConvert := OrderedMap(
     "{1} := StatusBarGetText({2}, {3}, {4}, {5})"
   , "StatusBarWait,BarTextT2E,Timeout,Part,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E" ,
     " StatusBarWait({1}, {2}, {3}, {4}, {5}, {6})"
-  , "StringCaseSense,param" ,
-    ";REMOVED StringCaseSense, {1}"
+  , "StringCaseSense,OnOffLocaleOn2True" ,
+    "*_StringCaseSense"
   , "StringGetPos,OutputVar,InputVar,SearchTextT2E,SideT2E,OffsetCBE2E" ,
     "*_StringGetPos"
   , "StringLen,OutputVar,InputVar" ,

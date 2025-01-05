@@ -3248,7 +3248,7 @@ _StringGetPos(p) {
    CaseSense := gaScriptStrsUsed.StringCaseSense ? " A_StringCaseSense" : ""
 
    if (IsEmpty(p[4]) && IsEmpty(p[5]))
-      return format("{2} := InStr({3}, {4},{1}) - 1", CaseSense, p*)
+      return RegExReplace(format("{2} := InStr({3}, {4},{1}) - 1", CaseSense, p*), "[\s,]*\)", ")")
 
    ; modelled off of:
    ; https://github.com/Lexikos/AutoHotkey_L/blob/9a88309957128d1cc701ca83f1fc5cca06317325/source/script.cpp#L14732

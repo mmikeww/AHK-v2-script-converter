@@ -3237,10 +3237,12 @@ _StringUpper(p) {
 }
 ;################################################################################
 _StringGetPos(p) {
-   global gIndentation
+   global gIndentation, gaScriptStrsUsed
+
+   CaseSense := gaScriptStrsUsed.StringCaseSense ? " A_StringCaseSense" : ""
 
    if (IsEmpty(p[4]) && IsEmpty(p[5]))
-      return format("{1} := InStr({2}, {3}) - 1", p*)
+      return format("{2} := InStr({3}, {4},{1}) - 1", CaseSense, p*)
 
    ; modelled off of:
    ; https://github.com/Lexikos/AutoHotkey_L/blob/9a88309957128d1cc701ca83f1fc5cca06317325/source/script.cpp#L14732
@@ -3265,31 +3267,31 @@ _StringGetPos(p) {
          {
             ; only add occurrences param to InStr func if occurrences > 1
             if (isInteger(occurrences) && (occurrences > 1))
-               return format("{1} := InStr({2}, {3},, -1*(({5})+1), -" . occurrences . ") - 1", p*)
+               return format("{2} := InStr({3}, {4},{1}, -1*(({6})+1), -" . occurrences . ") - 1", CaseSense, p*)
             else
-               return format("{1} := InStr({2}, {3},, -1*(({5})+1)) - 1", p*)
+               return format("{2} := InStr({3}, {4},{1}, -1*(({6})+1)) - 1", CaseSense, p*)
          } else
          {
             if (isInteger(occurrences) && (occurrences > 1))
-               return format("{1} := InStr({2}, {3},, ({5})+1, " . occurrences . ") - 1", p*)
+               return format("{2} := InStr({3}, {4},{1}, ({6})+1, " . occurrences . ") - 1", CaseSense, p*)
             else
-               return format("{1} := InStr({2}, {3},, ({5})+1) - 1", p*)
+               return format("{2} := InStr({3}, {4},{1}, ({6})+1) - 1", CaseSense, p*)
          }
       } else if (p[4] = 1)
       {
          ; in v1 if occurrences param = "R" or "1" conduct search right to left
          ; "1" sounds weird but its in the v1 source, see link above
-         return format("{1} := InStr({2}, {3},, -1*(({5})+1)) - 1", p*)
+         return format("{2} := InStr({3}, {4},{1}, -1*(({6})+1)) - 1", CaseSense, p*)
       } else if (p[4] = "")
       {
-         return format("{1} := InStr({2}, {3},, ({5})+1) - 1", p*)
+         return format("{2} := InStr({3}, {4},{1}, ({6})+1) - 1", CaseSense, p*)
       } else
       {
          ; msgbox( p.Length "`n" p[1] "`n" p[2] "`n" p[3] "`n[" p[4] "]`n[" p[5] "]")
          ; else then a variable was passed (containing the "L#|R#" string),
          ;      or literal text converted to expr, something like:   "L" . A_Index
          ; output something anyway even though it won't work, so that they can see something to fix
-         return format("{1} := InStr({2}, {3},, ({5})+1, {4}) - 1", p*)
+         return format("{2} := InStr({3}, {4},{1}, ({6})+1, {5}) - 1", CaseSense, p*)
       }
    }
 }

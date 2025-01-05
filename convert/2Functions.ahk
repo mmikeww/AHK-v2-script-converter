@@ -26,7 +26,7 @@ global gmAhkFuncsToConvert := OrderedMap(
   , "RegExReplace(Haystack,NeedleRegEx,Replacement,OutputVarCountV2VR,Limit,StartingPos)" ,
     "RegExReplace({1}, {2}, {3}, {4}, {5}, {6})"
   , "StrReplace(Haystack,Needle,ReplaceText,OutputVarCountV2VR,Limit)" ,
-    "StrReplace({1}, {2}, {3}, , {4}, {5})"
+    "*_StrReplace"
   , "SubStr(String, StartingPos, Length)" ,
     "SubStr({1}, {2}, {3})"
   , "RegisterCallback(FunctionNameQ2T,Options,ParamCount,EventInfo)" ,
@@ -420,6 +420,13 @@ _RegExMatch(p) {
     Out := Format("RegExMatch({1}, {2}, , {4})", p*)
   }
   Return RegExReplace(Out, "[\s\,]*\)$", ")")
+}
+
+_StrReplace(p) {
+  global gaScriptStrsUsed
+  CaseSense := gaScriptStrsUsed.StringCaseSense ? "A_StringCaseSense" : ""
+  Out := Format("StrReplace({2}, {3}, {4}, {1}, {5}, {6})", CaseSense, p*)
+  return RegExReplace(Out, "[\s,]*\)", ")")
 }
 
 _SB_SetText(p) {

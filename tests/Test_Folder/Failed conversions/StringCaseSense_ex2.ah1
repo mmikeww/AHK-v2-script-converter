@@ -10,3 +10,6 @@ MsgBox % msg
 
 StringReplace, msg, var, ABC
 MsgBox % msg
+
+msg := StrReplace("aA", "A")
+MsgBox % msg

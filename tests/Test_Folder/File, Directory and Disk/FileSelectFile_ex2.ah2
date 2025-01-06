@@ -9,10 +9,10 @@ If not ErrorLevel
 MsgBox(ErrorLevel)
 
 oMyVar := FileSelect("M")
+MyVar := ""
 for FileName in oMyVar
 {
-MyVar .= A_index=2 ? "`r`n" : ""
-MyVar .= A_index=1 ? FileName : RegExReplace(FileName,"^.*\\([^\\]*)$" ,"$1") "`r`n"
+MyVar .= A_Index=1 ? RegExReplace(FileName, "(.+)\\(.*)", "$1`r`n$2`r`n") : RegExReplace(FileName, ".+\\(.*)", "$1`r`n")
 }
 if (MyVar = "") {
 ErrorLevel := 1

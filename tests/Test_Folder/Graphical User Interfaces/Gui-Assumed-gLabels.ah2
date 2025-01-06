@@ -33,7 +33,7 @@ ButtonButton3(A_GuiEvent := "", GuiCtrlObj := "", Info := "", *)
 global ; V1toV2: Made function global
 MsgBox("Third Button Pressed")
 Return
-} ; V1toV2: Added Bracket before label
+} ; V1toV2: Added bracket before function
 
 ButtonButton4(A_GuiEvent := "", GuiCtrlObj := "", Info := "", *) {
 MsgBox("Fourth Button Pressed via " A_GuiEvent)

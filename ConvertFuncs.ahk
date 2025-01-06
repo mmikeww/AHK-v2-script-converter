@@ -123,6 +123,7 @@ setGlobals()
    global gGuiControlCount       := 0
    global gMenuList              := "|"
    global gmMenuCBChecks         := map()       ; 2024-06-26 AMB, for fix #131
+   global gmGuiFuncCBChecks      := map()       ; same as above for gui funcs
    global gmGuiCtrlType          := map()       ; Create a map to return the type of control
    global gmGuiCtrlObj           := map()       ; Create a map to return the object of a control
    global gUseLastName           := False       ; Keep track of if we use the last set name in gGuiList
@@ -1267,6 +1268,7 @@ FinalizeConvert(&code)
    try code := UpdateGotoFunc(code)     ; Update Goto Label when Label is converted to a func
    try code := FixOnMessage(code)       ; Fix turning off OnMessage when defined after turn off
    try code := FixVarSetCapacity(code)  ; &buf -> buf.Ptr   &vssc -> StrPtr(vssc)
+   addGuiCBArgs(&code)
    addMenuCBArgs(&code)                 ; 2024-06-26, AMB - Fix #131
    addOnMessageCBArgs(&code)            ; 2024-06-28, AMB - Fix #136
 
@@ -1891,6 +1893,7 @@ _Gui(p) {
    global gOScriptStr           ; array of all the lines
    global gAllV1LabelNames      ; all label names (comma delim str)
    global gAllFuncNames         ; all func names (comma delim str)
+   global gmGuiFuncCBChecks
    global gO_Index              ; current index of the lines
    global gmGuiVList
    global gGuiActiveFont
@@ -1962,6 +1965,9 @@ _Gui(p) {
          if (!InStr(gAllV1LabelNames, ControlLabel) and !InStr(gAllFuncNames, ControlLabel))
             ControlLabel := ""
       }
+      if ControlLabel != "" and !InStr(gAllV1LabelNames, ControlLabel) and InStr(gAllFuncNames, ControlLabel)
+         gmGuiFuncCBChecks[ControlLabel] := true
+
       if (RegExMatch(Var3, "i)\bv[\w]*\b")) {
          ControlName := RegExReplace(Var3, "i)^.*\bv([\w]*)\b.*$", "$1")
 
@@ -4645,6 +4651,14 @@ RenameKeywords(Line) {
       restoreStrings(&Line)
 
    return Line
+}
+;################################################################################
+addGuiCBArgs(&code) { 
+   global gmGuiFuncCBChecks
+   for key, val in gmGuiFuncCBChecks {
+      code := RegExReplace(code, "im)^(\s*" key ")\((.*?)\)(\s*\{)", '$1(A_GuiEvent := "", GuiCtrlObj := "", Info := "", *)$3 `; V1toV2: Handle params: $2')
+      code := RegExReplace(code, "m) `; V1toV2: Handle params: $")
+   }
 }
 ;################################################################################
 addMenuCBArgs(&code) {

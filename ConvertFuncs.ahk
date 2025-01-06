@@ -85,6 +85,7 @@ After_LineConverts(&code)
    ; inspect to see whether your code is best placed here or in FinalizeConvert()
    ; operations that must be performed last
    FinalizeConvert(&code)                 ; perform all final operations
+   TrueFinalizeConvert(&code)             ; final operations not in block node conversions, please use FinalizeConvert() when possible
 
    return    ; code by reference
 }
@@ -1266,11 +1267,16 @@ FinalizeConvert(&code)
    try code := UpdateGotoFunc(code)     ; Update Goto Label when Label is converted to a func
    try code := FixOnMessage(code)       ; Fix turning off OnMessage when defined after turn off
    try code := FixVarSetCapacity(code)  ; &buf -> buf.Ptr   &vssc -> StrPtr(vssc)
-   try code := FixByRefParams(code)     ; Adds & to ByRef params in user func calls
    addMenuCBArgs(&code)                 ; 2024-06-26, AMB - Fix #131
    addOnMessageCBArgs(&code)            ; 2024-06-28, AMB - Fix #136
 
    return ; code by reference
+}
+;################################################################################
+TrueFinalizeConvert(&code)
+;################################################################################
+{
+   try code := FixByRefParams(code)     ; Adds & to ByRef params in user func calls
 }
 ;################################################################################
 ; Convert a v1 function in a single script line to v2

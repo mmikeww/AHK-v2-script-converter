@@ -434,12 +434,6 @@ _convertLines(ScriptString, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to ac
       {
          ; DO NOTHING - already V2 compliant
       }
-      ; 2024-09-07 f2g: FIXED -  Adjacent, comma-separated empty string assignments - ex2
-      ; re: https://github.com/mmikeww/AHK-v2-script-converter/issues/286
-      else if (RegExMatch(Line, "i)^.*:=.*\)$"))
-      {
-         ; DO NOTHING - already V2 compliant
-      }
       ; -------------------------------------------------------------------------------
       ; Replace = with := expression equivilents in "var = value" assignment lines
       ;
@@ -468,43 +462,56 @@ _convertLines(ScriptString, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to ac
       }
       else if (RegexMatch(Line, "(?i)^(\h*[a-z_][a-z_0-9]*\h*[:*\.]=\h*)(.*)") && InStr(Line, '""')) ; Line is var assignment, and has ""
       {
-         ternary := 0
          ; Fixes issues with continuation sections
          Line := RegExReplace(Line, '""(\h*)\r\n', '"' Chr(0x2700) '"$1`r`n')
          maskFuncCalls(&Line)
-         if (RegexMatch(Line, "(?i)^(\h*[a-z_][a-z_0-9]*\h*[:*\.]=\h*)(.*)", &Equation) && InStr(Line, '""')) {
-            ; 2024-08-02 AMB, Fix 272
-            If (InStr(Line, "?") && InStr(Line, ":")) { ; Ternary
-               Line := Equation[1], val := Equation[2]
-               maskStrings(&val)
-               If (!InStr(val, "?") || !InStr(val, ":")) {
-                  ternary := 0
-                  Line := Line restoreStrings(&val)
-               } else {
-                  ternary := 1
-                  post := StrSplit(val, ":")
-                  pre := StrSplit(post[1], "?")
-
-                  expr := pre[1]
-                  ifTrue := pre[2]
-                  ifFalse := post[2]
-
-                  restoreStrings(&expr)
-                  ConvertDblQuotes2(&Line, expr "?")
-                  restoreStrings(&ifTrue)
-                  ConvertDblQuotes2(&Line, ifTrue ":")
-                  restoreStrings(&ifFalse)
-                  ConvertDblQuotes2(&Line, ifFalse)
+         maskStrings(&Line)
+         LineSplit := []
+         for , Line in StrSplit(Line, ",") {
+            restoreStrings(&Line)
+            ternary := 0
+            if (RegexMatch(Line, "(?i)^(\h*[a-z_][a-z_0-9]*\h*[:*\.]=\h*)(.*)", &Equation) && InStr(Line, '""')) {
+               ; 2024-08-02 AMB, Fix 272
+               If (InStr(Line, "?") && InStr(Line, ":")) { ; Ternary
+                  Line := Equation[1], val := Equation[2]
+                  maskStrings(&val)
+                  If (!InStr(val, "?") || !InStr(val, ":")) {
+                     ternary := 0
+                     Line := Line restoreStrings(&val)
+                  } else {
+                     ternary := 1
+                     val := StrReplace(val, ":=", Chr(0x2727) "assign" Chr(0x2727))
+                     val := StrReplace(val, ":", ":" Chr(0x2828))
+                     val := StrReplace(val, "?", "?" Chr(0x2929))
+                     valSplit := StrSplit(val, [":", "?"])
+                     val := ""
+                     for , chunk in valSplit {
+                        restoreStrings(&chunk)
+                        if InStr(chunk, '""')
+                           ConvertDblQuotes2(&val, chunk)
+                        else
+                           val .= chunk
+                     }
+                     Line .= val
+                     Line := StrReplace(Line, Chr(0x2929), "?")
+                     Line := StrReplace(Line, Chr(0x2828), ":")
+                     Line := StrReplace(Line, Chr(0x2727) "assign" Chr(0x2727), ":=")
+                  }
+               }
+               If !ternary {
+                  maskStrings(&line), Line := Equation[1], val := Equation[2]
+                  if (!RegexMatch(Line, "\h*\w+(\((?>[^)(]+|(?-1))*\))")) ; not a func
+                  {
+                     ConvertDblQuotes2(&Line, val)
+                  }
                }
             }
-            If !ternary {
-               maskStrings(&line), Line := Equation[1], val := Equation[2]
-               if (!RegexMatch(Line, "\h*\w+(\((?>[^)(]+|(?-1))*\))")) ; not a func
-               {
-                  ConvertDblQuotes2(&Line, val)
-               }
-            }
+            LineSplit.Push(Line)
          }
+         Line := ""
+         for , v in LineSplit
+            Line .= v ","
+         Line := RTrim(Line, ",")
          Line := RegExReplace(Line, Chr(0x2700))
          restoreStrings(&line)
          restoreFuncCalls(&Line)

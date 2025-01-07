@@ -691,7 +691,8 @@ _convertLines(ScriptString, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to ac
                params := StrReplace(params, MatchFuncParams[],,,, 1)
             }
             gmByRefParamMap.Set(MatchFunc[1], ByRefTrackArray)
-            Line := RegExReplace(Line, "i)(\bByRef\s+)", "&")
+            ; Moved replacement to FixByRefParams()
+            ; Line := RegExReplace(Line, "i)(\bByRef\s+)", "&")
          }
 
          AllParams := MatchFunc[2]
@@ -4501,7 +4502,7 @@ FixByRefParams(ScriptString) {
             params := match[2]
             while pos := RegExMatch(params, "[^,]+", &MatchFuncParams) {
                if v[A_Index] {
-                  retLine .= "&" LTrim(MatchFuncParams[]) ", "
+                  retLine .= "&" RegExReplace(LTrim(MatchFuncParams[]), "i)^ByRef ") ", "
                } else {
                   retLine .= MatchFuncParams[] ", "
                }

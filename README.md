@@ -29,9 +29,10 @@ However, this project is way more ambitious that I originally thought, and __it 
 ## Post conversion
 If you find that the script does not work, please go through the troubleshooting steps below
 1. Review all comments, they are prefixed with `; V1toV2: ` and can provide fixes on code that the converter can't handle
-2. Check [issues](https://github.com/mmikeww/AHK-v2-script-converter/issues), if others users have experienced this issue we create potential fixes before we implement it.
-3. If nobody has experienced your issue, [create a new one](https://github.com/mmikeww/AHK-v2-script-converter/issues/new/choose)
-4. Finally ask for help! Either on the [discussions page](https://github.com/mmikeww/AHK-v2-script-converter/discussions/categories/q-a-conversion-help) or at [AHK forums](https://www.autohotkey.com/boards/viewforum.php?f=82)
+2. Read [this](https://github.com/mmikeww/AHK-v2-script-converter/discussions/325) page listing many of the common conversion issues and their fixes
+3. Check [issues](https://github.com/mmikeww/AHK-v2-script-converter/issues), if others users have experienced this issue we create potential fixes before we implement it.
+4. If nobody has experienced your issue, [create a new one](https://github.com/mmikeww/AHK-v2-script-converter/issues/new/choose)
+5. Finally ask for help! Either on the [discussions page](https://github.com/mmikeww/AHK-v2-script-converter/discussions/categories/q-a-conversion-help) or at [AHK forums](https://www.autohotkey.com/boards/viewforum.php?f=82)
 
 ## Note
 You may still have the AutoHotkey V1 binary associated with *.ahk files, the converter is written in V2 so please either [update AutoHotkey](https://www.autohotkey.com/download/) or open the repository in command prompt and run the following command: `"AutoHotKey Exe\AutoHotkeyV2.exe" QuickConvertorV2.ahk`

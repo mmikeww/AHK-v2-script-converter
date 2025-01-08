@@ -2517,7 +2517,7 @@ _IfNotInString(p) {
 }
 ;################################################################################
 _Input(p) {
-   Out := format("ih{1} := InputHook({2},{3},{4}), ih{1}.Start(), ih{1}.Wait(), {1} := ih{1}.Input", p*)
+   Out := format("ih{1} := InputHook({2},{3},{4}), ih{1}.Start(), " (gaScriptStrsUsed.ErrorLevel ? "ErrorLevel := " : "") "ih{1}.Wait(), {1} := ih{1}.Input", p*)
    Return out := RegExReplace(Out, "[\s\,]*\)", ")")
 }
 ;################################################################################

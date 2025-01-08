@@ -441,7 +441,7 @@ _convertLines(ScriptString, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to ac
       ; lexikos says var=value should always be a string, even numbers
       ; https://autohotkey.com/boards/viewtopic.php?p=118181#p118181
       ;
-      else if (RegExMatch(Line, "(?i)^(\h*[a-z_][a-z_0-9]*\h*)=([^;\v]*)", &Equation))
+      else if (RegExMatch(Line, "(?i)^(\h*[a-z_%][a-z_0-9%]*\h*)=([^;\v]*)", &Equation))
       {
          ; msgbox("assignment regex`norigLine: " Line "`norig_left=" Equation[1] "`norig_right=" Equation[2] "`nconv_right=" ToStringExpr(Equation[2]))
          Line := RTrim(Equation[1]) . " := " . ToStringExpr(Equation[2])   ; regex above keeps the gIndentation already

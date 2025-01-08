@@ -1,0 +1,1 @@
+return a := "", b .= InStr(b, a) ? "" : ""

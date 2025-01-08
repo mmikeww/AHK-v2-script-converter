@@ -1099,6 +1099,8 @@ _convertLines(ScriptString, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to ac
       if InStr(Line, '""') && RegExReplace(Line, "\w\(",, &funcCount) != Line
       {
          maskFuncCalls(&Line)
+         Line := StrReplace(Line, "(", Chr(0x3030))
+         Line := StrReplace(Line, ")", Chr(0x3131))
          maskStrings(&Line)
          restoreFuncCalls(&Line)
          Loop(funcCount) {
@@ -1124,6 +1126,8 @@ _convertLines(ScriptString, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to ac
             Line := splitFunc.pre splitFunc.func "(" Line ")" splitFunc.post
          }
          Line := StrReplace(Line, Chr(0x2727), '``"')
+         Line := StrReplace(Line, Chr(0x3030), "(")
+         Line := StrReplace(Line, Chr(0x3131), ")")
          ;MsgBox "Constructed`n" Line
          restoreStrings(&Line)
       }

@@ -1,0 +1,1 @@
+return (AHKv1v2_Temp := a := "", b .= InStr(b, a) ? "" : "", AHKv1v2_Temp) ; V1toV2: Wrapped Multi-statement return with parentheses

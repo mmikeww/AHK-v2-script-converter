@@ -1,0 +1,10 @@
+Menu,Tray,NoStandard
+Menu,Tray,DeleteAll
+Menu,Tray,Add,%applicationname%,SHOW
+Menu,Tray,Add
+Menu,Tray,Add,&Show,SHOW
+Menu,Tray,Add
+Menu,Tray,Add,&About...,ABOUT
+Menu,Tray,Add,E&xit,EXIT
+Menu,Tray,Tip,%applicationname%
+Menu,Tray,Default,%applicationname%

@@ -1,0 +1,1 @@
+GuiControl, % "+AltSubmit -g", MyListBox

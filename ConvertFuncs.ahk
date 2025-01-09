@@ -2379,6 +2379,10 @@ _GuiControl(p) {
       }
    } else if (RegExMatch(SubCommand, "^[+-].*")) {
       Return ControlObject ".Options(" ToExp(SubCommand) ")"
+   } else { ; Passed as variable, just output something that won't work
+      if RegExMatch(SubCommand, "[+-].*")
+         Return ControlObject ".Options(" ToExp(SubCommand) ")"
+      Return ControlObject ".%" ToExp(SubCommand) "%() `; V1toV2: SubCommand passed as variable, check variable contents and docs"
    }
 
    Return

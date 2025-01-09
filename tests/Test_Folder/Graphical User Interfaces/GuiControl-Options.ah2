@@ -1,0 +1,1 @@
+ogcMyListBox.Options("+AltSubmit -g")

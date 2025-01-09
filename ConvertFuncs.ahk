@@ -4669,7 +4669,7 @@ addGuiCBArgs(&code) {
    global gmGuiFuncCBChecks
    for key, val in gmGuiFuncCBChecks {
       code := RegExReplace(code, "im)^(\s*" key ")\((.*?)\)(\s*\{)", '$1(A_GuiEvent := "", GuiCtrlObj := "", Info := "", *)$3 `; V1toV2: Handle params: $2')
-      code := RegExReplace(code, "m) `; V1toV2: Handle params: $")
+      code := RegExReplace(code, 'm) `; V1toV2: Handle params: (A_GuiEvent := "", GuiCtrlObj := "", Info := "", \*)?$')
    }
 }
 ;################################################################################

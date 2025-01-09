@@ -1999,6 +1999,7 @@ _Gui(p) {
          Var3 := StrReplace(Var3, match[])
          if (ControlObject = "" && Var4 != "") {
             ControlObject := InStr(ControlHwnd, SubStr(Var4, 1, 4)) ? "ogc" StrReplace(ControlHwnd, "hwnd") : "ogc" Var4 StrReplace(ControlHwnd, "hwnd")
+            ControlObject := RegExReplace(ControlObject, "\W")
          } else if (ControlObject = "") {
             gGuiControlCount++
             ControlObject := Var2 gGuiControlCount

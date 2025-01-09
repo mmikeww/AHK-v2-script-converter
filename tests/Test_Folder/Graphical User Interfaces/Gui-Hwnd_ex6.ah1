@@ -1,0 +1,1 @@
+Gui, Add, Button, hwndVAR, Text.

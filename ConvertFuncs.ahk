@@ -838,7 +838,7 @@ _convertLines(ScriptString, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to ac
          Line := RegExReplace(Line, "im)^(.*\s\?.*\:\s*)(\)|$)", '$1 ""$2')
       }
 
-      ; Fix quote object properties [{"A": "B"}] => [{A: "B"}]
+      ; Fix quoted object properties [{"A": "B"}] => [{A: "B"}]
       if InStr(Line, "{") and InStr(Line, '"') and InStr(Line, ":") {
          maskStrings(&Line)
          if InStr(Line, "{") and !InStr(Line, '"') and InStr(Line, ":") {
@@ -853,7 +853,7 @@ _convertLines(ScriptString, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to ac
                   codeArray.Push(tempCode)
                   tempCode := ""
                   inObj++
-               } else if (char = ":" and inObj) {
+               } else if (char ~= ":|," and inObj) {
                   codeArray.Push(tempCode)
                   tempCode := ""
                } else if (char = "}") {

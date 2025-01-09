@@ -428,13 +428,6 @@ _convertLines(ScriptString, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to ac
          continue
       }
       ; -------------------------------------------------------------------------------
-      ; 2024-09-07 f2g: FIXED - Adjacent, comma-separated empty string assignments - ex1
-      ; re: https://github.com/mmikeww/AHK-v2-script-converter/issues/286
-      else if (RegExMatch(Line, "i)^.*:=\h*`"`"\h*(?<!\))$"))
-      {
-         ; DO NOTHING - already V2 compliant
-      }
-      ; -------------------------------------------------------------------------------
       ; Replace = with := expression equivilents in "var = value" assignment lines
       ;
       ; var = 3      will be replaced with    var := "3"

@@ -1987,7 +1987,7 @@ _Gui(p) {
             }
          }
       }
-      if (RegExMatch(Var3, "i)\+?HWND(\w*?)(?:`"|\s|$)", &match)) {
+      if (RegExMatch(Var3, "i)\+?HWND(\w*?)(?=`"|\s|$)", &match)) {
          ControlHwnd := match[1]
          Var3 := StrReplace(Var3, match[])
          if (ControlObject = "" && Var4 != "") {

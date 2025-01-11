@@ -448,17 +448,6 @@ EvalSelectedTest(thisCtrl, *)
 }
 gui_AhkHelp(SearchString,Version:="V2")
 {
-    if !isSet(Url){
-        WBGui := Gui()
-        WBGui.Opt("+Resize")
-        WBGui.MarginX := "0", WBGui.MarginY := "0"
-        global Url,WB,WBGui
-        WBGui.Title := "AutoHotKey Help"
-        ogcActiveXWBC := WBGui.Add("ActiveX", "xm w980 h640 vIE", "Shell.Explorer")
-        WB := ogcActiveXWBC.Value
-        WBGui.OnEvent("Size", WBGui_Size)
-    }
-
     if (Version="V1"){
         URLSearch := "https://www.autohotkey.com/docs/v1/search.htm?q="
     }
@@ -467,42 +456,11 @@ gui_AhkHelp(SearchString,Version:="V2")
     }
     URL := URLSearch SearchString "&m=2"
 
-    WB.Navigate(URL)
-    FuncObj := gui_KeyDown.Bind(WB)
-    OnMessage(0x100, FuncObj, 2)
-    WBGui.Show()
-
-    WBGui_Size(thisGui, MinMax, Width, Height){
-        ogcActiveXWBC.Move(,,Width,Height) ; Gives an error Webbrowser has no method named move
-    }
+    Run(URL)
 }
 Gui_DropFiles(GuiObj, GuiCtrlObj, FileArray, X, Y)
 {
     V1Edit.Text := StrReplace(StrReplace(FileRead(FileArray[1]), "`r`n", "`n"), "`n", "`r`n")
-}
-gui_KeyDown(wb, wParam, lParam, nMsg, hWnd)
-{
-	; if (Chr(wParam) ~= "[BD-UW-Z]" || wParam = 0x74) ; Disable Ctrl+O/L/F/N and F5.
-		; return
-	WBGui.Opt("+OwnDialogs") ; For threadless callbacks which interrupt this.
-	pipa := ComObjQuery(wb, "{00000117-0000-0000-C000-000000000046}")
-    NumPut(
-        'Ptr', hWnd,
-        'Ptr', nMsg,
-        'Ptr', wParam,
-        'Ptr', lParam,
-        'UInt', A_EventInfo,
-    	kMsg := Buffer(48)
-    )
-    DllCall('GetCursorPos', 'Ptr', kMsg.Ptr + (4 * A_PtrSize) + 4)
-
-	Loop 2
-    ComCall(5, pipa, 'Ptr', kMsg)
-    ; Loop to work around an odd tabbing issue (it's as if there
-    ; is a non-existent element at the end of the tab order).
-	until wParam != 9 || wb.Document.activeElement != ""
-	; S_OK: the message was translated to an accelerator.
-	return 0
 }
 Gui_Size(thisGui, MinMax, Width, Height)  ; Expand/Shrink ListView and TreeView in response to the user's resizing.
 {
@@ -841,6 +799,7 @@ RunV2E(*)
 }
 MenuCommandHelp(*)
 {
+    global v1HelpFile, v2HelpFile
     ogcFocused := MyGui.FocusedCtrl
     Type := ogcFocused.Type
     if (Type="Edit"){
@@ -853,17 +812,6 @@ MenuCommandHelp(*)
         PostString := RegExReplace(SubStr(text,count), "(^[^,，\s,\.\t`"\(\)`']*).*", "$1")
         word := PreString PostString
 
-        if !isSet(Url){
-            WBGui := Gui()
-            WBGui.Opt("+Resize")
-            WBGui.MarginX := "0", WBGui.MarginY := "0"
-            global Url,WB,WBGui
-            WBGui.Title := "AutoHotKey Help"
-            ogcActiveXWBC := WBGui.Add("ActiveX", "xm w980 h640 vIE", "Shell.Explorer")
-            WB := ogcActiveXWBC.Value
-            WBGui.OnEvent("Size", WBGui_Size)
-        }
-
         if InStr(ogcFocused.Name,"V1"){
             URLSearch := "https://www.autohotkey.com/docs/v1/search.htm?q="
         }
@@ -872,14 +820,7 @@ MenuCommandHelp(*)
         }
         URL := URLSearch word "&m=2"
 
-        WB.Navigate(URL)
-        FuncObj := gui_KeyDown.Bind(WB)
-        OnMessage(0x100, FuncObj, 2)
-        WBGui.Show()
-
-        WBGui_Size(thisGui, MinMax, Width, Height){
-            ogcActiveXWBC.Move(,,Width,Height) ; Gives an error Webbrowser has no method named move
-        }
+        Run(URL)
     }
 }
 MenuShowSymols(*)

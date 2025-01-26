@@ -1973,8 +1973,8 @@ _Gui(p) {
       if ControlLabel != "" and !InStr(gAllV1LabelNames, ControlLabel) and InStr(gAllFuncNames, ControlLabel)
          gmGuiFuncCBChecks[ControlLabel] := true
 
-      if (RegExMatch(Var3, "i)\bv[\w]*\b")) {
-         ControlName := RegExReplace(Var3, "i)^.*\bv([\w]*)\b.*$", "$1")
+      if (RegExMatch(Var3, "i)\bv[\w]+\b") && !(Var1 ~= "i)show|margin|font")) {
+         ControlName := RegExReplace(Var3, "i)^.*\bv([\w]+)\b.*$", "$1")
 
          ControlObject := InStr(ControlName, SubStr(Var2, 1, 4)) ? "ogc" ControlName : "ogc" Var2 ControlName
          gmGuiCtrlObj[ControlName] := ControlObject

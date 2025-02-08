@@ -164,7 +164,7 @@
          tempfile.Write(tempRead)                                      ; save CRLF temp file for VisualDiff read
          tempfile.Close()
          Sleep(1000)
-         Run("diff\VisualDiff.exe diff\VisualDiff.ahk `"" . FN . "`" `"" . FNOut . "`"")
+         Run("diff\VisualDiff.ahk `"" . FN . "`" `"" . FNOut . "`"")
       }
    } else if (A_Args.has(2)) {
       A_Args[2] := RTrim(A_Args[2], "\")

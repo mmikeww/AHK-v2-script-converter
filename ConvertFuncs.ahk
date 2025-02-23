@@ -2122,6 +2122,14 @@ _Gui(p) {
          }
          if (Var4 != "") {
             if (RegExMatch(Var2, "i)^tab[23]?$") || Var2 = "ListView" || Var2 = "DropDownList" || Var2 = "DDL" || Var2 = "ListBox" || Var2 = "ComboBox") {
+               searchIdx := 1
+               while (gOScriptStr.Has(gO_Index + searchIdx) && SubStr(gOScriptStr[gO_Index + searchIdx], 1, 1) ~= "^(\||)$") {
+                  Var4 .= contStr := gOScriptStr[gO_Index + searchIdx]
+                  nlCount := (SubStr(contStr, 1, 1) = "|" ? 0 : (IsSet(nlCount) ? nlCount : 0) + 1)
+                  searchIdx++
+               }
+               if searchIdx != 1
+                  gO_Index += (searchIdx - 1 - nlCount)
                if RegExMatch(Var4, "%(.*)%", &match) {
                   LineResult .= ', StrSplit(' match[1] ', "|")'
                   LineSuffix .= " `; V1toV2: Check that this " Var2 " has the correct choose value"

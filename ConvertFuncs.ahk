@@ -4477,15 +4477,18 @@ FixVarSetCapacity(ScriptString) {
 
    loop parse ScriptString, "`n", "`r" {
       Line := A_LoopField
-      if (RegExMatch(Line, "(?<!VarSetStrCapacity\()(?<=\W)&(\w+)", &match))
-         and !RegExMatch(Line, "^\s*;") {
-         for vName, vType in gmVarSetCapacityMap {
-            ;MsgBox "v: " vName "`nm1: " match[1]
-            if (vName = match[1]) {
-               if (vType = "B")
-                  Line := StrReplace(Line, "&" match[1], match[1] ".Ptr")
-               else if (vType = "V")
-                  Line := StrReplace(Line, "&" match[1], "StrPtr(" match[1] ")")
+      StrReplace(Line, "&",,, &ReplacementCount)
+      Loop (ReplacementCount) {
+         if (RegExMatch(Line, "(?<!VarSetStrCapacity\()(?<=\W)&(\w+)", &match))
+            and !RegExMatch(Line, "^\s*;") {
+            for vName, vType in gmVarSetCapacityMap {
+               ;MsgBox "v: " vName "`nm1: " match[1]
+               if (vName = match[1]) {
+                  if (vType = "B")
+                     Line := StrReplace(Line, "&" match[1], match[1] ".Ptr")
+                  else if (vType = "V")
+                     Line := StrReplace(Line, "&" match[1], "StrPtr(" match[1] ")")
+               }
             }
          }
       }

@@ -959,7 +959,7 @@ RunV2(*)
         FileDelete TempAhkFile
     }
     FileAppend oSaved.vCodeV2 , TempAhkFile
-    Run AhkV2Exe " " TempAhkFile
+    Run AhkV2Exe " " Format('"{1}"', TempAhkFile)
     ButtonCloseV2.Opt("-Disabled")
 }
 RunV2E(*)
@@ -975,7 +975,7 @@ RunV2E(*)
         FileDelete TempAhkFile
     }
     FileAppend V2ExpectedEdit.Text , TempAhkFile
-    Run AhkV2Exe " " TempAhkFile
+    Run AhkV2Exe " " Format('"{1}"', TempAhkFile)
     ButtonCloseV2E.Opt("-Disabled")
 }
 TV_ItemSelect(thisCtrl, Item)  ; This function is called when a new item is selected.

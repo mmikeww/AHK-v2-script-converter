@@ -943,7 +943,7 @@ RunV1(*)
         FileDelete TempAhkFile
     }
     FileAppend V1Edit.Text, TempAhkFile
-    Run AhkV1Exe " " TempAhkFile
+    Run AhkV1Exe " " Format('"{1}"', TempAhkFile)
     ButtonCloseV1.Opt("-Disabled")
 }
 RunV2(*)

@@ -13,8 +13,12 @@ if (params[0] > 0) {     ; if command line args are passed
 	SplitPath, % params[1], file1name
 	SplitPath, % params[2], file2name
 	srcFilePath	:= params[1]	; 2024-07-01 ADDED, AMB
-	lhsvalue	:= "FileRead('" . RegExReplace(params[1], "\\", "/") . "')"
-	rhsvalue	:= "FileRead('" . RegExReplace(params[2], "\\", "/") . "')"
+	; 2025-04-28 AMB, UPDATED to fix Issue #335
+	lhsvalue	:= "FileRead('" . fixPath(params[1]) . "')"
+	rhsvalue	:= "FileRead('" . fixPath(params[2]) . "')"
+;	lhsvalue	:= "FileRead('" . RegExReplace(params[1], "\\", "/") . "')"
+;	rhsvalue	:= "FileRead('" . RegExReplace(params[2], "\\", "/") . "')"
+
 	instructions := "&nbsp;"
 } else {
 	lhsvalue	:= "'the quick red fox jumped\nover the hairy dog\n\nhello world'"
@@ -268,6 +272,16 @@ return
 ;ESC::
 ;ExitApp
 
+
+/**
+ *	2025-04-28 AMB, ADDED to fix Issue #335
+ *	To fix filepath characters for 'FileRead' string
+ */
+fixPath(srcPath){
+	fixedPath := RegExReplace(srcPath, "\\", "/")		; back-slash => forward-slash
+	fixedPath := RegExReplace(fixedPath, "'", "\'")		; 2025-04-28 - escape apostrophe/singleQuote
+	return fixedPath
+}
 
 /**
  *

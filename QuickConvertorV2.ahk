@@ -304,7 +304,7 @@ CompDiffV2(*)
     }
     FileAppend V1Edit.Text, TempAhkFileV1
 
-   RunWait('"' A_ScriptDir '\diff\VisualDiff.exe" "' A_ScriptDir '\diff\VisualDiff.ahk" "' . TempAhkFileV1 . '" "' . TempAhkFileV2 . '"')
+   RunWait('"' A_ScriptDir '\diff\VisualDiff.ahk" "' . TempAhkFileV1 . '" "' . TempAhkFileV2 . '"')
 
     Return
 }
@@ -327,7 +327,7 @@ CompDiffV2E(*)
     }
     FileAppend V2ExpectedEdit.Text, TempAhkFileV2E
 
-   RunWait('"' A_ScriptDir '\diff\VisualDiff.exe" "' A_ScriptDir '\diff\VisualDiff.ahk" "' . TempAhkFileV2 . '" "' . TempAhkFileV2E . '"')
+   RunWait('"' A_ScriptDir '\diff\VisualDiff.ahk" "' . TempAhkFileV2 . '" "' . TempAhkFileV2E . '"')
 
     Return
 }

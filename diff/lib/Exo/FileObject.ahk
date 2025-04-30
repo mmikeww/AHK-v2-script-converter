@@ -27,7 +27,7 @@ class FileObject
 			return (this.__Ptr)[method](args*)
 	}
 
-	RawRead(bytes, Advanced=0)
+	/*RawRead(bytes, Advanced:=0)
 	{
 		Count := this.__Ptr.RawRead(VarOrAddress, bytes)
 		if (Advanced) {
@@ -35,7 +35,7 @@ class FileObject
 		} else {
 			return VarOrAddress
 		}
-	}
+	}*/
 	RawWrite(VarOrAddress, bytes)
 	{
 		return this.__Ptr.RawWrite(VarOrAddress, bytes)

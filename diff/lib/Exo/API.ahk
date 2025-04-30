@@ -22,8 +22,8 @@ _A_Args(){
 /**
  * 
  */
-_A_ScriptDir(){
-	return %mainDir% 
+_A_ScriptDir(*){
+	return ''
 }
 
 
@@ -31,7 +31,7 @@ _A_ScriptDir(){
  * 
  */
 _A_ScriptFullPath(){
-	return %mainPath% 
+	return ''
 }
 
 
@@ -39,24 +39,8 @@ _A_ScriptFullPath(){
  * 
  */
 _A_ScriptName(){
-	SplitPath, mainPath, mainFilename
-	return %mainFilename%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_BlockInput(Mode){
-	BlockInput %Mode%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_Click(Item1="",Item2="",Item3="",Item4="",Item5="",Item6="",Item7=""){
-	Click %Item1%,%Item2%,%Item3%,%Item4%,%Item5%,%Item6%,%Item7%
+	;SplitPath(mainPath, &mainFilename)
+	return ''
 }
 
 
@@ -65,44 +49,13 @@ _Click(Item1="",Item2="",Item3="",Item4="",Item5="",Item6="",Item7=""){
  * "Clipboard" and "ErrorLevel" are the only built-in variables that allow write access.
  * Because "getBuiltInVar()" only handles getters, these 2 had to be customized.
  */
-_Clipboard(a*){ ; variadic parameters, to detect the role (getter or setter)
+Array.Prototype.DefineProp('MaxIndex', {Call:(a)=>(i:='',e:=a.__Enum(),[((*)=>e(&k,&v)&&(i:=IsSet(k)?k:i))*],i)})
+_A_Clipboard(a*){ ; variadic parameters, to detect the role (getter or setter)
 	if (a.MaxIndex()) { ; setter
-		Clipboard := a[1]
+		A_Clipboard := a[1]
 	} else { ; getter
-		return Clipboard
+		return A_Clipboard
 	}
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_ClipWait(SecondsToWait="",AnyKindOfData=""){
-	ClipWait %SecondsToWait%,%AnyKindOfData%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_Control(Cmd,Value="",Control="",WinTitle="",WinText="",ExcludeTitle="",ExcludeText=""){
-	Control %Cmd%,%Value%,%Control%,%WinTitle%,%WinText%,%ExcludeTitle%,%ExcludeText%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_ControlClick(ControlorPos="",WinTitle="",WinText="",WhichButton="",ClickCount="",Options="",ExcludeTitle="",ExcludeText=""){
-	ControlClick %ControlorPos%,%WinTitle%,%WinText%,%WhichButton%,%ClickCount%,%Options%,%ExcludeTitle%,%ExcludeText%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_ControlFocus(Control="",WinTitle="",WinText="",ExcludeTitle="",ExcludeText=""){
-	ControlFocus %Control%,%WinTitle%,%WinText%,%ExcludeTitle%,%ExcludeText%
 }
 
 
@@ -111,238 +64,9 @@ _ControlFocus(Control="",WinTitle="",WinText="",ExcludeTitle="",ExcludeText=""){
  * "ControlGetPos" is special because it outputs 4 variables.
  * In JS, we return an Object with 4 properties: X, Y, Width and Height.
  */
-_ControlGetPos(Control="",WinTitle="",WinText="",ExcludeTitle="",ExcludeText=""){
-	ControlGetPos X,Y,Width,Height,%Control%,%WinTitle%,%WinText%,%ExcludeTitle%,%ExcludeText%
+_ControlGetPos(Control:="",WinTitle:="",WinText:="",ExcludeTitle:="",ExcludeText:=""){
+	ControlGetPos(&X, &Y, &Width, &Height, Control, WinTitle, WinText, ExcludeTitle)
 	return JS.Object("X", X, "Y", Y, "Width", Width, "Height", Height)
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_ControlGet(Cmd,Value="",Control="",WinTitle="",WinText="",ExcludeTitle="",ExcludeText=""){
-	ControlGet OutputVar,%Cmd%,%Value%,%Control%,%WinTitle%,%WinText%,%ExcludeTitle%,%ExcludeText%
-	return OutputVar
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_ControlGetFocus(WinTitle="",WinText="",ExcludeTitle="",ExcludeText=""){
-	ControlGetFocus OutputVar,%WinTitle%,%WinText%,%ExcludeTitle%,%ExcludeText%
-	return OutputVar
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_ControlGetText(Control="",WinTitle="",WinText="",ExcludeTitle="",ExcludeText=""){
-	ControlGetText OutputVar,%Control%,%WinTitle%,%WinText%,%ExcludeTitle%,%ExcludeText%
-	return OutputVar
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_ControlMove(Control,X,Y,Width,Height,WinTitle="",WinText="",ExcludeTitle="",ExcludeText=""){
-	ControlMove %Control%,%X%,%Y%,%Width%,%Height%,%WinTitle%,%WinText%,%ExcludeTitle%,%ExcludeText%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_ControlSend(Control="",Keys="",WinTitle="",WinText="",ExcludeTitle="",ExcludeText=""){
-	ControlSend %Control%,%Keys%,%WinTitle%,%WinText%,%ExcludeTitle%,%ExcludeText%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_ControlSendRaw(Control="",Keys="",WinTitle="",WinText="",ExcludeTitle="",ExcludeText=""){
-	ControlSendRaw %Control%,%Keys%,%WinTitle%,%WinText%,%ExcludeTitle%,%ExcludeText%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_ControlSetText(Control="",NewText="",WinTitle="",WinText="",ExcludeTitle="",ExcludeText=""){
-	ControlSetText %Control%,%NewText%,%WinTitle%,%WinText%,%ExcludeTitle%,%ExcludeText%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_CoordMode(Target,Mode=""){
-	CoordMode %Target%,%Mode%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_Critical(Value=""){
-	Critical %Value%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_DetectHiddenText(OnOff){
-	DetectHiddenText %OnOff%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_DetectHiddenWindows(OnOff){
-	DetectHiddenWindows %OnOff%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_Drive(Subcommand,Drive="",Value=""){
-	Drive %Subcommand%,%Drive%,%Value%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_DriveGet(Cmd,Value=""){
-	DriveGet OutputVar,%Cmd%,%Value%
-	return OutputVar
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_DriveSpaceFree(Path){
-	DriveSpaceFree OutputVar,%Path%
-	return OutputVar+0
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_EnvGet(EnvVarName){
-	EnvGet OutputVar,%EnvVarName%
-	return OutputVar
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_EnvSet(EnvVar,Value){
-	return OutputVar
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_EnvUpdate(){
-	EnvUpdate
-}
-
-
-/**
- * Implementation: Identical.
- * "Clipboard" and "ErrorLevel" are the only built-in variables that allow write access.
- * Because "getBuiltInVar()" only handles getters, these 2 had to be customized.
- */
-_ErrorLevel(a*){ ; variadic parameters, to detect the role (getter or setter)
-	if (a.MaxIndex()) { ; setter
-		ErrorLevel := a[1]
-	} else { ; getter
-		return ErrorLevel
-	}
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_ExitApp(ExitCode=""){
-	ExitApp %ExitCode%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_FileAppend(Text="",Filename="",Encoding=""){
-	FileAppend %Text%,%Filename%,%Encoding%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_FileCopy(SourcePattern,DestPattern,Flag=""){
-	FileCopy %SourcePattern%,%DestPattern%,%Flag%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_FileCopyDir(Source,Dest,Flag=""){
-	FileCopyDir %Source%,%Dest%,%Flag%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_FileCreateDir(DirName){
-	FileCreateDir %DirName%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_FileCreateShortcut(Target,LinkFile,WorkingDir="",Args="",Description="",IconFile="",ShortcutKey="",IconNumber="",RunState=""){
-	FileCreateShortcut %Target%,%LinkFile%,%WorkingDir%,%Args%,%Description%,%IconFile%,%ShortcutKey%,%IconNumber%,%RunState%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_FileDelete(FilePattern){
-	FileDelete %FilePattern%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_FileEncoding(Encoding=""){
-	FileEncoding %Encoding%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_FileGetAttrib(Filename=""){
-	FileGetAttrib OutputVar,%Filename%
-	return OutputVar
 }
 
 
@@ -350,53 +74,11 @@ _FileGetAttrib(Filename=""){
  * Implementation: Minor change (returns Object)
  * "FileGetShortcut" is special because it outputs 7 variables.
  * In JS, we return an Object with 7 properties: Target, Dir, Args, Description, Icon, IconNum, RunState.
+ * V2 Change: Removed redundent parameters
  */
-_FileGetShortcut(LinkFile, Target="", Dir="", Args="", Description="", Icon="", IconNum="", RunState=""){
-	FileGetShortcut, %LinkFile%, %Target%, %Dir%, %Args%, %Description%, %Icon%, %IconNum%, %RunState%
+_FileGetShortcut(LinkFile){
+	FileGetShortcut(LinkFile, &Target, &Dir, &Args, &Description, &Icon, &IconNum, &RunState)
 	return JS.Object("Target",Target, "Dir",Dir, "Args",Args, "Description",Description, "Icon",Icon, "IconNum",IconNum, "RunState",RunState)
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_FileGetSize(Filename="",Units=""){
-	FileGetSize OutputVar,%Filename%,%Units%
-	return OutputVar+0
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_FileGetTime(Filename="",WhichTime=""){
-	FileGetTime OutputVar,%Filename%,%WhichTime%
-	return OutputVar
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_FileGetVersion(Filename=""){
-	FileGetVersion OutputVar,%Filename%
-	return OutputVar
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_FileMove(SourcePattern,DestPattern,Flag=""){
-	FileMove %SourcePattern%,%DestPattern%,%Flag%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_FileMoveDir(Source,Dest,Flag=""){
-	FileMoveDir %Source%,%Dest%,%Flag%
 }
 
 
@@ -414,149 +96,7 @@ _FileMoveDir(Source,Dest,Flag=""){
  *           Data: The data retrieved from the file.
  */
 _FileOpen(fspec, flags, encoding:="CP0"){
-	return new FileObject(fspec, flags, encoding)
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_FileRead(Filename){
-	FileRead OutputVar,%Filename%
-	return OutputVar
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_FileReadLine(Filename,LineNum){
-	FileReadLine OutputVar,%Filename%,%LineNum%
-	return OutputVar
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_FileRecycle(FilePattern){
-	FileRecycle %FilePattern%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_FileRecycleEmpty(DriveLetter=""){
-	FileRecycleEmpty %DriveLetter%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_FileRemoveDir(DirName,Recurse=""){
-	FileRemoveDir %DirName%,%Recurse%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_FileSelectFile(Options="",RootDirOFilename="",Prompt="",Filter=""){
-	FileSelectFile OutputVar,%Options%,%RootDirOFilename%,%Prompt%,%Filter%
-	return OutputVar
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_FileSelectFolder(StartingFolder="",Options="",Prompt=""){
-	FileSelectFolder OutputVar,%StartingFolder%,%Options%,%Prompt%
-	return OutputVar
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_FileSetAttrib(Attributes,FilePattern="",OperateOnFolders="",Recurse=""){
-	FileSetAttrib %Attributes%,%FilePattern%,%OperateOnFolders%,%Recurse%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_FileSetTime(YYYYMMDDHH24MISS="",FilePattern="",WhichTime="",OperateOnFolders="",Recurse=""){
-	FileSetTime %YYYYMMDDHH24MISS%,%FilePattern%,%WhichTime%,%OperateOnFolders%,%Recurse%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_FormatTime(YYYYMMDDHH24MISS="",Format=""){
-	FormatTime OutputVar,%YYYYMMDDHH24MISS%,%Format%
-	return OutputVar
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_GroupActivate(GroupName,R=""){
-	GroupActivate %GroupName%,%R%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_GroupAdd(GroupName,WinTitle="",WinText="",Label="",ExcludeTitle="",ExcludeText=""){
-	GroupAdd %GroupName%,%WinTitle%,%WinText%,%Label%,%ExcludeTitle%,%ExcludeText%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_GroupClose(GroupName,Flag=""){
-	GroupClose %GroupName%,%Flag%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_GroupDeactivate(GroupName,R=""){
-	GroupDeactivate %GroupName%,%R%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_Gui(Subcommand,Param2="",Param3="",Param4=""){
-	Gui %Subcommand%,%Param2%,%Param3%,%Param4%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_GuiControl(Subcommand,ControlID,Param3=""){
-	GuiControl %Subcommand%,%ControlID%,%Param3%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_GuiControlGet(Subcommand="",ControlID="",Param4=""){
-	GuiControlGet OutputVar,%Subcommand%,%ControlID%,%Param4%
-	return OutputVar
+	return FileObject(fspec, flags, encoding)
 }
 
 
@@ -566,11 +106,12 @@ _GuiControlGet(Subcommand="",ControlID="",Param4=""){
  * The migrated function uses closures instead of labels.
  * TODO: Add support for AltTab.
  */
-_Hotkey(KeyName, Closure="", Options=""){
+/*
+_Hotkey(KeyName, Closure:="", Options:=""){
 	if (KeyName == "") {
 		end("Invalid KeyName!")
 	}
-	StringLower, Closure, Closure	; uniformity, to allow case insesitivity
+	Closure := StrLower(Closure)	; uniformity, to allow case insesitivity
 	operation := ""
 	if (Closure == "on" || RegExMatch(Options, "i)\bOn\b")) {
 		operation := "on"
@@ -583,17 +124,17 @@ _Hotkey(KeyName, Closure="", Options=""){
 		if (!closures.HasKey("Hotkey" . KeyName)) {
 			end("Nonexistent hotkey!")
 		} else {
-			Hotkey %KeyName%, %operation%, %Options%
+			Hotkey(KeyName, operation, Options)
 		}
 	} else {
 		if (Closure!="") {
 			closures["Hotkey" . KeyName] := Closure
-			Hotkey %KeyName%, LabelHotkey, %Options%
+			Hotkey(KeyName, LabelHotkey, Options)
 		} else {
-			Hotkey %KeyName%,, %Options%
+			Hotkey KeyName,, Options
 		}
 	}
-}
+}*/
 
 
 /**
@@ -602,75 +143,8 @@ _Hotkey(KeyName, Closure="", Options=""){
  * In JS, we return an Object with 2 properties: X, Y.
  */
 _ImageSearch(X1,Y1,X2,Y2,ImageFile){
-	ImageSearch X,Y,%X1%,%Y1%,%X2%,%Y2%,%ImageFile%
+	ImageSearch(&X, &Y, X1, Y1, X2, Y2, ImageFile)
 	return JS.Object("X",X, "Y",Y)
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_IniDelete(Filename,Section,Key=""){
-	IniDelete %Filename%,%Section%,%Key%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_IniRead(Filename,Section="",Key="",Default=""){
-	IniRead OutputVar,%Filename%,%Section%,%Key%,%Default%
-	return OutputVar
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_IniWrite(Value,Filename,Section,Key=""){
-	IniWrite %Value%,%Filename%,%Section%,%Key%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_Input(Options="",EndKeys="",MatchList=""){
-	Input OutputVar,%Options%,%EndKeys%,%MatchList%
-	return OutputVar
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_InputBox(Title="",Prompt="",HIDE="",Width="",Height="",X="",Y="",FontBlank="",Timeout="",Default=""){
-	InputBox OutputVar,%Title%,%Prompt%,%HIDE%,%Width%,%Height%,%X%,%Y%,,%Timeout%,%Default%
-	return OutputVar
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_KeyHistory(){
-	KeyHistory 
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_KeyWait(KeyName,Options=""){
-	KeyWait %KeyName%,%Options%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_ListHotkeys(){
-	ListHotkeys 
 }
 
 
@@ -692,89 +166,49 @@ _ListHotkeys(){
  *			Syntax: Loop("HKLM|HKYU|...", [Key, IncludeSubkeys, Recurse])
  *			Each Object has the same properties as the special variables available inside a Registry-Loop:
  *			Name,Type,Key,SubKey,TimeModified
+ * V2 Change: Update output object to reflect new variable names
  */
-_Loop(Param1,Param2="",Param3="",Param4=""){
+_Loop(Param1,Param2:="",Param3:=""){
 	output := JS.Array()
-	if (RegExMatch(Param1, "i)^parse$")) {
+	if (Param1 = "i)^parse$") {
 		end("The Parse-Loop has been superseded by StrSplit().")
-	} else if (RegExMatch(Param1, "i)^read$")) {
-		Loop, %Param1%, %Param2%
+	} else if (Param1 = "Read") {
+		Loop Read, Param2
 		{
             output.push(A_LoopReadLine)
 		}
-	} else {
-		global regNames
-		if (regNames.HasKey(Param1)) {
-			Loop, %Param1%, %Param2%, %Param3%, %Param4%
-			{
-                output.push(JS.Object("Name", A_LoopRegName
-                    ,"Type", A_LoopRegType
-                    ,"Key", A_LoopRegKey
-                    ,"SubKey", A_LoopRegSubKey
-                    ,"TimeModified", A_LoopRegTimeModified))
-			}
-		} else {
-			Loop, %Param1%, %Param2%, %Param3%
-            {
-                output.push(JS.Object("Name", A_LoopFileName
-                    ,"Ext", A_LoopFileExt
-                    ,"FullPath", A_LoopFileFullPath
-                    ,"LongPath", A_LoopFileLongPath
-                    ,"ShortPath", A_LoopFileShortPath
-                    ,"Dir", A_LoopFileDir
-                    ,"TimeModified", A_LoopFileTimeModified
-                    ,"TimeCreated", A_LoopFileTimeCreated
-                    ,"TimeAccessed", A_LoopFileTimeAccessed
-                    ,"Attrib", A_LoopFileAttrib
-                    ,"Size", A_LoopFileSize+0
-                    ,"SizeKB", A_LoopFileSizeKB+0
-                    ,"SizeMB", A_LoopFileSizeMB+0))
-            }
+	} else if (Param1 = "Reg") {
+		Loop Reg, Param2, Param3
+		{
+            output.push(JS.Object("Name", A_LoopRegName
+                ,"Type", A_LoopRegType
+                ,"Key", A_LoopRegKey
+                ,"TimeModified", A_LoopRegTimeModified))
 		}
+	} else if (Param1 = "Files") {
+		Loop Files, Param2, Param3
+        {
+	        output.push(JS.Object("Name", A_LoopFileName
+                ,"Ext", A_LoopFileExt
+                ,"Path", A_LoopFilePath
+                ,"FullPath", A_LoopFileFullPath
+                ,"ShortPath", A_LoopFileShortPath
+                ,"Dir", A_LoopFileDir
+                ,"TimeModified", A_LoopFileTimeModified
+                ,"TimeCreated", A_LoopFileTimeCreated
+                ,"TimeAccessed", A_LoopFileTimeAccessed
+                ,"Attrib", A_LoopFileAttrib
+                ,"Size", A_LoopFileSize+0
+                ,"SizeKB", A_LoopFileSizeKB+0
+                ,"SizeMB", A_LoopFileSizeMB+0))
+        }
+	} else { ; Error handling
+		If Param1 = ""
+			end("The Normal-Loop has been superseded by JavaScript's while or for loops.")
+		else
+			end("Unknown loop type: " Param1)
 	}
 	return output
-}
-
-
-/**
- * Implementation: Major change.
- * "LV_GetText" is special because it outputs 2 variables (a return value and a ByRef).
- * The migrated function has two modes:
- * 		1) the default mode (Advanced=0) is to return the retrieved text. Note that this behavior differs from the one in AHK.
- *		2) the advanced mode (Advanced non-empty) returns an object with 2 properties: Text, Success.
- */
-_LV_GetText(RowNumber,ColumnNumber=1,Advanced=0){
-	if (Advanced) {
-		Success := LV_GetText(Text, RowNumber, ColumnNumber)
-		return JS.Object("Text",Text, "Success",Success)
-	} else {
-		LV_GetText(OutputVar, RowNumber, ColumnNumber)
-		return OutputVar
-	}
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_Menu(MenuName,Cmd,P3="",P4="",P5=""){
-	Menu %MenuName%,%Cmd%,%P3%,%P4%,%P5%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_MouseClick(WhichButton="",X="",Y="",ClickCount="",Speed="",State="",R=""){
-	MouseClick %WhichButton%,%X%,%Y%,%ClickCount%,%Speed%,%State%,%R%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_MouseClickDrag(WhichButton,X1,Y1,X2,Y2,Speed="",R=""){
-	MouseClickDrag %WhichButton%,%X1%,%Y1%,%X2%,%Y2%,%Speed%,%R%
 }
 
 
@@ -783,17 +217,9 @@ _MouseClickDrag(WhichButton,X1,Y1,X2,Y2,Speed="",R=""){
  * "MouseGetPos" is special because it outputs 4 variables.
  * In JS, we return an Object with 4 properties: X, Y, Win, Control.
  */
-_MouseGetPos(Flag=""){
-	MouseGetPos X, Y, Win, Control, %Flag%
+_MouseGetPos(Flag:=""){
+	MouseGetPos(&X, &Y, &Win, &Control, Flag)
 	return JS.Object("X",X, "Y",Y, "Win",Win+0, "Control",Control)
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_MouseMove(X,Y,Speed="",R=""){
-	MouseMove %X%,%Y%,%Speed%,%R%
 }
 
 
@@ -803,13 +229,13 @@ _MouseMove(X,Y,Speed="",R=""){
  * the commas separating the parameters are interperted as string.
  * Also, the case for no-parameters had to be intercepted.
  */
-_MsgBox(Param1="__Undefined", Title="__Undefined", Text="", Timeout=""){
+_MsgBox(Param1:="__Undefined", Title:="__Undefined", Text:=""){
 	if (Param1 == "__Undefined") {
 		MsgBox
 	} else if (Title == "__Undefined") {
-		MsgBox, %Param1%
+		MsgBox(Param1)
 	} else {
-		MsgBox % Param1,%Title%,%Text%,%Timeout%
+		MsgBox(Param1,Title,Text)
 	}
 }
 
@@ -819,7 +245,7 @@ _MsgBox(Param1="__Undefined", Title="__Undefined", Text="", Timeout=""){
  * "OnExit" is special because it uses labels.
  * The migrated function uses instead closures.
  */
-_OnExit(Closure=""){
+_OnExit(Closure:=""){
 	closures["OnExit"] := Closure
 }
 
@@ -829,14 +255,15 @@ _OnExit(Closure=""){
  * "OnMessage" is special because it uses function names.
  * In JS, the function name becomes a closure.
  */
-_OnMessage(MsgNumber, Closure="__Undefined", MaxThreads=1){
+/*
+_OnMessage(MsgNumber, Closure:="__Undefined", MaxThreads:=1){
     key := "OnMessage" . MsgNumber
     fn := closures[key]
     if (Closure == "__Undefined") {
         return fn
     } else if (Closure == "") {
 		closures.Remove(key)
-		OnMessage(MsgNumber, "", MaxThreads)
+		OnMessage(MsgNumber, key, 0)
         return fn
 	} else {
 		closures[key] := Closure
@@ -847,32 +274,7 @@ _OnMessage(MsgNumber, Closure="__Undefined", MaxThreads=1){
             return Closure
         }
 	}
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_OutputDebug(Text){
-	OutputDebug %Text%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_Pause(State="",OperateOnUnderlyingThread=""){
-	Pause %State%,%OperateOnUnderlyingThread%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_PixelGetColor(X,Y,Flags=""){
-	PixelGetColor OutputVar,%X%,%Y%,%Flags%
-	return OutputVar
-}
+}*/
 
 
 /**
@@ -880,59 +282,9 @@ _PixelGetColor(X,Y,Flags=""){
  * "PixelSearch" is special because it outputs 2 variables.
  * In JS, we return an Object with 2 properties: X, Y.
  */
-_PixelSearch(X1,Y1,X2,Y2,ColorID,Variation="",Flags=""){
-	PixelSearch X,Y,%X1%,%Y1%,%X2%,%Y2%,%ColorID%,%Variation%,%Flags%
+_PixelSearch(X1,Y1,X2,Y2,ColorID,Variation:=""){
+	PixelSearch(&X, &Y, X1, Y1, X2, Y2, ColorID, Variation)
 	return JS.Object("X",X, "Y",Y)
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_PostMessage(Msg,wParam="",lParam="",Control="",WinTitle="",WinText="",ExcludeTitle="",ExcludeText=""){
-	PostMessage %Msg%,%wParam%,%lParam%,%Control%,%WinTitle%,%WinText%,%ExcludeTitle%,%ExcludeText%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_Process(Cmd,PIDorName,Param3=""){
-	Process %Cmd%,%PIDorName%,%Param3%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_Progress(ProgressParam1,SubText="",MainText="",WinTitle="",FontName=""){
-	Progress %ProgressParam1%,%SubText%,%MainText%,%WinTitle%,%FontName%
-}
-
-
-/**
- * Implementation: Major change.
- * "Random" is special because it accepts two modes:
- * 		1) Normal mode (with Min & Max as parameters). This is the default mode.
- *		2) Re-seeding mode (with NewSeed as parameter)
- * For the JS migration, the NewSeed mode can be activated by providing a third parameter (NewSeed),
- * in which case the first two parameters are disregarded.
- */
-_Random(Min="",Max="",NewSeed=""){
-	If (NewSeed) {
-		Random,,%NewSeed%
-	} else {
-		Random OutputVar,%Min%,%Max%
-		return OutputVar+0
-	}
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_RegDelete(RootKey,SubKey,ValueName=""){
-	RegDelete %RootKey%,%SubKey%,%ValueName%
 }
 
 
@@ -947,17 +299,9 @@ _RegDelete(RootKey,SubKey,ValueName=""){
  * Otherwise, it will return a Match object (http://ahkscript.org/docs/commands/RegExMatch.htm#MatchObject), no matter
  * what the matching mode is (default, P or O).
  */
-_RegExMatch(Haystack, NeedleRegEx, StartingPosition=1, Advanced=0){
+_RegExMatch(Haystack, NeedleRegEx, StartingPosition:=1, Advanced:=0){
 	if (Advanced) {
-		RegExMatch(NeedleRegEx, "^\W+\)", flags)
-		if (!flags) {
-			NeedleRegEx := "O)" . NeedleRegEx
-		} else {
-			if (!InStr(flags, "O", true)) {
-				NeedleRegEx := "O" . NeedleRegEx
-			}
-		}
-		RegExMatch(Haystack, NeedleRegEx, Match, StartingPosition)
+		RegExMatch(Haystack, NeedleRegEx, &Match, StartingPosition)
         
         Pos := JS.Array()
         Len := JS.Array()
@@ -965,7 +309,7 @@ _RegExMatch(Haystack, NeedleRegEx, StartingPosition=1, Advanced=0){
         Name := JS.Array()        
         a := ["Pos",Pos, "Len",Len, "Value",Value, "Name",Name, "Count",Match.Count(), "Mark",Match.Mark()]
 		n := Match.Count() + 1
-		Loop, %n%
+		Loop n
 		{
 			index := A_Index - 1
             Pos.push(Match.Pos(index))
@@ -977,7 +321,7 @@ _RegExMatch(Haystack, NeedleRegEx, StartingPosition=1, Advanced=0){
 		}
 		return JS.Object(a*)
 	} else {
-		return RegExMatch(Haystack, NeedleRegEx, "", StartingPosition)
+		return RegExMatch(Haystack, NeedleRegEx, , StartingPosition)
 	}
 }
 
@@ -989,38 +333,13 @@ _RegExMatch(Haystack, NeedleRegEx, StartingPosition=1, Advanced=0){
  *		2) fills the Count ByRef variable. This mode is triggered by non-empty values of Advanced. In this case,
  *		an Object will be returned, with 2 properties: Text, Count.
  */
-_RegExReplace(Haystack, NeedleRegEx, Replacement="", Limit=-1, StartingPosition=1, Advanced=0){
-	Text := RegExReplace(Haystack, NeedleRegEx, Replacement, Count, Limit, StartingPosition)
+_RegExReplace(Haystack, NeedleRegEx, Replacement:="", Limit:=-1, StartingPosition:=1, Advanced:=0){
+	Text := RegExReplace(Haystack, NeedleRegEx, Replacement, &Count, Limit, StartingPosition)
 	if (Advanced) {
 		return JS.Object("Text",Text, "Count",Count)
 	} else {
 		return Text
 	}
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_RegRead(RootKey,SubKey,ValueName=""){
-	RegRead OutputVar,%RootKey%,%SubKey%,%ValueName%
-	return OutputVar
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_RegWrite(ValueType,RootKey,SubKey,ValueName="",Value=""){
-	RegWrite %ValueType%,%RootKey%,%SubKey%,%ValueName%,%Value%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_Reload(){
-	Reload 
 }
 
 
@@ -1036,25 +355,8 @@ _Reload(){
  *      ● "#Include" could also be written as "eval(FileRead(path))"
  */
 _Require(path){
-    FileRead, content, %path%
+    content := FileRead(path)
     window.eval(content) ; seems to work ok in IE8 at this point
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_Run(Target, WorkingDir="", Flags=""){
-	Run %Target%, %WorkingDir%, %Flags%, OutputVar
-	return OutputVar
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_RunAs(User="",Password="",Domain=""){
-	RunAs %User%,%Password%,%Domain%
 }
 
 
@@ -1063,200 +365,8 @@ _RunAs(User="",Password="",Domain=""){
  * "RunWait" is special because it sets a process ID which can be read by another thread.
  * For JS, we cannot implement this feature and therefore don't return any PID (as opposed to "Run")
  */
-_RunWait(Target,WorkingDir="",Flags=""){
-	RunWait %Target%, %WorkingDir%, %Flags%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_Send(Keys){
-	Send %Keys%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_SendEvent(Keys){
-	SendEvent %Keys%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_SendInput(Keys){
-	SendInput %Keys%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_SendLevel(Level){
-	SendLevel %Level%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_SendMessage(Msg,wParam="",lParam="",Control="",WinTitle="",WinText="",ExcludeTitle="",ExcludeText="",Timeout=""){
-	SendMessage %Msg%,%wParam%,%lParam%,%Control%,%WinTitle%,%WinText%,%ExcludeTitle%,%ExcludeText%,%Timeout%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_SendMode(Mode){
-	SendMode %Mode%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_SendPlay(Keys){
-	SendPlay %Keys%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_SendRaw(Keys){
-	SendRaw %Keys%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_SetBatchLines(IntervalOrLineCount){
-	SetBatchLines %IntervalOrLineCount%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_SetCapslockState(State=""){
-	SetCapslockState %State%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_SetControlDelay(Delay){
-	SetControlDelay %Delay%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_SetDefaultMouseSpeed(Speed){
-	SetDefaultMouseSpeed %Speed%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_SetFormat(NumberType,Format){
-	SetFormat %NumberType%,%Format%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_SetKeyDelay(Delay="",PressDuration="",Play=""){
-	SetKeyDelay %Delay%,%PressDuration%,%Play%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_SetMouseDelay(Delay,Play=""){
-	SetMouseDelay %Delay%,%Play%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_SetNumLockState(State=""){
-	SetNumLockState %State%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_SetRegView(RegView){
-	SetRegView %RegView%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_SetScrollLockState(State=""){
-	SetScrollLockState %State%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_SetStoreCapslockMode(OnOrOff){
-	SetStoreCapslockMode %OnOrOff%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_SetTitleMatchMode(Flag){
-	SetTitleMatchMode %Flag%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_SetWinDelay(Delay){
-	SetWinDelay %Delay%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_SetWorkingDir(DirName){
-	SetWorkingDir %DirName%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_Shutdown(Code){
-	Shutdown %Code%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_Sleep(DelayInMilliseconds){
-	Sleep %DelayInMilliseconds%
+_RunWait(Target,WorkingDir:="",Flags:=""){
+	RunWait(Target, WorkingDir, Flags)
 }
 
 
@@ -1264,19 +374,10 @@ _Sleep(DelayInMilliseconds){
  * Implementation: Major change.
  * "Sort" is special because it modifies a ByRef variable.
  * For JS, we made it a return value.
- * TODO: implement the "F MyFunction" flag.
+ * TODO: implement the callback param.
  */
-_Sort(VarName,Options=""){
-	Sort VarName, %Options%
-	return VarName
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_SoundBeep(Frequency="",Duration=""){
-	SoundBeep %Frequency%,%Duration%
+_Sort(VarName,Options:=""){
+	return Sort(VarName, Options)
 }
 
 
@@ -1284,8 +385,8 @@ _SoundBeep(Frequency="",Duration=""){
  * Implementation: Normalization.
  * "SoundGet" is special because it has multiple return types (Number or String).
  */
-_SoundGet(ComponentType="",ControlType="",DeviceNumber=""){
-	SoundGet OutputVar, %ComponentType%, %ControlType%, %DeviceNumber%
+_SoundGet(ComponentType:="",ControlType:="",DeviceNumber:=""){
+	OutputVar := SoundGet%ControlType%(ComponentType, DeviceNumber)
 	static STRING_CONTROL_TYPES := {ONOFF:1, MUTE:1, MONO:1, LOUDNESS:1, STEREOENH:1, BASSBOOST:1}
 	if (STRING_CONTROL_TYPES.HasKey(ControlType)) {
 		return OutputVar
@@ -1296,300 +397,24 @@ _SoundGet(ComponentType="",ControlType="",DeviceNumber=""){
 
 
 /**
- * Implementation: Normalization.
- */
-_SoundGetWaveVolume(DeviceNumber=""){
-	SoundGetWaveVolume OutputVar,%DeviceNumber%
-	return OutputVar+0
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_SoundPlay(Filename,Wait=""){
-	SoundPlay %Filename%,%Wait%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_SoundSet(NewSetting,ComponentType="",ControlType="",DeviceNumber=""){
-	SoundSet %NewSetting%,%ComponentType%,%ControlType%,%DeviceNumber%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_SoundSetWaveVolume(Percent,DeviceNumber=""){
-	SoundSetWaveVolume %Percent%,%DeviceNumber%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_SplashImage(Param1,Options="",SubText="",MainText="",WinTitle="",FontName=""){
-	SplashImage %Param1%,%Options%,%SubText%,%MainText%,%WinTitle%,%FontName%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_SplashTextOff(){
-	SplashTextOff 
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_SplashTextOn(Width="",Height="",Title="",Text=""){
-	SplashTextOn %Width%,%Height%,%Title%,%Text%
-}
-
-
-/**
  * Implementation: Minor change (returns Object).
  * "SplitPath" is special because it outputs 5 variables.
  * In JS, we return an Object with 5 properties: FileName, Dir, Extension, NameNoExt, Drive
  */
 _SplitPath(InputVar){
-	SplitPath InputVar, FileName, Dir, Extension, NameNoExt, Drive
+	SplitPath(InputVar, &FileName, &Dir, &Extension, &NameNoExt, &Drive)
 	return JS.Object("FileName",FileName, "Dir",Dir, "Extension",Extension, "NameNoExt",NameNoExt, "Drive",Drive)
 }
 
 
 /**
- * Implementation: Normalization.
- */
-_StatusBarGetText(Part="",WinTitle="",WinText="",ExcludeTitle="",ExcludeText=""){
-	StatusBarGetText OutputVar,%Part%,%WinTitle%,%WinText%,%ExcludeTitle%,%ExcludeText%
-	return OutputVar
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_StatusBarWait(BarText="",Seconds="",Part#="",WinTitle="",WinText="",Interval="",ExcludeTitle="",ExcludeText=""){
-	StatusBarWait %BarText%,%Seconds%,%Part#%,%WinTitle%,%WinText%,%Interval%,%ExcludeTitle%,%ExcludeText%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_StringCaseSense(Flag){
-	StringCaseSense %Flag%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_StringGetPos(InputVar,SearchText,LRFlag="",Offset=""){
-	StringGetPos OutputVar,InputVar, %SearchText%,%LRFlag%,%Offset%
-	return OutputVar+0
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_StringLeft(InputVar,Count){
-	StringLeft OutputVar,InputVar,%Count%
-	return OutputVar
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_StringLen(InputVar){
-	StringLen OutputVar,InputVar
-	return OutputVar
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_StringLower(InputVar,T=""){
-	StringLower OutputVar,InputVar,%T%
-	return OutputVar
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_StringMid(InputVar,StartChar,Count="",L=""){
-	StringMid OutputVar,InputVar,%StartChar%,%Count%,%L%
-	return OutputVar
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_StringReplace(InputVar,SearchText,ReplaceText="",ReplaceAll=""){
-	StringReplace OutputVar,InputVar,%SearchText%,%ReplaceText%,%ReplaceAll%
-	return OutputVar
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_StringRight(InputVar,Count){
-	StringRight OutputVar,InputVar,%Count%
-	return OutputVar
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_StringTrimLeft(InputVar,Count){
-	StringTrimLeft OutputVar,InputVar,%Count%
-	return OutputVar
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_StringTrimRight(InputVar,Count){
-	StringTrimRight OutputVar,InputVar,%Count%
-	return OutputVar
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_StringUpper(InputVar,T=""){
-	StringUpper OutputVar,InputVar,%T%
-	return OutputVar
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_Suspend(Mode=""){
-	Suspend %Mode%
-}
-
-
-/**
  * Implementation: Minor change (returns Object).
- * "SysGet" is special because it has multiple return types (Number|String|Object).
- * If Subcommand="Monitor", the output will be an Object with 4 properties: Left, Top, Right, Bottom.
- * If Subcommand="MonitorName", the output will be String.
- * Otherwise, the output will be Number.
+ * "MonitorGet" is special because it outputs 5 variables.
+ * In JS, we return an Object with 5 properties: ActualN, Left, Top, Right, Bottom.
  */
-_SysGet(Subcommand,Param2=""){
-	SysGet v, %Subcommand%, %Param2%
-	if (Subcommand == "Monitor") {
-		return JS.Object("Left",vLeft, "Top",vTop, "Right",vRight, "Bottom",vBottom)
-	} else if (Subcommand == "MonitorName") {
-		return v
-	} else {
-        return v+0
-    }
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_Thread(Subcommand,Param2="",Param3=""){
-	Thread %Subcommand%,%Param2%,%Param3%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_ToolTip(Text="",X="",Y="",WhichToolTip=""){
-	ToolTip %Text%,%X%,%Y%,%WhichToolTip%
-}
-
-
-/**
- * Implementation: Normalization.
- * "Transform" is special because it has multiple return types (Number or String).
- */
-_Transform(Cmd,Value1,Value2=""){
-	Transform OutputVar, %Cmd%, %Value1%, %Value2%
-	static STRING_COMMANDS := {Chr:1, HTML:1}
-	if (STRING_COMMANDS.HasKey(Cmd)) {
-		return OutputVar
-	} else {
-		return OutputVar+0
-	}
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_TrayTip(Title="",Text="",Seconds="",Options=""){
-	TrayTip %Title%,%Text%,%Seconds%,%Options%
-}
-
-/**
- * Implementation: Major change.
- * "TV_GetText" is special because it outputs 2 variables (a return value and a ByRef)
- * The migrated function has two modes:
- * 		1) the default mode (Advanced=0) is to return the retrieved text. Note that this behavior differs from the one in AHK.
- *		2) the advanced mode (Advanced non-empty) returns an object with 2 properties: Text, Success.
- */
-_TV_GetText(ItemID, Advanced=0){
-	if (Advanced) {
-        Success := TV_GetText(OutputVar, ItemID)
-		return JS.Object("Text", OutputVar, "Success",Success)
-	} else {
-		TV_GetText(OutputVar, ItemID)
-		return OutputVar
-	}
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_UrlDownloadToFile(URL,Filename){
-	UrlDownloadToFile %URL%,%Filename%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_WinActivate(WinTitle="",WinText="",ExcludeTitle="",ExcludeText=""){
-	WinActivate %WinTitle%,%WinText%,%ExcludeTitle%,%ExcludeText%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_WinActivateBottom(WinTitle="",WinText="",ExcludeTitle="",ExcludeText=""){
-	WinActivateBottom %WinTitle%,%WinText%,%ExcludeTitle%,%ExcludeText%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_WinClose(WinTitle="",WinText="",SecondsToWait="",ExcludeTitle="",ExcludeText=""){
-	WinClose %WinTitle%,%WinText%,%SecondsToWait%,%ExcludeTitle%,%ExcludeText%
+_MonitorGet(N:=1) {
+	ActualN := MonitorGet(N, &Left, &Top, &Right, &Bottom)
+	return JS.Object("ActualN", ActualN, "Left",Left, "Top",Top, "Right",Right, "Bottom",Bottom)
 }
 
 
@@ -1598,16 +423,17 @@ _WinClose(WinTitle="",WinText="",SecondsToWait="",ExcludeTitle="",ExcludeText=""
  * "WinGet" is special because it may output an pseudo-array.
  * In JS, if Cmd=List, we return an Array of Numbers.
  * TODO: implement the List Cmd
+ * V2 TODO: Separate func for each WinGet* Func
  */
-_WinGet(Cmd="",WinTitle="",WinText="",ExcludeTitle="",ExcludeText=""){
-	WinGet OutputVar,%Cmd%,%WinTitle%,%WinText%,%ExcludeTitle%,%ExcludeText%
-    StringLower, Cmd, Cmd
+_WinGet(Cmd:="",WinTitle:="",WinText:="",ExcludeTitle:="",ExcludeText:=""){
+	OutputVar := WinGet%Cmd%(WinTitle,WinText,ExcludeTitle,ExcludeText)
+    Cmd := StrLower(Cmd)
     static STRING_COMMANDS := {ProcessName:1, ProcessPath:1, ControlList:1, ControlListHwnd:1, Style:1, ExStyle:1}
     if (Cmd == "list") {
         a := []
-        Loop, %OutputVar%
+        Loop OutputVar
         {
-            a.Insert(OutputVar%A_Index% + 0)
+            a.Insert((OutputVar . A_Index) + 0)
         }
         return JS.Array(a*) ; variadic call
     } else if (STRING_COMMANDS.HasKey(Cmd)) {
@@ -1615,36 +441,6 @@ _WinGet(Cmd="",WinTitle="",WinText="",ExcludeTitle="",ExcludeText=""){
 	} else {
 		return OutputVar+0
 	}
-	
-}
-
-
-/**
- * Implementation: Minor change (returns Object).
- * "WinGetActiveStats" is special because it outputs 5 variables.
- * In JS, we return an Object with 5 properties: X, Y, Width, Height, Title.
- */
-_WinGetActiveStats(){
-	WinGetActiveStats Title,Width,Height,X,Y
-	return JS.Object("Title",Title, "Width",Width, "Height",Height, "X",X, "Y",Y)
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_WinGetActiveTitle(){
-	WinGetActiveTitle OutputVar
-	return OutputVar
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_WinGetClass(WinTitle="",WinText="",ExcludeTitle="",ExcludeText=""){
-	WinGetClass OutputVar,%WinTitle%,%WinText%,%ExcludeTitle%,%ExcludeText%
-	return OutputVar
 }
 
 
@@ -1653,153 +449,7 @@ _WinGetClass(WinTitle="",WinText="",ExcludeTitle="",ExcludeText=""){
  * "WinGetPos" is special because it outputs 4 variables.
  * In JS, we return an Object with 4 properties: X, Y, Width, Height.
  */
-_WinGetPos(WinTitle="",WinText="",ExcludeTitle="",ExcludeText=""){
-	WinGetPos X, Y, Width, Height, %WinTitle%, %WinText%, %ExcludeTitle%, %ExcludeText%
+_WinGetPos(WinTitle:="",WinText:="",ExcludeTitle:="",ExcludeText:=""){
+	WinGetPos(&X, &Y, &Width, &Height, WinTitle, WinText, ExcludeTitle, ExcludeText)
 	return JS.Object("Width",Width, "Height",Height, "X",X, "Y",Y)
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_WinGetText(WinTitle="",WinText="",ExcludeTitle="",ExcludeText=""){
-	WinGetText OutputVar,%WinTitle%,%WinText%,%ExcludeTitle%,%ExcludeText%
-	return OutputVar
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_WinGetTitle(WinTitle="",WinText="",ExcludeTitle="",ExcludeText=""){
-	WinGetTitle OutputVar,%WinTitle%,%WinText%,%ExcludeTitle%,%ExcludeText%
-	return OutputVar
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_WinHide(WinTitle="",WinText="",ExcludeTitle="",ExcludeText=""){
-	WinHide %WinTitle%,%WinText%,%ExcludeTitle%,%ExcludeText%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_WinKill(WinTitle="",WinText="",SecondsToWait="",ExcludeTitle="",ExcludeText=""){
-	WinKill %WinTitle%,%WinText%,%SecondsToWait%,%ExcludeTitle%,%ExcludeText%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_WinMaximize(WinTitle="",WinText="",ExcludeTitle="",ExcludeText=""){
-	WinMaximize %WinTitle%,%WinText%,%ExcludeTitle%,%ExcludeText%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_WinMenuSelectItem(WinTitle,WinText,Menu,SubMenu1="",SubMenu2="",SubMenu3="",SubMenu4="",SubMenu5="",SubMenu6="",ExcludeTitle="",ExcludeText=""){
-	WinMenuSelectItem %WinTitle%,%WinText%,%Menu%,%SubMenu1%,%SubMenu2%,%SubMenu3%,%SubMenu4%,%SubMenu5%,%SubMenu6%,%ExcludeTitle%,%ExcludeText%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_WinMinimize(WinTitle="",WinText="",ExcludeTitle="",ExcludeText=""){
-	WinMinimize %WinTitle%,%WinText%,%ExcludeTitle%,%ExcludeText%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_WinMinimizeAll(){
-	WinMinimizeAll 
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_WinMinimizeAllUndo(){
-	WinMinimizeAllUndo 
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_WinMove(Param1,Param2,X="",Y="",Width="",Height="",ExcludeTitle="",ExcludeText=""){
-	WinMove %Param1%,%Param2%,%X%,%Y%,%Width%,%Height%,%ExcludeTitle%,%ExcludeText%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_WinRestore(WinTitle="",WinText="",ExcludeTitle="",ExcludeText=""){
-	WinRestore %WinTitle%,%WinText%,%ExcludeTitle%,%ExcludeText%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_WinSet(Attribute,Value,WinTitle="",WinText="",ExcludeTitle="",ExcludeText=""){
-	WinSet %Attribute%,%Value%,%WinTitle%,%WinText%,%ExcludeTitle%,%ExcludeText%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_WinSetTitle(Param1,WinText,NewTitle,ExcludeTitle="",ExcludeText=""){
-	WinSetTitle %Param1%,%WinText%,%NewTitle%,%ExcludeTitle%,%ExcludeText%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_WinShow(WinTitle="",WinText="",ExcludeTitle="",ExcludeText=""){
-	WinShow %WinTitle%,%WinText%,%ExcludeTitle%,%ExcludeText%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_WinWait(WinTitle="",WinText="",Seconds="",ExcludeTitle="",ExcludeText=""){
-	WinWait %WinTitle%,%WinText%,%Seconds%,%ExcludeTitle%,%ExcludeText%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_WinWaitActive(WinTitle="",WinText="",Seconds="",ExcludeTitle="",ExcludeText=""){
-	WinWaitActive %WinTitle%,%WinText%,%Seconds%,%ExcludeTitle%,%ExcludeText%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_WinWaitClose(WinTitle="",WinText="",Seconds="",ExcludeTitle="",ExcludeText=""){
-	WinWaitClose %WinTitle%,%WinText%,%Seconds%,%ExcludeTitle%,%ExcludeText%
-}
-
-
-/**
- * Implementation: Normalization.
- */
-_WinWaitNotActive(WinTitle="",WinText="",Seconds="",ExcludeTitle="",ExcludeText=""){
-	WinWaitNotActive %WinTitle%,%WinText%,%Seconds%,%ExcludeTitle%,%ExcludeText%
 }

@@ -6,16 +6,16 @@
  */
 WB_onKey(wParam, lParam, nMsg, hWnd)
 {
-   WinGetClass WinClass, ahk_id %hWnd%
+   WinClass := WinGetClass("ahk_id " hWnd)
    if (WinClass == "Internet Explorer_Server")
    {
       static riid_IDispatch
-      if !VarSetCapacity(riid_IDispatch)
+      if !VarSetStrCapacity(&riid_IDispatch)
       {
-         VarSetCapacity(riid_IDispatch, 16)
-         DllCall("ole32\CLSIDFromString", "WStr", "{00020400-0000-0000-C000-000000000046}", "Ptr", &riid_IDispatch)
+         VarSetStrCapacity(&riid_IDispatch, 16)
+         DllCall("ole32\CLSIDFromString", "WStr", "{00020400-0000-0000-C000-000000000046}", "Ptr", StrPtr(riid_IDispatch))
       }
-      DllCall("oleacc\AccessibleObjectFromWindow", "Ptr", hWnd, "UInt", 0xFFFFFFFC, "Ptr", &riid_IDispatch, "Ptr*", pacc) ; OBJID_CLIENT:=0xFFFFFFFC
+      DllCall("oleacc\AccessibleObjectFromWindow", "Ptr", hWnd, "UInt", 0xFFFFFFFC, "Ptr", StrPtr(riid_IDispatch), "Ptr*", &pacc) ; OBJID_CLIENT:=0xFFFFFFFC
      
       static IID_IHTMLWindow2 := "{332C4427-26CB-11D0-B483-00C04FD90119}"
       pwin := ComObjQuery(pacc, IID_IHTMLWindow2, IID_IHTMLWindow2)
@@ -25,23 +25,25 @@ WB_onKey(wParam, lParam, nMsg, hWnd)
            , SID_SWebBrowserApp := IID_IWebBrowserApp
       pweb := ComObjQuery(pwin, SID_SWebBrowserApp, IID_IWebBrowserApp)
          ObjRelease(pwin)
-      wb := ComObject(9, pweb, 1)
+      wb := ComValue(9, pweb, 1)
 
       static IID_IOleInPlaceActiveObject := "{00000117-0000-0000-C000-000000000046}"
       pIOIPAO := ComObjQuery(wb, IID_IOleInPlaceActiveObject)
+      
+      MouseGetPos(&A_GuiX, &A_GuiY)
+      MSG := Buffer(48, 0)                      ; http://goo.gl/GX6GNm
+      NumPut("UPtr", hWnd, 
+      "UPtr", nMsg, 
+      "UPtr", wParam, 
+      "UPtr", lParam, 
+      "UInt", A_EventInfo, 
+      "Int", A_GuiX, 
+      "Int", A_GuiY, 
+      MSG) ; hwnd
 
-      VarSetCapacity(MSG, 48, 0)                      ; http://goo.gl/GX6GNm
-      , NumPut(A_GuiY                                 ; POINT.y
-      , NumPut(A_GuiX                                 ; POINT.x
-      , NumPut(A_EventInfo                            ; time
-      , NumPut(lParam                                 ; lParam
-      , NumPut(wParam                                 ; wParam
-      , NumPut(nMsg                                   ; message
-      , NumPut(hWnd, MSG)))), "UInt"), "Int"), "Int") ; hwnd
-
-      TranslateAccelerator := NumGet(NumGet(pIOIPAO + 0) + 5*A_PtrSize)
+      TranslateAccelerator := NumGet(NumGet(pIOIPAO + 0, "UPtr") + 5*A_PtrSize, "UPtr")
       Loop 2
-         r := DllCall(TranslateAccelerator, "Ptr", pIOIPAO, "Ptr", &MSG)
+         r := DllCall(TranslateAccelerator, "Ptr", pIOIPAO, "Ptr", MSG.Ptr)
       until (wParam != 9 || wb.Document.activeElement != "")
       ObjRelease(pIOIPAO)
       if (r == 0)

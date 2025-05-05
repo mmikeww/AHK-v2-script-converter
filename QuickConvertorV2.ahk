@@ -51,6 +51,9 @@
     ;   Note: Loading might take a long time if an entire drive such as C:\ is specified.
     global TreeRoot := A_ScriptDir "\Tests\Test_Folder"
 
+    ; Help file paths
+    getHelpPath()
+
     ;READ INI VARIABLES WITH DEFAULTS
     IniFile := "QuickConvertorV2.ini"
     Section := "Convertor"
@@ -158,6 +161,37 @@ AddSubFoldersToTree(Folder, DirList, ParentItemID := 0,*)
     TV.Opt("+Redraw")
     SB.SetText("Number of tests: " . Number_Tests . " ( " . Number_Tests - Number_Tests_Pass . " failed / " . Number_Tests_Pass . " passed)", 1)
     return DirList
+}
+/**
+ * Function to get the paths of both version's help file
+ * If it is missing it is set to run (open in browser)
+*/
+getHelpPath() {
+    global v1HelpFile, v2HelpFile
+    if !IsSet(v1HelpFile) or !IsSet(v2HelpFile) {
+        command := RegRead("HKCR\AutoHotkeyScript\shell\Open\Command",, "")
+        if command = "" ; Can't find ahk, default to run online docs
+            v1HelpFile := "online", v2HelpFile := "online"
+        else {
+            SplitPath(RegExReplace(command, '"(.*?)".*', "$1"),, &AhkDir)
+            AhkDir := RTrim(AhkDir, "UX")
+
+            v1HelpFile := "", v2HelpFile := ""
+            loop files AhkDir "*", "D" {
+                if InStr(A_LoopFileName, "1.1")
+                    v1HelpFile := VerCompare(v1HelpFile, "<" A_LoopFileName) ? A_LoopFileName : v1HelpFile
+                else if RegExMatch(A_LoopFileName, "^v?2(.0|$)")
+                    v2HelpFile := VerCompare(v2HelpFile, "<" A_LoopFileName) ? A_LoopFileName : v2HelpFile
+            }
+
+            v1HelpFile := AhkDir v1HelpFile "\AutoHotkey.chm"
+            if !FileExist(v1HelpFile)
+                v1HelpFile := "online"
+            v2HelpFile := AhkDir v2HelpFile "\AutoHotkey.chm"
+            if !FileExist(v2HelpFile)
+                v2HelpFile := "online"
+        }
+    }
 }
 ButtonConvert(*)
 {
@@ -451,7 +485,11 @@ gui_AhkHelp(SearchString,Version:="V2")
     }
     URL := URLSearch SearchString "&m=2"
 
-    Run(URL)
+    ; version is either v1 or v2
+    if %Version%HelpFile != "online"
+        Run(A_WinDir "\hh.exe `"mk:@MSITStore:" %Version%HelpFile "::/DOCS/search.htm#q=" SearchString "&m=2`"")
+    else
+        Run(URL)
 }
 Gui_DropFiles(GuiObj, GuiCtrlObj, FileArray, X, Y)
 {
@@ -790,14 +828,20 @@ MenuCommandHelp(*)
         word := PreString PostString
 
         if InStr(ogcFocused.Name,"V1"){
+            Version := "v1"
             URLSearch := "https://www.autohotkey.com/docs/v1/search.htm?q="
         }
         else{
+            Version := "v2"
             URLSearch := "https://www.autohotkey.com/docs/v2/search.htm?q="
         }
         URL := URLSearch word "&m=2"
 
-        Run(URL)
+        ; version is either v1 or v2
+        if %Version%HelpFile != "online"
+            Run(A_WinDir "\hh.exe `"mk:@MSITStore:" %Version%HelpFile "::/DOCS/search.htm#q=" word "&m=2`"")
+        else
+            Run(URL)
     }
 }
 MenuShowSymols(*)

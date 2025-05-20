@@ -15,6 +15,7 @@ WB_onKey(wParam, lParam, nMsg, hWnd)
          VarSetStrCapacity(&riid_IDispatch, 16)
          DllCall("ole32\CLSIDFromString", "WStr", "{00020400-0000-0000-C000-000000000046}", "Ptr", StrPtr(riid_IDispatch))
       }
+      pacc := 0
       DllCall("oleacc\AccessibleObjectFromWindow", "Ptr", hWnd, "UInt", 0xFFFFFFFC, "Ptr", StrPtr(riid_IDispatch), "Ptr*", &pacc) ; OBJID_CLIENT:=0xFFFFFFFC
      
       static IID_IHTMLWindow2 := "{332C4427-26CB-11D0-B483-00C04FD90119}"
@@ -24,7 +25,7 @@ WB_onKey(wParam, lParam, nMsg, hWnd)
       static IID_IWebBrowserApp := "{0002DF05-0000-0000-C000-000000000046}"
            , SID_SWebBrowserApp := IID_IWebBrowserApp
       pweb := ComObjQuery(pwin, SID_SWebBrowserApp, IID_IWebBrowserApp)
-         ObjRelease(pwin)
+         ; ObjRelease(pwin)
       wb := ComValue(9, pweb, 1)
 
       static IID_IOleInPlaceActiveObject := "{00000117-0000-0000-C000-000000000046}"
@@ -41,11 +42,11 @@ WB_onKey(wParam, lParam, nMsg, hWnd)
       "Int", A_GuiY, 
       MSG) ; hwnd
 
-      TranslateAccelerator := NumGet(NumGet(pIOIPAO + 0, "UPtr") + 5*A_PtrSize, "UPtr")
+      TranslateAccelerator := NumGet(NumGet(pIOIPAO.Ptr + 0, "UPtr") + 5*A_PtrSize, "UPtr")
       Loop 2
          r := DllCall(TranslateAccelerator, "Ptr", pIOIPAO, "Ptr", MSG.Ptr)
       until (wParam != 9 || wb.Document.activeElement != "")
-      ObjRelease(pIOIPAO)
+      ; ObjRelease(pIOIPAO)
       if (r == 0)
          return 0
    }

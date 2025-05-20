@@ -45,7 +45,7 @@
         FileInstall(".\AutoHotKey Exe\AutoHotkeyV2.exe", A_ScriptDir "\AutoHotKey Exe\AutoHotkeyV2.exe")
 }
 { ;VARIABLES:
-    global icons, TestMode, TestFailing, FontSize, ViewExpectedCode, GuiIsMaximised, GuiWidth, GuiHeight
+    global icons, TestMode, TestFailing, FontSize, ViewExpectedCode, UIDarkMode, GuiIsMaximised, GuiWidth, GuiHeight
 
     ; TreeRoot will be the root folder for the TreeView.
     ;   Note: Loading might take a long time if an entire drive such as C:\ is specified.
@@ -67,6 +67,7 @@
     TestFailing         := IniRead(IniFile, Section, "TestFailing", 0)
     TreeViewWidth       := IniRead(IniFile, Section, "TreeViewWidth", 280)
     ViewExpectedCode    := IniRead(IniFile, Section, "ViewExpectedCode", 0)
+    UIDarkMode          := IniRead(IniFile, Section, "UIDarkMode", 0)
     OnExit(ExitFunc)
     ;WRITE BACK VARIABLES SO THAT DEFAULTS ARE SAVED TO INI (Seems like this should be moved to exit routine SEE Esc::)
 
@@ -528,26 +529,26 @@ Gui_Size(thisGui, MinMax, Width, Height)  ; Expand/Shrink ListView and TreeView 
     else{
         NumberEdits := 2
     }
-    EditWith := (Width-TreeViewWidth)/NumberEdits
+    EditWidth := (Width-TreeViewWidth)/NumberEdits
 
-    V1Edit.Move(TreeViewWidth,,EditWith,EditHeight)
-    V2Edit.Move(TreeViewWidth+EditWith,,EditWith,EditHeight)
+    V1Edit.Move(TreeViewWidth,,EditWidth,EditHeight)
+    V2Edit.Move(TreeViewWidth+EditWidth,,EditWidth,EditHeight)
     ButtonEvaluateTests.Move(,ButtonHeight)
-    ButtonEvalSelected.Move(ButtonWidth,ButtonHeight)
-    CheckBoxViewSymbols.Move(TreeViewWidth+EditWith-140,EditHeight+6)
+    ButtonEvalSelected.Move(ButtonWidth+15,ButtonHeight)
+    CheckBoxViewSymbols.Move(TreeViewWidth+EditWidth-160,EditHeight+6)
     ButtonRunV1.Move(TreeViewWidth,ButtonHeight)
     ButtonCloseV1.Move(TreeViewWidth+28,ButtonHeight)
-    oButtonConvert.Move(TreeViewWidth+EditWith-60,ButtonHeight)
-    ButtonRunV2.Move(TreeViewWidth+EditWith,ButtonHeight)
-    ButtonCloseV2.Move(TreeViewWidth+EditWith+28,ButtonHeight)
-    ButtonCompDiffV2.Move(TreeViewWidth+EditWith+56,ButtonHeight)
-    ButtonCompVscV2.Move(TreeViewWidth+EditWith+84,ButtonHeight)
+    oButtonConvert.Move(TreeViewWidth+EditWidth-80,ButtonHeight)
+    ButtonRunV2.Move(TreeViewWidth+EditWidth,ButtonHeight)
+    ButtonCloseV2.Move(TreeViewWidth+EditWidth+28,ButtonHeight)
+    ButtonCompDiffV2.Move(TreeViewWidth+EditWidth+56,ButtonHeight)
+    ButtonCompVscV2.Move(TreeViewWidth+EditWidth+84,ButtonHeight)
     if (V2ExpectedEdit_W){
-        V2ExpectedEdit.Move(TreeViewWidth+EditWith*2,,EditWith,EditHeight)
-        ButtonRunV2E.Move(TreeViewWidth+EditWith*2,ButtonHeight)
-        ButtonCloseV2E.Move(TreeViewWidth+EditWith*2+28,ButtonHeight)
-        ButtonCompDiffV2E.Move(TreeViewWidth+EditWith*2+56,ButtonHeight)
-        ButtonCompVscV2E.Move(TreeViewWidth+EditWith*2+84,ButtonHeight)
+        V2ExpectedEdit.Move(TreeViewWidth+EditWidth*2,,EditWidth,EditHeight)
+        ButtonRunV2E.Move(TreeViewWidth+EditWidth*2,ButtonHeight)
+        ButtonCloseV2E.Move(TreeViewWidth+EditWidth*2+28,ButtonHeight)
+        ButtonCompDiffV2E.Move(TreeViewWidth+EditWidth*2+56,ButtonHeight)
+        ButtonCompVscV2E.Move(TreeViewWidth+EditWidth*2+84,ButtonHeight)
         ButtonRunV2E.Visible := 1
         ButtonCloseV2E.Visible := 1
         ButtonCompDiffV2E.Visible := 1
@@ -560,17 +561,17 @@ Gui_Size(thisGui, MinMax, Width, Height)  ; Expand/Shrink ListView and TreeView 
         ButtonCompVscV2E.Visible := 0
     }
 
-    CheckBoxV2E.Move(Width-100,EditHeight+6)
+    CheckBoxV2E.Move(Width-115,EditHeight+6)
     ButtonValidateConversion.Move(Width-30,ButtonHeight)
     DllCall("LockWindowUpdate", "Uint",0)
     thisGui.GetPos(&GuiX,&GuiY)
     thisGui.GetClientPos(,,&GuiW,&GuiH)
     GuiIsMaximised := WinGetMinMax(thisGui.title)
-    IniWrite(GuiIsMaximised, "QuickConvertorV2.ini", "Convertor", "GuiIsMaximised")
-    IniWrite(GuiW, "QuickConvertorV2.ini", "Convertor", "GuiWidth")
-    IniWrite(GuiH, "QuickConvertorV2.ini", "Convertor", "GuiHeight")
-    IniWrite(GuiX, "QuickConvertorV2.ini", "Convertor", "GuiX")
-    IniWrite(GuiY, "QuickConvertorV2.ini", "Convertor", "GuiY")
+    IniWrite(GuiIsMaximised, IniFile, Section, "GuiIsMaximised")
+    IniWrite(GuiW, IniFile, Section, "GuiWidth")
+    IniWrite(GuiH, IniFile, Section, "GuiHeight")
+    IniWrite(GuiX, IniFile, Section, "GuiX")
+    IniWrite(GuiY, IniFile, Section, "GuiY")
 
 }
 
@@ -583,11 +584,11 @@ Gui_Close(thisGui){
     thisGui.GetPos(&GuiX,&GuiY)
     thisGui.GetClientPos(,,&GuiW,&GuiH)
     GuiIsMaximised := WinGetMinMax(thisGui.title)
-    IniWrite(GuiIsMaximised, "QuickConvertorV2.ini", "Convertor", "GuiIsMaximised")
-    IniWrite(GuiW, "QuickConvertorV2.ini", "Convertor", "GuiWidth")
-    IniWrite(GuiH, "QuickConvertorV2.ini", "Convertor", "GuiHeight")
-    IniWrite(GuiX, "QuickConvertorV2.ini", "Convertor", "GuiX")
-    IniWrite(GuiY, "QuickConvertorV2.ini", "Convertor", "GuiY")
+    IniWrite(GuiIsMaximised, IniFile, Section, "GuiIsMaximised")
+    IniWrite(GuiW, IniFile, Section, "GuiWidth")
+    IniWrite(GuiH, IniFile, Section, "GuiHeight")
+    IniWrite(GuiX, IniFile, Section, "GuiX")
+    IniWrite(GuiY, IniFile, Section, "GuiY")
     ; FileTempScript := A_ScriptDir "\Tests\TempScript.ah1"
     return
 }
@@ -687,7 +688,7 @@ GuiTest(strV1Script:="")
     ButtonCompDiffV2 := MyGui.AddPicButton("w24 h24", "shell32.dll","icon239 h20")
     ButtonCompDiffV2.StatusBar := "Compare V1 and V2 code"
     ButtonCompDiffV2.OnEvent("Click", CompDiffV2)
-    ButtonCompVscV2 := MyGui.Add("Button", " x+10 yp w80", "Compare VSC" )
+    ButtonCompVscV2 := MyGui.Add("Button", " x+10 yp w100", "Compare VSC" )
     ButtonCompVscV2.StatusBar := "Compare V1 and V2 code in VS Code"
     if !FileExist("C:\Users\" A_UserName "\AppData\Local\Programs\Microsoft VS Code\Code.exe"){
         ButtonCompVscV2.Visible := 0
@@ -705,7 +706,7 @@ GuiTest(strV1Script:="")
     ButtonCompDiffV2E := MyGui.AddPicButton("w24 h24", "shell32.dll","icon239 h20")
     ButtonCompDiffV2E.StatusBar := "Compare V2 and expected V2 code"
     ButtonCompDiffV2E.OnEvent("Click", CompDiffV2E)
-    ButtonCompVscV2E := MyGui.Add("Button", " x+10 yp w80", "Compare VSC" )
+    ButtonCompVscV2E := MyGui.Add("Button", " x+10 yp w100", "Compare VSC" )
     ButtonCompVscV2E.StatusBar := "Compare V2 and Expected V2 code in VS Code"
     if !FileExist("C:\Users\" A_UserName "\AppData\Local\Programs\Microsoft VS Code\Code.exe"){
         ButtonCompVscV2E.Visible := 0
@@ -754,6 +755,7 @@ GuiTest(strV1Script:="")
     ViewMenu.Add()
     ViewMenu.Add("View Tree",MenuViewtree)
     ViewMenu.Add("View Expected Code",MenuViewExpected)
+    ViewMenu.Add("DarkMode",MenuViewDark)
     HelpMenu := Menu()
     HelpMenu.Add("Command Help`tF1",MenuCommandHelp)
     HelpMenu.Add()
@@ -773,12 +775,16 @@ GuiTest(strV1Script:="")
     Menus.Add( "Help", HelpMenu)
     MyGui.MenuBar := Menus
 
-    ; TODO: This doesn't check box
     if ViewExpectedCode{
         ViewMenu.Check("View Expected Code")
     }
+    if UIDarkMode{
+        ViewMenu.Check("DarkMode")
+    }
+
     MyGui.Opt("+MinSize450x200")
     MyGui.OnEvent("DropFiles",Gui_DropFiles)
+    setUIMode(MyGui, UIDarkMode)
 
     ; Correct coordinates to a visible position inside the screens
     GuiXOpt := (GuiX!="") ? " x" ((GuiX<0) ? 0 : (GuiX+GuiWidth>SysGet(78)) ? SysGet(78)-GuiWidth : GuiX) : ""
@@ -875,7 +881,7 @@ MenuTestMode(*)
         CheckBoxV2E.Visible := false
         ViewMenu.UnCheck("View Tree")
     }
-    IniWrite(TestMode, "QuickConvertorV2.ini", "Convertor", "TestMode")
+    IniWrite(TestMode, IniFile, Section, "TestMode")
     MyGui.GetPos(, , &Width, &Height)
     Gui_Size(MyGui, 0, Width-14, Height - 60)
 }
@@ -884,7 +890,7 @@ MenuTestFailing(*)
     global
     SettingsMenu.ToggleCheck("Include Failing")
     TestFailing := !TestFailing
-    IniWrite(TestFailing, "QuickConvertorV2.ini", "Convertor", "TestFailing")
+    IniWrite(TestFailing, IniFile, Section, "TestFailing")
 }
 MenuRemoveComments(*)
 {
@@ -897,10 +903,17 @@ MenuFixLineEndings(*) {
     V1Edit.Value := RegExReplace(V1Edit.Value, "(?<!\r)\n", "`r`n")
     V2Edit.Value := RegExReplace(V2Edit.Value, "(?<!\r)\n", "`r`n")
 }
+MenuViewDark(*)
+{
+    global UIDarkMode
+    UIDarkMode := !UIDarkMode
+    IniWrite(UIDarkMode, IniFile, Section, "UIDarkMode")
+    ViewDrk()
+}
 MenuViewExpected(*)
 {
     CheckBoxV2E.Value := !CheckBoxV2E.Value
-    IniWrite(CheckBoxV2E.Value, "QuickConvertorV2.ini", "Convertor", "ViewExpectedCode")
+    IniWrite(CheckBoxV2E.Value, IniFile, Section, "ViewExpectedCode")
     ViewV2E(myGui)
     MyGui.GetPos(,, &Width,&Height)
     Gui_Size(MyGui, 0, Width - 14, Height - 60)
@@ -1084,10 +1097,16 @@ ViewV2E(*)
     }
     IniWrite(CheckBoxV2E.Value, "QuickConvertorV2.ini", "Convertor", "ViewExpectedCode")
 }
+ViewDrk(*)
+{
+    ViewMenu.ToggleCheck("DarkMode")
+    setUIMode(MyGui, UIDarkMode)
+}
+
 ;***************
 ;*** HOTKEYS ***
 ;***************
-#HotIf WinActive(MyGui.title)
+#HotIf ((IsSet(MyGui)) && WinActive(MyGui.title))
 $Esc::     ;Exit application - Using either <Esc> Hotkey or Goto("MyExit")
 {
 MyExit:
@@ -1100,6 +1119,7 @@ MyExit:
     IniWrite(TestFailing,        IniFile, Section, "TestFailing")
     IniWrite(TreeViewWidth,      IniFile, Section, "TreeViewWidth")
     IniWrite(ViewExpectedCode,   IniFile, Section, "ViewExpectedCode")
+    IniWrite(UIDarkMode,         IniFile, Section, "UIDarkMode")
 ;    ExitApp
     Return
 }
@@ -1180,6 +1200,7 @@ ExitFunc(ExitReason, ExitCode){
     IniWrite(TestFailing,        IniFile, Section, "TestFailing")
     IniWrite(TreeViewWidth,      IniFile, Section, "TreeViewWidth")
     IniWrite(ViewExpectedCode,   IniFile, Section, "ViewExpectedCode")
+    IniWrite(UIDarkMode,         IniFile, Section, "UIDarkMode")
 ;    ExitApp
 }
 
@@ -1191,11 +1212,73 @@ On_WM_MOVE(wParam, lParam, msg, hwnd){
             thisGui.GetPos(&GuiX,&GuiY)
             thisGui.GetClientPos(,,&GuiW,&GuiH)
             GuiIsMaximised := WinGetMinMax(thisGui.title)
-            IniWrite(GuiIsMaximised, "QuickConvertorV2.ini", "Convertor", "GuiIsMaximised")
-            IniWrite(GuiW, "QuickConvertorV2.ini", "Convertor", "GuiWidth")
-            IniWrite(GuiH, "QuickConvertorV2.ini", "Convertor", "GuiHeight")
-            IniWrite(GuiX, "QuickConvertorV2.ini", "Convertor", "GuiX")
-            IniWrite(GuiY, "QuickConvertorV2.ini", "Convertor", "GuiY")
+            IniWrite(GuiIsMaximised, IniFile, Section, "GuiIsMaximised")
+            IniWrite(GuiW, IniFile, Section, "GuiWidth")
+            IniWrite(GuiH, IniFile, Section, "GuiHeight")
+            IniWrite(GuiX, IniFile, Section, "GuiX")
+            IniWrite(GuiY, IniFile, Section, "GuiY")
         }
     }
+}
+;################################################################################
+setUIMode(GuiObj, DarkMode:=false)
+{
+; 2025-05-17 AMB, ADDED Darkmode option (partial complete)
+;   some controls not updated yet, will complete them another time
+;   may add option for user to adjust desired colors/shades
+; borrowed from here...
+;   https://www.autohotkey.com/boards/viewtopic.php?f=92&t=115952
+
+	global DarkColors          := Map("Background", "0x353535", "Controls", "0x404040", "Font", "0xE0E0E0")
+	global TextBackgroundBrush := DllCall("gdi32\CreateSolidBrush", "UInt", DarkColors["Background"], "Ptr")
+	static PreferredAppMode    := Map("Default", 0, "AllowDark", 1, "ForceDark", 2, "ForceLight", 3, "Max", 4)
+
+    if (VerCompare(A_OSVersion, "10.0.17763") >= 0)
+	{
+		DWMWA_USE_IMMERSIVE_DARK_MODE := 19
+		if (VerCompare(A_OSVersion, "10.0.18985") >= 0)
+		{
+			DWMWA_USE_IMMERSIVE_DARK_MODE := 20
+		}
+		uxtheme := DllCall("kernel32\GetModuleHandle", "Str", "uxtheme", "Ptr")
+		SetPreferredAppMode := DllCall("kernel32\GetProcAddress", "Ptr", uxtheme, "Ptr", 135, "Ptr")
+		FlushMenuThemes     := DllCall("kernel32\GetProcAddress", "Ptr", uxtheme, "Ptr", 136, "Ptr")
+		switch DarkMode
+		{
+			case True:
+			{
+				DllCall("dwmapi\DwmSetWindowAttribute", "Ptr", GuiObj.hWnd, "Int", DWMWA_USE_IMMERSIVE_DARK_MODE, "Int*", True, "Int", 4)
+				DllCall(SetPreferredAppMode, "Int", PreferredAppMode["ForceDark"])
+				DllCall(FlushMenuThemes)
+				GuiObj.BackColor := DarkColors["Background"]
+                TV.Opt("Background353535")
+                TV.SetFont("cWhite")
+                V1Edit.Opt("Background353535")
+                V1Edit.SetFont("cWhite")
+                V2Edit.Opt("Background353535")
+                V2Edit.SetFont("cWhite")
+                V2ExpectedEdit.Opt("Background353535")
+                V2ExpectedEdit.SetFont("cWhite")
+                CheckBoxV2E.Opt("BackgroundF0F0F0")             ; unable to change text color, so keep bkgd light
+                CheckBoxViewSymbols.Opt("BackgroundF0F0F0")     ; unable to change text color, so keep bkgd light
+			}
+			default:
+			{
+				DllCall("dwmapi\DwmSetWindowAttribute", "Ptr", GuiObj.hWnd, "Int", DWMWA_USE_IMMERSIVE_DARK_MODE, "Int*", False, "Int", 4)
+				DllCall(SetPreferredAppMode, "Int", PreferredAppMode["Default"])
+				DllCall(FlushMenuThemes)
+				GuiObj.BackColor := "Default"
+                TV.Opt("BackgroundFFFFFF")
+                TV.SetFont("cBlack")
+                V1Edit.Opt("BackgroundFFFFFF")
+                V1Edit.SetFont("cBlack")
+                V2Edit.Opt("BackgroundFFFFFF")
+                V2Edit.SetFont("cBlack")
+                V2ExpectedEdit.Opt("BackgroundFFFFFF")
+                V2ExpectedEdit.SetFont("cBlack")
+                CheckBoxV2E.Opt("BackgroundF0F0F0")             ; unable to change text color, so keep bkgd light
+                CheckBoxViewSymbols.Opt("BackgroundF0F0F0")     ; unable to change text color, so keep bkgd light
+			}
+		}
+	}
 }

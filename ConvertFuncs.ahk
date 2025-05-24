@@ -216,17 +216,7 @@ _convertLines(ScriptString, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to ac
          Line := RegExReplace(Line, "(?<!\Q" char "\E)\Q" gaScriptStrsUsed.CommentFlag "\E", ";")
       }
 
-      if (RegExMatch(Line, "(\h+`;.*)$", &EOLComment))
-      {
-         EOLComment := EOLComment[1]
-         Line       := RegExReplace(Line, "(\h+`;.*)$", "")
-         ;msgbox, % "Line:`n" Line "`n`nEOLComment:`n" EOLComment
-      } else if (FirstChar == ";")
-      {
-         EOLComment := Line
-         Line := ""
-      } else
-         EOLComment := ""
+      Line := removeEOLComments(Line, FirstChar, &EOLComment)
 
       CommandMatch := -1
 
@@ -322,6 +312,7 @@ _convertLines(ScriptString, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to ac
 
       ; Check for , continuation sections add them to the line
       ; https://www.autohotkey.com/docs/Scripts.htm#continuation
+      EOLComment_Cont := [EOLComment] ; Adds comments to correct location if multiple are stored in the below cont
       loop
       {
          if (gOScriptStr.Length < gO_Index + 1) {
@@ -339,6 +330,8 @@ _convertLines(ScriptString, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to ac
                                        || ThreeNextLine     = "and"
                                        || ThreeNextLine     ~= ":\h(?!:)")             ; tenary (:) - fix hotkey mistaken for tenary colon
          {
+            removeEOLComments(gOScriptStr[gO_Index + 1], FirstNextLine, &EOLComment)
+            EOLComment_Cont.Push(EOLComment)
             gO_Index++
             ; 2024-06-30, AMB Fix missing linefeed and comments - Issue #72
             Line .= "`r`n" . RegExReplace(gOScriptStr[gO_Index], "(\h+`;.*)$", "")
@@ -346,6 +339,10 @@ _convertLines(ScriptString, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to ac
             break
          }
       }
+      if EOLComment_Cont.Length != 1
+         EOLComment := ''
+      else
+         EOLComment_Cont.Pop()
 
       ; Loop the functions
       gfNoSideEffect := False
@@ -1216,7 +1213,19 @@ _convertLines(ScriptString, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to ac
             gEOLComment_Func := " `; " . gEOLComment_Func
          }
       }
-      ScriptOutput .= gNL_Func . Line . EOLComment . gEOLComment_Func . "`r`n"
+      NoCommentOutput := gNL_Func . Line . 'v1v2EOLCommentCont' . EOLComment . gEOLComment_Func
+      OutSplit := StrSplit(NoCommentOutput, '`r`n')
+      for idx, comment in EOLComment_Cont {
+         if (idx != OutSplit.Length)
+            OutSplit[idx] := OutSplit[idx] comment
+         else
+            OutSplit[idx] := StrReplace(OutSplit[idx], 'v1v2EOLCommentCont', comment)
+      }
+      finLine := ''
+      for , v in OutSplit
+         finLine .= v '`r`n'
+      finLine := StrReplace(finLine, 'v1v2EOLCommentCont')
+      ScriptOutput .= finLine
       gNL_Func:="", gEOLComment_Func:="" ; reset global variables
       ; Output and NewInput should become arrays, NewInput is a copy of the Input, but with empty lines added for easier comparison.
       LastLine := Line
@@ -4861,4 +4870,20 @@ isMLStr(srcStr)
 ;      return mML[1] . ToStringExpr(mML[2]) . mML[3]
    else
       return ""
+}
+;################################################################################
+removeEOLComments(Line, FirstChar, &EOLComment) {
+   if (RegExMatch(Line, "(\h+`;.*)$", &EOLComment))
+   {
+      EOLComment := EOLComment[1]
+      Line       := RegExReplace(Line, "(\h+`;.*)$", "")
+      ;msgbox, % "Line:`n" Line "`n`nEOLComment:`n" EOLComment
+   } else if (FirstChar == ";")
+   {
+      EOLComment := Line
+      Line := ""
+   } else
+      EOLComment := ""
+
+   return Line
 }

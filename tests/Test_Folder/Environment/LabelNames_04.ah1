@@ -1,4 +1,4 @@
-﻿; glabel name will cause conflict once renamed
+; glabel name will cause conflict once renamed
 Gui, Add, Button, gInit$Vars, Make MsgBox
 Gui, Show
 Return

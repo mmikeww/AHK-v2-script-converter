@@ -6,7 +6,7 @@ myGui.Show()
 Return
 
 ; has conflict with other label once renamed
-Init_Vars_2(A_GuiEvent := "", GuiCtrlObj := "", Info := "", *)
+Init_Vars_2(A_GuiEvent := "", A_GuiControl := "", Info := "", *)
 { ; V1toV2: Added bracket
 global ; V1toV2: Made function global
 MsgBox("Created MsgBox")

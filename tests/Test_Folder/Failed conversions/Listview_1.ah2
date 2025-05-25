@@ -20,8 +20,8 @@ MyListView(A_GuiEvent := "", GuiCtrlObj := "", Info := "", *)
 global ; V1toV2: Made function global
 if (A_GuiEvent = "DoubleClick")
 {
-    RowText := ogcListViewNameSizeKB.GetText(A_EventInfo)  ; Get the text from the row's first field.
-    ToolTip("You double-clicked row number " A_EventInfo ". Text: `"" RowText "`"")
+    RowText := ogcListViewNameSizeKB.GetText(Info)  ; Get the text from the row's first field.
+    ToolTip("You double-clicked row number " Info ". Text: `"" RowText "`"")
 }
 return
 } ; V1toV2: Added bracket before function

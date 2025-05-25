@@ -21,7 +21,7 @@ global ; V1toV2: Made function global
 return
 } ; V1toV2: Added Bracket before label
 
-Exit(A_GuiEvent := "", GuiCtrlObj := "", Info := "", *)
+Exit(A_GuiEvent := "", A_GuiControl := "", Info := "", *)
 { ; V1toV2: Added bracket
 global ; V1toV2: Made function global
 ExitApp()

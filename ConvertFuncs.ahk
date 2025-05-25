@@ -168,6 +168,7 @@ _convertLines(ScriptString, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to ac
    InCont                           := 0
    Cont_String                      := 0
    gaScriptStrsUsed.ErrorLevel      := InStr(ScriptString, "ErrorLevel")
+   gaScriptStrsUsed.A_GuiControl    := InStr(ScriptString, "A_GuiControl")
    gaScriptStrsUsed.StringCaseSense := InStr(ScriptString, "StringCaseSense") ; Both command and A_ variable
 
    ; parse each line of the input script
@@ -2216,9 +2217,9 @@ _Gui(p) {
             ControlEvent := "Click"
          }
          V1GuiControlEvent := ControlEvent = "Change" ? "Normal" : ControlEvent
-         V1GuiControlEvent := V1GuiControlEvent = "Click" ? "Normal" : ControlEvent
+         V1GuiControlEvent := V1GuiControlEvent = "Click" ? "Normal" : V1GuiControlEvent
          LineResult .= "`r`n" gIndentation ControlObject ".OnEvent(`"" ControlEvent "`", " getV2Name(ControlLabel) ".Bind(`"" V1GuiControlEvent "`"))"
-         gaList_LblsToFuncO.Push({label: ControlLabel, parameters: 'A_GuiEvent := "", GuiCtrlObj := "", Info := "", *', NewFunctionName: getV2Name(ControlLabel)})
+         gaList_LblsToFuncO.Push({label: ControlLabel, parameters: 'A_GuiEvent := "", A_GuiControl := "", Info := "", *', NewFunctionName: getV2Name(ControlLabel)})
       }
       if (ControlHwnd != "") {
          LineResult .= ", " ControlHwnd " := " ControlObject ".hwnd"
@@ -4176,6 +4177,9 @@ ConvertLabel2Func(ScriptString, Label, Parameters := "", NewFunctionName := "", 
             LabelPointer := 0
          } else {
             Result .= "{ `; V1toV2: Added bracket`r`nglobal `; V1toV2: Made function global`r`n" ; Global - See #49
+            RegExMatch(Result, '(.*)\r\n.*\r\n.*\r\n$', &match) ; Check if label is for a gui
+            if InStr(match[1], 'A_GuiControl') && gaScriptStrsUsed.A_GuiControl
+               Result .= 'A_GuiControl := HasProp(A_GuiControl, "Text") ? A_GuiControl.Text : A_GuiControl`r`n'
             LabelPointer := 1
          }
          LabelStart := 0
@@ -4686,8 +4690,8 @@ RenameKeywords(Line) {
 addGuiCBArgs(&code) { 
    global gmGuiFuncCBChecks
    for key, val in gmGuiFuncCBChecks {
-      code := RegExReplace(code, "im)^(\s*" key ")\((.*?)\)(\s*\{)", '$1(A_GuiEvent := "", GuiCtrlObj := "", Info := "", *)$3 `; V1toV2: Handle params: $2')
-      code := RegExReplace(code, 'm) `; V1toV2: Handle params: (A_GuiEvent := "", GuiCtrlObj := "", Info := "", \*)?$')
+      code := RegExReplace(code, "im)^(\s*" key ")\((.*?)\)(\s*\{)", '$1(A_GuiEvent := "", A_GuiControl := "", Info := "", *)$3 `; V1toV2: Handle params: $2')
+      code := RegExReplace(code, 'm) `; V1toV2: Handle params: (A_GuiEvent := "", A_GuiControl := "", Info := "", \*)?$')
    }
 }
 ;################################################################################

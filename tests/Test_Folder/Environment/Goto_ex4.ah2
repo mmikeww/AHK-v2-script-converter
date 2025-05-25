@@ -6,7 +6,7 @@ myGui.Show()
 Lbl()
 ;Goto, Lbl
 
-Lbl(A_GuiEvent := "", GuiCtrlObj := "", Info := "", *)
+Lbl(A_GuiEvent := "", A_GuiControl := "", Info := "", *)
 { ; V1toV2: Added bracket
 global ; V1toV2: Made function global
 MsgBox()

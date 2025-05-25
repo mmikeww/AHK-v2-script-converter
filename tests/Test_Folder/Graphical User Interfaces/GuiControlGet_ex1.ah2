@@ -6,7 +6,7 @@ ogcButtonCheckResponse.OnEvent("Click", CheckResponse.Bind("Normal"))
 myGui.Show()
 Return
 
-CheckResponse(A_GuiEvent := "", GuiCtrlObj := "", Info := "", *)
+CheckResponse(A_GuiEvent := "", A_GuiControl := "", Info := "", *)
 { ; V1toV2: Added bracket
 global ; V1toV2: Made function global
 _Type := ogcRadio_Type.Value

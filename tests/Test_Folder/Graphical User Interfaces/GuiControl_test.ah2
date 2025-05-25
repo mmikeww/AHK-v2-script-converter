@@ -34,7 +34,7 @@ myGui.Title := "Simple Input Example"
 myGui.Show()
 return  ; End of auto-execute section. The script is idle until the user does something.
 
-EmptyTest(A_GuiEvent := "", GuiCtrlObj := "", Info := "", *)
+EmptyTest(A_GuiEvent := "", A_GuiControl := "", Info := "", *)
 { ; V1toV2: Added bracket
 global ; V1toV2: Made function global
 oSaved := myGui.Submit("0")

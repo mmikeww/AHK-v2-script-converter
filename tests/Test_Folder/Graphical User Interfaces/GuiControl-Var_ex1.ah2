@@ -5,7 +5,7 @@ ogcEdite1 := myGui.Add("Edit", "ve1", "Some Text")
 myGui.Show()
 Return
 
-b1(A_GuiEvent := "", GuiCtrlObj := "", Info := "", *)
+b1(A_GuiEvent := "", A_GuiControl := "", Info := "", *)
 { ; V1toV2: Added bracket
 global ; V1toV2: Made function global
 Var := "Focus" ; This fix works with focus, others won't

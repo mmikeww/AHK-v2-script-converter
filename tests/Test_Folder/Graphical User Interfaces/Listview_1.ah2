@@ -15,7 +15,7 @@ ogcListViewNameSizeKB.ModifyCol(2, "Integer")  ; For sorting purposes, indicate 
 myGui.Show()
 return
 
-MyListView(A_GuiEvent := "", GuiCtrlObj := "", Info := "", *)
+MyListView(A_GuiEvent := "", A_GuiControl := "", Info := "", *)
 { ; V1toV2: Added bracket
 global ; V1toV2: Made function global
 if (A_GuiEvent = "DoubleClick")

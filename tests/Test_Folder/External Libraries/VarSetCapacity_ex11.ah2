@@ -7,7 +7,7 @@ ogcButtonConvert := myGui.Add("Button", "Default", "Convert")
 ogcButtonConvert.OnEvent("Click", ButtonConvert.Bind("Normal"))
 myGui.Show()
 return
-ButtonConvert(A_GuiEvent := "", GuiCtrlObj := "", Info := "", *)
+ButtonConvert(A_GuiEvent := "", A_GuiControl := "", Info := "", *)
 { ; V1toV2: Added bracket
 global ; V1toV2: Made function global
 oSaved := myGui.Submit("0")

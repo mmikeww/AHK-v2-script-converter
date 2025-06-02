@@ -4,7 +4,7 @@ ogcButtonOK.OnEvent("Click", ButtonOK.Bind("Normal"))
 myGui.Show()
 Return
 
-ButtonOK(A_GuiEvent := "", GuiCtrlObj := "", Info := "", *)
+ButtonOK(A_GuiEvent := "", A_GuiControl := "", Info := "", *)
 { ; V1toV2: Added bracket
 global ; V1toV2: Made function global
 myGui.Hide()

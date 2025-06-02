@@ -16,26 +16,26 @@ ogcButtonButton5 := myGui1.Add("Button", "ys", "Button 5")
 myGui1.Show()
 Return
 
-ButtonButton1(A_GuiEvent := "", GuiCtrlObj := "", Info := "", *) {
+ButtonButton1(A_GuiEvent := "", A_GuiControl := "", Info := "", *) {
 MsgBox("First Button Pressed")
 Return
 }
 
-ButtonButton2(A_GuiEvent := "", GuiCtrlObj := "", Info := "", *)
+ButtonButton2(A_GuiEvent := "", A_GuiControl := "", Info := "", *)
 { ; V1toV2: Added bracket
 global ; V1toV2: Made function global
 MsgBox("Second Button Pressed")
 Return
 } ; V1toV2: Added Bracket before label
 
-ButtonButton3(A_GuiEvent := "", GuiCtrlObj := "", Info := "", *)
+ButtonButton3(A_GuiEvent := "", A_GuiControl := "", Info := "", *)
 { ; V1toV2: Added bracket
 global ; V1toV2: Made function global
 MsgBox("Third Button Pressed")
 Return
 } ; V1toV2: Added bracket before function
 
-ButtonButton4(A_GuiEvent := "", GuiCtrlObj := "", Info := "", *) {
+ButtonButton4(A_GuiEvent := "", A_GuiControl := "", Info := "", *) {
 MsgBox("Fourth Button Pressed via " A_GuiEvent)
 Return
 }

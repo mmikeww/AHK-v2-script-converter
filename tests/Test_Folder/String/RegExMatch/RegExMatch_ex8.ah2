@@ -14,14 +14,14 @@ Deref(Str)
             out .= %m[2]%
         else Switch (m[3])
         {
-            case "a":  out .= "`a"
-            case "b":  out .= "`b"
-            case "f":  out .= "`f"
-            case "n":  out .= "`n"
-            case "r":  out .= "`r"
-            case "t":  out .= "`t"
-            case "v":  out .= "`v"
-            default:  out .= m[3]
+            case "a": out .= "`a"
+            case "b": out .= "`b"
+            case "f": out .= "`f"
+            case "n": out .= "`n"
+            case "r": out .= "`r"
+            case "t": out .= "`t"
+            case "v": out .= "`v"
+            default: out .= m[3]
         }
     }
     return out SubStr(Str, (spo)<1 ? (spo)-1 : (spo))

@@ -3,7 +3,7 @@ user := "hello"
 ; with continuation block
 script1 :=
 (
-	 "document.querySelector('#userId').value = '" . user . "'"
+	"document.querySelector('#userId').value = '" user "'"
 )
 MsgBox("script1:`n`n[" script1 "]")
 

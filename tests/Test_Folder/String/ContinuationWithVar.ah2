@@ -1,6 +1,6 @@
 user := "defaultuser0"
 script :=
 (
-	 "document.querySelector('#userId').value = '" . user . "'"
+	"document.querySelector('#userId').value = '" user "'"
 )
 MsgBox(script)

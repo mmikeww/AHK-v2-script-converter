@@ -1,7 +1,7 @@
 user := "defaultuser0"
 script :=
 (
-	 "document.querySelector('#userId').value = '" . user . "'"
+	"document.querySelector('#userId').value = '" user "'"
 )
 MsgBox(script)
 
@@ -10,7 +10,7 @@ MsgBox(script)
 MyVar := "Test"
 MySection :=
 (
-	 "This is a " . MyVar
+	"This is a " MyVar
 )
 
 MsgBox(MySection)

@@ -1,5 +1,5 @@
-var := "
+var :=
    (
-   hello world
-   )"
+   "hello world"
+   )
 FileAppend(var, "*")

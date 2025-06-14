@@ -3,7 +3,7 @@ b := "2"
 c := "3"
 d := "4"
 
-MsgBox
+MsgBox(
 (
 "Test
   a: " a "
@@ -12,4 +12,4 @@ MsgBox
 Test
   c: " c "
   d: " d
-)
+))

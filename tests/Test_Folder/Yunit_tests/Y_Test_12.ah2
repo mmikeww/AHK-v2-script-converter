@@ -1,7 +1,7 @@
 Sleep(100)
-var := "
+var :=
 (
-line1
-line2
-)"
+"line1
+line2"
+)
 FileAppend(var, "*")

@@ -1,6 +1,6 @@
 var := 9
-MsgBox
+MsgBox(
 (
 var "
 line2"
-)
+))

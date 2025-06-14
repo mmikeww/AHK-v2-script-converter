@@ -3,5 +3,5 @@ Return 1
 }
 
 Switch MyFunc() {
-Case 1: MsgBox()
+Case 1:MsgBox()
 }

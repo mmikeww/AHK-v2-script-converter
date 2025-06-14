@@ -122,10 +122,10 @@ _DllCall(p) {
     NeedleRegEx := "(\*\s*0\s*\+\s*)(&)(\w*)" ; *0+&var split into 3 groups (*0+), (&), and (var)
     ;if (p[A_Index] ~= "^&") {                       ; Remove the & parameter
     ;  p[A_Index] := SubStr(p[A_Index], 2)
-    ;} else 
+    ;} else
     if (RegExMatch(p[A_Index], NeedleRegEx)) { ; even if it's behind a *0 var assignment preceding it
       gfNoSideEffect := 1
-      subLoopFunctions(ScriptString:=p[A_Index], Line:=p[A_Index], &v2:="", &gotFunc:=False)
+      V1toV2_Functions(ScriptString:=p[A_Index], Line:=p[A_Index], &v2:="", &gotFunc:=False)
       gfNoSideEffect := 0
       if (commentPos:=InStr(v2,"`;")) {
         v2 := SubStr(v2, 1, commentPos-1)
@@ -161,7 +161,7 @@ _DllCall(p) {
 
 _Hotstring(p) {
   global gaList_LblsToFuncO
-  if RegExMatch(p[1], '":') and p.Has(2) { 
+  if RegExMatch(p[1], '":') and p.Has(2) {
     p[2] := Trim(p[2], '"')
     gaList_LblsToFuncO.Push({label: p[2], parameters: '*', NewFunctionName: getV2Name(p[2])})
   }
@@ -292,14 +292,14 @@ _NumPut(p) {
         Type := p[4]
       }
 
-      ParBuffer := Type ", " Number ", `r`n" gIndentation "   " ParBuffer
+      ParBuffer := Type ", " Number ", `r`n" gIndent "   " ParBuffer
 
       NextParameters := RegExReplace(VarOrAddress, "is)^\s*Numput\((.*)\)\s*$", "$1", &OutputVarCount)
       if (OutputVarCount = 0) {
         break
       }
 
-      p := V1ParSplit(NextParameters)
+      p := V1ParamSplit(NextParameters)
       loop 4 - p.Length {
         p.Push("")
       }

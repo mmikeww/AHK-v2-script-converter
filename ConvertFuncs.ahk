@@ -1702,7 +1702,7 @@ _MsgBox(p) {
          text := ToExp(SubStr(text, 2))
          title := ToExp(p[2])
       }
-      Out := format("MsgBox({1}, {2}, {3})", text, title, ToExp(options))
+      Out := format("MsgBox({1}, {2}, {3})", text, (title = '""' ? '' : title), ToExp(options))
       if (Check_IfMsgBox()) {
          Out := "msgResult := " Out
       }

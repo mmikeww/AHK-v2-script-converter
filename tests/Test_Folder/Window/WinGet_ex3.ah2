@@ -5,7 +5,7 @@ For v in oActiveControlList
 }
 Loop Parse, ActiveControlList, "`n"
 {
-    msgResult := MsgBox("Control #" A_Index " is `"" A_LoopField "`". Continue?", "", 4)
+    msgResult := MsgBox("Control #" A_Index " is `"" A_LoopField "`". Continue?", , 4)
     if (msgResult = "No")
         break
 }

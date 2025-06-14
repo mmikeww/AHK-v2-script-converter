@@ -1,1 +1,0 @@
-MsgBox, 4, , This is the 3-parameter method. Commas (,) do not need to be escaped.

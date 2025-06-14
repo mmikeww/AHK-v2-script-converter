@@ -347,6 +347,16 @@ _OnMessage(p) {
   ; OnMessage(MsgNumber, FunctionQ2T, MaxThreads)
   ; OnMessage({1}, {2}, {3})
   if (p.Has(1) && p.Has(2) && p[1] != "" && p[2] != "") {
+    if InStr(p[2], 'Func(') {
+      RegExMatch(p[2], '\.Bind\(.*\)', &bindContent)
+      if RegExMatch(p[2], '%Func\("(\w+)"\)', &match) { ; Func("name")
+        p[2] := match[1]
+      } else if RegExMatch(p[2], '%Func\((\w+)\)', &match) { ; Func(var)
+        p[2] := '%' match[1] '%'
+      }
+      if bindContent != ''
+        p[2] .= bindContent[]
+    }
     ;gmOnMessageMap.%p[1]% := p[2]
     ; 2024-06-28 change to key/val format for fix of Issue 136
     ; see addOnMessageCBArgs() in ConvertFuncs.ahk

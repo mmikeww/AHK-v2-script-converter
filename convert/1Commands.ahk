@@ -59,18 +59,12 @@ global gAhkCmdsToRemoveV1 := "
 global gAhkCmdsToRemoveV2 := "
    (c
       #AllowSameLineComments
-;      #CommentFlag
-;      #Delimiter
-;      #DerefChar
-;      #EscapeChar
       #LTrim
       #MaxMem
       #NoEnv
       SetBatchLines
-;      SetFormat
       SoundGetWaveVolume
       SoundSetWaveVolume
-;      SplashImage
       A_FormatInteger
       A_FormatFloat
       AutoTrim
@@ -197,22 +191,16 @@ global gmAhkCmdsToConvertV2 := OrderedMap(
     "EnvSet({1}, {2})"
   , "EnvSub,var,valueCBE2E,TimeUnitsT2E" ,
     "*_EnvSub"
-;  , "EnvDiv,var,valueCBE2E" ,
-;    "{1} /= {2}"
   , "EnvGet,OutputVar,EnvVarNameT2E" ,
     "{1} := EnvGet({2})"
-;  , "EnvMult,var,valueCBE2E" ,
-;    "{1} *= {2}"
   , "EnvUpdate" ,
     'SendMessage, % WM_SETTINGCHANGE := 0x001A, 0, Environment,, % "ahk_id " . HWND_BROADCAST := "0xFFFF"'
   , "Exit,ExitCode" ,
     "Exit({1})"
   , "ExitApp,ExitCode" ,
     "ExitApp({1})"
-;  , "FileAppend,text,fileT2E,encT2E" ,
-;    "*_FileAppend"
   , "FileAppend,textT2E,fileT2E,encT2E" ,
-  "FileAppend({1}, {2}, {3})"
+    "FileAppend({1}, {2}, {3})"
   , "FileCopyDir,sourceT2E,destT2E,flagCBE2E" ,
     "*_FileCopyDir"
   , "FileCopy,sourceT2E,destT2E,OverwriteCBE2E" ,
@@ -261,8 +249,6 @@ global gmAhkCmdsToConvertV2 := OrderedMap(
     "*_FileSetTime"
   , "FormatTime,outVar,dateT2E,formatT2E" ,
     "{1} := FormatTime({2}, {3})"
-;  , "GetKeyState,OutputVar,KeyNameT2E,ModeT2E" ,
-;    '{1} := GetKeyState({2}, {3}) ? "D" : "U"'
   , "Gui,SubCommand,Value1,Value2,Value3" ,
     "*_Gui"
   , "GuiControl,SubCommand,ControlID,Value" ,
@@ -285,36 +271,8 @@ global gmAhkCmdsToConvertV2 := OrderedMap(
     "*_Hotkey"
   , "KeyWait,KeyNameT2E,OptionsT2E" ,
     "*_KeyWait"
-;  , "IfEqual,var,valueT2QE" ,
-;    "if ({1} = {2})"
-;  , "IfNotEqual,var,valueT2QE" ,
-;    "if ({1} != {2})"
-;  , "IfGreater,var,valueT2QE" ,
-;    "*_IfGreater"
-;  , "IfGreaterOrEqual,var,valueT2QE" ,
-;    "*_IfGreaterOrEqual"
-;  , "IfLess,var,valueT2QE" ,
-;    "*_IfLess"
-;  , "IfLessOrEqual,var,valueT2QE" ,
-;    "*_IfLessOrEqual"
-;  , "IfInString,var,valueT2E" ,
-;    "*_IfInString"
   , "IfMsgBox,ButtonNameT2E" ,
     "if (msgResult = {1})"
-;  , "IfNotInString,var,valueT2E" ,
-;    "*_IfNotInString"
-;  , "IfExist,fileT2E" ,
-;    "if FileExist({1})"
-;  , "IfNotExist,fileT2E" ,
-;    "if !FileExist({1})"
-;  , "IfWinExist,titleT2E,textT2E,excltitleT2E,excltextT2E" ,
-;    "if WinExist({1}, {2}, {3}, {4})"
-;  , "IfWinNotExist,titleT2E,textT2E,excltitleT2E,excltextT2E" ,
-;    "if !WinExist({1}, {2}, {3}, {4})"
-;  , "IfWinActive,titleT2E,textT2E,excltitleT2E,excltextT2E" ,
-;    "if WinActive({1}, {2}, {3}, {4})"
-;  , "IfWinNotActive,titleT2E,textT2E,excltitleT2E,excltextT2E" ,
-;    "if !WinActive({1}, {2}, {3}, {4})"
   , "ImageSearch,OutputVarXV2VRM,OutputVarYV2VRM,X1CBE2E,Y1CBE2E,X2CBE2E,Y2CBE2E,ImageFileT2E" ,
     "ErrorLevel := !ImageSearch({1}, {2}, {3}, {4}, {5}, {6}, {7})"
   , "IniDelete,FilenameT2E,SectionT2E,KeyT2E" ,
@@ -345,8 +303,6 @@ global gmAhkCmdsToConvertV2 := OrderedMap(
   , "MouseClickDrag,WhichButtonT2E,X1CBE2E,Y1CBE2E,X2CBE2E,Y2CBE2E,SpeedCBE2E,RelativeT2E"       , "MouseClickDrag({1}, {2}, {3}, {4}, {5}, {6}, {7})"
   , "MouseMove,XCBE2E,YCBE2E,SpeedCBE2E,RelativeT2E" ,
     "MouseMove({1}, {2}, {3}, {4})"
-;  , "OnExit,Func,AddRemove" ,
-;    "*_OnExit"
   , "OutputDebug,TextT2E" ,
     "OutputDebug({1})"
   , "Pause,OnOffToggleOn2True,OperateOnUnderlyingThread " ,
@@ -359,8 +315,6 @@ global gmAhkCmdsToConvertV2 := OrderedMap(
     "PostMessage({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8})"
   , "Process,SubCommand,PIDOrNameT2E,ValueT2E" ,
     "*_Process"
-;  , "Progress, ProgressParam1,SubTextT2E,MainTextT2E,WinTitleT2E,FontNameT2E" ,
-;    "*_Progress"
   , "Random,OutputVar,MinCBE2E,MaxCBE2E" ,
     "*_Random"
   , "RegRead,OutputVar,KeyName,ValueName,var4" ,
@@ -381,8 +335,6 @@ global gmAhkCmdsToConvertV2 := OrderedMap(
     "SetCapsLockState({1})"
   , "SetControlDelay,DelayCBE2E" ,
     "SetControlDelay({1})"
-;  , "SetEnv,var,valueT2E" ,
-;    "{1} := {2}"
   , "SetNumLockState, StateT2E" ,
     "SetNumLockState({1})"
   , "SetKeyDelay,DelayCBE2E,PressDurationCBE2E,PlayT2E" ,
@@ -439,12 +391,6 @@ global gmAhkCmdsToConvertV2 := OrderedMap(
     "SoundPlay({1}, {2})"
   , "SoundSet,NewSetting,ComponentTypeT2E,ControlType,DeviceNumberT2E" ,
     "*_SoundSet"
-;  , "SplashTextOn,Width,Height,TitleT2E,TextT2E" ,
-;    "*_SplashTextOn"
-;  , "SplashTextOff" ,
-;    "SplashTextGui.Destroy"
-;  , "SplashImage,ImageFileT2E,Options,SubTextT2E,MainTextT2E,WinTitleT2E,FontNameT2E" ,
-;    "*_SplashImage"
   , "SplitPath,varCBE2E,filenameV2VR,dirV2VR,extV2VR,name_no_extV2VR,drvV2VR" ,
     "SplitPath({1}, {2}, {3}, {4}, {5}, {6})"
   , "StatusBarGetText,Part,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E" ,
@@ -453,28 +399,12 @@ global gmAhkCmdsToConvertV2 := OrderedMap(
     " StatusBarWait({1}, {2}, {3}, {4}, {5}, {6})"
   , "StringCaseSense,OnOffLocaleOn2True" ,
     "*_StringCaseSense"
-;  , "StringGetPos,OutputVar,InputVar,SearchTextT2E,SideT2E,OffsetCBE2E" ,
-;    "*_StringGetPos"
-;  , "StringLen,OutputVar,InputVar" ,
-;    "{1} := StrLen({2})"
-;  , "StringLeft,OutputVar,InputVar,CountCBE2E" ,
-;    "{1} := SubStr({2}, 1, {3})"
-;  , "StringMid,OutputVar,InputVar,StartCharCBE2E,CountCBE2E,L_T2E" ,
-;    "*_StringMid"
-;  , "StringRight,OutputVar,InputVar,CountCBE2E" ,
-;    "{1} := SubStr({2}, -1*({3}))"
   , "StringSplit,OutputArray,InputVar,DelimitersT2E,OmitCharsT2E" ,
     "*_StringSplit"
-;  , "StringTrimLeft,OutputVar,InputVar,CountCBE2E" ,
-;    "{1} := SubStr({2}, ({3})+1)"
-;  , "StringTrimRight,OutputVar,InputVar,CountCBE2E" ,
-;    "{1} := SubStr({2}, 1, -1*({3}))"
   , "StringUpper,OutputVar,InputVar,TT2E" ,
     "*_StringUpper"
   , "StringLower,OutputVar,InputVar,TT2E" ,
     "*_StringLower"
-;  , "StringReplace,OutputVar,InputVar,SearchTxtT2E,ReplTxtT2E,ReplAll" ,
-;    "*_StringReplace"
   , "Suspend,ModeOn2True" ,
     "*_SuspendV2"
   , "SysGet,OutputVar,SubCommand,ValueCBE2E" ,
@@ -485,8 +415,6 @@ global gmAhkCmdsToConvertV2 := OrderedMap(
     "ToolTip({1}, {2}, {3}, {4})"
   , "TrayTip,TitleT2E,TextT2E,Seconds,OptionsT2E" ,
     "TrayTip({1}, {2}, {4})"
-;  , "Transform,OutputVar,SubCommand,Value1T2E,Value2T2E" ,
-;    " *_Transform"
   , "UrlDownloadToFile,URLT2E,FilenameT2E" ,
     "Download({1},{2})"
   , "WinActivate,WinTitleT2E,WinTextT2E,ExcludeTitleT2E,ExcludeTextT2E" ,

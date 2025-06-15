@@ -86,7 +86,7 @@ IsLabel IsObject IsSetRef KeyHistory KeyWait ListHotkeys ListLines ListVars List
 LoadPicture Log Ln Loop Map Max MenuBar Menu MenuFromHandle MenuSelect 
 Min Mod MonitorGet MonitorGetCount MonitorGetName MonitorGetPrimary MonitorGetWorkArea MouseClick MouseClickDrag MouseGetPos 
 MouseMove MsgBox Number NumGet NumPut ObjAddRef ObjRelease ObjBindMethod ObjHasOwnProp ObjOwnProps 
-ObjGetBase ObjGetCapacity ObjGetDataPtr ObjGetDataSize ObjOwnPropCount ObjSetBase ObjSetCapacity ObjSetDataPtr OnClipboardChange OnError 
+ObjGetBase ObjGetCapacity ObjOwnPropCount ObjSetBase ObjSetCapacity OnClipboardChange OnError 
 OnExit OnMessage Ord OutputDebug Pause Persistent PixelGetColor PixelSearch PostMessage ProcessClose 
 ProcessExist ProcessGetName ProcessGetParent ProcessGetPath ProcessSetPriority ProcessWait ProcessWaitClose Random RegExMatch RegExReplace 
 RegCreateKey RegDelete RegDeleteKey RegRead RegWrite Reload Round Run RunAs 
@@ -95,9 +95,9 @@ SetControlDelay SetDefaultMouseSpeed SetKeyDelay SetMouseDelay SetNumLockState S
 SetWinDelay SetWorkingDir Shutdown Sin Sleep Sort SoundBeep SoundGetInterface SoundGetMute SoundGetName 
 SoundGetVolume SoundPlay SoundSetMute SoundSetVolume SplitPath Sqrt StatusBarGetText StatusBarWait StrCompare StrGet 
 String StrLen StrLower StrPtr StrPut StrReplace StrSplit StrTitle StrUpper SubStr 
-Suspend SysGet SysGetIPAddresses Tan Thread Throw ToolTip TraySetIcon TrayTip 
+Suspend SysGet SysGetIPAddresses Tan Thread ToolTip TraySetIcon TrayTip 
 Trim LTrim RTrim Type VarSetStrCapacity VerCompare WinActivate WinActivateBottom 
-WinActive WinClose WinExist WinGetAlwaysOnTop WinGetClass WinGetClientPos WinGetControls WinGetControlsHwnd WinGetCount WinGetEnabled 
+WinActive WinClose WinExist WinGetClass WinGetClientPos WinGetControls WinGetControlsHwnd WinGetCount 
 WinGetID WinGetIDLast WinGetList WinGetMinMax WinGetPID WinGetPos WinGetProcessName WinGetProcessPath WinGetStyle WinGetExStyle 
 WinGetText WinGetTitle WinGetTransColor WinGetTransparent WinHide WinKill WinMaximize WinMinimize WinMinimizeAll WinMinimizeAllUndo 
 WinMove WinMoveBottom WinMoveTop WinRedraw WinRestore WinSetAlwaysOnTop WinSetEnabled WinSetRegion WinSetStyle WinSetExStyle 

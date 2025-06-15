@@ -480,7 +480,6 @@
 	If_VarContains(&lineStr, &lineOpen)						; if var contains
 	If_VarIsType(&lineStr, &lineOpen)						; if var is type
 	fixTernaryBlanks(&lineStr)								; fixes blank/missing ternary fields
-	removeTernaryIf(&lineStr)
 	if (gV2Conv) {	; v2 only conversion
 		v2_fixElseError(&lineStr, &lineOpen, &lineClose)	; V2 - fixes 'Unexpected Else' error
 	}
@@ -680,19 +679,6 @@
 		; blank/missing 'false' value, Multi-line
 		lineStr := RegExReplace(lineStr, '(?im)^(.*?\h*+)(\v+\h*+\?[^\v]+\v++)(\h*+:)(\h*+)(\){1,}|$)', '$1$2$3$4""$5')
 	Restore_Strings(&lineStr)
-
-	return
-}
-;################################################################################
-													    removeTernaryIf(&lineStr)
-;################################################################################
-{
-; Remove if from ternary
-; Eg if abc ? 'yes' : 'no' -> (abc ? 'yes' : 'no')
-
-	while (RegExMatch(lineStr, "(.*?)if\s+(.*?.*:.*)", &match)) {
-		lineStr := match[1] match[2]
-	}
 
 	return
 }

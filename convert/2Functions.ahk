@@ -15,6 +15,8 @@ global gmAhkFuncsToConvert := OrderedMap(
      "ComObject({1}, {2})"
   , "DllCall(DllFunction,Type1,Arg1,val*)" ,
      "*_DllCall"
+  , "Exception(Message, What, Extra)",
+     "Error({1}, {2}, {3})"
   , "Func(FunctionNameQ2T)" ,
      "{1}"
   , "Hotstring(String,Replacement,OnOffToggle)" ,

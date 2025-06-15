@@ -13,6 +13,8 @@ global gmAhkFuncsToConvert := OrderedMap(
     "ComValue({1}, {2}, {3})"
   , "ComObjCreate(CLSID , IID)" ,
      "ComObject({1}, {2})"
+  , "ComObjParameter(vt, value, Flags)" ,
+     "ComValue({1}, {2}, {3})"
   , "DllCall(DllFunction,Type1,Arg1,val*)" ,
      "*_DllCall"
   , "Exception(Message, What, Extra)",

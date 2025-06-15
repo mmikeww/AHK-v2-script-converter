@@ -949,7 +949,7 @@ _Gui(p) {
 
       ; 2024-07-09 AMB, UPDATED needles to support all valid v1 label chars
       ; 2024-09-05 f2g: EDITED - Don't test Var3 for g-label if Var1 = "Show"
-      if (RegExMatch(Var3, "i)^.*?\bg([^,\h``]+).*$") && !RegExMatch(Var1, "i)show|margin|font")) {
+      if (RegExMatch(Var3, "i)^.*?\bg([^,\h``]+).*$") && !RegExMatch(Var1, "i)show|margin|font|new")) {
          ; Record and remove gLabel
          ControlLabel := RegExReplace(Var3, "i)^.*?\bg([^,\h``]+).*$", "$1")  ; get glabel name
          Var3 := RegExReplace(Var3, "i)^(.*?)\bg([^,\h``]+)(.*)$", "$1$3")    ; remove glabel
@@ -962,7 +962,7 @@ _Gui(p) {
       if ControlLabel != "" and !InStr(gAllV1LabelNames, ControlLabel) and InStr(gAllFuncNames, ControlLabel)
          gmGuiFuncCBChecks[ControlLabel] := true
 
-      if (RegExMatch(Var3, "i)\bv[\w]+\b") && !(Var1 ~= "i)show|margin|font")) {
+      if (RegExMatch(Var3, "i)\bv[\w]+\b") && !(Var1 ~= "i)show|margin|font|new")) {
          ControlName := RegExReplace(Var3, "i)^.*\bv([\w]+)\b.*$", "$1")
 
          ControlObject := InStr(ControlName, SubStr(Var2, 1, 4)) ? "ogc" ControlName : "ogc" Var2 ControlName
@@ -976,7 +976,7 @@ _Gui(p) {
             }
          }
       }
-      if (RegExMatch(Var3, "i)\+?HWND(\w*?)(?=`"|\s|$)", &match)) {
+      if (RegExMatch(Var3, "i)(?<=[^\w\n]|^)\+?HWND(\w*?)(?=`"|\s|$)", &match)) {
          ControlHwnd := match[1]
          Var3 := StrReplace(Var3, match[])
          if (ControlObject = "" && Var4 != "") {
@@ -988,16 +988,18 @@ _Gui(p) {
          }
          gmGuiCtrlObj["%" ControlHwnd "%"] := ControlObject
          gmGuiCtrlObj["% " ControlHwnd] := ControlObject
-      } else if (RegExMatch(Var2, "i)\+?HWND(.*?)(?:\s|$)", &match))
+      } else if (RegExMatch(Var2, "i)(?<=[^\w\n]|^)\+?HWND(.*?)(?:\h|$)", &match))
          && (RegExMatch(Var1, "i)(?<!\w)New")) {
-            GuiOpt := Var3
+            GuiOpt := Var2
             GuiOpt := StrReplace(GuiOpt, match[])
-            LineSuffix .= gIndent match[1] " := " GuiNameLine ".Hwnd"
+            LineSuffix .= ", " match[1] " := " GuiNameLine ".Hwnd"
+      } else if (RegExMatch(Var1, "i)(?<!\w)New")) {
+            GuiOpt := Var2
       }
 
       if (!InStr(gGuiList, "|" GuiNameLine "|")) {
          gGuiList .= GuiNameLine "|"
-         LineResult := GuiNameLine " := Gui(" GuiOpt ")`r`n" gIndent
+         LineResult := GuiNameLine " := Gui(" RegExReplace(ToStringExpr(GuiOpt), '^""$') ")`r`n" gIndent
 
          ; Add the events if they are used.
          aEventRename := []
@@ -1078,7 +1080,10 @@ _Gui(p) {
       } else if (Var1 = "Cancel") {
          Var1 := "Hide"
       } else if (var1 = "New") {
-         return Trim(LineResult LineSuffix,"`n")
+         LineResult := Trim(LineResult LineSuffix,"`n")
+         GuiName :=  ", " ToStringExpr(Var3)
+         LineResult := RegExReplace(LineResult, "(.*)\)(.*)", "$1" (GuiName != ', ""' ? GuiName ')' : ')') "$2")
+         return RegExReplace(LineResult, '\r\n,', ',')
       }
 
       LineResult .= GuiNameLine "."
@@ -1092,7 +1097,7 @@ _Gui(p) {
       } else {
          if (Var1 != "") {
             if (RegExMatch(Var1, "^\s*[-\+]\w*")) {
-               While (RegExMatch(Var1, 'i)\+HWND(.*?)(?:\s|$)', &match)) {
+               While (RegExMatch(Var1, 'i)(?<=[^\w\n]|^)\+HWND(.*?)(?:\s|$)', &match)) {
                   LineSuffix .= ", " match[1] " := " GuiNameLine ".Hwnd"
                   Var1 := StrReplace(Var1, match[])
                }

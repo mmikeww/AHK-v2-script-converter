@@ -1,0 +1,1 @@
+var := { Close: _CR_Disconnect, __Delete: _CR_Disconnect }

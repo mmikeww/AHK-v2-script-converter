@@ -1,0 +1,1 @@
+var := { Close: Func("_CR_Disconnect"), __Delete: Func("_CR_Disconnect") }

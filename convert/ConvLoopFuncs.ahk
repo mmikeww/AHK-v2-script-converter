@@ -260,30 +260,35 @@
 	}
 	return
 }
-;################################################################################
-														 v2_DQ_Literals(&lineStr)
-;################################################################################
-{
-; 2025-06-12 AMB, redesigned and moved to dedicated routine for cleaner convert loop
-; Purpose: convert double-quote literals from "" (v1) to `" (v2) format
-;	handles all of them, whether in function call params or not
 
-	Mask_DQstrings(&lineStr)									; tag any DQ strings, so they are easy to find
 
-	; grab each string mask one at a time from lineStr
-	nDQTag		:= gTagPfx 'DQ_\w+' gTagTrl						; [regex for DQ string tags]
-	pos			:= 1
-	While (pos	:= RegexMatch(lineStr, nDQTag, &mTag, pos)) {	; find each DQ string tag (masked-string)
-		tagStr	:= mTag[]										; [temp var to handle tag and replacement]
-		Restore_DQstrings(&tagStr)								; get orig string for current tag
-		tagStr	:= SubStr(tagStr, 2, -1)						; strip outside DQ chars from each end of extracted string
-		tagStr	:= RegExReplace(tagStr, '""', '``"')			; replace all remaining "" with `"
-		tagStr	:= '"' tagStr '"'								; add DQ chars back to each end
-		lineStr	:= StrReplace(lineStr, mTag[], tagStr)			; replace tag within lineStr with newly converted string
-		pos		+= StrLen(tagStr)								; prep for next search
-	}
-	return
-}
+; 2025-06-16 - MOVED TO MaskCode.ahk (for now)
+;;################################################################################
+;														 v2_DQ_Literals(&lineStr)
+;;################################################################################
+;{
+;; 2025-06-12 AMB, redesigned and moved to dedicated routine for cleaner convert loop
+;; Purpose: convert double-quote literals from "" (v1) to `" (v2) format
+;;	handles all of them, whether in function call params or not
+
+;	Mask_DQstrings(&lineStr)									; tag any DQ strings, so they are easy to find
+
+;	; grab each string mask one at a time from lineStr
+;	nDQTag		:= gTagPfx 'DQ_\w+' gTagTrl						; [regex for DQ string tags]
+;	pos			:= 1
+;	While (pos	:= RegexMatch(lineStr, nDQTag, &mTag, pos)) {	; find each DQ string tag (masked-string)
+;		tagStr	:= mTag[]										; [temp var to handle tag and replacement]
+;		Restore_DQstrings(&tagStr)								; get orig string for current tag
+;		tagStr	:= SubStr(tagStr, 2, -1)						; strip outside DQ chars from each end of extracted string
+;		tagStr	:= RegExReplace(tagStr, '""', '``"')			; replace all remaining "" with `"
+;		tagStr	:= '"' tagStr '"'								; add DQ chars back to each end
+;		lineStr	:= StrReplace(lineStr, mTag[], tagStr)			; replace tag within lineStr with newly converted string
+;		pos		+= StrLen(tagStr)								; prep for next search
+;	}
+;	return
+;}
+
+
 ;################################################################################
 														   v2_FixACaret(&lineStr)
 ;################################################################################
@@ -315,6 +320,9 @@
 ; Purpose: Make sure kvPairs have valid v2 key names [{"A": "B"}] => [{A: "B"}]
 ; characters for V2 key names are much more restrictive, may need to update further
 ;  also updated to detect valid {key:val} objects (only)
+; TODO - THIS CAN CHANGE KEY NAMES - NEED TO ADD SUPPORT FOR...
+;	1. ENSURING KEYNAMES ARE STILL UNIQUE
+;	2. UPDATING KEYNAME REFERENCES WITHIN CODE (obj.KEYNAME)
 
 
 	Mask_Strings(&lineStr)	; must be here to avoid errors with next regex			; don't match false positives (found within strings)
@@ -330,18 +338,16 @@
 		kvPairsList	:= RegExReplace(kvObj, '\{([^}]+)\}', '$1')						; ... strip outer {} from object, now just key:val list sep by commas
 		newObj		:= '{'															; [will be the new object string]
 		for idx, kvPair in StrSplit(kvPairsList, ',') {								; for each key:val pair in list...
-			if (RegExMatch(kvPair, '(?s)^(?<key>[^:]+):(?<val>.+)$', &mKV)) {		; if is properly formatted key:val...
-				key		:= mKV.key, val := mKV.val									; ... extract key and value properties
-				Restore_Strings(&key)	; DO NOT REMOVE								; restore strings for key only (so it can be reformatted)
-				; make sure key name is valid format
-				; TODO - MIGHT NEED TO ADD DUPLICATION DETECTION/CORRECTION
-				key	:= StrReplace(RegExReplace(key,'"\h+\.\h+"'),'"')				; remove any concat operators and quotes from key (creates new var name)
-				if (RegExMatch(key, '^(\h*)(.+?)(\h*)$', &mKey)) {					; separate leading/trailing ws from key name...
-					key := mKey[1] . RegExReplace(mKey[2], '\W') . mKey[3]			; remove any illegal chars from key name (\w chars only, I think)
+			if (RegExMatch(kvPair, '(?s)^(?<key>[^:]+):(?<val>.+)$', &mKV)) {		; if seems to be properly formatted key:val...
+				; TODO - FOR ANY KEYNAME CHANGES in next line...
+				; ... ADD SUPPORT FOR UPDATING KEYNAME REFERENCES WITHIN CODE
+				kvp := kvPair, restore_strings(&kvp, false)	; for DEBUG MSG
+				val := mKV.val
+				if ((key := validKeyName(mKV.key)) = '') {							; make sure key name is valid
+;					MsgBox 'Invalid Keyname for key/val pair:`n[' kvp ']'			; DEBUG unknown keyname formatting
+					key := mKV.key '_INVALID_KEYNAME'								; TODO - TEMP SOLUTION FOR NOW
 				}
-				; use lead underscore for names that begin with number (for now)
-				key := RegExReplace(key, '^(\h*)(\d\D.+)$', '$1_$2')				; can be a number, or ^[_a-z]\w*. But cannot be a var that begins with number
-				kvPair	:= key ':' val												; reassemble key:val pair with updated key
+				kvPair := key ':' val												; reassemble key:val pair with updated key
 			}
 			newObj .= kvPair . ','													; add updated key:val pair to new object list
 		}
@@ -351,6 +357,39 @@
 	}
 	Restore_Strings(&lineStr)														; restore any remaining masked-strings
 	return		; lineStr by reference
+}
+;################################################################################
+																validKeyName(key)
+;################################################################################
+{
+; 2025-06-16 AMB, ADDED - ensures keyname is valid format
+; TODO - WORK IN PROGRESS
+
+	Restore_Strings(&key, false)	; DO NOT REMOVE									; incase strings are masked before receiving
+	key := StrReplace(RegExReplace(key,'"\h+\.\h+"'),'"')							; remove any concat operators and quotes from key (creates new var name)
+	nKN := '^((?:\h*+\(*+)*+)(\w+(?:[-\h]*\w+)*)+?((?:\h*+\)*+)*+)$'				; [identifies key name - supports optional parentheses/hyphens(not minus)/ws]
+	if (!RegExMatch(key, nKN, &mKN)) {												; if key does not look valid...
+		return ''																	; ... return empty string
+	}
+	; keyname looks like its valid or can be fixed...
+	LWS	:= mKN[1]																	; leading ws and optional opening parenthesis (could be more than 1)
+	KN	:= mKN[2]																	; [working var for keyname]
+	TWS	:= mKN[3]																	; trailing ws and optional closing parenthesis (could be more than 1)
+
+	if (KN ~= '^\d+$') {															; if keyname is a number (1 or more integer digits) ? ...
+		return LWS . KN . TWS														; ... is valid - return it
+	}
+
+	; is alpha-numeric - ensure proper formatting
+	KN := RegExReplace(KN, '\W')													; valid chars are [a-z_0-9] (I think?) - remove spaces and hyphens from name
+	KN := RegExReplace(KN, '^(\h*)(\d\D.+)$', '$1_$2')								; keyname cannot begin with a number, add underscore to beginning if it does
+	if (KN) {																		; make sure we still have something left
+		return LWS . KN . TWS														; return keyname
+	}
+	else {
+		return ''																	; invalid - just in case we encounter something unusual
+	}
+
 }
 ;################################################################################
 											   v2_formatClassProperties(&lineStr)
@@ -971,13 +1010,38 @@
 ;################################################################################
 {
 ; 2025-06-12 AMB, Moved to dedicated routine (and redesigned) for cleaner convert loop
+; 2025-06-16 AMB, UPDATED to support global masking of continuation sections,
+;	and comments for all lines
 ; Purpose: parses line looking for v1 COMMANDS that need to be converted to v2 format
 ;	performs recursion as required for chained commands/params
-;	also handles multi-line params
+;	also supports continuation sections
 ; TODO - MOVE THIS AND RELATED FUNCTIONS TO 1Commands.ahk ??
 
 
-	global gO_Index, gIndent, gOScriptStr
+	global gO_Index, gIndent, gOScriptStr, gEOLComment_Cont
+
+
+	; 2025-06-16 AMB, ADDED support for global masking of continuation sections
+	; if lineStr is a continuation section masked tag...
+	; extract original code, see if line1 has a targetted command... if not, exit
+	fHaveCS	:= false															; flag used later
+	if (tag := hasTag(lineStr, 'MLLineCont')) {									; is lineStr a continuation tag?
+		oCode := hasTag(lineStr, tag)											; get orignal line + continuation section
+		Restore_PreMask(&oCode, false)											; extract strings and comments that are masked
+		if (RegExMatch(oCode, '(?s)^([^\v]+)(.+)$', &m)) {
+			tLine1 := m[1], contBlk := m[2]										; separate temp_line1 from continuation block
+			if (!obj := V1LineToProcess.getCmdObject(tLine1)) {					; determine whether line1 has v1 command to be converted
+				return false													; no command to process - exit
+			}
+			; line1 has legit command
+			lineStr := tLine1													; OK to change lineStr now - make it the first (cmd) line
+			fHaveCS := true														; flag to use alternate routine to fill params arrays
+			; deal with any comment on line 1
+			FirstChar	:= SubStr(Trim(lineStr),1,1)							; get first char of line (after leading ws)
+			lineStr		:= removeEOLComments(lineStr, FirstChar, &EOLComment)	; remove first comment found on line1
+			gEOLComment_Cont.Push(EOLComment)									; TODO - can lead to errors, investigate if it continues
+		}
+	}
 
 
 	; look at current line and find/convert v1 command(s) that require conversion
@@ -1003,11 +1067,25 @@
 		; 	these 'extended' params should be last param on cur line.
 		; Find this cont section (if it exists) and...
 		; 	update cLParams, cLParamsArr, EOLComment
-		if (paramContSect := getParamContSect(&cLParams, &cLParamsArr, &EOLComment)) {			; get param continuation section (if exists) for last param on current line
-;			MsgBox "[" paramContSect "]", "CONT" ; debug
-		}
 
-		; REWORK THESE AS PART OF CLASS OBJECT INSTEAD (OR ELIMINATE ENTIRELY) ??
+		; get continuaton section (if present)
+		; 2025-06-16 AMB, UPDATED to support global masking of continuation sections
+		if (fHaveCS) {																			; if we already have the continuation section (see entry above)
+			if (contBlk) {																		; if we have not visited getParamContSect2() yet
+				if (paramContSect := getParamContSect(contBlk, &cLParams						; use alternate routine to fill params string and array
+											, &cLParamsArr, &EOLComment)) {
+;					MsgBox "[" paramContSect "]", "CONT" ; debug								; debug
+				}
+				contBlk := ''																	; make sure we only enter getParamContSect2() once
+			}
+		}
+;		else {	; 2025-06-16 - NO LONGER USED - previous brute force to obtain continuaton section
+;			if (paramContSect := getParamContSect1(&cLParams, &cLParamsArr, &EOLComment)) {		; get param continuation section (if exists) for last param on current line
+;	;			MsgBox "[" paramContSect "]", "CONT" ; debug
+;			}
+;		}
+
+		; TODO - REWORK THESE AS PART OF CLASS OBJECT INSTEAD (OR ELIMINATE ENTIRELY) ??
 		; ONLY USED BY _msgbox()
 		cLParamsArr.Extra.OrigArr := cLParamsArr.Clone()
 		cLParamsArr.Extra.OrigStr := cLParams
@@ -1045,6 +1123,193 @@
 
 	return																						; all func parameters by reference
 }
+
+; 2025-06-16 - MODIFIED to support masking
+;	BUT... keeping here for now... pending further testing
+;;################################################################################
+;						  getParamContSect1(&cLParams, &cLParamsArr, &EOLComment)
+;;################################################################################
+;{
+;; 2025-06-12 AMB, Moved from v2_AHKCommands() to dedicated routine
+;; gets continuaton section (parentheses-block) if one exists for current command param
+;; updates param list string and array
+;; TODO - may incorporate continuation-section masking/tags at some point
+
+;	global gO_Index, gOScriptStr, gEOLComment_Cont
+
+;	; have we reached end of script?
+;	if (gOScriptStr.Length <= gO_Index)	{										; if at end of script...
+;		return ''																; ...exit, no continuation section
+;	}
+
+;	; is next line the beginning of continuation section?
+;	nextLine := Trim(gOScriptStr.GetLine(gO_Index + 1))							; grab next line
+;	if (!(nextLine ~= buildPtn_MLBlock().define)) {								; if not the start of cont section...
+;		return ''																; ...exit, no continuation section
+;	}
+
+;	; this is a continuation section...
+;	; loop thru each line until closing parenthesis is found
+;	; collect line strings, then add them to cLParams and cLParamsArr
+;	lastLineParam	:= cLParamsArr[cLParamsArr.length]							; most recent line param, prior to looking for cont section
+;	fullContSectStr	:= lastLineParam '`r`n'										; starts with command from previous line (much of the time)
+;	looped := false
+;	loop
+;	{
+;		; CAN USE A NEW INSTANCE OF SCRIPTCODE TO PREVENT ADVANCING LOOP INDEX
+;		gO_Index++, gOScriptStr.SetIndex(gO_Index)								; advance to next line (position within script array)
+;		if (gOScriptStr.Length < gO_Index) {									; if reached end of script, stop search, exit
+;			break
+;		}
+;		looped := true
+;;		curContLine	:= gOScriptStr[gO_Index]									; next line in continuation (because of gO_Index++ above)
+;		curContLine	:= gOScriptStr.GetLine(gO_Index)							; next line in continuation (because of gO_Index++ above)
+;		nlChar1		:= SubStr(Trim(curContLine),1,1)							; get first char of line (after leading ws)
+;		curContLine := removeEOLComments(curContLine, nlChar1, &EOLComment)		; remove first comment found on line
+;		gEOLComment_Cont.Push(EOLComment)										; TODO - can lead to errors, need to investigate
+
+;		FirstChar := SubStr(Trim(curContLine),1,1)								; capture "(" or ")" if on current line
+;		if (FirstChar == ')')													; if current line appears to be end of cont section
+;		{
+;;			if (RegExMatch(curContLine, '(\h+`;.*)$', &mComment)) {				; if current line has a trailing comment...
+;;				EOLComment .= ' ' mComment[1]									; ... add that comment to comment var
+;;				curContLine := RegExReplace(curContLine, '(\h+`;.*)$', '')		; then, remove comment from current line
+;;			}
+
+;			cLParams .= '`r`n' curContLine										; append current continuation line to LINE params
+;;			fullContSectStr .= curContLine '`r`n'
+
+;			; when a cont section is not the last param...
+;			;	look for trailing params that follow the
+;			;	closing parenthesis of cont section...
+;			; 	This can also continue the search for...
+;			;	addtional params and cont sections
+;			trailingParams := V1ParamSplit(curContLine)							; get any additional params that follow closing parenthesis
+
+;			lastIdx := cLParamsArr.Length										; [last array element idx]
+;			cLParamsArr[lastIdx] := fullContSectStr . trailingParams[1]			; REPLACE the last element with accumulaed contSect lines and first param from current line
+;			Loop trailingParams.Length - 1 {									; then, add the rest of trailing params from current line
+;				cLParamsArr.Push(trailingParams[A_index + 1])
+;			}
+;			break																; continuation section has concluded - EXIT
+;		}
+;		cLParams .= '`r`n' curContLine											; add the final continuation line to LINE params
+;		fullContSectStr .= curContLine '`r`n'									; add the final continuation to output string
+;	}
+;	fullContSectStr .= curContLine												; this final concat is just for output purposes (for debugging)
+
+;	if (looped)
+;	{
+;		if (gEOLComment_Cont.Length != 1) {
+;			EOLComment := ''
+;		}
+;		else {
+;			gEOLComment_Cont.Pop()
+;		}
+;	}
+
+;	return fullContSectStr														; output full continuation block
+
+;	;; for handling cLParamsArr updates externally (if desired)
+;	;	contSect := getParamContSect(...)
+;	;	nContSect := '(?s)^.+?(\s+' . gPtn_PrnthBlk . '"?\)*)(.*)$'
+;	;	if (RegExMatch(contsect, nContSect, &m)) {
+;	;		parBlk := m[1], extParams := m[4]
+;	;		cLParamsArr[cLParamsArr.length] := lastLineParam . parBlk
+;	;		if (extParams && curLineParams := V1ParamSplit(extParams)) {
+;	;			Loop curLineParams.Length {
+;	;				curParam := RTrim(curLineParams[A_index], '`r`n`t ')		; trim ws from right side
+;	;				if (trim(curParam)) {
+;	;					cLParamsArr.Push(curParam)
+;	;				}
+;	;			}
+;	;		}
+;	;	}
+;}
+
+;################################################################################
+				  getParamContSect(contBlk, &cLParams, &cLParamsArr, &EOLComment)
+;################################################################################
+{
+; 2025-06-16 AMB, UPDATED to support global masking of continuation sections
+; gets continuaton section (parentheses-block) from known source (contBlk)
+; updates param list string and array
+; TODO - the code is currently a hybrid between the old brute force method...
+;	and already having the CS data in hand (contBlk).
+;	Will redesign to remove brute-force after verifying that CS masking works well
+
+	global gO_Index, gOScriptStr
+
+	lastLineParam	:= cLParamsArr[cLParamsArr.length]							; most recent line param, prior to arriving here
+	fullContSectStr	:= lastLineParam '`r`n'										; starts with command from previous line (line1 usually)
+
+	lines := StrSplit(contBlk, '`n', '`r')										; grab lines from cont blk
+	curContLine := '', looped := false											; ini
+	for idx, line in lines
+	{
+		; TODO - might need to adjust this jump/continue in future?
+		if (idx=1)
+			continue															; skip first element
+		looped		:= true														; flag for gEOLComment_Cont[] below loop
+		curContLine	:= line														; [working var]
+		FirstChar	:= SubStr(Trim(curContLine),1,1)							; capture "(" or ")" if on current line
+		curContLine	:= removeEOLComments(curContLine, FirstChar, &EOLComment)	; remove first comment found on line
+		gEOLComment_Cont.Push(EOLComment)										; save comment for CURRENT LINE to be restored later
+
+		if (FirstChar == ')')													; if current line appears to be end of cont section
+		{
+			cLParams .= '`r`n' curContLine										; append current continuation line to LINE params
+;			fullContSectStr .= curContLine '`r`n'
+
+			; when a cont section is not the last param...
+			;	look for trailing params that follow the
+			;	closing parenthesis of cont section...
+			; 	This can also continue the search for...
+			;	addtional params and cont sections
+			trailingParams := V1ParamSplit(curContLine)							; get any additional params that follow closing parenthesis
+
+			lastIdx := cLParamsArr.Length										; [last array element idx]
+			cLParamsArr[lastIdx] := fullContSectStr . trailingParams[1]			; REPLACE the last element with accumulaed contSect lines and first param from current line
+			Loop trailingParams.Length - 1 {									; then, add the rest of trailing params from current line
+				cLParamsArr.Push(trailingParams[A_index + 1])
+			}
+			break																; continuation section has concluded - EXIT
+		}
+		cLParams .= '`r`n' curContLine											; add the final continuation line to LINE params
+		fullContSectStr .= curContLine '`r`n'									; add the final continuation to output string
+	}
+	fullContSectStr .= curContLine												; this final concat is just for output purposes (for debugging)
+
+	; gEOLComment_Cont is provided by Banaanae
+	if (looped)	; don't do this unless we entered loop above
+	{
+		if (gEOLComment_Cont.Length != 1) {
+			EOLComment := ''
+		}
+		else {
+			gEOLComment_Cont.Pop()
+		}
+	}
+	return fullContSectStr														; output full continuation block
+
+
+	;; for handling cLParamsArr updates externally (if desired)
+	;	contSect := getParamContSect(...)
+	;	nContSect := '(?s)^.+?(\s+' . gPtn_PrnthBlk . '"?\)*)(.*)$'
+	;	if (RegExMatch(contsect, nContSect, &m)) {
+	;		parBlk := m[1], extParams := m[4]
+	;		cLParamsArr[cLParamsArr.length] := lastLineParam . parBlk
+	;		if (extParams && curLineParams := V1ParamSplit(extParams)) {
+	;			Loop curLineParams.Length {
+	;				curParam := RTrim(curLineParams[A_index], '`r`n`t ')		; trim ws from right side
+	;				if (trim(curParam)) {
+	;					cLParamsArr.Push(curParam)
+	;				}
+	;			}
+	;		}
+	;	}
+}
+
 ;################################################################################
 			  executeConversion(&lineStr, &cLParamsArr, cDParamsArr, cmdV2Format)
 ;################################################################################
@@ -1138,7 +1403,10 @@
 				fRecursionReq := true															; ... recursion will be required
 			}
 			else {																				; look to see whether 'extra param' is a chained cmd...
-				fRecursionReq := FindCmdDefs(exParam1)											; reursion will be required IF it is a chained command
+				fRecursionReq := FindCmdDefs(exParam1)											; recursion will be required IF it is a chained command
+			}
+			if (fRecursionReq) {
+				extraParams := LTrim(extraParams)	; RE-ADDED 2025-06-16						; trim next param if it's actually a keyword or command
 			}
 		}
 	}
@@ -1166,93 +1434,6 @@
 
 	return extraParams
 }
-
-;################################################################################
-						   getParamContSect(&cLParams, &cLParamsArr, &EOLComment)
-;################################################################################
-{
-; 2025-06-12 AMB, Moved from v2_AHKCommands() to dedicated routine
-; gets continuaton section (parentheses-block) if one exists for current command param
-; updates param list string and array
-; TODO - may incorporate continuation-section masking/tags at some point
-
-	global gO_Index, gOScriptStr
-
-	; have we reached end of script?
-	if (gOScriptStr.Length <= gO_Index)	{										; if at end of script...
-		return ''																; ...exit, no continuation section
-	}
-
-	; is next line the beginning of continuation section?
-	nextLine := Trim(gOScriptStr.GetLine(gO_Index + 1))							; grab next line
-	if (!(nextLine ~= buildPtn_MLBlock().define)) {								; if not the start of cont section...
-		return ''																; ...exit, no continuation section
-	}
-
-	; this is a continuation section...
-	; loop thru each line until closing parenthesis is found
-	; collect line strings, then add them to cLParams and cLParamsArr
-	lastLineParam	:= cLParamsArr[cLParamsArr.length]							; most recent line param, prior to looking for cont section
-	fullContSectStr	:= lastLineParam '`r`n'										; starts with command from previous line (much of the time)
-	loop
-	{
-		; CAN USE A NEW INSTANCE OF SCRIPTCODE TO PREVENT ADVANCING LOOP INDEX
-		gO_Index++, gOScriptStr.SetIndex(gO_Index)								; advance to next line (position within script array)
-		if (gOScriptStr.Length < gO_Index) {									; if reached end of script, stop search, exit
-			break
-		}
-;		curContLine	:= gOScriptStr[gO_Index]									; next line in continuation (because of gO_Index++ above)
-		curContLine	:= gOScriptStr.GetLine(gO_Index)							; next line in continuation (because of gO_Index++ above)
-
-		FirstChar := SubStr(Trim(curContLine),1,1)								; capture "(" or ")" if on current line
-		if (FirstChar == ')')													; if current line appears to be end of cont section
-		{
-			if (RegExMatch(curContLine, '(\h+`;.*)$', &mComment)) {				; if current line has a trailing comment...
-				EOLComment .= ' ' mComment[1]									; ... add that comment to comment var
-				curContLine := RegExReplace(curContLine, '(\h+`;.*)$', '')		; then, remove comment from current line
-			}
-
-			cLParams .= '`r`n' curContLine										; append current continuation line to LINE params
-;			fullContSectStr .= curContLine '`r`n'
-
-			; when a cont section is not the last param...
-			;	look for trailing params that follow the
-			;	closing parenthesis of cont section...
-			; 	This can also continue the search for...
-			;	addtional params and cont sections
-			trailingParams := V1ParamSplit(curContLine)							; get any additional params that follow closing parenthesis
-
-			lastIdx := cLParamsArr.Length										; [last array element idx]
-			cLParamsArr[lastIdx] := fullContSectStr . trailingParams[1]			; REPLACE the last element with accumulaed contSect lines and first param from current line
-			Loop trailingParams.Length - 1 {									; then, add the rest of trailing params from current line
-				cLParamsArr.Push(trailingParams[A_index + 1])
-			}
-			break																; continuation section has concluded - EXIT
-		}
-		cLParams .= '`r`n' curContLine											; add the final continuation line to LINE params
-		fullContSectStr .= curContLine '`r`n'									; add the final continuation to output string
-	}
-	fullContSectStr .= curContLine												; this final concat is just for output purposes (for debugging)
-
-	return fullContSectStr														; output full continuation block
-
-	;; for handling cLParamsArr updates externally (if desired)
-	;	contSect := getParamContSect(...)
-	;	nContSect := '(?s)^.+?(\s+' . gPtn_PrnthBlk . '"?\)*)(.*)$'
-	;	if (RegExMatch(contsect, nContSect, &m)) {
-	;		parBlk := m[1], extParams := m[4]
-	;		cLParamsArr[cLParamsArr.length] := lastLineParam . parBlk
-	;		if (extParams && curLineParams := V1ParamSplit(extParams)) {
-	;			Loop curLineParams.Length {
-	;				curParam := RTrim(curLineParams[A_index], '`r`n`t ')		; trim ws from right side
-	;				if (trim(curParam)) {
-	;					cLParamsArr.Push(curParam)
-	;				}
-	;			}
-	;		}
-	;	}
-}
-
 ;################################################################################
 Class V1LineToProcess
 {

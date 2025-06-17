@@ -18,6 +18,7 @@ global   gFilePath   := ''              ; TEMP, for testing
 #Include Convert/MaskCode.ahk           ; 2024-06-26 ADDED AMB (masking support)
 #Include Convert/ConvLoopFuncs.ahk      ; 2025-06-12 ADDED AMB (separated loop code)
 #Include Convert/Conversion_CLS.ahk     ; 2025-06-12 ADDED AMB (future support of Class version)
+#Include Convert/ConvContSect.ahk       ; 2025-06-16 ADDED AMB (for support dedicated to continuation sections)
 
 
 ;################################################################################
@@ -70,6 +71,7 @@ Before_LineConverts(&code)
       ; this masking also performs masking found in Mask_PreMask (all strings and comments)
       Mask_V1LegMLSV(&code)                             ; mask v1 legacy multi-line var string assignments
       Mask_MLSExpAssign(&code)                          ; 2025-06-12 AMB, ADDED
+      Mask_LineAndContSect(&code)                       ; 2025-06-16 AMB, ADDED
 
       ; convert and mask classes and functions
       Mask_Blocks(&code)                                ; see MaskCode.ahk
@@ -277,7 +279,9 @@ FinalizeConvert(&code)
    addMenuCBArgs(&code)                 ; 2024-06-26, AMB - Fix #131
    addOnMessageCBArgs(&code)            ; 2024-06-28, AMB - Fix #136
 
-   Restore_MLSExpAssign(&code)          ; 2025-06-12, AMB
+   Restore_LineAndContSect(&code)       ; 2025-06-16 - converts prior to restore
+   Restore_MLSExpAssign(&code)          ; 2025-06-12 - converts prior to restore
+;   Restore_PreMask(&code)
 
    return   ; code by reference
 }
@@ -2632,43 +2636,6 @@ _HashtagWarn(p) {
    Return Out
 }
 ;################################################################################
-Convert_GetContSect() {
-; 2025-06-12 AMB, UPDATED - gOScriptStr is now an object
-   ; Go further in the lines to get the next continuation section
-   global gOScriptStr   ; array of all the lines
-   global gO_Index   ; current index of the lines
-
-   result := ""
-
-   loop {
-      gO_Index++
-      gOScriptStr.SetIndex(gO_Index)
-      if (gOScriptStr.Length < gO_Index) {
-;      if (!gOScriptStr.HasNext) {
-         break
-      }
-;      LineContSect := gOScriptStr[gO_Index]
-      LineContSect := gOScriptStr.GetLine(gO_Index)
-      FirstChar := SubStr(Trim(LineContSect), 1, 1)
-      if ((A_index = 1)
-         && (FirstChar != "("
-         || !RegExMatch(LineContSect, "i)^\s*\((?:\s*(?(?<=\s)(?!;)|(?<=\())(\bJoin\S*|[^\s)]+))*(?<!:)(?:\s+;.*)?$"))) {
-         ; no continuation section found
-         gO_Index--
-         gOScriptStr.SetIndex(gO_Index)
-         return ""
-      }
-      if (FirstChar == ")") {
-         result .= LineContSect
-         break
-      }
-      result .= LineContSect "`r`n"
-   }
-   DebugWindow("contsect:" result "`r`n", Clear := 0)
-
-   return "`r`n" result
-}
-;################################################################################
 ; Checks if IfMsgBox is used in the next lines
 Check_IfMsgBox() {
    ; Go further in the lines to get the next continuation section
@@ -3874,13 +3841,13 @@ removeEOLComments(Line, FirstChar, &EOLComment) {
 ; 2025-05-24 Banaanae, ADDED for fix #296
 ; 2025-06-12 AMB, UPDATED - to capture far-left line comment, rather than trailing (far right) occurence
 
-   nL2RComment := '^([^;\v]+?)(\h+`;.*)$'             ; far left occurence needle
+   nL2RComment := '^([^;\v]+?)(\h+`;.*)$'               ; far left occurence
 
    if (FirstChar = ';') {
       EOLComment    := Line
       Line          := ''
    }
-   else if (RegExMatch(Line, nL2RComment, &mL2R)) {   ; capture FIRST (far left) occurence of comment
+   else if (RegExMatch(Line, nL2RComment, &mL2R)) {     ; capture FIRST (far left) occurence of comment
       line          := mL2R[1]
       EOLComment    := mL2R[2]
    }
@@ -3978,3 +3945,41 @@ Class ScriptCode
       this._lineArr := StrSplit(this._origStr, '`n', '`r')
    }
 }
+
+;;################################################################################
+;Convert_GetContSect() {
+;; 2025-06-12 AMB, UPDATED - gOScriptStr is now an object
+;   ; Go further in the lines to get the next continuation section
+;   global gOScriptStr   ; array of all the lines
+;   global gO_Index   ; current index of the lines
+
+;   result := ""
+
+;   loop {
+;      gO_Index++
+;      gOScriptStr.SetIndex(gO_Index)
+;      if (gOScriptStr.Length < gO_Index) {
+;;      if (!gOScriptStr.HasNext) {
+;         break
+;      }
+;;      LineContSect := gOScriptStr[gO_Index]
+;      LineContSect := gOScriptStr.GetLine(gO_Index)
+;      FirstChar := SubStr(Trim(LineContSect), 1, 1)
+;      if ((A_index = 1)
+;         && (FirstChar != "("
+;         || !RegExMatch(LineContSect, "i)^\s*\((?:\s*(?(?<=\s)(?!;)|(?<=\())(\bJoin\S*|[^\s)]+))*(?<!:)(?:\s+;.*)?$"))) {
+;         ; no continuation section found
+;         gO_Index--
+;         gOScriptStr.SetIndex(gO_Index)
+;         return ""
+;      }
+;      if (FirstChar == ")") {
+;         result .= LineContSect
+;         break
+;      }
+;      result .= LineContSect "`r`n"
+;   }
+;   DebugWindow("contsect:" result "`r`n", Clear := 0)
+
+;   return "`r`n" result
+;}

@@ -7,7 +7,7 @@
 ; then the wb control will load temp.html
 params := getArgs()
 
-if (params[1] > 0) {     ; if command line args are passed
+if (params[1] > 0) {	; if command line args are passed
 	SplitPath(params[2], &file1name)
 	SplitPath(params[3], &file2name)
 	srcFilePath	:= params[1]	; 2024-07-01 ADDED, AMB
@@ -66,41 +66,41 @@ A_WDay A_WinDir A_WorkingDir A_YDay A_YWeek A_YYYY
 ;TODO SysGetIPAddresses
 ENUM_FUNCTIONS := "
 (
-Abs ASin ACos ATan BlockInput Buffer CallbackCreate CallbackFree CaretGetPos 
-Ceil Chr Click ClipboardAll ClipWait ComCall ComObjActive ComObjArray ComObjConnect ComObject 
-ComObjFlags ComObjFromPtr ComObjGet ComObjQuery ComObjType ComObjValue ComValue ControlAddItem ControlChooseIndex 
-ControlChooseString ControlClick ControlDeleteItem ControlFindItem ControlFocus ControlGetChecked ControlGetChoice ControlGetClassNN ControlGetEnabled ControlGetFocus 
-ControlGetHwnd ControlGetIndex ControlGetItems ControlGetPos ControlGetStyle ControlGetExStyle ControlGetText ControlGetVisible ControlHide ControlHideDropDown 
-ControlMove ControlSend ControlSendText ControlSetChecked ControlSetEnabled ControlSetStyle ControlSetExStyle ControlSetText ControlShow ControlShowDropDown 
-CoordMode Cos Critical DateAdd DateDiff DetectHiddenText DetectHiddenWindows DirCopy DirCreate DirDelete 
-DirExist DirMove DirSelect DllCall Download DriveEject DriveGetCapacity DriveGetFileSystem DriveGetLabel DriveGetList 
-DriveGetSerial DriveGetSpaceFree DriveGetStatus DriveGetStatusCD DriveGetType DriveLock DriveRetract DriveSetLabel DriveUnlock Edit 
-EditGetCurrentCol EditGetCurrentLine EditGetLine EditGetLineCount EditGetSelectedText EditPaste EnvGet EnvSet Exit 
-ExitApp Exp FileAppend FileCopy FileCreateShortcut FileDelete FileEncoding FileExist FileInstall FileGetAttrib 
-FileGetShortcut FileGetSize FileGetTime FileGetVersion FileMove FileOpen FileRead FileRecycle FileRecycleEmpty FileSelect 
-FileSetAttrib FileSetTime Float Floor Format FormatTime GetKeyName GetKeyVK 
-GetKeySC GetKeyState GetMethod GroupActivate GroupAdd GroupClose GroupDeactivate Gui GuiCtrlFromHwnd 
-GuiFromHwnd HasBase HasMethod HasProp Hotkey Hotstring IL_Create IL_Add IL_Destroy 
-ImageSearch IniDelete IniRead IniWrite InputBox InputHook InstallKeybdHook InstallMouseHook InStr Integer 
-IsLabel IsObject IsSetRef KeyHistory KeyWait ListHotkeys ListLines ListVars ListViewGetContent 
-LoadPicture Log Ln Loop Map Max MenuBar Menu MenuFromHandle MenuSelect 
-Min Mod MonitorGet MonitorGetCount MonitorGetName MonitorGetPrimary MonitorGetWorkArea MouseClick MouseClickDrag MouseGetPos 
-MouseMove MsgBox Number NumGet NumPut ObjAddRef ObjRelease ObjBindMethod ObjHasOwnProp ObjOwnProps 
-ObjGetBase ObjGetCapacity ObjOwnPropCount ObjSetBase ObjSetCapacity OnClipboardChange OnError 
-OnExit OnMessage Ord OutputDebug Pause Persistent PixelGetColor PixelSearch PostMessage ProcessClose 
-ProcessExist ProcessGetName ProcessGetParent ProcessGetPath ProcessSetPriority ProcessWait ProcessWaitClose Random RegExMatch RegExReplace 
-RegCreateKey RegDelete RegDeleteKey RegRead RegWrite Reload Round Run RunAs 
-RunWait Send SendText SendInput SendPlay SendEvent SendLevel SendMessage SendMode SetCapsLockState 
-SetControlDelay SetDefaultMouseSpeed SetKeyDelay SetMouseDelay SetNumLockState SetScrollLockState SetRegView SetStoreCapsLockMode SetTimer SetTitleMatchMode 
-SetWinDelay SetWorkingDir Shutdown Sin Sleep Sort SoundBeep SoundGetInterface SoundGetMute SoundGetName 
-SoundGetVolume SoundPlay SoundSetMute SoundSetVolume SplitPath Sqrt StatusBarGetText StatusBarWait StrCompare StrGet 
-String StrLen StrLower StrPtr StrPut StrReplace StrSplit StrTitle StrUpper SubStr 
-Suspend SysGet SysGetIPAddresses Tan Thread ToolTip TraySetIcon TrayTip 
-Trim LTrim RTrim Type VarSetStrCapacity VerCompare WinActivate WinActivateBottom 
-WinActive WinClose WinExist WinGetClass WinGetClientPos WinGetControls WinGetControlsHwnd WinGetCount 
-WinGetID WinGetIDLast WinGetList WinGetMinMax WinGetPID WinGetPos WinGetProcessName WinGetProcessPath WinGetStyle WinGetExStyle 
-WinGetText WinGetTitle WinGetTransColor WinGetTransparent WinHide WinKill WinMaximize WinMinimize WinMinimizeAll WinMinimizeAllUndo 
-WinMove WinMoveBottom WinMoveTop WinRedraw WinRestore WinSetAlwaysOnTop WinSetEnabled WinSetRegion WinSetStyle WinSetExStyle 
+Abs ASin ACos ATan BlockInput Buffer CallbackCreate CallbackFree CaretGetPos
+Ceil Chr Click ClipboardAll ClipWait ComCall ComObjActive ComObjArray ComObjConnect ComObject
+ComObjFlags ComObjFromPtr ComObjGet ComObjQuery ComObjType ComObjValue ComValue ControlAddItem ControlChooseIndex
+ControlChooseString ControlClick ControlDeleteItem ControlFindItem ControlFocus ControlGetChecked ControlGetChoice ControlGetClassNN ControlGetEnabled ControlGetFocus
+ControlGetHwnd ControlGetIndex ControlGetItems ControlGetPos ControlGetStyle ControlGetExStyle ControlGetText ControlGetVisible ControlHide ControlHideDropDown
+ControlMove ControlSend ControlSendText ControlSetChecked ControlSetEnabled ControlSetStyle ControlSetExStyle ControlSetText ControlShow ControlShowDropDown
+CoordMode Cos Critical DateAdd DateDiff DetectHiddenText DetectHiddenWindows DirCopy DirCreate DirDelete
+DirExist DirMove DirSelect DllCall Download DriveEject DriveGetCapacity DriveGetFileSystem DriveGetLabel DriveGetList
+DriveGetSerial DriveGetSpaceFree DriveGetStatus DriveGetStatusCD DriveGetType DriveLock DriveRetract DriveSetLabel DriveUnlock Edit
+EditGetCurrentCol EditGetCurrentLine EditGetLine EditGetLineCount EditGetSelectedText EditPaste EnvGet EnvSet Exit
+ExitApp Exp FileAppend FileCopy FileCreateShortcut FileDelete FileEncoding FileExist FileInstall FileGetAttrib
+FileGetShortcut FileGetSize FileGetTime FileGetVersion FileMove FileOpen FileRead FileRecycle FileRecycleEmpty FileSelect
+FileSetAttrib FileSetTime Float Floor Format FormatTime GetKeyName GetKeyVK
+GetKeySC GetKeyState GetMethod GroupActivate GroupAdd GroupClose GroupDeactivate Gui GuiCtrlFromHwnd
+GuiFromHwnd HasBase HasMethod HasProp Hotkey Hotstring IL_Create IL_Add IL_Destroy
+ImageSearch IniDelete IniRead IniWrite InputBox InputHook InstallKeybdHook InstallMouseHook InStr Integer
+IsLabel IsObject IsSetRef KeyHistory KeyWait ListHotkeys ListLines ListVars ListViewGetContent
+LoadPicture Log Ln Loop Map Max MenuBar Menu MenuFromHandle MenuSelect
+Min Mod MonitorGet MonitorGetCount MonitorGetName MonitorGetPrimary MonitorGetWorkArea MouseClick MouseClickDrag MouseGetPos
+MouseMove MsgBox Number NumGet NumPut ObjAddRef ObjRelease ObjBindMethod ObjHasOwnProp ObjOwnProps
+ObjGetBase ObjGetCapacity ObjOwnPropCount ObjSetBase ObjSetCapacity OnClipboardChange OnError
+OnExit OnMessage Ord OutputDebug Pause Persistent PixelGetColor PixelSearch PostMessage ProcessClose
+ProcessExist ProcessGetName ProcessGetParent ProcessGetPath ProcessSetPriority ProcessWait ProcessWaitClose Random RegExMatch RegExReplace
+RegCreateKey RegDelete RegDeleteKey RegRead RegWrite Reload Round Run RunAs
+RunWait Send SendText SendInput SendPlay SendEvent SendLevel SendMessage SendMode SetCapsLockState
+SetControlDelay SetDefaultMouseSpeed SetKeyDelay SetMouseDelay SetNumLockState SetScrollLockState SetRegView SetStoreCapsLockMode SetTimer SetTitleMatchMode
+SetWinDelay SetWorkingDir Shutdown Sin Sleep Sort SoundBeep SoundGetInterface SoundGetMute SoundGetName
+SoundGetVolume SoundPlay SoundSetMute SoundSetVolume SplitPath Sqrt StatusBarGetText StatusBarWait StrCompare StrGet
+String StrLen StrLower StrPtr StrPut StrReplace StrSplit StrTitle StrUpper SubStr
+Suspend SysGet SysGetIPAddresses Tan Thread ToolTip TraySetIcon TrayTip
+Trim LTrim RTrim Type VarSetStrCapacity VerCompare WinActivate WinActivateBottom
+WinActive WinClose WinExist WinGetClass WinGetClientPos WinGetControls WinGetControlsHwnd WinGetCount
+WinGetID WinGetIDLast WinGetList WinGetMinMax WinGetPID WinGetPos WinGetProcessName WinGetProcessPath WinGetStyle WinGetExStyle
+WinGetText WinGetTitle WinGetTransColor WinGetTransparent WinHide WinKill WinMaximize WinMinimize WinMinimizeAll WinMinimizeAllUndo
+WinMove WinMoveBottom WinMoveTop WinRedraw WinRestore WinSetAlwaysOnTop WinSetEnabled WinSetRegion WinSetStyle WinSetExStyle
 WinSetTitle WinSetTransColor WinSetTransparent WinShow WinWait WinWaitActive WinWaitNotActive WinWaitClose Require
 )"
 
@@ -120,8 +120,10 @@ HKEY_CLASSES_ROOT,HKCR
 HKEY_CURRENT_CONFIG,HKCC
 )"
 
-WIDTH := 800
-HEIGHT := 600
+w		:= floor(A_ScreenWidth  * (96/A_ScreenDPI)) - 100
+h		:= floor(A_ScreenHeight * (96/A_ScreenDPI)) - 100
+WIDTH	:= w	;800
+HEIGHT	:= h 	;600
 
 ; __________________________________________________________________________________________________
 ; Global variables
@@ -177,7 +179,7 @@ if (false) { ; TODO: implement the "#UseExoScope" directive
 } else {
 	scope := "window"
 }
-exoHelper .= 
+exoHelper .=
 (
 "	var __ExoHelper = {
 		Object: function() {
@@ -190,8 +192,8 @@ exoHelper .=
 		Array: function() {
 			return Array.prototype.slice.call(arguments);
 		},
-		
-		
+
+
 		registerFunction: function(name, func) {
 			" scope "[name] = func;
 		},
@@ -300,10 +302,10 @@ getBuiltInVar(name){
  * Wrapper for SKAN's function (see below)
  */
 getArgs(){
-	CmdLine := DllCall( "GetCommandLine", "Str" )
-	CmdLine := RegExReplace(CmdLine, " /ErrorStdOut", "")
-	Skip    := ( A_IsCompiled ? 1 : 2 )
-	argv    := Args( CmdLine, Skip )
+	CmdLine	:= DllCall( "GetCommandLine", "Str" )
+	CmdLine	:= RegExReplace(CmdLine, " /ErrorStdOut", "")
+	Skip	:= ( A_IsCompiled ? 1 : 2 )
+	argv	:= Args( CmdLine, Skip )
 	return argv
 }
 
@@ -311,19 +313,19 @@ getArgs(){
 /**
  * By SKAN,  http://goo.gl/JfMNpN,  CD:23/Aug/2014 | MD:24/Aug/2014
  */
-Args( CmdLine := "", Skip := 0 ) {    
+Args( CmdLine := "", Skip := 0 ) {
 	Local pArgs := 0, nArgs := 0, A := []
 	pArgs := DllCall("Shell32\CommandLineToArgvW", "WStr", CmdLine, "PtrP", &nArgs, "Ptr")
 	Loop ( nArgs )
 		If ( A_Index > Skip )
-			A.Push(StrGet( NumGet(( A_Index - 1 ) * A_PtrSize + pArgs, "UPtr"), "UTF-16")) 
+			A.Push(StrGet( NumGet(( A_Index - 1 ) * A_PtrSize + pArgs, "UPtr"), "UTF-16"))
 	A.InsertAt(1, nArgs - Skip)
 	Return A
 }
 
 
 /**
- * 
+ *
  */
 trigger(key, args*){
 	try closure := closures[key]

@@ -1,4 +1,53 @@
 
+is_arr := { (tree): 1 }
+
+key:={ 0 : 0 ,_0x00: "Icon", 500:"5 hundred"}
+
+Static Views := {_0x00: "Icon", _0x01: "Report", _0x02: "IconSmall", _0x03: "List", _0x04: "Tile"}
+
+return this.str({""_INVALID_KEYNAME: param_value}, "")		; missing object property
+
+strangeKeynames := { (weirdkn): "weird kn", anotherone: "another", [s u p e r "s t r @ n g 3"]_INVALID_KEYNAME: "super-strange"}
+
+;################################################################################
+
+HelpText:=
+(join`r`n
+"This program allows you to load a CSV file (any delimited file)
+and use various search criteria to filter the listview.
+You can export the results to a new file.
+The regular expression search is case sensitive and should be a
+Perl-compatible regular expression (PCRE, www.pcre.org)
+Note: an entire row of the CSV is searched at once and not
+on a cell by cell basis to provide faster search results.
+
+" CmdlineOpt "
+
+Press enter: Show row data in a message box
+Press ctrl-c: Copy row data to clipboard
+
+" helpforum
+)
+MsgBox(HelpText, helptitle, 32)
+
+;################################################################################
+
+HelpText:=
+(join`r`n
+"Select a file and set the delimiter and press OK
+
+If you want to change the columns that will be visible in
+the listview and/or the order, enter a comma separated list:
+1,4,8 will only show columns 1 4 and 8 in your listview
+3,2,1 will show the columns in that order
+The export function will use this order as well.
+If you use columns that don't exist they show up empty.
+
+" helpforum
+)
+MsgBox(HelpText, helptitle, 32)
+
+
 ;################################################################################
 
 	gSite_BibleHub := {url: "https://biblehub.com/audio/chapter/{book}/{chapter}.htm", genesis: "genesis", exodus: "exodus", leviticus: "leviticus", numbers: "numbers", deuteronomy: "deuteronomy", joshua: "joshua", judges: "judges", ruth: "ruth", _1samuel: "1_samuel", _2samuel: "2_samuel", _1kings: "1_kings", _2kings: "2_kings", _1chronicles: "1_chronicles", _2chronicles: "2_chronicles", ezra: "ezra", nehemiah: "nehemiah", esther: "esther", job: "job", psalms: "psalms", proverbs: "proverbs", ecclesiastes: "ecclesiastes", songofsolomon: "songs", isaiah: "isaiah", jeremiah: "jeremiah", lamentations: "lamentations", ezekiel: "ezekiel", daniel: "daniel", hosea: "hosea", joel: "joel", amos: "amos", obadiah: "obadiah", jonah: "jonah", micah: "micah", nahum: "nahum", habakkuk: "habakkuk", zephaniah: "zephaniah", haggai: "haggai", zechariah: "zechariah", malachi: "malachi", matthew: "matthew", mark: "mark", luke: "luke", john: "john", acts: "acts", romans: "romans", _1corinthians: "1_corinthians", _2corinthians: "2_corinthians", galatians: "galatians", ephesians: "ephesians", philippians: "philippians", colossians: "colossians", _1thessalonians: "1_thessalonians", _2thessalonians: "2_thessalonians", _1timothy: "1_timothy", _2timothy: "2_timothy", titus: "titus", philemon: "philemon", hebrews: "hebrews", james: "james", _1peter: "1_peter", _2peter: "2_peter", _1john: "1_john", _2john: "2_john", _3john: "3_john", jude: "jude", revelation: "revelation"}

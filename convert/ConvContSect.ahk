@@ -88,15 +88,21 @@
 
 class CSect
 {
-	static MLLineCont		:= '(?im)(?<line1>.++)' . buildPtn_MLBlock().Full
-	static cmdVar			:= '(?im)^([\h\w]+?)'											; command/var portion of line1
-	static tag				:= '(?<tag>\h*+#TAG★(?:LC|BC|QS)\w++★#)*+'						; optional tag on line 1 (comments or quoted-string ONLY!)
-	; Line1 configurations
-	static nLegacyAssign	:= CSect.cmdVar . '='					. CSect.tag . '$'		; [var/cmd =]
-	static nLegAssignVar	:= CSect.cmdVar . '=\h*+%\w++%'			. CSect.tag . '$'		; [var = %var%] (CAN BE CONVERTED TO [var .= ])
-	static nExpAssignQS1	:= CSect.cmdVar . '[.:]=\h*+"?'			. CSect.tag . '$'		; [var/cmd :=] or [var/cmd .= "]
-	static nExpAssignQS2	:= CSect.cmdVar . '[:]=\h*+\w+\h*"?'	. CSect.tag . '$'		; [var := var] or [var := "] (CAN BE COVERTED TO [var .= "])
-	static nCmdComma		:= CSect.cmdVar . ',?' 					. CSect.tag . '$'		; [cmd] or [cmd,]
+	static MLLineCont		:= '(?i)(?<head>.++)' . buildPtn_MLBlock().FullT		; head (cmd line) + body (block) + optional trailer
+	static cmdVar			:= '(?i)^([\h\w]+?)'									; command/var portion of head
+	static tag				:= '(?<tag1>(?:\h*+#TAG★(?:LC|BC|QS)\w++★#)*+)'		; optional tag on head line (comments or quoted-string ONLY!)
+
+	; head configurations
+	static nLegacyAssign	:= CSect.cmdVar . '='									. CSect.tag ; . '$'		; [var/cmd =]
+	static nLegAssignVar	:= CSect.cmdVar . '=(\h*+)%(\w++)%'						. CSect.tag ; . '$'		; [var = %var%] (MAY BE CONVERTED TO [var .= ])
+	static nExpAssignQS1	:= CSect.cmdVar . '([.:]=)(\h*%)?(\h*")?'				. CSect.tag ; . '$'		; [var/cmd :=] or [var/cmd .= "]
+	static nExpAssignQS2	:= CSect.cmdVar . '[:]=\h*+\w+\h*"?'					. CSect.tag ; . '$'		; [var := var] or [var := "] (CAN BE COVERTED TO [var .= "])
+	static nCmdPlus			:= CSect.cmdVar . '(\h*[,%]?)?(\h*")?' 					. CSect.tag ; . '$'		; [cmd] or [cmd,]
+	static nFCall			:= '(?i)^'		. '(?:\h*%)?(\h*[a-z]\w*\()(\h*"?)?'	. CSect.tag ; . '$'		; [cmd] or [cmd,]
+	static nLegExp			:= '(?i)^'		. '(\h*[,%]?)?(\h*")?'					. CSect.tag ; . '$'		; [cmd] or [cmd,]
+
+	; TODO - ADD SUPPORT FOR 'Command,' (as needed)
+
 
 	needle := ''
 
@@ -114,269 +120,265 @@ class CSect
 	{
 		; TODO - ADD SUPPORT FOR MORE SECTION TYPES, AS NEEDED
 
-		; if srcStr is a full section, including the...
-		;	... line leading into the cont block (and possibly the trailer)...
-		if (RegExMatch(srcStr, CSect.MLLineCont, &mML)) {							; if is [line + contSect + trailer]...
-			return (convert) ? CSect._conv_MLLineCont(srcStr) : true				; ... return converted block if requested, true otherwise
+		if (!(srcStr ~= '(?im)' . buildPtn_MLBlock().ParBlk)) {						; if does not have a parentheses block...
+			return false															; ... return negatory!
 		}
-;		; OR... if is full cont section without leading line
-;		else if (RegExMatch(srcStr, buildPtn_MLBlock().Full, &mML)) {
-;			return (convert) ? conv_ContFullBlk(srcStr) : true						; return converted block if requested, true otherwise
-;		}
-		; OR... if is just cont blk (...)
-		else if (RegExMatch(srcStr, '(?im)' . buildPtn_MLBlock().ParBlk, &mML)) {
-			return (convert) ? conv_ContParBlk(srcStr) : true						; return converted block if requested, true otherwise
+		if (!convert) {																; if no conversion requested
+			return true																; ... simply flag as continuation block
+		}
+		; conversion requested
+
+		; if srcStr is a full section, including the...
+		;	... head (cmd line), neck, body (block), and optional trailer...
+		if (RegExMatch(srcStr, CSect.MLLineCont, &mML)) {							; if is [head + body + optional trailer]...
+			return CSect.FilterAndConvert(srcStr)									; ... return converted block
+		}
+
+		; default behavior (for now)
+		; looks like srcStr is just the block ?
+		return conv_ContParBlk(srcStr)												; otherwise... return converted block
+	}
+
+
+	; Public - 2025-06-16 AMB, UPDATED
+	; Determines whether code is a continuation section...
+	;	if so... routes code to appropriate conversion routine
+	;		then returns converted code
+	;	if not... returns false
+	static FilterAndConvert(code)
+	{
+		Mask_PreMask(&code, false)													; false - do not mask multi-line strings!
+
+		if (!RegExMatch(code, CSect.MLLineCont, &mCS)) {							; if does not match profile (head + body + optional trailer)
+			return false															; ... return negatory!
+		}
+		; code is a properly formatted continuation section
+		; route code to proper function for conversion
+
+		if (mCS.head ~= CSect.nLegacyAssign			. '$')	{
+;			return CSect._conv_LegacyAssign(&code)				; [var/cmd =]
+		}
+		else if	(mCS.head ~= CSect.nLegAssignVar	. '$')	{
+			return CSect._conv_LegAssignVar(code)				; [var = %var%]
+		}
+		else if	(mCS.head ~= CSect.nExpAssignQS1	. '$')	{
+			return CSect._conv_ExpAssignQS1(code)				; [var/cmd := %? "?]
+		}
+		else if	(mCS.head ~= CSect.nExpAssignQS2	. '$')	{
+;			return CSect._conv_ExpAssignQS2(code)				; [var := var] or [var := "]
+		}
+		else if	(mCS.head ~= CSect.nCmdPlus			. '$')	{
+;			return 	CSect._conv_CmdComma(code)					; [cmd] or [cmd,]
+		}
+		else if	(mCS.head ~= CSect.nFCall			. '$')	{
+			return 	CSect._conv_FCall(code)						; [ %? funcCall("? ]
+		}
+		else if	(mCS.head ~= CSect.nLegExp			. '$')	{	; CAN CATCH FALSE POSITIVES
+			return 	CSect._conv_LegExp(code)					; [,? %? "?]
 		}
 		else {
-;			if (srcStr ~= '\R') {
-;				MsgBox "[" "no contSect match" "]`n`n" srcStr						; DEBUGGING
-;			}
-			return false     														; srcStr does NOT have continuation section
+			msg := '`n`nPATTERN NOT FOUND`n' gFilePath "`n" mCS.head
+;			MsgBox msg
+			head .= msg
+			return code
 		}
 	}
 
 
-;	static FilterAndConvert(&code)
+;	; Public - 2025-06-16 AMB, UPDATED - NOT USED FOR NOW
+;	static _conv_MLLineCont(code)
 ;	{
-;		if (!RegExMatch(code, CSect.MLLineCont, &mCS))
+;		; verify code matches pattern
+;		nML := CSect.MLLineCont
+;		if (!RegExMatch(code, nML, &mML)) {
 ;			return false
-
-;		; code is a CS
-;		; return the appropriate func to handle the specific CS block
-;		if		(mCS.line1 ~= CSect.nLegacyAssign)	{
-;				; [var/cmd =]
-;				CSect._conv_LegacyAssign(&code)
-;				return true
-;;				return "_conv_LegacyAssign"
 ;		}
-;		else if	(mCS.line1 ~= CSect.nLegAssignVar)	{
-;				; [var = %var%] (CAN BE COVERTED TO [var .= ])
-;				CSect._conv_LegAssignVar(&code)
-;				return true
-;;				return "_conv_LegAssignVar"
-;		}
-;		else if	(mCS.line1 ~= CSect.nExpAssignQS1)	{
-;				; [var/cmd :=] or [var/cmd .= "]
-;				CSect._conv_ExpAssignQS1(&code)
-;				return true
-;;				return "_conv_ExpAssignQS1"
-;		}
-;		else if	(mCS.line1 ~= CSect.nExpAssignQS2)	{
-;				; [var := var] or [var := "] (CAN BE COVERTED TO [var .= "])
-;				CSect._conv_ExpAssignQS2(&code)
-;				return true
-;;				return "_conv_ExpAssignQS2"
-;		}
-;		else if	(mCS.line1 ~= CSect.nCmdComma)		{
-;				; [cmd] or [cmd,]
-;				CSect._conv_CmdComma(&code)
-;				return true
-;;				return "_conv_CmdComma"
-;		}
-;		else {
-;				line1 .= '`n`nPATTERN NOT FOUND`n' gFilePath "`n" mCS.Line1
-;				return false
-;		}
-
-;;		; identify CS block type
-;;		if (convFunc := CSect.IdentifyCS(&code))
-;;		{
-;;			CSect.%convFunc%(&code)
-;;		}
-;;		; pass code to appropriate conversion func
-;;		; return code via reference
+;		head		:= mML.head												; cmd line
+;		head		:= RegExReplace(head, '^\h*%\h')						; remove ' % ' from head line
+;		head		:= RegExReplace(head, '^([^"]*?)"(\h*)$', '$1$2')		; remove [optional] " at end of head line
+;		neck		:= mML.neck												; portion between head and opening body '('
+;		body		:= conv_ContParBlk(mML.parBlk)							; parentheses block '(...)' - converted
+;		trail		:= RegExReplace(mML.trail, '^"')						; remove any [optional] trailing DQ following ')"'
+;		outStr		:= head . neck . body . trail							; assemble output string
+;		Restore_Premask(&outStr)											; make sure strings and comments have been restored
+;		return 		outStr													; return converted output
 ;	}
 
-	static _conv_MLLineCont(code)
+
+	; Public - 2025-06-16 AMB, UPDATED
+	; head	->	var/cmd :=  %? "?
+	; body	->	(...)"?
+	static _conv_ExpAssignQS1(code)
 	{
-		; TODO - ADD SUPPORT FOR 'Command,' (as needed)
-
 		; verify code matches pattern
-		if (!RegExMatch(code, CSect.MLLineCont, &mML)) {					; if code does not match CS pattern...
-			return false													; ... return negatory!
+		nML := CSect.nExpAssignQS1 . buildPtn_MLBlock().FullT
+		if (!RegExMatch(code, nML, &mML)) {
+			return false
 		}
-
-		line1		:= mML.line1											; line leading into cont section
-;		oLine1		:= line1												; save original line1
-		line1		:= RegExReplace(line1, '^\h*%\h')						; remove ' % ' from line1
-		line1		:= RegExReplace(line1, '^([^"]*?)"(\h*)$', '$1$2')		; remove (optional) " at end of line1
-		entry		:= mML.entry											; [part between line1 and opening '(']
-		trail		:= mML.trail											; [part following closing ')' (additional params?)]
-;		oTrail		:= trail												; save original trailing-code
-		trail		:= RegExReplace(trail, '^"')							; remove any (optional) trailing DQ following ')"'
-		pBlk		:= mML.parBlk											; parentheses block '(...)'
-;		oBlk		:= pBlk													; save original pBlk
-		pBlk		:= conv_ContParBlk(pBlk)								; convert parentheses block '(...)'
-		outStr		:= line1 . entry . pBlk . trail							; build full (converted) output string...
-		return		outStr													; ... and return it
+		varCmd		:= mML[1]												; var or command on cmd line
+		equals		:= mML[2]												; equals on cmd line [ := or .= ]
+		tag1		:= mML.tag1												; trailing comment (masked) on command line
+		perc		:= trim(mML[3])											; % on cmd line (will be removed)
+		dq			:= trim(mML[4])											; " on cmd line (will be removed)
+		head		:= varCmd . equals . tag1								; newly formatted cmd line
+		neck		:= mML.neck												; portion between head and opening body '('
+		body		:= mML.parBlk											; parentheses block '(...)' - before conversion
+		if (dq)																; if cmd line had "...
+			body	:= conv_ContParBlk(body)								; ... convert the block code, (otherwise don't convert ??)
+		trail		:= RegExReplace(mML.trail, '^"')						; remove any [optional] trailing DQ following ')"'
+		outStr		:= head . neck . body . trail							; assemble output string
+		Restore_Premask(&outStr)											; make sure strings and comments have been restored
+		return 		outStr													; return converted output
 	}
 
-;	static _conv_LegacyAssign(&code)
-;	{
-;		code := "LegacyAssign`n" . code
-;		/*
-;			verify proper profile
-;		*/
+	; Public - 2025-06-16 AMB, UPDATED
+	; head	->	,? %? "?
+	; body	->	(...)"?
+	static _conv_LegExp(code)
+	{
+		; verify code matches pattern
+		nML := CSect.nLegExp . buildPtn_MLBlock().FullT
+		if (!RegExMatch(code, nML, &mML)) {
+			return false
+		}
+		tag1		:= mML.tag1												; optional comment (masked) on cmd line
+		head		:= tag1													; remove all of these -> , % " (from cmd line)
+		neck		:= mML.neck												; portion between head and opening body '('
+		body		:= conv_ContParBlk(mML.parBlk)							; full parentheses block (...) - converted
+		trail		:= RegExReplace(mML.trail, '^"')						; remove any [optional] trailing DQ following ')"'
+		outStr		:= head . neck . body . trail							; assemble output string
+		Restore_Premask(&outStr)											; make sure strings and comments have been restored
+		return 		outStr													; return converted output
+	}
 
-;	}
-;	static _conv_LegAssignVar(&code)
-;	{
-;		code := "LegAssignVar`n" . code
-;	}
-;	static _conv_ExpAssignQS1(&code)
-;	{
-;		code := "ExpAssignQS1`n" . code
-;	}
-;	static _conv_ExpAssignQS2(&code)
-;	{
-;		code := "ExpAssignQS2`n" . code
-;	}
-;	static _conv_CmdComma(&code)
-;	{
-;		code := "CmdComma`n" . code
-;	}
+	; Public - 2025-06-16 AMB, UPDATED
+	; head	->	var = %var%
+	; body	->	(...)"?
+	static _conv_LegAssignVar(code)
+	{
+		; verify code matches pattern
+		nML := CSect.nLegAssignVar . buildPtn_MLBlock().FullT
+		if (!RegExMatch(code, nML, &mML)) {
+			return false
+		}
+		var1		:= mML[1]												; var on left side of =
+		ws			:= mML[2]												; optional horz whitespace
+		var2		:= mML[3]												; var on right side of =
+		tag1		:= mML.tag1												; optional comment (masked) on cmd line
+		head		:= var1 . ':=' . ws . var2 . tag1						; newly formatted cmd line [ = to := ]
+		neck		:= mML.neck												; portion between head and opening body '('
+		body		:= conv_ContParBlk(mML.parBlk)							; full parentheses block (...) - converted
+		trail		:= RegExReplace(mML.trail, '^"')						; remove any [optional] trailing DQ following ')"'
+		outStr		:= head . neck . body . trail							; assemble output string
+		Restore_Premask(&outStr)											; make sure strings and comments have been restored
+		return 		outStr													; return converted output
+	}
 
-;	static IdentifyCS(&code)
-;	{
-;		if (!RegExMatch(code, CSect.MLLineCont, &mCS))
-;			return false
-
-;		; code is a CS
-;		; return the appropriate func to handle the specific CS block
-;		if		(mCS.line1 ~= CSect.LegacyAssign)	{
-;				; [var/cmd =]
-;				CSect._conv_LegacyAssign(&code)
-;;				return "_conv_LegacyAssign"
-;		}
-;		else if	(mCS.line1 ~= CSect.LegAssignVar)	{
-;				; [var = %var%] (CAN BE COVERTED TO [var .= ])
-;				CSect._conv_LegAssignVar(&code)
-;;				return "_conv_LegAssignVar"
-;		}
-;		else if	(mCS.line1 ~= CSect.ExpAssignQS1)	{
-;				; [var/cmd :=] or [var/cmd .= "]
-;				CSect._conv_ExpAssignQS1(&code)
-;;				return "_conv_ExpAssignQS1"
-;		}
-;		else if	(mCS.line1 ~= CSect.ExpAssignQS2)	{
-;				; [var := var] or [var := "] (CAN BE COVERTED TO [var .= "])
-;				CSect._conv_ExpAssignQS2(&code)
-;;				return "_conv_ExpAssignQS2"
-;		}
-;		else if	(mCS.line1 ~= CSect.CmdComma)		{
-;				; [cmd] or [cmd,]
-;				CSect._conv_CmdComma(&code)
-;;				return "_conv_CmdComma"
-;		}
-;		else {
-;				line1 .= '`n`nPATTERN NOT FOUND`n' gFilePath "`n" mCS.Line1
-;				return false
-;		}
-;	}
-
-;	Convert(&code)
-;	{
-;	}
+	; Public - 2025-06-16 AMB, UPDATED
+	; head	->	%? funcCall("?
+	; body	->	(...)"?
+	static _conv_FCall(code)
+	{
+		; verify code matches pattern
+		nML := CSect.nFCall . buildPtn_MLBlock().FullT
+		if (!RegExMatch(code, nML, &mML)) {
+			return false
+		}
+		fCall		:= trim(mML[1])											; function call on cmd line (preserve)
+		ws			:= StrReplace(mML[2], '"')								; whitespace - remove DQ if present
+		tag1		:= mML.tag1												; optional comment (masked) on cmd line
+		head		:= fCall . ws . tag1									; newly formatted cmd line
+		neck		:= mML.neck												; portion between head and opening body '('
+		body		:= conv_ContParBlk(mML.parBlk)							; full parentheses block (...) - converted
+		trail		:= RegExReplace(mML.trail, '^"')						; remove any [optional] trailing DQ following ')"'
+		outStr		:= head . neck . body . trail							; assemble output string
+		Restore_Premask(&outStr)											; make sure strings and comments have been restored
+		return 		outStr													; return converted output
+	}
 }
 
 
+; 2025-06-16 - MOVED TO MaskCode.ahk... at least for now
 ;;################################################################################
-;														   conv_ContFullBlk(code)
+;															conv_ContParBlk(code)
 ;;################################################################################
 ;{
 ;; 2025-06-12 AMB, ADDED - WORK IN PROGRESS
-;; converts code within full continuation block
+;; 2025-06-16 AMB, UPDATED
+;; converts code within string continuation (parentheses) block
 ;; TODO - WORK IN PROGRESS
 
 ;	; verify code matches pattern
-;	if (!RegExMatch(code, buildPtn_MLBlock().Full, &mML)) {				; if code does not match CS pattern...
-;		return false													; ... return negatory!
+;	if (!RegExMatch(code, '(?im)' . buildPtn_MLBlock().ParBlk, &mML)) {		; if code does not match CS pattern...
+;		return false														; ... return negatory!
 ;	}
 
-;	; TODO - MORE TO DO HERE
+;	body	:= code															; [parentheses block - working var]
+;	oBdy	:= body															; orig block code - will need this later
 
-;	entry	:= mML.entry
-;	pBlk	:= mML.ParBlk
-;	guts	:= mML.guts
-;	trail	:= mML.trail
+;	; separate/tag leading and trailing ws
+;	nSep := '(?is)\((?<LWS>[^\v]*\R\s*)(?<guts>.*?)(?<TWS>\h*\R\h*)\)'		; [separation needle]
+;	RegExMatch(body, nSep, &mSep)											; fill vars - TODO - CHANGE TO VERIFICATION IF
+;	oLWS	:= mSep.LWS														; save orig leading  WS for restore later
+;	oTWS	:= mSep.TWS														; save orig trailing WS for restore later
+;	oGuts	:= mSep.guts													; save orig guts contents (excluding lead/trail ws)
+;	tLWS	:= gTagPfx 'LWS' gTagTrl										; create temp tag for leading  WS
+;	tTWS	:= gTagPfx 'TWS' gTagTrl										; create temp tag for trailing WS
+;	body	:= RegExReplace(body, '^\(' oLWS, '(' tLWS)						; replace orig lead  ws with a temp tag
+;	body	:= RegExReplace(body, oTWS '\)$', tTWS ')')						; replace orig trail ws with a temp tag
 
-;	pBlk := conv_ContParBlk(pBlk)
-;	return entry . pBlk . trail
+;	; work on guts of body
+;	uGuts	:= oGuts														; updated/new guts - will be changed below
+;	Restore_Strings(&uGuts)													; remove masking from strings within guts only
+;	uGuts	:= '"' uGuts '"'												; add surounding double-quotes to guts (to prep for next step)
+;	v2_DQ_Literals(&uGuts)													; change "" to `" within guts only
+;	uGuts	:= RegExReplace(uGuts, '(?s)^"(.+)"$', '$1')					; remove surrounding DQs (to prep for next step)
+;	uGuts	:= RegExReplace(uGuts, '(?<!``)"', '``"')						; replace " (single) with `"
+;	uGuts	:= '"' uGuts '"'												; add surounding double-quotes to guts (again)
 
+;	; mask all %var% within guts
+;	nV1Var := '(?<!``)%([^%]+)(?<!``)%'										; [identifies %var%]
+;	clsPreMask.MaskAll(&uGuts, 'V1VAR', nV1Var)								; mask/hide all %var%s for now
+
+;	; add quotes before and after v1 vars
+;	nV1VarTag := gTagPfx 'V1VAR_\w+' gTagTrl								; [identifies V1Var tags]
+;	pos := 1
+;	While(pos := RegexMatch(uGuts, nV1VarTag, &mVarTag, pos)) {				; for each V1Var tag found...
+;		oTag	:= mVarTag[]												; tag found (orig)
+;		qTag	:= '" ' oTag ' "'											; ... add concat quotes around tag (INCLUDE CONCAT DOTS ALSO?)
+;		uGuts	:= RegExReplace(uGuts, oTag, qTag,,1,pos)					; replace orig tag with quoted tag
+;		pos		+= StrLen(qTag)												; prep for next loop iteration
+;	}
+;	uGuts		:= RegExReplace(uGuts, '^""\h*')							; cleanup any leading  "" (un-needed)
+;	uGuts		:= RegExReplace(uGuts, '\h*""$')							; cleanup any trailing "" (un-needed)
+;	body		:= StrReplace(body, oGuts, uGuts)							; replace orig guts with new guts
+
+;	; restore original %VAR%s, then replace each with VAR (remove %)
+;	clsPreMask.RestoreAll(&body, 'V1VAR')									; restore orig %VAR%s
+;	pos := 1
+;	While(pos := RegexMatch(body, nV1Var, &mVar, pos)) {					; for each %VAR% found...
+;		pVar	:= mVar[]													; %VAR%
+;		eVar	:= mVar[1]													; extracted var [gets VAR from %VAR%]
+;		body	:= RegExReplace(body, pVar, eVar,,1,pos)					; replace %VAR% with VAR
+;		pos		+= StrLen(eVar)												; prep for next loop iteration
+;	}
+
+;	; restore original lead/trail ws
+;	body := RegExReplace(body, tLWS, oLWS)									; replace leadWS  tag with orig ws code
+;	body := RegExReplace(body, tTWS, oTWS)									; replace trailWS tag with orig ws code
+
+;	; add leading empty lines to quoted text								; (simulate same output as v1)
+;	RegExReplace(oLWS, '\R',, &cCRLF)										; count CRLFs - will tells us how many (leading) empty lines
+;	if (cCRLF > 1) {	; first CRLF doesn't count							; if one or more empty lines...
+;		nBlk := '(?s)(\([^\v]*)(\R)(\s+)"(.+?)(\))'							; [separates block anatomy]
+;		body := RegExReplace(body, nBlk, '$1$2"$3$4$5')						; include those empty lines in quoted text (move leading DQ)
+;	}
+
+;	; if block is empty (it happens), add empty quotes
+;	if (RegExReplace(body, '\s') = '()') {									; if body is empty...
+;		body := RegExReplace(body, '(?s)(\(\R)', '$1""',,1)					; add empty string quotes below opening parenthesis
+;	}
+
+;	Restore_Premask(&body)													; make sure premask tags are removed
+;	return body
 ;}
-;################################################################################
-															conv_ContParBlk(code)
-;################################################################################
-{
-; 2025-06-12 AMB, ADDED - WORK IN PROGRESS
-; converts code within continuation parentheses block
-; TODO - WORK IN PROGRESS
-
-	; verify code matches pattern
-	if (!RegExMatch(code, '(?im)' . buildPtn_MLBlock().ParBlk, &mML)) {		; if code does not match CS pattern...
-		return false														; ... return negatory!
-	}
-
-	pBlk	:= code															; [parentheses block - working var]
-	oBlk	:= pBlk															; orig block code - will need this later
-
-	; separate/tag leading and trailing ws
-	nSep := '(?is)\((?<LWS>[^\v]*\R\s*)(?<guts>.*?)(?<TWS>\h*\R\h*)\)'		; separate leading/trailing ws from block contents
-	RegExMatch(pBlk, nSep, &mSep)											; fill vars - TODO - CHANGE TO VERIFICATION IF
-	oLWS	:= mSep.LWS														; save orig leading  WS for restore later
-	oTWS	:= mSep.TWS														; save orig trailing WS for restore later
-	oGuts	:= mSep.guts													; save orig guts contents (excluding lead/trail ws)
-	tLWS	:= gTagPfx 'LWS' gTagTrl										; create temp tag for leading  WS
-	tTWS	:= gTagPfx 'TWS' gTagTrl										; create temp tag for trailing WS
-	pBlk	:= RegExReplace(pBlk, '^\(' oLWS, '(' tLWS)						; replace orig lead  ws with a temp tag
-	pBlk	:= RegExReplace(pBlk, oTWS '\)$', tTWS ')')						; replace orig trail ws with a temp tag
-
-	; work on guts of block
-	uGuts	:= oGuts														; updated/new guts - will be changed below
-	Restore_Strings(&uGuts)													; remove masking from strings within guts only
-	uGuts	:= '"' uGuts '"'												; add surounding double-quotes to guts (to prep for next step)
-	v2_DQ_Literals(&uGuts)													; change "" to `" within guts only
-	uGuts	:= RegExReplace(uGuts, '(?s)^"(.+)"$', '$1')					; remove surrounding DQs (to prep for next step)
-	uGuts	:= RegExReplace(uGuts, '(?<!``)"', '``"')						; replace " (single) with `"
-	uGuts	:= '"' uGuts '"'												; add surounding double-quotes to guts (again)
-
-	; mask all %var% within guts
-	nV1Var := '(?<!``)%([^%]+)(?<!``)%'										; [identifies %var%]
-	clsPreMask.MaskAll(&uGuts, 'V1VAR', nV1Var)								; mask/hide all %var%s for now
-
-	; add quotes before and after v1 vars
-	nV1VarTag := gTagPfx 'V1VAR_\w+' gTagTrl								; [identifies V1Var tags]
-	pos := 1
-	While(pos := RegexMatch(uGuts, nV1VarTag, &mVarTag, pos)) {				; for each V1Var tag found...
-		repl	:= '" ' mVarTag[] ' "'										; ... add concat quotes (SHOULD WE INCLUDE CONCAT DOTS?)
-		uGuts	:= RegExReplace(uGuts, mVarTag[], repl,,1,pos)				; replace tags with concat-quote tags
-		pos		+= StrLen(repl)												; prep for next loop iteration
-	}
-	uGuts		:= RegExReplace(uGuts, '^""\h*')							; remove any leading  "" (un-needed)
-	uGuts		:= RegExReplace(uGuts, '\h*""$')							; remove any trailing "" (un-needed)
-	pBlk		:= StrReplace(pBlk, oGuts, uGuts)							; replace orig guts with new guts
-
-	; restore original %VAR%s, then replace each with VAR (remove %)
-	clsPreMask.RestoreAll(&pBlk, 'V1VAR')									; restore orig %VAR%s
-;	nV1Var := '(?<!``)%([^%]+)(?<!``)%'										; [identifies %VAR%] (redundant)
-	pos := 1
-	While(pos := RegexMatch(pBlk, nV1Var, &mVar, pos)) {					; for each %VAR% found...
-		repl	:= mVar[1]													; [grabs just VAR from %VAR%]
-		pBlk	:= RegExReplace(pBlk, mVar[], repl,,1,pos)					; replace %VAR% with VAR
-		pos		+= StrLen(repl)												; prep for next loop iteration
-	}
-
-	; restore original lead/trail ws
-	pBlk := RegExReplace(pBlk, tLWS, oLWS)									; replace leadWS  tag with orig ws code
-	pBlk := RegExReplace(pBlk, tTWS, oTWS)									; replace trailWS tag with orig ws code
-
-	; add leading empty lines to quoted text								; (simulate same output as v1)
-	RegExReplace(oLWS, '\R',, &cCRLF)										; count CRLFs - will tells us how many (leading) empty lines
-	if (cCRLF > 1) {	; first CRLF doesn't count							; if one or more empty lines...
-		nBlk := '(?s)(\([^\v]*)(\R)(\s+)"(.+?)(\))'							; [separates block anatomy]
-		pBlk := RegExReplace(pBlk, nBlk, '$1$2"$3$4$5')						; include those empty lines in quoted text (move leading DQ)
-	}
-
-	Restore_Premask(&pBlk)													; make sure premask tags are removed
-	return pBlk
-}

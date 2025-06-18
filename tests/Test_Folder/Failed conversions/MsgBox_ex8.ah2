@@ -1,1 +1,0 @@
-MsgBox(Text, Title, MsgBox_Number " T" Timeout)

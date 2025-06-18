@@ -1,3 +1,3 @@
 i := 0
-e := i . ++i
+e := i++ . i
 MsgBox(e)

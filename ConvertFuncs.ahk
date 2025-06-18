@@ -1691,14 +1691,14 @@ _MsgBox(p) {
    ; 2025-06-12 AMB, UPDATED
    ;    TODO - NEEDS TO BE CLEANED UP AND ORGANIZED BETTER
    Check_IfMsgBox()
-   if (RegExMatch(p[1], "i)^(0x)?\d*\s*$") && (p.Extra.OrigArr.Length > 1)) {
+   if (RegExMatch(p[1], "i)^((0x)?\d*\h*|\s*%\s*\w+%?\s*)$") && (p.Extra.OrigArr.Length > 1)) {
       options := p[1]
-      if ( p.Length = 4 && (IsEmpty(p[4]) || IsNumber(p[4])) ) {
+      if ( p.Length = 4 && (IsEmpty(p[4]) || IsNumber(p[4]) || RegExMatch(p[4], '\s*%', &m)) ) {
          ; 2024-08-03 AMB, ADDED support for multiline text that may include variables
          text := p[3]
          text := (csStr := CSect.HasContSect(text)) ? csStr : ToExp(text)
          if (!IsEmpty(p[4]))
-            options .= " T" p[4]
+            options .= ' " T" ' ToExp(p[4])
          title := ToExp(p[2])
       } else {
          text := ""
@@ -1711,6 +1711,11 @@ _MsgBox(p) {
       if (Check_IfMsgBox()) {
          Out := "msgResult := " Out
       }
+      if IsSet(m) ; If timeout is variable
+         Out := RegExReplace(Out, '``" T``" (\w+)"\)', '" T" $1)') ; Clean up
+      Out := RegExReplace(Out, '``" T``" ', 'T')
+      Out := RegExReplace(Out, '" " T', '" T')
+      Out := RegExReplace(Out, '(,\s*"[^,]*?)\s*"([^,]*"[^,]*?\))$', '$1$2')
       return Out
    } else {
       ; 2024-08-03 AMB, ADDED support for multiline text that may include variables

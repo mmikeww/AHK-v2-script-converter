@@ -344,10 +344,12 @@
 {
 ; 2025-06-22 AMB, ADDED - ensures keyname is valid format
 ; TODO - WORK IN PROGRESS
+	if RegExMatch(key, '#TAG★(?:LC|BC|QS)\w++★#')					   			   ; if key contained quoted (masked) strings
+		key := RegExReplace(key, '(?<= |^)(?<!"|\w)(\w+)(?!"|\w)(?= |$)', '%$1%')	; ... wrap unquoted text in %% (variable)
 
 	MaskR(&key, 'STR', false)	; DO NOT REMOVE										; incase strings are masked before receiving
-	key := StrReplace(RegExReplace(key,'"\h+\.\h+"'),'"')							; remove any concat operators and quotes from key (creates new var name)
-	nKN := '^((?:\h*+\(*+)*+)(\w+(?:[-\h]*\w+)*)+?((?:\h*+\)*+)*+)$'				; [identifies key name - supports optional parentheses/hyphens(not minus)/ws]
+	key := StrReplace(RegExReplace(key,'\h+\.\h+'),'"')								; remove any concat operators and quotes from key (creates new var name)
+	nKN := '^((?:\h*+\(*+)*+)([\w%]+(?:[-\h]*[\w%]+)*)+?((?:\h*+\)*+)*+)$'			; [identifies key name - supports optional parentheses/hyphens(not minus)/ws]
 	if (!RegExMatch(key, nKN, &mKN)) {												; if key does not look valid...
 		return ''																	; ... return empty string
 	}
@@ -361,7 +363,7 @@
 	}
 
 	; is alpha-numeric - ensure proper formatting
-	KN := RegExReplace(KN, '\W')													; valid chars are [a-z_0-9] (I think?) - remove spaces and hyphens from name
+	KN := RegExReplace(KN, '[^\w%]')													; valid chars are [a-z_0-9] (I think?) - remove spaces and hyphens from name
 	KN := RegExReplace(KN, '^(\h*)(\d\D.+)$', '$1_$2')								; keyname cannot begin with a number, add underscore to beginning if it does
 
 	return (KN) ? (LWS . KN . TWS) : ''												; trim any ws if KN is now empty

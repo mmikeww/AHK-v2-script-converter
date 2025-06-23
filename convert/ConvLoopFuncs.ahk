@@ -344,7 +344,7 @@
 {
 ; 2025-06-22 AMB, ADDED - ensures keyname is valid format
 ; TODO - WORK IN PROGRESS
-	if hasTag(key)																	; if key contained quoted (masked) strings
+	if RegExMatch(key, '#TAG★(?:LC|BC|QS)\w++★#')					   			   ; if key contained quoted (masked) strings
 		key := RegExReplace(key, '(?<= |^)(?<!"|\w)(\w+)(?!"|\w)(?= |$)', '%$1%')	; ... wrap unquoted text in %% (variable)
 
 	MaskR(&key, 'STR', false)	; DO NOT REMOVE										; incase strings are masked before receiving

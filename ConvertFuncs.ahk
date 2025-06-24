@@ -18,6 +18,7 @@ global   gFilePath   := ''              ; TEMP, for testing
 #Include Convert/MaskCode.ahk           ; 2024-06-26 ADDED AMB (masking support)
 #Include Convert/ConvLoopFuncs.ahk      ; 2025-06-12 ADDED AMB (separated loop code)
 #Include Convert/Conversion_CLS.ahk     ; 2025-06-12 ADDED AMB (future support of Class version)
+#Include Convert/ContSections.ahk       ; 2025-06-22 ADDED AMB (for support dedicated to continuation sections)
 
 
 ;################################################################################
@@ -32,7 +33,7 @@ Convert(ScriptString)            ; MAIN ENTRY POINT for conversion process
 
    ; DO NOT PLACE YOUR CODE HERE
    ; perform conversion of main/global portion of script only
-   convertedCode := _convertLines(ScriptString) ;,finalize:=0)
+   convertedCode := _convertLines(ScriptString)
 
    ; Please place any code that must be performed AFTER _convertLines()...
    ;  ... into the following function
@@ -48,6 +49,10 @@ Before_LineConverts(&code)
    ; initialize all global vars here so ALL code has access to them
    setGlobals()
 
+   ; move any labels to their own line (if on same line as opening/closing brace)
+   ; this makes them easier to find and deal with
+   code := isolateLabels(code)                          ; 2025-06-22 AMB, ADDED
+
    ; 2024-07-09 AMB, UPDATED - for label renaming support
    ; these must also be declared global here because they are being updated here
    global gAllFuncNames    := getFuncNames(code)        ; comma-delim stringList of all function names
@@ -62,17 +67,11 @@ Before_LineConverts(&code)
    global gMenuBarName     := getMenuBarName(code)      ; name of GUI main menubar
 
    ; turn masking on/off at top of SetGlobals()
-   if (gUseMasking)
-   {
-      ; 2024-07-01 AMB - ADDED For fix of #74
-      ; 2025-06-12 AMB - UPDATED for fix #333
-      ; v1 legacy multi-line var string assignments (are returned converted)
-      ; this masking also performs masking found in Mask_PreMask (all strings and comments)
-      Mask_V1LegMLSV(&code)                             ; mask v1 legacy multi-line var string assignments
-      Mask_MLSExpAssign(&code)                          ; 2025-06-12 AMB, ADDED
-
-      ; convert and mask classes and functions
-      Mask_Blocks(&code)                                ; see MaskCode.ahk
+   if (gUseMasking) {
+      ; this masking also performs masking for all strings and comments temporarily...
+      ; but they are restored prior to exiting this func (behind the scenes)
+      MaskT(&code, 'CSECT2')                            ; global masking of M2 continuation sections (2025-06-22)
+      MaskT(&code, 'FUNC&CLS')                          ; global masking of functions and classes
    }
 
    return   ; code by reference
@@ -83,18 +82,17 @@ After_LineConverts(&code)
    ;####  Please place CALLS TO YOUR FUNCTIONS here - not boilerplate code  #####
 
    ; turn masking on/off at top of SetGlobals()
-   if (gUseMasking)
-   {
-      ; remove masking from classes, functions, v1 legacy multi-line var string assignments
-      ; classes, funcs, v1 legacy multi-line var string assignments are returned as v2 converted
-      Restore_Blocks(&code)                 ; see MaskCode.ahk
-      Restore_V1LegMLSV(&code)              ; 2024-07-01 - converts prior to restore
+   if (gUseMasking) {
+      ; remove masking from classes, functions (returned as v2 converted)
+      MaskR(&code, 'Func&Cls')              ; remove masking from functions and classes
    }
 
    ; operations that must be performed last
    ; inspect to see whether your code is best placed here or in the following
    FinalizeConvert(&code)                   ; perform all final operations
 
+   MaskR(&code, 'CSect')                    ; restore remaining cont sects (returned as v2 converted)
+   MaskR(&code, 'C&S')                      ; ensure all comments/strings are restored (just in case)
    return    ; code by reference
 }
 
@@ -153,7 +151,7 @@ setGlobals()
 }
 ;################################################################################
 ; MAIN CONVERSION LOOP - handles each line separately
-_convertLines(ScriptString) ;, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to accommodate masking
+_convertLines(ScriptString)
 ;################################################################################
 {
 ; 2025-06-12 AMB, UPDATED
@@ -163,7 +161,7 @@ _convertLines(ScriptString) ;, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to
 ;   added block-comment masking as a global condition for full ScriptString
 ;   changed many variable and function names
 
-   Mask_BCs(&ScriptString)          ; 2025-06-12 AMB, mask all block-comments globally
+   MaskT(&ScriptString, 'BC')       ; 2025-06-12 AMB, mask all block-comments globally
 
    global gmAltLabel                := GetAltLabelsMap(ScriptString)       ; Create a map of labels who are identical
    global gOrig_ScriptStr           := ScriptString
@@ -207,17 +205,12 @@ _convertLines(ScriptString) ;, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to
       ;     currently v1.0 -> v1.1 conversion is not possible until the operations are separated
       ;     this will happen in phase 2 of redesign
       ; ORDER MAY MATTER FOR FOLLOWING STEPS...
-
-;      if (checkContState(&curLine, &lastLine, &ScriptOutput)) {    ; no longer used, but leaving here just in case
-;         continue
-;      }
-
       addContsToLine(&curLine, &EOLComment)                         ; Adds continuation lines to current line - TODO - USE CONT-MASKING ??
       fixAssignments(&curLine, &EOLComment)                         ; line conversions related to assignments [var= and var:=] (v1/v2)
       convert_Ifs(&curline, &lineOpen, &lineClose)                  ; line conversions related to IF (v1/v2)
 
       fCmdConverted := false                                        ; will be set by v2_AHKCommand() thru v2_Conversions() below
-      if (gV2Conv) {                                               ; v2, but currently required for v1 conversion also
+      if (gV2Conv) {                                                ; v2, but currently required for v1 conversion also
          v2_Conversions(&curLine, &lineOpen, &EOLComment            ; line conversions related to V2 only (currently required for v1 conv also)
                       , &fCmdConverted, scriptString)               ; SETS VALUE of fCmdConverted (indirectly)
       }
@@ -231,7 +224,7 @@ _convertLines(ScriptString) ;, finalize:=!gUseMasking)   ; 2024-06-26 RENAMED to
 
    ; trim the very last (extra) newline from output string
    ScriptOutput := RegExReplace(ScriptOutput, '\r\n$',,,1)          ; 2025-06-12 MOVED to here to eliminate multiple 'finalize' paths/processing
-   Restore_BCs(&ScriptOutput)                                       ; 2025-06-12 AMB, Restore all block-comments
+   MaskR(&ScriptOutput, 'BC')                                       ; 2025-06-12 AMB, Restore all block-comments
    return ScriptOutput
 }
 ;################################################################################
@@ -273,11 +266,10 @@ FinalizeConvert(&code)
    try code := FixOnMessage(code)       ; Fix turning off OnMessage when defined after turn off
    try code := FixVarSetCapacity(code)  ; &buf -> buf.Ptr   &vssc -> StrPtr(vssc)
    try code := FixByRefParams(code)     ; Replace ByRef with & in func declarations and calls - see related fixFuncParams()
+
    addGuiCBArgs(&code)
    addMenuCBArgs(&code)                 ; 2024-06-26, AMB - Fix #131
    addOnMessageCBArgs(&code)            ; 2024-06-28, AMB - Fix #136
-
-   Restore_MLSExpAssign(&code)          ; 2025-06-12, AMB
 
    return   ; code by reference
 }
@@ -2637,43 +2629,6 @@ _HashtagWarn(p) {
    Return Out
 }
 ;################################################################################
-Convert_GetContSect() {
-; 2025-06-12 AMB, UPDATED - gOScriptStr is now an object
-   ; Go further in the lines to get the next continuation section
-   global gOScriptStr   ; array of all the lines
-   global gO_Index   ; current index of the lines
-
-   result := ""
-
-   loop {
-      gO_Index++
-      gOScriptStr.SetIndex(gO_Index)
-      if (gOScriptStr.Length < gO_Index) {
-;      if (!gOScriptStr.HasNext) {
-         break
-      }
-;      LineContSect := gOScriptStr[gO_Index]
-      LineContSect := gOScriptStr.GetLine(gO_Index)
-      FirstChar := SubStr(Trim(LineContSect), 1, 1)
-      if ((A_index = 1)
-         && (FirstChar != "("
-         || !RegExMatch(LineContSect, "i)^\s*\((?:\s*(?(?<=\s)(?!;)|(?<=\())(\bJoin\S*|[^\s)]+))*(?<!:)(?:\s+;.*)?$"))) {
-         ; no continuation section found
-         gO_Index--
-         gOScriptStr.SetIndex(gO_Index)
-         return ""
-      }
-      if (FirstChar == ")") {
-         result .= LineContSect
-         break
-      }
-      result .= LineContSect "`r`n"
-   }
-   DebugWindow("contsect:" result "`r`n", Clear := 0)
-
-   return "`r`n" result
-}
-;################################################################################
 ; Checks if IfMsgBox is used in the next lines
 Check_IfMsgBox() {
    ; Go further in the lines to get the next continuation section
@@ -3026,9 +2981,9 @@ ConvertPseudoArray(ScriptStringInput, PseudoArrayName) {
       if (PseudoArrayName.HasOwnProp("regex") && PseudoArrayName.regex)
       {
          ; this is regexmatch array[0] - validate that array has been set -> (m&&m[0])
-         Mask_Strings(&ScriptStringInput)
+         MaskT(&ScriptStringInput, 'STR')
          ScriptStringInput := RegExReplace(ScriptStringInput, "is)(?<!\w|&|\.)" ArrayName "(?!&|\w|%|\.|\[|\s*:=)", "(" ArrayName "&&" NewName ")")
-         Restore_Strings(&ScriptStringInput)
+         MaskR(&ScriptStringInput, 'STR')
       }
       else
       {
@@ -3087,7 +3042,7 @@ GetMapOptions(Options) {
 ConvertLabel2Func(ScriptString, Label, Parameters := "", NewFunctionName := "", aRegexReplaceList := "") {
 ; 2025-06-12 AMB, UPDATED - changed some var and func names, gOScriptStr is now an object
 
-   Mask_BCs(&ScriptString)
+   MaskT(&ScriptString, 'BC')
 ;   gOScriptStr  := StrSplit(ScriptString, "`n", "`r")
    ScriptStr    := ScriptCode(ScriptString)
    Result       := ""
@@ -3131,13 +3086,13 @@ ConvertLabel2Func(ScriptString, Label, Parameters := "", NewFunctionName := "", 
       }
       if (RegExMatch(Line, "i)^(\s*;).*") || RegExMatch(Line, "i)^(\s*)$")) {   ; comment or empty
          ; Do nothing
-      } else if (line ~= gPtn_HOTSTR || line ~= gPtn_HOTKEY) {   ; Hotkey or Hotstring
+      } else if (line ~= gPtn_HS_LWS || line ~= gPtn_HK_LWS) {   ; Hotkey or Hotstring
          if (LabelPointer = 1 || RegexPointer = 1) {
             Result .= LabelPointer = 1 ? "} `; V1toV2: Added Bracket before hotkey or Hotstring`r`n" : ""
             LabelPointer := 0
             RegexPointer := 0
          }
-         if (line ~= gPtn_HOTSTR || line ~= gPtn_HOTKEY) {    ; Hotkey or Hotstring
+         if (line ~= gPtn_HS_LWS || line ~= gPtn_HK_LWS) {    ; Hotkey or Hotstring
             ; oneline detected do noting
             LabelPointer := 0
             RegexPointer := 0
@@ -3155,7 +3110,7 @@ ConvertLabel2Func(ScriptString, Label, Parameters := "", NewFunctionName := "", 
          LabelStart := 0
       }
       if (LabelPointer = 1 || RegexPointer = 1) {
-         if (RestString ~= gPtn_HOTSTR || RestString ~= gPtn_HOTKEY) {   ; Hotkey or Hotstring
+         if (RestString ~= gPtn_HS_LWS || RestString ~= gPtn_HK_LWS) {   ; Hotkey or Hotstring
             Result .= LabelPointer = 1 ? "} `; V1toV2: Added Bracket before hotkey or Hotstring`r`n" : ""
             LabelPointer := 0
             RegexPointer := 0
@@ -3204,7 +3159,7 @@ ConvertLabel2Func(ScriptString, Label, Parameters := "", NewFunctionName := "", 
    }
    result .= happyTrails    ; add ONLY original trailing blank lines back
 
-   Restore_BCs(&result)
+   MaskR(&result, 'BC')
    return Result
 }
 ;################################################################################
@@ -3216,7 +3171,7 @@ ConvertLabel2Func(ScriptString, Label, Parameters := "", NewFunctionName := "", 
  */
 AddBracket(ScriptString) {
 
-   Mask_BCs(&ScriptString)
+   MaskT(&ScriptString, 'BC')
 
    ; 2024-07-09 AMB, ADDED - fix for trailing CRLF issue
    ; capture any trailing blank lines at end of string
@@ -3251,12 +3206,12 @@ AddBracket(ScriptString) {
          }
          if (RegExMatch(Line, "i)^(\s*;).*") || RegExMatch(Line, "i)^(\s*)$")) {   ; comment or empty
             ; Do nothing
-         } else if (line ~= gPtn_HOTSTR || line ~= gPtn_HOTKEY) {   ; Hotkey or Hotstring
+         } else if (line ~= gPtn_HS_LWS || line ~= gPtn_HK_LWS) {   ; Hotkey or Hotstring
             if (HotkeyPointer = 1) {
                Result .= "} `; V1toV2: Added Bracket before hotkey or Hotstring`r`n"
                HotkeyPointer := 0
             }
-            if (line ~= gPtn_HOTSTR . '\h*[^\s;]+' || line ~= gPtn_HOTKEY . '\h*[^\s;]+') {   ; is command on same line as hotkey/hotstring ?
+            if (line ~= gPtn_HS_LWS . '\h*[^\s;]+' || line ~= gPtn_HK_LWS . '\h*[^\s;]+') {   ; is command on same line as hotkey/hotstring ?
                ; oneline detected do noting
             } else {
                ; Hotkey detected start searching for start
@@ -3295,7 +3250,7 @@ AddBracket(ScriptString) {
             }
          }
          if (HotkeyPointer = 1) {
-            if (RestString ~= gPtn_HOTSTR || RestString ~= gPtn_HOTKEY) {   ; Hotkey or Hotstring
+            if (RestString ~= gPtn_HS_LWS || RestString ~= gPtn_HK_LWS) {   ; Hotkey or Hotstring
                Result .= "} `; V1toV2: Added Bracket before hotkey or Hotstring`r`n"
                HotkeyPointer := 0
             } else if (RegExMatch(RestString, "is)^\s*((:[\h\*\?BCKOPRSIETXZ0-9]*:|)[^;\s\{}\[\:]+?\:\:?\h).*") > 0
@@ -3335,7 +3290,7 @@ AddBracket(ScriptString) {
    }
    result := RTrim(Result, "`r`n") . happyTrails
 
-   Restore_BCs(&result)
+   MaskR(&result, 'BC')
    return result
 }
 ;################################################################################
@@ -3347,7 +3302,7 @@ AddBracket(ScriptString) {
 */
 GetAltLabelsMap(ScriptString) {
 
-   Remove_BCs(ScriptString)
+   RemovePtn(ScriptString, 'BC')                                ; remove block-comments
 ;   ScriptStr := StrSplit(ScriptString, "`n", "`r")
    ScriptStr := ScriptCode(ScriptString)
    LabelPrev := ""
@@ -3356,7 +3311,7 @@ GetAltLabelsMap(ScriptString) {
 ;      Line := ScriptStr[A_Index]
       Line := ScriptStr.GetLine(A_Index)
 
-      if (trim(Remove_LCs(line))='') {     ; remove any line comments and whitespace
+      if (trim(RemovePtn(line, 'LC'))='') {                     ; remove any line comments and whitespace
          continue ; is blank line or line comment
       } else if (v1Label := getV1Label(line)) {
          Label := SubStr(v1Label, 1, -1) ; remove colon
@@ -3626,11 +3581,11 @@ v2_RemoveNewKeyword(&lineStr) {
    if (!InStr(lineStr, 'new'))
       return
 
-   Mask_Strings(&lineStr)   ; protect "new" within strings
+   MaskT(&lineStr, 'STR')   ; protect "new" within strings
    if (RegExMatch(lineStr, 'i)^(.+?)(:=|\(|,)(\h*)new\h(\h*\w.*)$', &m)) {
       lineStr := m[1] m[2] m[3] m[4]
    }
-   Restore_Strings(&lineStr)
+   MaskR(&lineStr, 'STR')
    return   ; lineStr by reference
 }
 ;################################################################################
@@ -3641,9 +3596,9 @@ CorrectNEQ(&lineStr) {
    if (!InStr(lineStr, '<>'))
       return
 
-   Mask_Strings(&lineStr)   ; protect "<>" within strings
+   MaskT(&lineStr, 'STR')   ; protect "<>" within strings
    lineStr := StrReplace(lineStr, '<>', '!=')
-   Restore_Strings(&lineStr)
+   MaskR(&lineStr, 'STR')
    return   ; lineStr by reference
 }
 ;################################################################################
@@ -3678,13 +3633,13 @@ RenameKeywords(&lineStr) {
       srchtxt := Trim(v1), rplctxt := Trim(v2)
       if (InStr(lineStr, srchtxt)) {
          if (!masked) {
-            masked := true, Mask_Strings(&lineStr)   ; masking is slow, so only do this as necessary
+            masked := true, MaskT(&lineStr, 'STR')   ; masking is slow, so only do this as necessary
          }
          lineStr := RegExReplace(lineStr, 'i)([^\w]|^)\Q' . srchtxt . '\E([^\w]|$)', '$1' . rplctxt . '$2')
       }
    }
    if (masked)
-      Restore_Strings(&lineStr)
+      MaskR(&lineStr, 'STR')
 
    return   ; lineStr by reference
 }
@@ -3854,9 +3809,9 @@ getScriptLabels(code)
 
    global gmAllLabelsV1toV2 := map()
 
-   contents := code                          ; script contents
-   contents := Remove_BCs(contents)          ; remove BLOCK comments only
-   contents := Remove_V1LegMLSV(contents)    ; remove v1 legacy multi-line var string assignments
+   contents := code                                 ; script contents
+   contents := RemovePtn(contents, 'BC')            ; remove BLOCK comments only
+   contents := RemovePtn(contents, 'v1LegMLS')      ; remove v1 legacy multi-line var string assignments
 
    ; convert v1 labelNames to v2 compatible, store as map in gmAllLabelsV1toV2
    corrections := ''
@@ -3879,13 +3834,13 @@ removeEOLComments(Line, FirstChar, &EOLComment) {
 ; 2025-05-24 Banaanae, ADDED for fix #296
 ; 2025-06-12 AMB, UPDATED - to capture far-left line comment, rather than trailing (far right) occurence
 
-   nL2RComment := '^([^;\v]+?)(\h+`;.*)$'             ; far left occurence needle
+   nL2RComment := '^([^;\v]+?)(\h+`;.*)$'               ; far left occurence
 
    if (FirstChar = ';') {
       EOLComment    := Line
       Line          := ''
    }
-   else if (RegExMatch(Line, nL2RComment, &mL2R)) {   ; capture FIRST (far left) occurence of comment
+   else if (RegExMatch(Line, nL2RComment, &mL2R)) {     ; capture FIRST (far left) occurence of comment
       line          := mL2R[1]
       EOLComment    := mL2R[2]
    }
@@ -3894,8 +3849,37 @@ removeEOLComments(Line, FirstChar, &EOLComment) {
    }
    return Line
 }
+;################################################################################
+isolateLabels(code)
+{
+; 2025-06-22 AMB, ADDED - to move labels to their own line...
+;   ... when they are on same line as opening/closing brace
+; can be adjusted o handle occurences for any other trailing item as well
+;   (to make sure braces are isolated to their own line)
 
-
+   outCode  := ''
+   for idx, line in StrSplit(code, '`n', '`r') {                    ; for each line in code string...
+      tempLine := line                                              ; in case we need to revert back to orig
+      if (RegExMatch(line, '^(\h*)([{}][\h}{]*)(.*)', &m)) {        ; separate leading brace(s) from rest of line
+         indent     := m[1]                                         ; preserve indentation
+         brace      := m[2]                                         ; leading brace(s)
+         trail      := m[3]                                         ; rest of line
+         tempLine   := RTrim(indent . brace)                        ; set initial value
+         clnTrail   := Trim(RemovePtn(trail, 'LC'))                 ; clean trailing string - remove line comment and ws
+         if (isValidV1Label(clnTrail)) {                            ; if a label is found, move it to its own line
+;         ; THIS CAN BE USED TO HANDLE OTHER ITEMS (protects HKs)
+;         if (clnTrail && !(clnTrail ~= '::$' )) {                   ; if not empty, and not a hotkey
+            tempLine .= '`r`n' . indent . trim(trail)               ; drop trailer str below brace (to next line)
+		 }
+         else {                                                     ; no label found on same line as brace(s)
+            tempLine := line                                        ; restore line to original
+         }
+      }
+      outCode .= tempLine . '`r`n'                                  ; build output string
+   }
+   outCode := RegExReplace(outCode, '\r\n$',,,1)                    ; remove final CRLF (added in loop)
+   return outCode
+}
 ;################################################################################
 Class NULL { ; solution for absence of value
 ;   static ToString() => "[NULL]"

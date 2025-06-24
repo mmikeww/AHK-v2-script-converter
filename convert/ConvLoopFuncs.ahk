@@ -1,3 +1,25 @@
+
+;################################################################################
+														   isValidV1Label(srcStr)
+;################################################################################
+{
+; 2025-06-12 AMB, ADDED
+; returns extracted label if it resembles a valid v1 label
+; 	does not verify that it is a valid v2 label (see validV2Label for that)
+; https://www.autohotkey.com/docs/v1/misc/Labels.htm
+; invalid v1 label chars are...
+;	comma, double-colon (except at beginning),
+;	whitespace, accent (that's not used as escape)
+; see gPtn_LBLDecl for details of label declaration needle (in MaskCode.ahk)
+
+	tempStr := trim(RemovePtn(srcStr, 'LC'))		; remove line comments and trim ws
+
+	; return just the label if...
+	;	it resembles a valid v1 label
+	if (RegExMatch(tempStr, gPtn_LblBLK, &m))		; single-line check
+		return m[1]									; appears to be valid v1 label
+	return ''										; not a valid v1 label
+}
 ;################################################################################
 										updateLineMessages(&lineStr, &EOLComment)
 ;################################################################################
@@ -25,12 +47,6 @@
 	NoCommentOutput	:= gNL_Func . lineStr . 'v1v2EOLCommentCont' . EOLComment . gEOLComment_Func
 	OutSplit := StrSplit(NoCommentOutput, '`r`n')
 
-	; TEMP - DEBUGGING - THESE TWO LENGTHS DO NOT MATCH SOMETIMES - CAUSES SCRIPT RUN ERRORS
-	; ... ESPECIALLY IN OLD VERSION OF CONVERTER
-	if (OutSplit.Length < gEOLComment_Cont.Length)
-	{
-;		MsgBox "[" NoCommentOutput "]`n`n" OutSplit.Length "`n`n" gEOLComment_Cont.Length
-	}
 	for idx, comment in gEOLComment_Cont {
 		if (idx != OutSplit.Length)								; if not last element
 			OutSplit[idx] := OutSplit[idx] comment				; add comment to proper line
@@ -79,7 +95,7 @@
 ; 2025-06-12 AMB, Moved to dedicated routine for cleaner convert loop
 ; Purpose: Converts PseudoArray to Array and...
 ;	ensures v1 RegexMatchObject can be accessed as a v2 Array
-/*
+	/*
 	V2 ONLY?  - Can part be applied to V1.1 if user wants (with exception of v2 only)?
 	also ensure v1 RegexMatchObject can be accessed as a v2 Array
 	array123						=> array[123]
@@ -87,17 +103,13 @@
 	Special cases in RegExMatch		=> { OutVar: OutVar[0]		OutVar0: ""				}
 	Special cases in StringSplit	=> { OutVar: "",			OutVar0: OutVar.Length	}
 	Special cases in WinGet(List)	=> { OutVar: OutVar.Length,	OutVar0: ""				}
-*/
-
-;	if (!lineStr)
-;		return
-
+	*/
 	Loop gaList_PseudoArr.Length {
 		if (InStr(lineStr, gaList_PseudoArr[A_Index].name))
 			lineStr := ConvertPseudoArray(lineStr, gaList_PseudoArr[A_Index])
 	}
 
-/*
+	/*
 	V2 ONLY
 	Converts Object Match V1 to Object Match V2
 	ObjectMatch.Value(N)	=> ObjectMatch[N]
@@ -105,7 +117,7 @@
 	ObjectMatch.Mark()		=> ObjectMatch.Mark
 	ObjectMatch.Name(N)		=> ObjectMatch.Name(N)
 	ObjectMatch.Name		=> ObjectMatch["Name"]
-*/
+	*/
 	Loop gaList_MatchObj.Length {
 		if (InStr(lineStr, gaList_MatchObj[A_Index]))
 			lineStr := ConvertMatchObject(lineStr, gaList_MatchObj[A_Index])
@@ -228,22 +240,22 @@
 
 	; return % var -> return var
 	nReturn1 := 'i)^(.*)(return)\h+%\h*\h+(.*)$'
-	lineStr	:= RegExReplace(lineStr, nReturn1, '$1$2 $3')
+	lineStr	 := RegExReplace(lineStr, nReturn1, '$1$2 $3')
 
 	; return %var% -> return var
 	nReturn2 := 'i)^(.*)(return)\h+%(\w+)%(.*)$'
-	lineStr	:= RegExReplace(lineStr, nReturn2, '$1$2 $3$4')
+	lineStr	 := RegExReplace(lineStr, nReturn2, '$1$2 $3$4')
 
 	; Fix return that has multiple return values (not common)
-	If (RegExMatch(lineStr, 'i)^(\h*return\h*)(.*)', &m) && InStr(m[2], ',')) {
-		Mask_FuncCalls(&lineStr)	; Mask_Strings(&lineStr) is auto-performed within Mask_FuncCalls()
-		Mask_KVObjects(&lineStr)	; don't wrap key/val pair objects
-		if InStr(lineStr, ',') {	; line appears to have multiple return values...
+	If (RegExMatch(lineStr, 'i)^(\h*return\h+)(.*)', &m) && InStr(m[2], ',')) {
+		sess := clsMask.NewSession()		; create temp masking session
+		MaskT(&lineStr, 'FC',1,sess)		; mask func CALLS (also masks strings)
+		MaskT(&lineStr, 'KV',,sess)			; don't wrap key/val pair objects
+		if InStr(lineStr, ',') {			; line appears to have multiple return values...
 			lineStr := m[1] '(AHKv1v2_Temp := ' m[2] ', AHKv1v2_Temp) `; V1toV2: Wrapped Multi-statement return with parentheses'
 		}
-		Restore_Strings(&lineStr)
-		Restore_KVObjects(&lineStr)
-		Restore_FuncCalls(&lineStr)
+		MaskR(&lineStr, 'KV',,sess)			; restore key/val pairs
+		MaskR(&lineStr, 'FC',,sess)			; restore function calls (also restores strings)
 	}
 	return
 }
@@ -257,30 +269,6 @@
 	if (RegExMatch(lineStr, 'i)^(\h*)([a-z_][a-z_0-9]*)\h*(\+|-)=\h*([^,\h]*)\h*,\h*([smhd]\w*)(.*)$', &m)) {
 		cmd := (m[3]='+') ? 'DateAdd' : 'DateDiff'
 		lineStr := m[1] m[2] ' := ' cmd '(' m[2] ', ' FormatParam('ValueCBE2E', m[4]) ", '" m[5] "')" m[6]
-	}
-	return
-}
-;################################################################################
-														 v2_DQ_Literals(&lineStr)
-;################################################################################
-{
-; 2025-06-12 AMB, redesigned and moved to dedicated routine for cleaner convert loop
-; Purpose: convert double-quote literals from "" (v1) to `" (v2) format
-;	handles all of them, whether in function call params or not
-
-	Mask_DQstrings(&lineStr)									; tag any DQ strings, so they are easy to find
-
-	; grab each string mask one at a time from lineStr
-	nDQTag		:= gTagPfx 'DQ_\w+' gTagTrl						; [regex for DQ string tags]
-	pos			:= 1
-	While (pos	:= RegexMatch(lineStr, nDQTag, &mTag, pos)) {	; find each DQ string tag (masked-string)
-		tagStr	:= mTag[]										; [temp var to handle tag and replacement]
-		Restore_DQstrings(&tagStr)								; get orig string for current tag
-		tagStr	:= SubStr(tagStr, 2, -1)						; strip outside DQ chars from each end of extracted string
-		tagStr	:= RegExReplace(tagStr, '""', '``"')			; replace all remaining "" with `"
-		tagStr	:= '"' tagStr '"'								; add DQ chars back to each end
-		lineStr	:= StrReplace(lineStr, mTag[], tagStr)			; replace tag within lineStr with newly converted string
-		pos		+= StrLen(tagStr)								; prep for next search
 	}
 	return
 }
@@ -315,33 +303,31 @@
 ; Purpose: Make sure kvPairs have valid v2 key names [{"A": "B"}] => [{A: "B"}]
 ; characters for V2 key names are much more restrictive, may need to update further
 ;  also updated to detect valid {key:val} objects (only)
+; TODO - THIS CAN CHANGE KEY NAMES - NEED TO ADD SUPPORT FOR...
+;	1. ENSURING KEYNAMES ARE STILL UNIQUE
+;	2. UPDATING KEYNAME REFERENCES WITHIN CODE (obj.KEYNAME)
 
 
-	Mask_Strings(&lineStr)	; must be here to avoid errors with next regex			; don't match false positives (found within strings)
+	MaskT(&lineStr, 'STR')	; must be here to avoid errors with next regex			; don't match false positives (found within strings)
 	if (!(lineStr ~= gPtn_KVO))	{													; make sure line has VALID {key:val} object
-		Restore_Strings(&lineStr)													; cleanup before early exit
+		MaskR(&lineStr, 'STR')														; cleanup before early exit
 		return	; unchanged lineStr by reference
 	}
 
-;	Restore_Strings(&lineStr)														; too early
 	pos := 1
 	While (pos		:= RegexMatch(lineStr, gPtn_KVO, &mObj, pos)) {					; for each {key:val} object found on current line...
 		kvObj		:= mObj[]														; [working var]
 		kvPairsList	:= RegExReplace(kvObj, '\{([^}]+)\}', '$1')						; ... strip outer {} from object, now just key:val list sep by commas
 		newObj		:= '{'															; [will be the new object string]
 		for idx, kvPair in StrSplit(kvPairsList, ',') {								; for each key:val pair in list...
-			if (RegExMatch(kvPair, '(?s)^(?<key>[^:]+):(?<val>.+)$', &mKV)) {		; if is properly formatted key:val...
-				key		:= mKV.key, val := mKV.val									; ... extract key and value properties
-				Restore_Strings(&key)	; DO NOT REMOVE								; restore strings for key only (so it can be reformatted)
-				; make sure key name is valid format
-				; TODO - MIGHT NEED TO ADD DUPLICATION DETECTION/CORRECTION
-				key	:= StrReplace(RegExReplace(key,'"\h+\.\h+"'),'"')				; remove any concat operators and quotes from key (creates new var name)
-				if (RegExMatch(key, '^(\h*)(.+?)(\h*)$', &mKey)) {					; separate leading/trailing ws from key name...
-					key := mKey[1] . RegExReplace(mKey[2], '\W') . mKey[3]			; remove any illegal chars from key name (\w chars only, I think)
+			if (RegExMatch(kvPair, '(?s)^(?<key>[^:]+):(?<val>.+)$', &mKV)) {		; if seems to be properly formatted key:val...
+				; TODO - FOR ANY KEYNAME CHANGES in next line...
+				; ... ADD SUPPORT FOR UPDATING KEYNAME REFERENCES WITHIN CODE
+				val := mKV.val														; [working var]
+				if((key	:= validKeyName(mKV.key)) = '') {							; make sure key name is valid
+					key	:= mKV.key '_INVALID_KEYNAME'								; TODO - TEMP SOLUTION FOR NOW
 				}
-				; use lead underscore for names that begin with number (for now)
-				key := RegExReplace(key, '^(\h*)(\d\D.+)$', '$1_$2')				; can be a number, or ^[_a-z]\w*. But cannot be a var that begins with number
-				kvPair	:= key ':' val												; reassemble key:val pair with updated key
+				kvPair := key ':' val												; reassemble key:val pair with updated key
 			}
 			newObj .= kvPair . ','													; add updated key:val pair to new object list
 		}
@@ -349,8 +335,39 @@
 		lineStr	:= RegExReplace(lineStr, escRegexChars(kvObj), newObj,, 1, pos)		; update output - replacing old object string with new one
 		pos		+= StrLen(newObj)													; prep for next loop iteration
 	}
-	Restore_Strings(&lineStr)														; restore any remaining masked-strings
+	MaskR(&lineStr, 'STR')															; restore any remaining masked-strings
 	return		; lineStr by reference
+}
+;################################################################################
+																validKeyName(key)
+;################################################################################
+{
+; 2025-06-22 AMB, ADDED - ensures keyname is valid format
+; TODO - WORK IN PROGRESS
+	if HasTag(key, 'QS')															; if key contained quoted (masked) strings
+		key := RegExReplace(key, '(?<= |^)(?<!"|\w)(\w+)(?!"|\w)(?= |$)', '%$1%')	; ... wrap unquoted text in %% (variable)
+
+	MaskR(&key, 'STR', false)	; DO NOT REMOVE										; incase strings are masked before receiving
+	key := StrReplace(RegExReplace(key,'\h+\.\h+'),'"')								; remove any concat operators and quotes from key (creates new var name)
+	nKN := '^((?:\h*+\(*+)*+)([\w%]+(?:[-\h]*[\w%]+)*)+?((?:\h*+\)*+)*+)$'			; [identifies key name - supports optional parentheses/hyphens(not minus)/ws]
+	if (!RegExMatch(key, nKN, &mKN)) {												; if key does not look valid...
+		return ''																	; ... return empty string
+	}
+	; keyname looks like its valid or can be fixed...
+	LWS	:= mKN[1]																	; leading ws and optional opening parenthesis (could be more than 1)
+	KN	:= mKN[2]																	; [working var for keyname]
+	TWS	:= mKN[3]																	; trailing ws and optional closing parenthesis (could be more than 1)
+
+	if (KN ~= '^\d+$') {															; if keyname is a number (1 or more integer digits) ? ...
+		return (LWS . KN . TWS)														; ... is valid - return it
+	}
+
+	; is alpha-numeric - ensure proper formatting
+	KN := RegExReplace(KN, '[^\w%]')													; valid chars are [a-z_0-9] (I think?) - remove spaces and hyphens from name
+	KN := RegExReplace(KN, '^(\h*)(\d\D.+)$', '$1_$2')								; keyname cannot begin with a number, add underscore to beginning if it does
+
+	return (KN) ? (LWS . KN . TWS) : ''												; trim any ws if KN is now empty
+
 }
 ;################################################################################
 											   v2_formatClassProperties(&lineStr)
@@ -392,13 +409,13 @@
 ; Purpose: Convert... func.("string") -> func.Call("string")
 ; TODO - update for more accurate targetting
 
-	nFC := '(\w+)\.\('										; this should be updated
+	nFC := '(\w+)\.\('										; orig needle - TODO - this should be updated
 	If (!(lineStr ~= nFC))									; if not a valid target...
 		return	; no change to linestr						; ... exit
 
-	Mask_Strings(&lineStr)									; avoid issues caused my string chars
+	MaskT(&lineStr, 'STR')									; avoid issues caused my string chars
 		lineStr := RegExReplace(lineStr, nFC, '$1.Call(')	; TODO - should update needle
-	Restore_Strings(&lineStr)								; remove string masks
+	MaskR(&lineStr, 'STR')									; remove string masks
 	return		; lineStr by reference
 }
 ;################################################################################
@@ -409,7 +426,7 @@
 ; Purpose: adds continuation lines to current line
 ; TODO -	EVENTUALLY - USE CONTINUATION SECTION MASKING INSTEAD
 ;			Ternary DOES NOT require ws - might need to adjust these needles
-;	WORK IN PROGRESS
+;	WORK IN PROGRESS - MAY BE MERGING INTO CSect class soon
 
 	global gOScriptStr, gO_Index, gEOLComment_Cont
 
@@ -428,9 +445,9 @@
 		nlChar1		:= SubStr(Trim(nextLine), 1, 1)												; first char of next line
 
 		; prevent these from interferring with detection of continuation lines
-		Mask_Hotkeys(&nextLine)
-		Mask_HotStrings(&nextLine)
-		Mask_Labels(&nextLine)
+		MaskT(&nextLine, 'HK')																	; mask hotkey declarations
+		MaskT(&nextLine, 'HS')																	; mask hotstring declartions
+		MaskT(&nextLine, 'labels')																; mask label declarations
 
 		; inspect each line after current line, to see whether a continuaton section exist...
 		;	if so, add each continuation line to the working var, which will then be added to curLine (and returned)
@@ -446,11 +463,12 @@
 			gOScriptStr.SetIndex(gO_Index)
 ;			outStr .= '`r`n' . RegExReplace(gOScriptStr[gO_Index], '(\h+`;.*)$', '')			; update output string as we go
 			outStr .= '`r`n' . RegExReplace(gOScriptStr.GetLine(gO_Index), '(\h+`;.*)$', '')	; update output string as we go
+
 			; these are not really needed... they serve no purpose here...
 			;	only included to cleanup reference within PreMask.masklist
-			Restore_Hotkeys(&nextLine)
-			Restore_HotStrings(&nextLine)
-			Restore_Labels(&nextLine)
+			MaskR(&nextLine, 'labels')															; restore label declarations
+			MaskR(&nextLine, 'HS')																; restore hotstring declarations
+			MaskR(&nextLine, 'HK')																; restore hotkey declarations
 		}
 		else {
 			break	; reached end of continuation section
@@ -483,15 +501,6 @@
 	if (gV2Conv) {	; v2 only conversion
 		v2_fixElseError(&lineStr, &lineOpen, &lineClose)	; V2 - fixes 'Unexpected Else' error
 	}
-
-;	; NOT USED ?? (seems to have no effect of unit tests)
-;	; Moving the if/else/While statement to the lineOpen
-;;	if (RegExMatch(curLine, "i)(^\s*[\}]?\s*(else|while|if)[\s\(][^\{]*{\s*)(.*$)", &Equation)) {
-;	if (RegExMatch(curLine, "i)^(\h*[\}]?\h*(else|while|if)[\h\(][^\{]*{\h*)(.*)$", &m)) {
-;		lineOpen .= m[1]
-;		lineStr := m[3]
-;	}
-
 	return
 }
 ;################################################################################
@@ -671,16 +680,16 @@
 ; [var ? "1" : ] => [var ? "1" : ""]
 ; TODO - Add unit tests for this... see below
 
-	Mask_Strings(&lineStr)
-		; blank/missing 'true' value, single or multi-line
+	MaskT(&lineStr, 'STR')
+		; for blank/missing 'true' value, single or multi-line
 		lineStr := RegExReplace(lineStr, '(?im)^(.*?\s*+)\?(\h*+)(\s*+):(\h*+)(.+)$', '$1?$2""$3:$4$5')
-		; blank/missing 'false' value, SINGLE-line
+		; for blank/missing 'false' value, SINGLE-line
 		lineStr := RegExReplace(lineStr, '(?im)^(.*?\h\?.*?:\h*)(\)|$)', '$1 ""$2')
-		; blank/missing 'false' value, Multi-line
+		; for blank/missing 'false' value, MULTI-line
 		lineStr := RegExReplace(lineStr, '(?im)^(.*?\h*+)(\v+\h*+\?[^\v]+\v++)(\h*+:)(\h*+)(\){1,}|$)', '$1$2$3$4""$5')
-	Restore_Strings(&lineStr)
+	MaskR(&lineStr, 'STR')
 
-	return
+	return		; lineStr by reference
 }
 ;################################################################################
 														   noKywdCommas(&lineStr)
@@ -691,7 +700,7 @@
 
 	nFlow	:= 'i)^(\h*)(else|for|if|loop|return|switch|while)(?:\h*,\h*|\h+)(.*)$'
 	lineStr	:= RegExReplace(lineStr, nFlow, '$1$2 $3')
-	return
+	return		; lineStr by reference
 }
 ;################################################################################
 															  splitLine(&lineStr)
@@ -708,7 +717,6 @@
 
 	; if line is not a hotstring, but is single-line hotkey with cmd, separate hotkey from cmd temporarily...
 	;	so the cmd can be processed alone. The hotkey will be re-combined with cmd after it is converted.
-;	nHotKey	:= gPtn_HOTKEY . '(.*)' ;((?:(?:^\h*+|\h*+&\h*+)(?:[^,\h]*|[$~!^#+]*,))+::)(.*+)$'
 	; TODO - need to update needle for more accurate targetting
 	nHotKey	:= '((?:(?:^\h*+|\h*+&\h*+)(?:[^,\h]*|[$~!^#+]*,))+::)(.*+)$'
 	if ((firstTwo	!= '::') && RegExMatch(LineStr, nHotKey, &m)) {
@@ -842,21 +850,8 @@
 ; replace [ = ] with [ := ] in different situations
 ; TO DO - needs to be updated to cover all situations
 
-;	WORK IN PROGRESS...
-;	Mask_FuncCalls(&lineStr)
-;;	MsgBox '[' lineStr ']'
-;	nLegAssign := '(?i)([a-z_][\w%]*+\h*+)=(?!=)([^,;\v]*+)'
-;	pos := 1
-;	While (pos := RegExMatch(lineStr, nLegAssign,&m,pos)) {
-;		new := trim(m[1]) ' := ' ToStringExpr(m[2])
-;		lineStr := RegExReplace(lineStr, escRegexChars(m[]), new,,pos)
-;		pos += StrLen(new)
-;	}
-;	Restore_FuncCalls(&lineStr)
-
 	; Legacy v1
 	; ... for assignments that take up entire line
-;	nLegAssign := '(?is)^(\h*+[a-z_%][\w%]*+\h*+)=(?!=)([^;\v]*+)'
 	nLegAssign := '(?is)^(\h*+[a-z_%][\w%]*+\h*+)=(?!=)([^;]*+)'
 	if (RegExMatch(lineStr, nLegAssign, &m)) {
 		before := lineStr
@@ -883,20 +878,20 @@
 ;################################################################################
 {
 ; 2025-06-12 AMB, Moved to dedicated routine for cleaner convert loop
-; TO DO - DOES NOT WORK WITH MIXED VAR ASSIGNEMENTS - NEED TO FIX
-;	the original did not work for mixed var assignments either
+; TO DO - DOES NOT WORK WITH MIXED VAR ASSIGNEMENTS - WILL FIX soon
+;	(the original did not work for mixed var assignments either)
 
 	comment := ''
 	nLegAssign := '(?i)((global|local|static).+)(?<!:)=(?!=)'			; detect... legacy = on global/static/local line
 	if (RegExMatch(lineStr, nLegAssign)) {
-		Mask_Strings(&lineStr)											; prevent detecton interference from strings
-		While (RegExMatch(lineStr, nLegAssign)) {						; if line has legacy assignment...
-			lineStr := RegExReplace(lineStr, nLegAssign, '$1:=')		; ... replace with expression assignment
-		}
-		If (InStr(lineStr, ',')) {										; add warning about mixed assignments as needed
-			comment := ' `; V1toV2: Assuming this is v1.0 code'			; no mixed assignemts supported (YET!)
-		}
-		Restore_Strings(&lineStr)										; clean up
+		MaskT(&lineStr, 'STR')											; prevent detecton interference from strings
+			While (RegExMatch(lineStr, nLegAssign)) {					; if line has legacy assignment...
+				lineStr := RegExReplace(lineStr, nLegAssign, '$1:=')	; ... replace with expression assignment
+			}
+			If (InStr(lineStr, ',')) {									; add warning about mixed assignments as needed
+				comment := ' `; V1toV2: Assuming this is v1.0 code'		; no mixed assignments supported (YET! but WILL soon)
+			}
+		MaskR(&lineStr, 'STR')											; clean up
 	}
 	return		; lineStr by reference
 }
@@ -911,16 +906,16 @@
 
 	global gmByRefParamMap
 
-	Mask_Strings(&lineStr)												; mask any ByRef,commas,?,= that may be within strings
+	MaskT(&lineStr, 'STR')												; mask strings that may contain 'ByRef, commas, ?, ='
 
 	; does lineStr contain a function declaration/call?
 	if (!RegExMatch(lineStr, gPtn_FuncCall, &mFunc)) {					; if lineStr does NOT have a function call...
-		Restore_Strings(&lineStr)										; ... remove masks from strings...
+		MaskR(&lineStr, 'STR')											; ... restore strings...
 		return	; no func call found									; ... and exit
 	}
 	; do not include IF or WHILE (which can be detected as well)
 	if (mFunc.FcName ~= 'i)\b(if|while)\b') {							; if func name is actually IF or WHILE...
-		Restore_Strings(&lineStr)										; ... remove masks from strings...
+		MaskR(&lineStr, 'STR')											; ... restore strings...
 		return	; exclude If or While									; ... and exit
 	}
 
@@ -944,7 +939,7 @@
 		&& !(gmByRefParamMap.has(mFunc.FcName))) {						; ... but func hasn't been flagged as such (yet - within global map)...
 		gmByRefParamMap.Set(mFunc.FcName, ByRefFlags)					; ... flag func, to be processed fully in FixByRefParams()
 	}
-	Restore_Strings(&lineStr)											; restore orignal strings
+	MaskR(&lineStr, 'STR')												; restore orignal strings
 	return																; lineStr by reference
 }
 ;################################################################################
@@ -956,10 +951,9 @@
 ;	see gmAhkFuncsToConvert() within 2Functions.ahk
 ; TODO - MOVE THIS AND RELATED FUNCTIONS TO 2Functions.ahk ??
 
-
 	global gfNoSideEffect
 
-	gfNoSideEffect := False		; need to see if this is needed ?
+	gfNoSideEffect := False		; TODO - see if this is needed OR rename var to better reflect purpose
 	V1toV2_Functions(scriptString, lineStr, &lineFuncV2, &gotFunc:=False)
 	if (gotFunc) {
 		lineStr := lineFuncV2
@@ -971,14 +965,36 @@
 ;################################################################################
 {
 ; 2025-06-12 AMB, Moved to dedicated routine (and redesigned) for cleaner convert loop
+; 2025-06-22 AMB, UPDATED to support global masking of continuation sections,
+;	and comments for all lines
 ; Purpose: parses line looking for v1 COMMANDS that need to be converted to v2 format
 ;	performs recursion as required for chained commands/params
-;	also handles multi-line params
+;	also supports continuation sections
 ; TODO - MOVE THIS AND RELATED FUNCTIONS TO 1Commands.ahk ??
 
+	global gO_Index, gIndent, gOScriptStr, gEOLComment_Cont
 
-	global gO_Index, gIndent, gOScriptStr
-
+	; 2025-06-22 AMB, ADDED support for global masking of continuation sections
+	; if lineStr is a continuation section masked tag...
+	; extract original code, see if line1 has a targetted command... if not, exit
+	fHaveCS	:= false															; flag used later
+	if (tag := hasTag(lineStr, 'MLCSECTM2')) {									; is lineStr a continuation tag?
+		oCode := hasTag(lineStr, tag)											; get orignal line + continuation section
+		MaskR(&oCode, 'C&S', false)												; extract comments/strings that are masked
+		if (RegExMatch(oCode, '(?s)^([^\v]+)(.+)$', &m)) {
+			tLine1 := m[1], contBlk := m[2]										; separate temp_line1 from continuation block
+			if (!obj := V1LineToProcess.getCmdObject(tLine1)) {					; determine whether line1 has v1 command to be converted
+				return false													; no command to process - exit
+			}
+			; line1 has legit command
+			lineStr := tLine1													; OK to change lineStr now - make it the first (cmd) line
+			fHaveCS := true														; flag to use alternate routine to fill params arrays
+			; deal with any comment on line 1
+			FirstChar	:= SubStr(Trim(lineStr),1,1)							; get first char of line (after leading ws)
+			lineStr		:= removeEOLComments(lineStr, FirstChar, &EOLComment)	; remove first comment found on line1
+			gEOLComment_Cont.Push(EOLComment)									; TODO - can lead to errors, investigate if it continues
+		}
+	}
 
 	; look at current line and find/convert v1 command(s) that require conversion
 	; loop will be performed recursively as needed to convert chained commands (if exist)
@@ -1003,11 +1019,20 @@
 		; 	these 'extended' params should be last param on cur line.
 		; Find this cont section (if it exists) and...
 		; 	update cLParams, cLParamsArr, EOLComment
-		if (paramContSect := getParamContSect(&cLParams, &cLParamsArr, &EOLComment)) {			; get param continuation section (if exists) for last param on current line
-;			MsgBox "[" paramContSect "]", "CONT" ; debug
+
+		; get continuaton section (if present)
+		; 2025-06-22 AMB, UPDATED to support global masking of continuation sections
+		if (fHaveCS) {																			; if we already have the continuation section (see entry above)
+			if (contBlk) {																		; if we have not visited getParamContSect2() yet
+				if (paramContSect := getParamContSect(contBlk, &cLParams						; use alternate routine to fill params string and array
+											, &cLParamsArr, &EOLComment)) {
+;					MsgBox "[" paramContSect "]", "CONT" ; debug								; debug
+				}
+				contBlk := ''																	; make sure we only enter getParamContSect2() once
+			}
 		}
 
-		; REWORK THESE AS PART OF CLASS OBJECT INSTEAD (OR ELIMINATE ENTIRELY) ??
+		; TODO - REWORK THESE AS PART OF CLASS OBJECT INSTEAD (OR ELIMINATE ENTIRELY) ??
 		; ONLY USED BY _msgbox()
 		cLParamsArr.Extra.OrigArr := cLParamsArr.Clone()
 		cLParamsArr.Extra.OrigStr := cLParams
@@ -1044,6 +1069,71 @@
 	}	Until(!fRecursionReq)
 
 	return																						; all func parameters by reference
+}
+;################################################################################
+				  getParamContSect(contBlk, &cLParams, &cLParamsArr, &EOLComment)
+;################################################################################
+{
+; 2025-06-22 AMB, UPDATED to support global masking of continuation sections
+; gets continuaton section (parentheses-block) from known source (contBlk)
+; updates param list string and array
+; TODO - the code is currently a hybrid between the old brute force method...
+;	... and already having the CS data in hand (contBlk).
+;	Will redesign to remove brute-force after verifying that CS masking works well
+
+	global gO_Index, gOScriptStr
+
+	lastLineParam	:= cLParamsArr[cLParamsArr.length]							; most recent line param, prior to arriving here
+	fullContSectStr	:= lastLineParam '`r`n'										; starts with command from previous line (line1 usually)
+
+	lines := StrSplit(contBlk, '`n', '`r')										; grab lines from cont blk
+	curContLine := '', looped := false											; ini
+	for idx, line in lines
+	{
+		; TODO - might need to adjust this jump/continue in future?
+		if (idx=1)
+			continue															; skip first element
+		looped		:= true														; flag for gEOLComment_Cont[] below loop
+		curContLine	:= line														; [working var]
+		FirstChar	:= SubStr(Trim(curContLine),1,1)							; capture "(" or ")" if on current line
+		curContLine	:= removeEOLComments(curContLine, FirstChar, &EOLComment)	; remove first comment found on line
+		gEOLComment_Cont.Push(EOLComment)										; save comment for CURRENT LINE to be restored later
+
+		if (FirstChar == ')')													; if current line appears to be end of cont section
+		{
+			cLParams .= '`r`n' curContLine										; append current continuation line to LINE params
+;			fullContSectStr .= curContLine '`r`n'
+
+			; when a cont section is not the last param...
+			;	look for trailing params that follow the
+			;	closing parenthesis of cont section...
+			; 	This can also continue the search for...
+			;	addtional params and cont sections
+			trailingParams := V1ParamSplit(curContLine)							; get any additional params that follow closing parenthesis
+
+			lastIdx := cLParamsArr.Length										; [last array element idx]
+			cLParamsArr[lastIdx] := fullContSectStr . trailingParams[1]			; REPLACE the last element with accumulaed contSect lines and first param from current line
+			Loop trailingParams.Length - 1 {									; then, add the rest of trailing params from current line
+				cLParamsArr.Push(trailingParams[A_index + 1])
+			}
+			break																; continuation section has concluded - EXIT
+		}
+		cLParams .= '`r`n' curContLine											; add the final continuation line to LINE params
+		fullContSectStr .= curContLine '`r`n'									; add the final continuation to output string
+	}
+	fullContSectStr .= curContLine												; this final concat is just for output purposes (for debugging)
+
+	; gEOLComment_Cont is provided by Banaanae
+	if (looped)	; don't do this unless we entered loop above
+	{
+		if (gEOLComment_Cont.Length != 1) {
+			EOLComment := ''
+		}
+		else {
+			gEOLComment_Cont.Pop()
+		}
+	}
+	return fullContSectStr														; output full continuation block
 }
 ;################################################################################
 			  executeConversion(&lineStr, &cLParamsArr, cDParamsArr, cmdV2Format)
@@ -1138,7 +1228,10 @@
 				fRecursionReq := true															; ... recursion will be required
 			}
 			else {																				; look to see whether 'extra param' is a chained cmd...
-				fRecursionReq := FindCmdDefs(exParam1)											; reursion will be required IF it is a chained command
+				fRecursionReq := FindCmdDefs(exParam1)											; recursion will be required IF it is a chained command
+			}
+			if (fRecursionReq) {
+				extraParams := LTrim(extraParams)	; RE-ADDED 2025-06-22						; trim next param if it's actually a keyword or command
 			}
 		}
 	}
@@ -1166,93 +1259,6 @@
 
 	return extraParams
 }
-
-;################################################################################
-						   getParamContSect(&cLParams, &cLParamsArr, &EOLComment)
-;################################################################################
-{
-; 2025-06-12 AMB, Moved from v2_AHKCommands() to dedicated routine
-; gets continuaton section (parentheses-block) if one exists for current command param
-; updates param list string and array
-; TODO - may incorporate continuation-section masking/tags at some point
-
-	global gO_Index, gOScriptStr
-
-	; have we reached end of script?
-	if (gOScriptStr.Length <= gO_Index)	{										; if at end of script...
-		return ''																; ...exit, no continuation section
-	}
-
-	; is next line the beginning of continuation section?
-	nextLine := Trim(gOScriptStr.GetLine(gO_Index + 1))							; grab next line
-	if (!(nextLine ~= buildPtn_MLBlock().define)) {								; if not the start of cont section...
-		return ''																; ...exit, no continuation section
-	}
-
-	; this is a continuation section...
-	; loop thru each line until closing parenthesis is found
-	; collect line strings, then add them to cLParams and cLParamsArr
-	lastLineParam	:= cLParamsArr[cLParamsArr.length]							; most recent line param, prior to looking for cont section
-	fullContSectStr	:= lastLineParam '`r`n'										; starts with command from previous line (much of the time)
-	loop
-	{
-		; CAN USE A NEW INSTANCE OF SCRIPTCODE TO PREVENT ADVANCING LOOP INDEX
-		gO_Index++, gOScriptStr.SetIndex(gO_Index)								; advance to next line (position within script array)
-		if (gOScriptStr.Length < gO_Index) {									; if reached end of script, stop search, exit
-			break
-		}
-;		curContLine	:= gOScriptStr[gO_Index]									; next line in continuation (because of gO_Index++ above)
-		curContLine	:= gOScriptStr.GetLine(gO_Index)							; next line in continuation (because of gO_Index++ above)
-
-		FirstChar := SubStr(Trim(curContLine),1,1)								; capture "(" or ")" if on current line
-		if (FirstChar == ')')													; if current line appears to be end of cont section
-		{
-			if (RegExMatch(curContLine, '(\h+`;.*)$', &mComment)) {				; if current line has a trailing comment...
-				EOLComment .= ' ' mComment[1]									; ... add that comment to comment var
-				curContLine := RegExReplace(curContLine, '(\h+`;.*)$', '')		; then, remove comment from current line
-			}
-
-			cLParams .= '`r`n' curContLine										; append current continuation line to LINE params
-;			fullContSectStr .= curContLine '`r`n'
-
-			; when a cont section is not the last param...
-			;	look for trailing params that follow the
-			;	closing parenthesis of cont section...
-			; 	This can also continue the search for...
-			;	addtional params and cont sections
-			trailingParams := V1ParamSplit(curContLine)							; get any additional params that follow closing parenthesis
-
-			lastIdx := cLParamsArr.Length										; [last array element idx]
-			cLParamsArr[lastIdx] := fullContSectStr . trailingParams[1]			; REPLACE the last element with accumulaed contSect lines and first param from current line
-			Loop trailingParams.Length - 1 {									; then, add the rest of trailing params from current line
-				cLParamsArr.Push(trailingParams[A_index + 1])
-			}
-			break																; continuation section has concluded - EXIT
-		}
-		cLParams .= '`r`n' curContLine											; add the final continuation line to LINE params
-		fullContSectStr .= curContLine '`r`n'									; add the final continuation to output string
-	}
-	fullContSectStr .= curContLine												; this final concat is just for output purposes (for debugging)
-
-	return fullContSectStr														; output full continuation block
-
-	;; for handling cLParamsArr updates externally (if desired)
-	;	contSect := getParamContSect(...)
-	;	nContSect := '(?s)^.+?(\s+' . gPtn_PrnthBlk . '"?\)*)(.*)$'
-	;	if (RegExMatch(contsect, nContSect, &m)) {
-	;		parBlk := m[1], extParams := m[4]
-	;		cLParamsArr[cLParamsArr.length] := lastLineParam . parBlk
-	;		if (extParams && curLineParams := V1ParamSplit(extParams)) {
-	;			Loop curLineParams.Length {
-	;				curParam := RTrim(curLineParams[A_index], '`r`n`t ')		; trim ws from right side
-	;				if (trim(curParam)) {
-	;					cLParamsArr.Push(curParam)
-	;				}
-	;			}
-	;		}
-	;	}
-}
-
 ;################################################################################
 Class V1LineToProcess
 {
@@ -1376,80 +1382,3 @@ Class CommandDefProfile
 		return CommandDefProfile(cmd, cmdV1Format, cmdV2Format, v1DefParams)				; return a command profile object to caller
 	}
 }
-
-
-
-;;################################################################################
-;checkContState(&curLine, &lastLine, &ScriptOutput)		; NO LONGER USED
-;;################################################################################
-;{
-
-;	static inCont := false, Cont_String := false
-
-;		FirstChar	:= SubStr(Trim(curLine), 1, 1)
-;		FirstTwo	:= SubStr(LTrim(curLine), 1, 2)
-
-;	if (FirstChar == '(')
-;	;        && RegExMatch(curLine, 'i)^\s*\((?:\s*(?(?<=\s)(?!;)|(?<=\())(\bJoin\S*|[^\s)]+))*(?<!:)(?:\s+;.*)?$')
-;			&& RegExMatch(curLine, 'i)^\h*\((?:\h*(?(?<=\h)(?!;)|(?<=\())(\bJoin\S*|[^\h)]+))*(?<!:)(?:\h+;.*)?$')
-;	{
-;		InCont := 1
-;		;if (RegExMatch(Line, 'i)join(.+?)(LTrim|RTrim|Comment|`%|,|``)?', &Join))
-;		;JoinBy := Join[1]
-;		;else
-;		;JoinBy := '``n'
-;		;MsgBox, Start of continuation section`nLine:`n%Line%`n`nLastLine:`n%LastLine%`n`nScriptOutput:`n[`n%ScriptOutput%`n]
-;		if (InStr(LastLine, ':= ""'))
-;		{
-;			; if LastLine was something like:                                  var := ""
-;			; that means that the line before conversion was:                  var =
-;			; and this new line is an opening ( for continuation section
-;			; so remove the last quote and the newline `r`n chars so we get:   var := "
-;			; and then re-add the newlines
-;			ScriptOutput := SubStr(ScriptOutput, 1, -3) . '`r`n'
-;			;MsgBox, Output after removing one quote mark:`n[`n%ScriptOutput%`n]
-;			Cont_String := 1
-;			;;;Output.Seek(-4, 1) ; Remove the newline characters and double quotes
-;		}
-;		else if (LastLine ~= '"\h*$')
-;		{
-;			Cont_String := 1
-;			;;;Output.Seek(-2, 1)
-;			;;;Output.Write(' `% ')
-;		}
-;		;continue ; Don't add to the output file
-;	}
-;	else if (FirstChar == ')')
-;	{
-;		;MsgBox 'End Cont. Section`n`nLine:`n' Line '`n`nLastLine:`n' LastLine '`n`nScriptOutput:`n[`n' ScriptOutput '`n]'
-;		InCont := 0
-;		if (Cont_String = 1)
-;		{
-;			curLine := RegExReplace(curLine, '\)', ')"',, 1)
-
-;			if (FirstTwo != ')"') {   ; added as an exception for quoted continuation sections
-;;				curLine := RegExReplace(curLine, '\)', ')"', , 1)
-;			}
-
-;			ScriptOutput .= curLine . '`r`n'
-;			LastLine := curLine
-;			Cont_String := false
-;			return true ;continue
-;		}
-;	}
-;	else if (InCont)
-;	{
-;		;Line := ToExp(Line . JoinBy)
-;		;if (InCont > 1)
-;		;Line := '. ' . Line
-;		;InCont++
-;		curLine := RegexReplace(curLine, '%(.*?)%', '" $1 "')
-;		;MsgBox 'Inside Cont. Section`n`nLine:`n' Line '`n`nLastLine:`n' LastLine '`n`nScriptOutput:`n[`n' ScriptOutput '`n]'
-;		ScriptOutput .= curLine . '`r`n'
-;		LastLine := curLine
-;		return true ;continue
-;	}
-
-
-;	return false
-;}

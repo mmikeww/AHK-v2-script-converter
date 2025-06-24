@@ -23,55 +23,45 @@
 
 	TODO
 		Better support for comment/string masking to avoid conflicts between them
-		Add more support for Continuation sections - detection, conversion, restoration (set of Classes supporting different types?)
+		Finish support for Continuation sections
 		Add support of other types of blocks/commands, etc.
 		Add interctive component to prompt user for decisions?
 		Refactor for separate support for v1.0 -> v1.1, and v1.1 -> v2
+		Better support for labels - False positive - 'Default:' within switch block (need to mask switch blocks first)
 
 */
 
-#Include ConvContSect.ahk
-
-global	  gTagChar		:= chr(0x2605) ; '★'																	; unique char to ensure tags are unique
-;		, gNull			:= gTagChar 'NULL' gTagChar
-		, gTagPfx		:= '#TAG' . gTagChar																	; common tag-prefix
-		, gTagTrl		:= gTagChar . '#'																		; common tag-trailer
-;		, gFilePath		:= '', gTestResCnt := 0	; TEMP
-
+;################################################################################
+; 2025-06-22 - UPDATED most of these needles
 ; global needles that can be used from anywhere within project
-		; 2025-06-12 AMB, UPDATED - target non-escaped semicolons with leading ws or at beginning of string
-		, gnLineComment	:= '(?<=^|\s)(?<!``);[^\v]*+'															; line comment (allows lead ws to be consumed already)
-;		, gnLineComment	:= '(?m).*\K(?<=^|\h)(?<!``);.*$'			; very last occurence on any line			; POOR Efficiency
-;		, gnLineComment	:= '(?m)(?<=^|\h)(?<!``);[^;\v]*+(?=\v|\z)'	; very last occurence on any line			; FAR MORE EFFICIENT
-		, gPtn_LC		:= '(*UCP)(?m)' . gnLineComment															; line comments found on any line
-;		, gPtn_LC		:= '(*UCP)(?m)(?<=\s|)(?<!``);[^\v]*'													; line comments found on any line
-		, gPtn_BC		:= '(*UCP)(?m)^\h*(/\*((?>[^*/]+|\*[^/]|/[^*])*)(?>(?-2)(?-1))*(?:\*/|\Z))'				; block comments
-;		, gPtn_ContBlk	:= '(?s)^(\R+\(\R+)(.+?)((?:\r\n)+\))$'													; basic continuation (parentheses) block [for reference]
-;		, gPtn_BrcBlk	:= '(\{(?>[^}{]+|(?-1))*\})'															; nested brace blocks (for future support)
-;		, gPtn_KVO		:= '\{(?<KV>[^:\v]+:[^,\v]+,?)+\}'														; {key1:val1,key2:val2} obects
-		, gPtn_KVO		:= '\{([^:,}\v]++:[^:,}]++)(,(?1))*+\}'													; {key1:val1,key2:val2} obects
-		, gPtn_PrnthBlk	:= '(?<FcParth>\((?<FcParams>(?>[^)(]+|(?-2))*)\))'		; very general					; nested parentheses block, single or multi-line
-		, gPtn_PrnthML	:= '\(\R(?>[^\v\))]+|(?<!\n)\)|\R)*?\R\h*\)'			; very general					; nested parentheses block, MULTI-LINE ONLY
-		, gPtn_LineCont	:= '(.++)\R\s*+' . gPtn_PrnthML . '(.*+)'				; general						; line, plus continuation section, plus trailer
-		, gPtn_FuncCall := '(?im)(?<FcName>[_a-z]\w*+)' . gPtn_PrnthBlk											; function call (supports ml and nested parentheses)
-		, gPtn_FUNC		:= buildPtn_FUNC()																		; function block (supports nesting)
-		, gPtn_CLASS	:= buildPtn_CLS()																		; class block (supports nesting)
-		, gPtn_V1L_MLSV	:= buildPtn_V1LegMLSV()																	; v1 legacy (non expression) multi-line string assignment
-;		, gPtn_IF		:= buildPtn_IF()																		; 2024-08-06 AMB, ADDED - IF blocks
-;		, gPtn_LBLDecl	:= '^\h*+(?<name>[^;,\s``]+)(?<!:):(?!:)'												; 2025-06-12 AMB, ADDED - Label declaration
-		, gPtn_LBLDecl	:= '^\h*(?<decl>(?::{0,2}(?:[^:,``\s]++|``[;%])++:(?!:))+)' ;(?=\h*$)'					; 2025-06-12 AMB, ADDED - Label declaration
-		, gPtn_LblBLK	:= buildPtn_Label()																		; 2024-08-06 AMB, ADDED - label blocks
-		, gPtn_HOTSTR	:= '^\h*+:(?<Opts>[^:\v]++)*+:(?<Trig>[^:\v]++)::'										; 2024-08-06 AMB, ADDED - hotstrings
-		, gPtn_HOTKEY	:= buildPtn_Hotkey()																	; 2024-08-06 AMB, ADDED - hotkeys
-		, gPtn_QS_1L	:= buildPtn_QStr()																		; DQ or SQ quoted-string, 1l (UPDATED 2025-06-12)
-		, gPtn_DQ_1L	:= buildPtn_QS_DQ()																		; DQ-string, 1l (ADDED 2025-06-12)
-		, gPtn_SQ_1L	:= buildPtn_QS_SQ()																		; SQ-string, 1l (ADDED 2025-06-12)
-		, gPtn_QS_MLPth	:= buildPtn_MLQSPth()																	; quoted-string, ml (within parentheses)
-		, gPtn_QS_ML	:= '(?<entry>:=\h*)\K"(([^"\v]++)\R)(?:\h*+[.|&,](?-2)*+)(?-1)++"'						; quoted-string, ml continuation (not within parentheses)
-		, gHotKeyList	:= ''
-		, gHotStrList	:= ''
-		, gMLContList	:= []
 
+global	  gTagChar		:= chr(0x2605) ; '★'															; unique char to ensure tags are unique
+		, gTagPfx		:= '#TAG' . gTagChar															; common tag-prefix
+		, gTagTrl		:= gTagChar . '#'																; common tag-trailer
+
+		, gnLineComment	:= '(?<=^|\s)(?<!``);[^\v]*+'													; UPDATED - line comment (allows lead ws to be consumed already)
+		, gPtn_LC		:= '(?m)' . gnLineComment														; UPDATED - line comments found on any line
+		, gPtn_BC		:= '(?m)^\h*(/\*((?>[^*/]+|\*[^/]|/[^*])*)(?>(?-2)(?-1))*(?:\*/|\Z))'			; block comments
+		, gPtn_KVO		:= '\{([^:,}\v]++:[^:,}]++)(,(?1))*+\}'											; UPDATED - {key1:val1,key2:val2} obects
+		, gPtn_PrnthBlk	:= '(?<FcParth>\((?<FcParams>(?>[^)(]+|(?-2))*)\))'			; very general		; nested parentheses block, single or multi-line
+		, gPtn_PrnthML	:= '\(\R(?>[^\v\))]+|(?<!\n)\)|\R)*?\R\h*\)'				; very general		; nested parentheses block, MULTI-LINE ONLY
+		. gPtn_CSectM1	:= buildPtn_CSM1()																; ADDED - line, plus cont sect 'method 1'
+		, gPtn_CSectM2	:= buildPtn_CSM2()											; general			; ADDED - line, plus cont sect 'method 2', plus trailer
+		, gPtn_FuncCall := '(?im)(?<FcName>[_a-z]\w*+)' . gPtn_PrnthBlk									; UPDATED - function call (supports ml and nested parentheses)
+		, gPtn_FUNC		:= buildPtn_FUNC()																; function block (supports nesting)
+		, gPtn_CLASS	:= buildPtn_CLS()																; class block (supports nesting)
+		, gPtn_V1L_MLSV	:= buildPtn_V1LegMLSV()															; UPDATED - v1 legacy (non-expr) multi-line string assignment
+		, gPtn_LBLDecl	:= '(?im)^\h*+(?<decl>(?::{0,2}(?:[^:,``\s]++|``[;%])++:)++)(?!\S)(?=\h*$)'		; UPDATED - Label declaration
+		, gPtn_LblBLK	:= buildPtn_Label()																; UPDATED - label blocks
+		, gPtn_HOTSTR	:= '^\h*+:(?<Opts>[^:\v]++)*+:(?<Trig>[^:\v]++)::'			; single line only	; UPDATED - hotstrings
+		, gPtn_HOTKEY	:= buildPtn_Hotkey().noLWS									; single line only	; UPDATED - hotkeys
+		, gPtn_HS_LWS	:= '^\s*+:(?<Opts>[^:\v]++)*+:(?<Trig>[^:\v]++)::'			; single line only	; UPDATED - hotstrings (supports leading blank lines)
+		, gPtn_HK_LWS	:= buildPtn_Hotkey().LWS									; single line only	; UPDATED - hotkeys (supports leading blank lines)
+		, gPtn_QS_1L	:= buildPtn_QStr()																; UPDATED - DQ or SQ quoted-string, 1l (UPDATED 2025-06-12)
+		, gPtn_DQ_1L	:= buildPtn_QS_DQ()																; UPDATED - DQ-string, 1l (ADDED 2025-06-12)
+		, gPtn_SQ_1L	:= buildPtn_QS_SQ()																; UPDATED - SQ-string, 1l (ADDED 2025-06-12)
+		, gPtn_QS_MLPth	:= buildPtn_MLQSPth()															; UPDATED - quoted-string, ml (within parentheses)
+		, gPtn_QS_ML	:= '(?<line1>:=\h*)\K"(([^"\v]++)\R)(?:\h*+[.|&,](?-2)*+)(?-1)++"'				; UPDATED - quoted-string, ml cont sect (not within parentheses)
 
 ;################################################################################
 class clsNodeMap	; 'block map' might be better term
@@ -81,7 +71,6 @@ class clsNodeMap	; 'block map' might be better term
 ; included to support tracking of local/global variables and modular-conversions
 
 	name					:= ''		; name of block
-;	taggedCode				:= ''		; (no longer used)
 	BlockCode				:= ''		; orig block code - used to determine whether code was converted
 	ConvCode				:= ''		; converted code
 	cType					:= ''		; CLS, FUNC, etc
@@ -93,7 +82,7 @@ class clsNodeMap	; 'block map' might be better term
 	ChildList				:= map()	; list of child nodes
 
 	; acts as constructor for a node object
-	__New(name, cType, blkCode, pos, len)
+	__new(name, cType, blkCode, pos, len)
 	{
 		this.name			:= name
 		this.cType			:= cType
@@ -154,7 +143,7 @@ class clsNodeMap	; 'block map' might be better term
 		for key, nm in clsNodeMap.MapList {
 			reportStr	.= '`nname:`t[' nm.cType '] ' nm.name '`nstart:`t' nm.pos '`nend:`t' nm.EndPos '`nlen:`t' nm.len
 						. '`nparent:`t' nm.parentName ' [' nm.parentPos ']`npath:`t' nm.path '`npathV:`t' nm.pathVal '`nDepth:`t' nm.Depth()
-						. '`nPList:`t' nm.parentList '`nChilds:`t' nm.getChildren() '`n'
+						. '`nPList:`t' nm.parentList '`nChilds:`t' nm.GetChildren() '`n'
 		}
 		return reportStr
 	}
@@ -209,9 +198,9 @@ class clsNodeMap	; 'block map' might be better term
 				if ((p:=RegExMatch(code, gPtn_CLASS, &m, pos))=pos)				; node position is known and specific
 				{
 					mCopy := m[]												; is premasked code - copy to prep for v2 conversion
-					Restore_PreMask(&mCopy)										; remove premask of comments/strings (should now be orig)
-					node.ConvCode := _convertLines(mCopy) ;,finalize:=0)		; now convert orig code to v2, store for final restoration
-					; replace block of premasked code with block-tag
+					MaskR(&mCopy, 'C&S')										; restore comments/strings (should now be orig)
+					node.ConvCode := _convertLines(mCopy)						; now convert orig code to v2, store for final restoration
+					; replace block of premasked-code with tag
 					code := RegExReplace(code, escRegexChars(m[]), mTag,,1,pos)	; 2025-06-12, part of Fix #333
 				}
 			}
@@ -223,9 +212,9 @@ class clsNodeMap	; 'block map' might be better term
 				if ((p:=RegExMatch(code, gPtn_FUNC, &m, pos))=pos)				; node position is known and specific
 				{
 					mCopy := m[]												; is premasked code - copy to prep for v2 conversion
-					Restore_PreMask(&mCopy)										; remove premask of comments/strings/etc (should now be orig)
-					node.ConvCode := _convertLines(mCopy) ;,finalize:=0)		; now convert orig code to v2, store for final restoration
-					; replace block of premasked code with block-tag
+					MaskR(&mCopy, 'C&S')										; restore comments/strings (should now be orig)
+					node.ConvCode := _convertLines(mCopy)						; now convert orig code to v2, store for final restoration
+					; replace block of premasked-code with tag
 					code := RegExReplace(code, escRegexChars(m[]), mTag,,1,pos)	; 2025-06-12, part of Fix #333
 				}
 			}
@@ -237,13 +226,11 @@ class clsNodeMap	; 'block map' might be better term
 	; converts original code in the process, stores it to be retrieved by Restore_Blocks()
 	static Mask_Blocks(&code)
 	{
-		; pre-mask comments and strings
-		Mask_PreMask(&code)										; might be redundant
-		; mask classes and functions
-		clsNodeMap.BuildNodeMap(code)							; prep for masking/conversion
-		clsNodeMap.maskAndConvertNodes(&code)
-		; remove premask from main/global code that will be converted normally
-		Restore_PreMask(&code)
+		MaskT(&code, 'C&S')										; mask comments/strings - might be redundant
+			; mask classes and functions
+			clsNodeMap.BuildNodeMap(code)						; prep for masking/conversion
+			clsNodeMap.maskAndConvertNodes(&code)
+		MaskR(&code, 'C&S')										; restore comments/strings
 		return
 	}
 
@@ -304,10 +291,19 @@ class clsNodeMap	; 'block map' might be better term
 	}
 }
 ;################################################################################
-class clsPreMask
+class clsMask
 {
-; handles masking of block/line comments and strings, and other general masking
-; may add support for multi-line strings as required
+; Class responisible for masking (tagging/restoring) code
+; Blocks of code are passed to MaskAll(), where targetted pattern substrings will be replaced with unique tags...
+;	... the passed code is accompanied with a regex needle that identifies the targeted substrings
+;	... the extracted substrings are then stored, and replaced with a unique tags (hiding them from conversion routines)
+; When restoration is needed, the tagged-code is sent to RestoreAll() where...
+;	... (unique) tags will be replaced with original code, but...
+;	... as part of the restoration process, the substrings are usually sent to a custom converter prior to restoration.
+; This class should be able to handle just about any type of masking/tagging desired
+;	It just needs a well formed regex needle to identify the taggeted subsrings, and conversion func if required
+;	These needles can be as simple or complex as your talents allow
+;	Contact one of the developers/contributers, if you would like assisitance with a custom needle
 
 	codePtn		:= ''
 	maskType	:= ''
@@ -331,175 +327,145 @@ class clsPreMask
 	static maskCountT	:= 0				; 2025-06-12 - to prevent endless-loop bug
 
 
+	; PUBLIC - establishes new masking session using clsMask._session
+	; this can be used to control which tags are accessed/restored/deleted
+	static NewSession()
+	{
+		uniqID	:= clsMask._genUniqueID()
+		sessObj	:= clsMask._session(uniqID)
+		return	sessObj
+	}
+
+	; PUBLIC property - read only
+	; TODO - return orig substr instead of T/F?
+	Static HasTag[tagID] {
+		get => this.masklist.Has(tagID)		; does tag exist in mask list?
+	}
+
+	; PUBLIC property - read only
+	; returns orig substr for passed tag (if available), 0 otherwise
+	Static GetOrig[tag] {
+		get => (this.masklist.Has(tag)) ? (this.masklist[tag].origCode) : 0		; return 0 rather than '' for debug purposes
+	}
+
 	; PRIVATE - removes tag record from maskList map
 	static _deleteTag(tag)	; tag := list key
 	{
-		if (clsPreMask.masklist.has(tag)) {
-			clsPreMask.maskList.Delete(tag)
+		if (clsMask.masklist.has(tag)) {
+			clsMask.maskList.Delete(tag)
 		}
 		return
 	}
 
-	; generates a unique 6bit hex value
-	Static GenUniqueID()
+	; PRIVATE - generates a unique 6bit hex value
+	; used for unique tag ids and session ids
+	Static _genUniqueID()
 	{
 		while(true) {
 			; make sure lockup (endless loop) does not occur (again)
-			if (clsPreMask.maskCountT >= clsPreMask.maxMasks) {
-				MsgBox('Fatal Error: Max number of masks (' clsPreMask.maxMasks ') have been used.`nEnding program!')
+			if (clsMask.maskCountT >= clsMask.maxMasks) {
+				MsgBox('Fatal Error: Max number of masks (' clsMask.maxMasks ') have been used.`nEnding program!')
 				ExitApp
 			}
 			; generate random 6 bit hex value (string)
-			rnd	:= Random(1, clsPreMask.maxMasks), rHx	:= format('{:06}',Format('{:X}', rnd))	; 6 char hex string
-			if (!clsPreMask.uniqueIdList.has(rHx)) {	; make sure value is not already in use
-				clsPreMask.uniqueIdList[rHx] := true, clsPreMask.maskCountT++
+			rnd	:= Random(1, clsMask.maxMasks), rHx	:= format('{:06}',Format('{:X}', rnd))	; 6 char hex string
+			if (!clsMask.uniqueIdList.has(rHx)) {	; make sure value is not already in use
+				clsMask.uniqueIdList[rHx] := true, clsMask.maskCountT++
 				break
 			}
 		}
-;		ToolTip('maskCount := ' clsPreMask.maskCountT, 10,10,10)
 		return rHx
 	}
 
-	; PUBLIC - convenience/proxy method - mask block comments
-	static Mask_BC(&code) {
-		clsPreMask.MaskAll(&code, 'BC', gPtn_BC)
-	}
-	; PUBLIC - convenience/proxy method - mask line comments
-	static Mask_LC(&code) {
-		clsPreMask.MaskAll(&code, 'LC', gPtn_LC)
-	}
-	; PUBLIC - convenience/proxy method - mask hotkeys
-	static Mask_HK(&code) {
-		clsPreMask.MaskAll(&code, 'HK', gPtn_HOTKEY)
-	}
-	; PUBLIC - convenience/proxy method - mask hotstrings
-	static Mask_HS(&code) {
-		clsPreMask.MaskAll(&code, 'HS', gPtn_HOTSTR)
-	}
-	; PUBLIC - convenience/proxy method - mask label declarations
-	static Mask_LBL(&code) {
-		clsPreMask.MaskAll(&code, 'LBL', gPtn_LblDecl)
-	}
-	; PUBLIC - convenience/proxy method - mask key:val objects
-	static Mask_KVO(&code) {
-		clsPreMask.MaskAll(&code, 'KVO', gPtn_KVO)
-	}
-	; PUBLIC - convenience/proxy method - mask same-line quoted-strings (DQ or SQ)
-	static Mask_QS(&code) {
-		clsPreMask.MaskAll(&code, 'QS', gPtn_QS_1L)
-	}
-	; PUBLIC - convenience/proxy method - mask same-line DQ-strings
-	static Mask_DQ(&code) {
-		clsPreMask.MaskAll(&code, 'DQ', gPtn_DQ_1L)
-	}
-	; PUBLIC - convenience/proxy method - mask same-line SQ-strings
-	static Mask_SQ(&code) {
-		clsPreMask.MaskAll(&code, 'SQ', gPtn_SQ_1L)
-	}
-	; PUBLIC - convenience/proxy method - mask multi-line QUOTED-strings
-	; 2025-06-12 AMB, ADDED, part of Fix #333 (regex needle is evolving)
-	static Mask_MLQS(&code) {
-		clsPreMask.MaskAll(&code, 'MLQS', gPtn_QS_MLPth)
-	}
-	; PUBLIC - convenience/proxy method - mask function calls
-	static Mask_FC(&code, deleteTag:=true) {
-		clsPreMask.Mask_FnCalls(&code, deleteTag)
-	}
 
-	; PUBLIC - convenience/proxy method - restore block comments
-	static Restore_BC(&code, deleteTag:=true) {
-		clsPreMask.RestoreAll(&code, 'BC', deleteTag)
-	}
-	; PUBLIC - convenience/proxy method - restore line comments
-	static Restore_LC(&code, deleteTag:=true) {
-		clsPreMask.RestoreAll(&code, 'LC', deleteTag)
-	}
-	; PUBLIC - convenience/proxy method - restore hotkeys
-	static Restore_HK(&code, deleteTag:=true) {
-		clsPreMask.RestoreAll(&code, 'HK', deleteTag)
-	}
-	; PUBLIC - convenience/proxy method - restore hotstrings
-	static Restore_HS(&code, deleteTag:=true) {
-		clsPreMask.RestoreAll(&code, 'HS', deleteTag)
-	}
-	; PUBLIC - convenience/proxy method - restore label declarations
-	static Restore_LBL(&code, deleteTag:=true) {
-		clsPreMask.RestoreAll(&code, 'LBL', deleteTag)
-	}
-	; PUBLIC - convenience/proxy method - restore key:val objects
-	static Restore_KVO(&code, deleteTag:=true) {
-		clsPreMask.RestoreAll(&code, 'KVO', deleteTag)
-	}
-	; PUBLIC - convenience/proxy method - restore same-line quoted-strings
-	static Restore_QS(&code, deleteTag:=true) {
-		clsPreMask.RestoreAll(&code, 'QS', deleteTag)
-	}
-	; PUBLIC - convenience/proxy method - restore same-line DQ-strings
-	static Restore_DQ(&code, deleteTag:=true) {
-		clsPreMask.RestoreAll(&code, 'DQ', deleteTag)
-	}
-	; PUBLIC - convenience/proxy method - restore same-line SQ-strings
-	static Restore_SQ(&code, deleteTag:=true) {
-		clsPreMask.RestoreAll(&code, 'SQ', deleteTag)
-	}
-	; PUBLIC - convenience/proxy method - restore multi-line QUOTED-strings
-	; 2025-06-12 AMB, ADDED, part of Fix #333
-	static Restore_MLQS(&code, deleteTag:=true) {
-		clsPreMask.RestoreAll(&code, 'MLQS', deleteTag)
-	}
-	; PUBLIC - convenience/proxy method - restore function calls
-	static Restore_FC(&code, deleteTag:=true) {
-		clsPreMask.RestoreAll(&code, 'FC', deleteTag)
-	}
-
-
-	; PUBLIC - searches for pattern in code and masks the code
-	; not for classes or functions - see dedicated methods for those
-	static MaskAll(&code, maskType, pattern)
+	; PUBLIC - searches for sub-pattern in code and masks/tags the occurences (sub-strings)
+	; not for classes or functions - see clsNodeMap methods for those
+	; param defaults set to empty to avoid errors when custom calls have missing args
+	;	the following are required for any call: code, maskType, pattern
+	;	sessObj is optional
+	static MaskAll(&code:='', maskType:='', pattern:='', sessObj:=unset)
 	{
-		; search for target-code, replace code with tags, save original code
-		pos := 1, uniqStr := ''
+		; ensure required args have been provided by caller
+		if (!code || !maskType || !pattern) {											; prevent issues with missing args
+			return
+		}
+
+		; search for targ-pattern, replace matching substrs with tags, save original substr
+		pos	 := 1, uniqStr := ''
+		mMsg := ''	; DEBUG
 		while (pos := RegExMatch(code, pattern, &m, pos))
 		{
 			; record match details
 			mCode := m[], mLen := m.Len
 
 			; setup unique tag id - only generate as needed
-			maskType	.= (maskType ~= '^\w+_$') ? '' : '_'							; ensure last char in maskType is underscore
-			uniqStr		:= (uniqStr='') ? (maskType clsPreMask.GenUniqueID() '_') : uniqStr
+			maskType	:= RegExReplace(maskType, '_$') . '_'							; ensure its last char is underscore
+			uniqStr		:= (uniqStr='')
+						? (maskType clsMask._genUniqueID() '_')
+						: uniqStr
 
 			; create tag, and store orig code using premask object
-			mTag					:= uniqueTag(uniqStr A_Index '_P' pos '_L' mLen)	; tag to be used for masking
-			clsPreMask.masklist[mTag]	:= clsPreMask(mCode, mTag, maskType, pattern)	; create new clsPreMask object - add to mask list
+			mTag  := uniqueTag(uniqStr A_Index '_P' pos '_L' mLen)						; tag to be used for masking
+			pmObj := clsMask(mCode, mTag, maskType, pattern)							; create new clsMask object
+			clsMask.masklist[mTag] := pmObj												; add object to shared maplist (using unique tag as key)
 
-			; 2025-06-12 AMB, UPDATED, part of Fix #333
-			; StrReplace can replace the wrong occurence of mCode (wrong position) in some cases...
-			;	(when that string is repeated more than once within the source code)
-			; Use RegexReplace as default instead (which supports position)
+			; add tag to session if sessObj was provided by caller
+			if (IsSet(sessObj) && Type(sessObj)='clsMask._session') {					; if caller provided a session id (session object)
+				sessObj.AddTag(mTag)													; store tag in that session as well
+			}
+
 			; Replace original code with a unique tag
 			code	:= RegExReplace(code, escRegexChars(mCode), mTag,,1,pos)			; supports position
 			pos		+= StrLen(mTag)														; set position for next search
 		}
 	}
 
-	; PUBLIC - finds tags within code and replaces the tags with original code
-	; OVERRIDE in sub-classes (for custom restores)
-	static RestoreAll(&code, maskType, deleteTag:=true)
-	{
-		; setup unique tag id
-		maskType	.= (maskType ~= '^\w+_$') ? '' : '_'		; ensure last char in maskType is underscore
-		nMTag		:= uniqueTag(maskType '\w+')
 
-		; search/replace tags with original code
-		while (pos := RegExMatch(code, nMTag, &m))
+	; PUBLIC - finds tags within code and replaces the tags with original substr
+	; No conversion is performed here by default...
+	; OVERRIDE this method in sub-classes (for custom restores/conversions)
+	; TODO - MAY IMPLEMENT FUNC-CALLBACK PARAM FOR CUSTOM CONVERSIONS/RESTORES...
+	;	(RATHER THAN SUB-CLASS REQUIREMENT)
+	; param defaults set to empty to avoid errors when custom calls have missing args
+	;	the following are required for any call: code, maskType
+	;	sessObj is optional
+	static RestoreAll(&code:='', maskType:='', deleteTag:=true, sessObj:=unset)
+	{
+		; ensure required args have been provided by caller
+		if (!code || !maskType) {												; prevent issues with missing args
+			return
+		}
+
+		; setup unique tag id
+		maskType	:= RegExReplace(maskType, '_$') . '_'						; ensure its last char is underscore
+		nMTag		:= uniqueTag(maskType '\w+')								; needle to find a tag that has maskType identifier
+
+		; search for targ-pattern, replace matching tags with orig substr
+		pos := 1
+		while (pos := RegExMatch(code, nMTag, &m, pos))
 		{
-			mTag	:= m[]
-			oCode	:= clsPreMask.masklist[mTag].origCode		; get original code (for current tag) from mask object
-			code	:= StrReplace(code, mTag, oCode)			; replace current unique tag with original code
-			; sometimes removes tags prematurely
-			;	might need to fix this
+			mTag	:= m[]														; [working var for tag]
+
+			; if sessObj was provided...
+			;	... restore substrs for tags associated...
+			;	... with that session only
+			if (IsSet(sessObj) && Type(sessObj)='clsMask._session') {			; if caller provided a session id (session obj)...
+				if (!sessObj.HasTag[mTag]) {									; ... if tag is not found in session list, ignore it
+					pos += StrLen(mTag)											; reposition search pointer
+					continue													; skip to next mact
+				}
+			}
+
+			; restore orig substr for current tag
+			oCode	:= clsMask.GetOrig[mTag]									; get original substr (for current tag) from tag list
+			code	:= StrReplace(code, mTag, oCode)							; replace current (unique) tag with original substr
+			pos		+= StrLen(oCode)											; prep for next search
+
+			; this is included to enhance performance of map...
+			;	does it help at all??
+			; sometimes removes tags prematurely								; if tags are removed prematurely, try using session masking instead
 			if (deleteTag) {
-				clsPreMask._deleteTag(mTag)						; clean up, enhance performance?
+				clsMask._deleteTag(mTag)										; clean up - does this enhance performance of map??
 			}
 		}
 	}
@@ -508,267 +474,98 @@ class clsPreMask
 	static _convertCode(&code)
 	{
 	}
-}
-;################################################################################
-class clsV1Leg_MLSV extends clsPreMask
-{
-; 2025-06-12 AMB, UPDATED to reflect proper purpose
-; for V1 Legacy multi-line string assignemnts (non expression equals) including variable declaration
 
-
-;	; 2025-06-12 AMB, ADDED for consistency
-;	;	but is not used - clsV1Leg_MLSV utilizes internal call to parent class (clsPreMask) for Masking
-;	; PUBLIC - searches for pattern in code and masks the code
-;	; OVERRIDES clsPreMask MaskAll method
-;	static MaskAll(&code, maskType, pattern)
-;	{
-;	}
-
-	; PUBLIC - finds tags within code and replaces the tags with converted code
-	; OVERRIDES clsPreMask RestoreAll method
-	static RestoreAll(&code, maskType, convert:=true, deleteTag:=true)
+	;################################################################################
+	; PRIVATE
+	class _session
 	{
-		; setup unique tag id
-		maskType	.= (maskType ~= '^\w+_$') ? '' : '_'		; make sure last char in maskType is underscore
-		nMTag		:= uniqueTag(maskType '\w+')
-		; search/replace tags with original code
-		while (pos := RegExMatch(code, nMTag, &m))				; position is unnecessary
-		{
-			mTag	:= m[]
-			oCode	:= clsV1Leg_MLSV.masklist[mTag].origCode	; get original code (for current tag) from mask object
-			if (convert) {
-				clsV1Leg_MLSV._convertCode(&oCode)				; THIS STEP is the reason for a dedicated clsV1Leg_MLSV class
-			}
-			code	:= StrReplace(code, mTag, oCode)			; replace current unique tag with original code
-			; sometimes removes tags prematurely
-			;	might need to fix this
-			if (deleteTag) {
-				clsV1Leg_MLSV._deleteTag(mTag)					; clean up (clsPreMask.maskList), enhance performance?
-			}
+	; 2025-06-22 AMB, ADDED - to support masking/access/restore of select set of tags
+	; Intented to be accessed/used excelusively by clsMask
+	; This helps prevent restoring/deleting of tags that may still be in use by other routines
+	; each session keeps its own list of tags that belong to that session only
+	; these session tags are also listed in the static/shared clsMask.Masklist map
+
+		_sessList	:= map()						; holds session tag ids
+		_sessID		:= ''							; unique session id
+
+		__new(sessID) {
+			this._sessID := sessID
+		}
+
+		; PUBLIC property - read only
+		HasTag[tagID] {
+			get => this._sessList.Has(tagID)		; does tag exist in session list?
+		}
+
+		; PUBLIC method to add tag to session map
+		AddTag(TagID) {
+			this._sessList[TagID] := true
 		}
 	}
-
-	; 2024-07-01, ADDED, AMB - fix for Issue #74
-	; Overrides clsPreMask _convertCode method
-	Static _convertCode(&code)
-	{
-		v2_ConvertV1L_MLSV(&code)
-	}
 }
 ;################################################################################
-class clsMLSExpAssign extends clsPreMask
-{
-; 2025-06-12 AMB, ADDED
-; for expression var assignments that are multi-line
-
-
-;	; 2025-06-12 AMB, ADDED for consistency
-;	;	but is not used - clsMLSExpAssign utilizes internal call to parent class (clsPreMask) for Masking
-;	; PUBLIC - searches for pattern in code and masks the code
-;	; OVERRIDES clsPreMask MaskAll method
-;	static MaskAll(&code, maskType, pattern)
-;	{
-;	}
-
-	; PUBLIC - finds tags within code and replaces the tags with converted code
-	; OVERRIDES clsPreMask RestoreAll method
-	static RestoreAll(&code, maskType, convert:=true, deleteTag:=true)
-	{
-		; setup unique tag id
-		maskType	.= (maskType ~= '^\w+_$') ? '' : '_'			; make sure last char in maskType is underscore
-		nMTag		:= uniqueTag(maskType '\w+')
-		; search/replace tags with original code
-		while (pos := RegExMatch(code, nMTag, &m))					; position is unnecessary
-		{
-			mTag	:= m[]
-			oCode	:= clsMLSExpAssign.masklist[mTag].origCode		; get original code (for current tag) from mask object
-			if (convert) {
-				clsMLSExpAssign._convertCode(&oCode)				; THIS STEP is the reason for a dedicated clsV1Leg_MLSV class
-			}
-			code	:= StrReplace(code, mTag, oCode)				; replace current unique tag with original code
-			; sometimes removes tags prematurely
-			;	might need to fix this
-			if (deleteTag) {
-				clsMLSExpAssign._deleteTag(mTag)					; clean up (clsPreMask.maskList), enhance performance?
-			}
-		}
-	}
-
-	; Overrides clsPreMask _convertCode method
-	Static _convertCode(&code)
-	{
-		Restore_PreMask(&code)
-		code := RegExReplace(code, '""', '``"')
-;		v2_DQ_Literals(&code)
-;		Restore_BCs(&code)
-;		Restore_LCs(&code)
-	}
-}
-;################################################################################
-class clsMLLineCont extends clsPreMask
+class clsMLLineCont extends clsMask
 {
 ; 2025-06-12 AMB, ADDED - WORK IN PROGRESS, may move to ConvContSect.ahk
-; for multi-line continuation sections, including previous line and trailer
+; for multi-line continuation sections, including previous line and optional trailer params
 
 ;	; 2025-06-12 AMB, ADDED for consistency
-;	;	but is not used - clsMLLineCont utilizes internal call to parent class (clsPreMask) for Masking
-;	; PUBLIC - searches for pattern in code and masks the code
-;	; OVERRIDES clsPreMask MaskAll method
-;	static MaskAll(&code, maskType, pattern)
-;	{
+;	;	but is not used - clsMLLineCont utilizes internal call to parent class (clsMask) for Masking
+;	; PUBLIC - searches for sub-pattern in code and masks/tags the occurences (sub-strings)
+;	; OVERRIDES clsMask MaskAll method
+;	static MaskAll(&code, maskType, pattern) {
 ;	}
 
-	; PUBLIC - searches for pattern in code and masks the code
-	; not for classes or functions - see dedicated methods for those
-	static MaskAll(&code, maskType, pattern)
+	; PUBLIC - finds tags within code and replaces the tags with converted substr
+	; OVERRIDES clsMask.RestoreAll() method for custom conversion
+	; note: currently not forcing/verifying masktype (tags) as 'MLCSECTM2' here...
+	;	since the assumption is... no code should pass thru here unless it has a 'MLCSECTM2' tag
+	;	if this turns out to be a false assumption, will address it then
+	; 	(don't want the converter code to be too specific, so it can be copy/pasted/used elsewhere)
+	; param defaults set to empty to avoid errors with missing args (although, should not happen)
+	;	the following are required for any call: code, maskType
+	;	sessObj is optional
+	static RestoreAll(&code:='', maskType:='', deleteTag:=true, sessObj:=unset, convert:=true)
 	{
-		global gMLContList
-
-		entry			:= '(?im)^[\h\w]+?'
-		tag				:= '(?<tag>\h*+#TAG★(?:LC|BC|QS)\w++★#)*+'
-		LegacyAssign	:= entry . '='					. tag . '$'		; [var/cmd =]
-		LegAssignVar	:= entry . '=\h*+%\w++%'		. tag . '$'		; [var = %var%] (CAN BE COVERTED TO [var .= ])
-		ExpAssignQS1	:= entry . '[.:]=\h*+"?'		. tag . '$'		; [var/cmd :=] or [var/cmd .= "]
-		ExpAssignQS2	:= entry . '[:]=\h*+\w+\h*"?'	. tag . '$'		; [var := var] or [var := "] (CAN BE COVERTED TO [var .= "])
-		CmdComma		:= entry . ',?' 				. tag . '$'		; [cmd] or [cmd,]
-
-
-		msg := '`n`n***************************NEWFILE****************************`n' gFilePath
-		line1 := ''
-		; search for target-code, replace code with tags, save original code
-		pos := 1, uniqStr := '', mCode := ''
-		while (pos := RegExMatch(code, pattern, &m, pos))
-		{
-			; record match details
-			mCode := m[], mLen := m.Len
-
-			;################################################################################
-			; TEMP - DEBUGGING
-			dup := false
-			for idx, item in gMLContList {
-				if (item == mCode) {
-					dup := true
-					break
-				}
-			}
-			if (!dup) {
-				gMLContList.push(mCode)
-
-				CSect.FilterAndConvert(&mCode)
-
-				; save origcode to a file for inspection - DEBUGGING
-				msg .= '`n`n**********NEWITEM************`n`n' mCode
-
-				if		(m.line1 ~= LegacyAssign)	{
-						; [var/cmd =]
-				}
-				else if	(m.line1 ~= LegAssignVar)	{
-						; [var = %var%] (CAN BE COVERTED TO [var .= ])
-				}
-				else if	(m.line1 ~= ExpAssignQS1)	{
-						; [var/cmd :=] or [var/cmd .= "]
-				}
-				else if	(m.line1 ~= ExpAssignQS2)	{
-						; [var := var] or [var := "] (CAN BE COVERTED TO [var .= "])
-				}
-				else if	(m.line1 ~= CmdComma)		{
-						; [cmd] or [cmd,]
-				}
-				else {
-					line1 .= '`n`nPATTERN NOT FOUND`n' gFilePath "`n" m.Line1
-				}
-			}
-			;################################################################################
-
-			; setup unique tag id - only generate as needed
-			maskType	.= (maskType ~= '^\w+_$') ? '' : '_'								; ensure last char in maskType is underscore
-			uniqStr		:= (uniqStr='') ? (maskType clsPreMask.GenUniqueID() '_') : uniqStr
-			; create tag, and store orig code using clsPreMask object
-			mTag						:= uniqueTag(uniqStr A_Index '_P' pos '_L' mLen)	; tag to be used for masking
-			clsPreMask.masklist[mTag]	:= clsPreMask(mCode, mTag, maskType, pattern)		; create new clsPreMask object - add to mask list
-			; Replace original code with a unique tag
-			code	:= RegExReplace(code, escRegexChars(mCode), mTag,,1,pos)				; supports position
-			pos		+= StrLen(mTag)															; set position for next search
+		; ensure required args have been provided by caller
+		if (!code || !maskType) {											; prevent issues with missing args
+			return
 		}
-		if (instr(msg, '*NEWITEM*')) {
-;			updateBuff(,line1,msg)
-		}
-	}
 
-
-	; PUBLIC - finds tags within code and replaces the tags with converted code
-	; OVERRIDES clsPreMask RestoreAll method
-	static RestoreAll(&code, maskType, convert:=true, deleteTag:=true)
-	{
 		; setup unique tag id
-		maskType	.= (maskType ~= '^\w+_$') ? '' : '_'					; make sure last char in maskType is underscore
-		nMTag		:= uniqueTag(maskType '\w+')
-		; search/replace tags with original code
-		while (pos := RegExMatch(code, nMTag, &m))							; position is unnecessary
-		{
-			mTag	:= m[]
-			oCode	:= clsMLLineCont.masklist[mTag].origCode				; get original code (for current tag) from mask object
+		maskType	:= RegExReplace(maskType, '_$') . '_'					; ensure its last char is underscore
+		nMTag		:= uniqueTag(maskType '\w+')							; needle to find a tag that has maskType identifier
 
-			; this masking is general in scope. Need to vet code...
-			; send orig code thru a filter which will...
-			;	redirect conversion to the appropiate routine
+		; search for targ-pattern, replace matching tags with orig substr
+		while (pos := RegExMatch(code, nMTag, &m)) {						; position is unnecessary
+			mTag	:= m[]													; [working var for tag]
+
+			; this is actually accessing clsMask.masklist
+			oCode	:= clsMLLineCont.masklist[mTag].origCode				; get original substr (for current tag) from tag list
+
+			; this masking is general in scope. Need to vet orig code...
+			; send orig substr thru a filter which will...
+			;	... redirect conversion to the appropiate routine
 			if (convert) {
-				clsMLLineCont._convertCode(&oCode)							; THIS STEP is the reason for a dedicated clsV1Leg_MLSV class
+				clsMLLineCont._convertCode(&oCode)							; [THIS STEP IS THE REASON for the dedicated clsMLLineCont sub-class]
 			}
-			code	:= StrReplace(code, mTag, oCode)						; replace current unique tag with original code
-			; sometimes removes tags prematurely
-			;	might need to fix this
+			code := StrReplace(code, mTag, oCode)							; replace current (unique) tag with original substr
+
+			; this is included to enhance performance of map...
+			;	does it help at all??
+			; sometimes removes tags prematurely							; if tags are removed prematurely, try using session masking instead
 			if (deleteTag) {
-				clsMLLineCont._deleteTag(mTag)								; clean up (clsPreMask.maskList), enhance performance?
+				clsMLLineCont._deleteTag(mTag)								; clean up - does this enhance performance of map??
 			}
 		}
 	}
 
-	; Overrides clsPreMask _convertCode method
+	; Overrides clsMask._convertCode() method for custom conversion
 	Static _convertCode(&code)
 	{
-		;clsMLLineCont._filterAndConvert(&code)
+		code := CSect.FilterAndConvert(code)								; 2025-06-22 - redirected conversion (should be permanent)
 	}
 
-	; Private - filters code, sends it to appropriate converter
-	Static _filterAndConvert(&code)
-	{
-		/*
-		look at code to determine...
-			is command a chained command? handle with current process?
-			which command is attached to cont section?
-			what type of cont section is it (profile)
-			how do we handle the conversion
-				pass to appropriate conv routine
-				convert code
-			return converted code back thru pipe line to be put back into orig code
-		*/
-
-	}
-}
-;################################################################################
-														v2_ConvertV1L_MLSV(&code)
-;################################################################################
-{
-; 2025-06-12 AMB, MOVED and updated
-; Purpose: Convert V1 Legacy multi-line string assignments, with variable declaration
-; see the following for logic and needle (hopefully this covers all cases)
-; needle tweaks are found in buildPtn_MLQSPth() and buildPtn_MLBlock in MaskCode.ahk
-; TODO - MOVE THIS TO ConvContSect.ahk ?
-
-	; make sure code matches pattern
-	nBlk := buildPtn_MLBlock().full
-	if (!(code ~= gPtn_V1L_MLSV) || !RegExMatch(code, nBlk, &mBlk)) {		; verify AND fill block needle vars
-		return	;  not legit - exit
-	}
-
-	nDeclare	:= '(?<decl>(?<var>([_a-z]\w*\h*))``?=)'					; [identifies var assign declaration]
-	code		:= RegExReplace(code, nDeclare, '$3:=',,1)					; replace = with := in declaration line only
-	fBlk		:= mBlk[]													; [full block - working var]
-	oBlk		:= fBlk														; orig block code - will need this later
-	fBlk		:= conv_ContParBlk(fBlk)									; convert the cont section block
-	code		:= StrReplace(code, oBlk, fBlk)								; finish it up - replace old code block with new code
-	return		; code by reference
 }
 ;################################################################################
 								 _getNodeNameList(code, nodeType, parentName:='')
@@ -810,8 +607,8 @@ class clsMLLineCont extends clsPreMask
 ; Those nodes contain the details of the particualr block
 ; 	additional details can then be extracted from those nodes
 
-	Mask_PreMask(&code)				; pre-mask comments and strings
-	clsNodeMap.BuildNodeMap(code)		; build node map
+	MaskT(&code, 'C&S')								; mask comments/strings
+	clsNodeMap.BuildNodeMap(code)					; build node map
 
 	; go thru node list and extract function names
 	nodeList := []
@@ -846,419 +643,269 @@ class clsMLLineCont extends clsPreMask
 
 	return _getNodeNameList(code, 'FUNC', parentName)
 }
-
-
 ;################################################################################
-															   Mask_Blocks(&code)
+									 MaskT(&code, targ, option:=0, sessID:=unset)
 ;################################################################################
 {
-; proxy func to mask CLASSES and FUNCTIONS
+; 2025-06-22 AMB, ADDED as central hub for tagging code (rather than dedicated funcs)
+;	Replaces targetted SUBSTRINGS, within passed code, with UNIQUE TAGS
+; the multiple targ 'case' strings below are for convenience...
+;	they can be reduced to a single exclusive string if desired...
+;	(I can't always remember which string should be used, so convering more than one option. lol)
+;	TODO - might just set exclusive strings and a popup in Default when 'targ' is unknown
+; the option param can mean different things for different targets - see comments for details
+;	if targ is custom (not covered in case-list below), use option as param for custom regex needle
+;	TODO - provide a list of what the option param does for each targ type
 
-	clsNodeMap.Mask_Blocks(&code)
-	return	; code by reference
-}
-;################################################################################
-															  Mask_PreMask(&code)
-;################################################################################
-{
-; pre-mask block/line comments and strings
-; necessary to remove characters that can interfere with...
-;	detection of blocked code (classes, functions, etc)
-; 2025-06-12 AMB, UPDATED - reordered as part of Fix #333
-;	also removed Mask_MLQS for now
+	switch targ,false	; case-insensitive
+	{
+		case	'C&S':										; COMMENTS AND STRINGS...
+				MaskT(&code,	 'BC',	,sessID?)			; 	recursion call - mask block comments
+				MaskT(&code,	 'LC',	,sessID?)			; 	recursion call - mask line  comments
+				MaskT(&code,	 'QS',	,sessID?)			; 	recursion call - mask quoted-strings (1line)
+				if (option)	; whether to mask ML strings	; if mask ML strings ?
+					MaskT(&code, 'MLQS',,sessID?)			; 	recursion call - mask quoted-strings (ML)
 
-	; ORDER MATTERS!
-	clsPreMask.Mask_BC(&code)		; mask block comments
-;;	clsPreMask.Mask_LC(&code)		; mask line comments (WRONG ORDER)
-	clsPreMask.Mask_QS(&code)		; mask quoted-strings - single-line
-	clsPreMask.Mask_MLQS(&code)		; mask quoted-strings - multi-line
-	clsPreMask.Mask_LC(&code)		; mask line comments
+		case	'BC':										; BLOCK COMMENTS
+				clsMask.MaskAll(&code, 'BC'
+					, gPtn_BC, sessID?)
 
-	return	; code by reference
-}
-;################################################################################
-																  Mask_BCs(&code)
-;################################################################################
-{
-; 2025-06-12 AMB, ADDED - proxy func to mask block-comments
+		case	'LC':										; LINE COMMENTS
+				clsMask.MaskAll(&code, 'LC'
+					, gPtn_LC, sessID?)
 
-	clsPreMask.Mask_BC(&code)
-	return	; code by reference
-}
-;################################################################################
-																  Mask_LCs(&code)
-;################################################################################
-{
-; 2025-06-12 AMB, ADDED - proxy func to mask line-comments
+		case	'HK','HOTKEY':								; HOT KEYS (declaration)
+				nGblHK := '(?im)' gPtn_HOTKEY				; support searching script globally
+;				nGblHK := gPtn_HOTKEY						; support searching script globally
+				clsMask.MaskAll(&code, 'HK'
+					, nGblHK, sessID?)
 
-	clsPreMask.Mask_LC(&code)
-	return	; code by reference
-}
-;################################################################################
-															  Mask_Strings(&code)
-;################################################################################
-{
-; 2024-04-08 AMB, ADDED
-; 2024-06-02 AMB, UPDATED
-; 2024-06-26 AMB, MOVED from ConvertFuncs.ahk. Just a proxy now
-; 2025-06-12 AMB, UPDATED - part of Fix #333
-;	support for multi-line QUOTED-strings in format "(string)" (removed for now)
-; masks quoted-strings
+		case	'HS','HOTSTR':								; HOT STRINGS (declaration)
+				nGblHS := '(?im)' gPtn_HOTSTR				; support searching script globally
+				clsMask.MaskAll(&code, 'HS'
+					, nGblHS, sessID?)
 
-	clsPreMask.Mask_QS(&code)		; mask single-line quoted strings
-	clsPreMask.Mask_MLQS(&code)	; mask multi--line quoted strings - removed for now
-	return	; code by reference
-}
-;################################################################################
-															Mask_DQstrings(&code)
-;################################################################################
-{
-; 2025-06-12 AMB, ADDED - proxy func to mask DOUBLE-quoted strings on one line
+		case	'LBL','LABELS':								; LABELS (declaration)
+;				nGblLabel := '(?im)' gPtn_LblDecl			; support searching script globally
+				clsMask.MaskAll(&code, 'LBL'
+					, gPtn_LblDecl, sessID?)				; currently already supports (?im)
 
-	clsPreMask.Mask_DQ(&code)
-	return	; code by reference
-}
-;################################################################################
-															Mask_SQstrings(&code)
-;################################################################################
-{
-; 2025-06-12 AMB, ADDED - proxy func to mask SINGLE-quoted strings on one line
+		case	'KV','KVO','KVP','KEYVAL':					; KEY/VAL pair/objects
+				clsMask.MaskAll(&code, 'KVO'
+					, gPtn_KVO, sessID?)
 
-	clsPreMask.Mask_SQ(&code)
-	return	; code by reference
-}
-;################################################################################
-															  Mask_HotKeys(&code)
-;################################################################################
-{
-; 2025-06-12 AMB, ADDED - proxy func to mask hotkeys
+		case	'DQ','DQSTR':								; QUOTED-STRINGS (1line, "" only)
+				clsMask.MaskAll(&code, 'DQ'
+					, gPtn_DQ_1L, sessID?)
 
-	clsPreMask.Mask_HK(&code)
-	return	; code by reference
-}
-;################################################################################
-														   Mask_HotStrings(&code)
-;################################################################################
-{
-; 2025-06-12 AMB, ADDED - proxy func to mask hotStrings
+		case	'SQ','SQSTR':								; QUOTED-STRINGS (1line, '' only)
+				clsMask.MaskAll(&code, 'SQ'
+					, gPtn_SQ_1L, sessID?)
 
-	clsPreMask.Mask_HS(&code)
-	return	; code by reference
-}
-;################################################################################
-															   Mask_Labels(&code)
-;################################################################################
-{
-; 2025-06-12 AMB, ADDED - proxy func to mask label declarations
+		case	'QS','QSTR':								; QUOTED-STRINGS (1line, "" and/or '')
+				clsMask.MaskAll(&code, 'QS'
+					, gPtn_QS_1L, sessID?)
 
-	clsPreMask.Mask_LBL(&code)
-	return	; code by reference
-}
-;################################################################################
-										 Mask_KVObjects(&code,restoreStrs:=false)
-;################################################################################
-{
-; 2025-06-12 AMB, ADDED - mask key:val objects {key1:val1,key2:val2}
+		case	'MLQS','MLSTR':								; QUOTED-STRINGS (multi-line)
+				clsMask.MaskAll(&code, 'MLQS'
+					, gPtn_QS_MLPth, sessID?)
 
-	Mask_PreMask(&code)	; pre-mask comments and strings
-	clsPreMask.Mask_KVO(&code)
-	; don't do this by default
-	if (restoreStrs)
-		Restore_Strings(&code)
-	return	; code by reference
-}
-;################################################################################
-															Mask_V1LegMLSV(&code)
-;################################################################################
-{
-; 2024-06-30 AMB, ADDED
-; masks V1 legacy (non-expression) multi-line string assignments
-; clsV1Leg_MLSV class is used for custom convert and restore, but not masking
-; called from Before_LineConverts() of ConvertFuncs.ahk
+		case	'V1MLS','V1LEGMLS':							; V1 LEGACY (non-expression) MULTI-LINE STRING
+				clsMask.MaskAll(&code, 'V1LEGMLS'
+					, gPtn_V1L_MLSV, sessID?)
 
-	Mask_PreMask(&code)	; pre-mask comments and strings
-	clsV1Leg_MLSV.MaskAll(&code, 'V1Leg_MLSV', gPtn_V1L_MLSV)	; internally uses clsPreMask.MaskAll
-	return	; code by reference
-}
-;################################################################################
-														 Mask_MLSExpAssign(&code)
-;################################################################################
-{
-; 2025-06-12 AMB, ADDED
-; masks multi-line var expression assignments, BUT...
-; Includes assignemnt line and full continuation block
+		case	'STR','STRINGS':							; STRINGS (1line and ML)
+				MaskT(&code,	 'QS',	,sessID?)			; 	recursion call - mask quoted-strings (1line)
+				MaskT(&code,	 'MLQS',,sessID?)			; 	recursion call - mask quoted-strings (ML)
 
-	Mask_PreMask(&code)	; pre-mask comments and strings
-	nMLSExpAssign := '(?im)\h*+[a-z]\w*\h*[.:]=\h*\R\s*+' . gPtn_PrnthML
-	clsMLSExpAssign.MaskAll(&code, 'nMLSExpAssign', nMLSExpAssign)
-	return	; code by reference
-}
-;################################################################################
-															Mask_MLParenth(&code)
-;################################################################################
-{
-; 2025-06-12 AMB, ADDED
-; masks (general) multi-line continuation blocks (surrounded by parentheses)
-; TODO - WORK/TESTING IN PROGRESS !
+		case	'CS','CSECT':								; CONTINUATION SECTIONS (ANY)
+				; 2025-06-22 - DONT MERGE THIS IDEA YET
+				;MaskT(&code,	'CS1',	,sessID?)			; 	recursion call - mask 'method 1' Cont Sects
+				MaskT(&code, 	'CS2',	,sessID?)			; 	recursion call - mask 'method 2' Cont Sects
 
-	Mask_PreMask(&code)	; pre-mask comments and strings
+		case	'CS1','CSECT1':								; CONTINUATION SECTIONS (METHOD 1)
+				MaskT(&code,	'C&S',	,sessID?)			; 	recursion call - mask comments/strings (NOT ML strings!)
+				MaskT(&code,	'HK',	,sessID?)			; 	recursion call - mask hotkey declarations
+				MaskT(&code,	'HS',	,sessID?)			; 	recursion call - mask hotstring declarations
+				MaskT(&code,	'LBL',	,sessID?)			; 	recursion call - mask label declarations
+				clsMask.MaskAll(&code, 'MLCSECTM1'
+					, gPtn_CSectM1, sessID?)
+				MaskR(&code,	'LBL',	,sessID?)			; 	restore label declarations
+				MaskR(&code,	'HS',	,sessID?)			; 	restore hotstring declarations
+				MaskR(&code,	'HK',	,sessID?)			; 	restore hotkey declarations
+				MaskR(&code,	'C&S',	,sessID?)			; 	restore comments/strings
 
-	nMLParenth := buildPtn_MLBlock().parBlk
-	clsPreMask.MaskAll(&code, 'MLGenCont', nMLParenth)
-;	clsPreMask.MaskAll(&code, 'MLGenCont', gPtn_PrnthML)
-	return	; code by reference
-}
-;################################################################################
-													  Mask_LineAndContSect(&code)
-;################################################################################
-{
-; 2025-06-12 AMB, ADDED - WORK IN PROGRESS...
-; masks multi-line continuation section, BUT...
-; Includes previous line (command line)...
-;	as well and any trailing portion after closing parenthesis
+		case	'CS2','CSECT2':								; CONTINUATION SECTIONS (METHOD 2)
+				MaskT(&code,	'C&S',	,sessID?)			; 	recursion call - mask comments/strings (NOT ML strings!)
+				clsMask.MaskAll(&code, 'MLCSECTM2'
+					, gPtn_CSectM2, sessID?)
 
-	; mask all line cont sects
-	nMLLineCont := '(?im)(?<line1>.++)' . buildPtn_MLBlock().Full
-	clsMLLineCont.MaskAll(&code, 'MLLineCont', nMLLineCont)
+		case	'FC','FCALL':								; FUNCTION CALLS
+				if (!IsSet(sessID)) {
+					sessID := clsMask.NewSession()
+				}
+				MaskT(&code,	'STR',	,sessID?)			; 	recursion call - mask strings
+				clsMask.MaskAll(&code, 'FC'
+					, gPtn_FuncCall, sessID?)
+				if (option) {								; if Restore-strings requested ?
+					MaskR(&code, 'STR',	,sessID?)			;	restore all strings [FROM TEMP SESSION]
+				}
 
-	; restore any that have commands
-	; convert string blocks, but leave them masked?
+		case	'BLOCKS', 'FUNC&CLS':						; FUNCTIONS AND CLASSES
+				clsNodeMap.Mask_Blocks(&code)
 
-;	clsMLLineCont.MaskAll(&code, 'MLLineCont', gPtn_LineCont)
-	return	; code by reference
-}
-;################################################################################
-										Mask_FuncCalls(&code, restoreStrs:=false)
-;################################################################################
-{
-; 2025-06-12 AMB, UPDATED - added code directly to this func, rather than acting as proxy
-; masks all function CALLS found within passed code string
-
-	Mask_Strings(&code)	; pre-mask comments and strings							; to prevent func detection issues
-;	nestedParentheses	:= '(\((?>[^)(]+|(?-1))*\))'							; single or multi-line, nested parentheses
-;	nFuncCall			:= '(?im)[_a-z]\w*+' nestedParentheses					; any func call, single or multi-line
-	funcCount			:= 0, pos := 0
-	while (pos	:= RegExMatch(code, gPtn_FuncCall, &m, pos+1)) {				; find all function calls within passed code
-		curMFC	:= m[]															; note: all strings in match have been premasked
-		origFC	:= curMFC, Restore_Strings(&origFC)								; restore orig strings within func calls only
-		uniqStr	:= 'FC_' clsPreMask.GenUniqueID() '_' (++funcCount)				; [unique tag string]
-		mTag	:= uniqueTag(uniqStr)											; create unique tag
-		clsPreMask.masklist[mTag] := clsPreMask(origFC, mTag, 'FC', '')			; store new Premask object within Premask-list
-		code	:= RegExReplace(code, escRegexChars(curMFC), mTag,,1,pos)		; update code with tag, replacing current masked FC
-		pos		+= StrLen(mtag)													; prep for next search/interation
+		default:
+				; targ not found in case-list above...
+				; ... so it may be a custom target for custom masking...
+				; submit it as custom masking, not covered above
+				; NOTE: needle should be provided thru OPTION param
+				customNeedle := option	; making it clear
+				clsMask.MaskAll(&code, targ
+					, customNeedle, sessID?)
 	}
-
-	; don't do this by default
-	if (restoreStrs)
-		Restore_Strings(&code)
-
-	return	; code by reference
+	return
 }
-
-
 ;################################################################################
-															Restore_Blocks(&code)
+				   MaskR(&code, targ, delTag:=true, sessID:=unset, convert:=true)
 ;################################################################################
 {
-; proxy func to restore CLASSES and FUNCTIONS
+; 2025-06-22 AMB, ADDED as central hub for restoring substrings that were masked/tagged with MaskT
+;	Replaces targetted TAGS, within passed code, with ORIG substrings.
+;	Also performs conversion (indirectly), of that restored substr, in most cases
+; the multiple targ 'case' strings below are for convenience...
+;	they can be reduced to a single exclusive string if desired...
+;	(I can't always remember which string should be used, so convering more than one option. lol)
+;	TODO - might just set exclusive strings and a popup in Default when 'targ' is unknown
+; delTag param - whether to remove the tag from the global (static) tag list or not
+;	removing the tag from the list is the default behavior...
+;	... but this should be disabled for a call, if the tag will be needed again later, for restoration
+; convert param - whether to convert code as part of masking restore
+;	has no relevance with clsMask.RestoreAll() since this code is not converted
+;	but sub-class (custom) RestoreAll()'s use it (clsMLLineCont.RestoreAll at the moment)
 
-	clsNodeMap.Restore_Blocks(&code)
-	return	; code by reference
+	switch targ,false	; case-insensitive
+	{
+		case	'C&S','S&C':								; COMMENTS AND STRINGS...
+				; ORDER MATTERS - reverse order of MASKT
+				MaskR(&code, 'MLQS',delTag, sessID?)		; 	recursion call - restore quoted-strings (ML)
+				MaskR(&code, 'QS',	delTag, sessID?)		; 	recursion call - restore quoted-strings (1line)
+				MaskR(&code, 'LC',	delTag, sessID?)		; 	recursion call - restore line  comments
+				MaskR(&code, 'BC',	delTag, sessID?)		; 	recursion call - restore block comments
+
+		case	'BC':										; BLOCK COMMENTS
+				clsMask.RestoreAll(&code, 'BC'
+					, delTag, sessID?)
+
+		case	'LC':										; LINE COMMENTS
+				clsMask.RestoreAll(&code, 'LC'
+					, delTag, sessID?)
+
+		case	'HK','HOTKEY':								; HOT KEYS (declaration)
+				clsMask.RestoreAll(&code, 'HK'
+					, delTag, sessID?)
+
+		case	'HS','HOTSTR':								; HOT STRINGS (declaration)
+				clsMask.RestoreAll(&code, 'HS'
+					, delTag, sessID?)
+
+		case	'LBL','LABELS',:							; LABELS (declaration)
+				clsMask.RestoreAll(&code, 'LBL'
+					, delTag, sessID?)
+
+		case	'KV','KVO','KVP','KEYVAL':					; KEY/VAL pair/objects
+				clsMask.RestoreAll(&code, 'KVO'
+					, delTag, sessID?)
+
+		case	'DQ','DQSTR':								; QUOTED-STRINGS (1line, "" only)
+				clsMask.RestoreAll(&code, 'DQ'
+					, delTag, sessID?)
+
+		case	'SQ','SQSTR':								; QUOTED-STRINGS (1line, '' only)
+				clsMask.RestoreAll(&code, 'SQ'
+					, delTag, sessID?)
+
+		case	'QS', 'QSTR':								; QUOTED-STRINGS (1line, "" and/or '')
+				clsMask.RestoreAll(&code, 'QS'
+					, delTag, sessID?)
+
+		case	'MLQS','MLSTR':								; QUOTED-STRINGS (multi-line)
+				clsMask.RestoreAll(&code, 'MLQS'
+					, delTag, sessID?)
+
+		case	'V1MLS','V1LEGMLS':							; V1 LEGACY (non-expression) MULTI-LINE STRING
+				clsMask.RestoreAll(&code, 'V1LEGMLS'
+					, delTag, sessID?)
+
+		case	'STR', 'STRINGS':							; STRINGS (1line and ML)
+				; ORDER MATTERS - reverse order of MASKT
+				MaskR(&code, 'MLQS',delTag, sessID?)		; 	recursion call - restore quoted-strings (ML)
+				MaskR(&code, 'QS',	delTag, sessID?)		; 	recursion call - restore quoted-strings (1line)
+
+		case	'CS','CSECT':								; CONTINUATION SECTIONS (ANY)
+				; reverse order of MaskT
+				MaskR(&code, 'CS2', delTag, sessID?)		; 	recursion call - restore method 2 cont sects
+;				MaskR(&code, 'CS1', delTag, sessID?)		; 	recursion call - restore method 1 cont sects
+
+		case	'CS1','CSECT1':								; CONTINUATION SECTIONS (METHOD 1)
+				; Subclass providing custom restore
+				clsMLLineCont.RestoreAll(&code, 'MLCSECTM1'
+					, delTag, sessID?, convert)				; will convert as part of restore
+
+		case	'CS2','CSECT2':								; CONTINUATION SECTIONS (METHOD 2)
+				; Subclass providing custom restore
+				clsMLLineCont.RestoreAll(&code, 'MLCSECTM2'
+					, delTag, sessID?, convert)				; will convert as part of restore
+
+		case	'FC','FCALL':								; FUNCTION CALLS
+				clsMask.RestoreAll(&code, 'FC'
+					, delTag, sessID?)
+				MaskR(&code, 'STR',	,sessID?)
+
+		case	'BLOCKS', 'FUNC&CLS':						; FUNCTIONS AND CLASSES
+				clsNodeMap.Restore_Blocks(&code)
+
+		default:
+				; targ not found in case-list above...
+				; ... so it may be a custom target...
+				; submit is as custom restore, not covered above
+				clsMask.RestoreAll(&code, targ
+					, delTag, sessID?)
+	}
+	return
 }
 ;################################################################################
-														   Restore_PreMask(&code)
+															RemovePtn(code, targ)
 ;################################################################################
 {
-; restore comments and strings that were premasked
-; 2025-06-12 AMB, UPDATED - part of Fix #333
+; 2025-06-22 AMB, ADDED as central hub for removing targ substrings
+;	Removes target substrings from passed code
 
-	; ORDER MATTERS!				(must be in reverse of masking)
-	clsPreMask.Restore_LC(&code)	; restore line comments
-	clsPreMask.Restore_MLQS(&code)	; restore quoted-strings - multi-line
-	clsPreMask.Restore_QS(&code)	; restore quoted-strings - single-line
-;	clsPreMask.Restore_LC(&code)	; restore line comments (WRONG ORDER)
-	clsPreMask.Restore_BC(&code)	; restore block comments
-	return							; code by reference
+	switch targ, false	; case-insensitive
+	{
+		case 'BC':
+			return RegExReplace(code, gPtn_BC)				; remove block comments
+
+		case 'LC':
+			; Mask strings first to prevent interference
+			sess := clsMask.NewSession()					; temp masking session
+			MaskT(&code, 'STR',, sess)						; mask strings, within isolated session
+				code := RegExReplace(code, gPtn_LC)			; remove line  comments
+			MaskR(&code, 'STR',, sess)						; restore strings, within isolated session
+			return code
+
+		case 'C', 'COM', 'LC&BC', 'COMMENTS':
+			code := RemovePtn(code, 'BC')					; remove block comments
+			return	RemovePtn(code, 'LC')					; remove line  comments
+
+		case 'V1LEGMLS':
+			return RegExReplace(code, gPtn_V1L_MLSV)		; remove v1 legacy (non-expression) ML string assignments
+
+		default:
+			MsgBox "RemovePtn - UNKNOWN TARG [" targ "]"
+			; TODO - provide a list of valid 'targ' strings
+	}
+	return
 }
-;################################################################################
-															   Restore_BCs(&code)
-;################################################################################
-{
-; 2025-06-12 AMB, ADDED - proxy func to restore block-comments
-
-	clsPreMask.Restore_BC(&code)
-	return	; code by reference
-}
-;################################################################################
-															   Restore_LCs(&code)
-;################################################################################
-{
-; 2025-06-12 AMB, ADDED - proxy func to restore line-comments
-
-	clsPreMask.Restore_LC(&code)
-	return	; code by reference
-}
-;################################################################################
-										  Restore_Strings(&code, deleteTag:=true)
-;################################################################################
-{
-; 2024-04-08 AMB, ADDED
-; 2024-06-26 AMB, MOVED from ConvertFuncs.ahk. Just a proxy now
-; 2025-06-12 AMB, UPDATED - part of Fix #333 - support for multi-line QUOTED-strings in format "(string)"
-; restores orig strings that were masked by Mask_Strings()
-
-	clsPreMask.Restore_MLQS(&code, deleteTag)
-	clsPreMask.Restore_QS(&code, deleteTag)
-	return	; code by reference
-}
-;################################################################################
-										Restore_DQstrings(&code, deleteTag:=true)
-;################################################################################
-{
-; 2025-06-12 AMB, ADDED - proxy func to restore DOUBLE-quoted strings on one line
-
-	clsPreMask.Restore_DQ(&code, deleteTag)
-	return	; code by reference
-}
-;################################################################################
-										Restore_SQstrings(&code, deleteTag:=true)
-;################################################################################
-{
-; 2025-06-12 AMB, ADDED - proxy func to restore SINGLE-quoted strings on one line
-
-	clsPreMask.Restore_SQ(&code, deleteTag)
-	return	; code by reference
-}
-;################################################################################
-										  Restore_HotKeys(&code, deleteTag:=true)
-;################################################################################
-{
-; 2025-06-12 AMB, ADDED - proxy func to restore hotkeys
-
-	clsPreMask.Restore_HK(&code, deleteTag)
-	return	; code by reference
-}
-;################################################################################
-									   Restore_HotStrings(&code, deleteTag:=true)
-;################################################################################
-{
-; 2025-06-12 AMB, ADDED - proxy func to restore hotStrings
-
-	clsPreMask.Restore_HS(&code, deleteTag)
-	return	; code by reference
-}
-;################################################################################
-										   Restore_Labels(&code, deleteTag:=true)
-;################################################################################
-{
-; 2025-06-12 AMB, ADDED - proxy func to restore label declarations
-
-	clsPreMask.Restore_LBL(&code, deleteTag)
-	return	; code by reference
-}
-;################################################################################
-										Restore_KVObjects(&code, deleteTag:=true)
-;################################################################################
-{
-; 2025-06-12 AMB, ADDED - proxy func to restore key:val objects {key1:val1,key2:val2}
-
-	clsPreMask.Restore_KVO(&code, deleteTag)
-	return	; code by reference
-}
-;################################################################################
-						 Restore_V1LegMLSV(&code, convert:=true, deleteTag:=true)
-;################################################################################
-{
-; 2024-06-30 AMB, ADDED
-; restore V1 legacy (non-expression) multi-line string assignments
-; clsV1Leg_MLSV class is used for custom convert and restore, but not masking
-; called from After_LineConverts() of ConvertFuncs.ahk
-
-	clsV1Leg_MLSV.RestoreAll(&code, 'V1Leg_MLSV', convert, deleteTag)	; CONVERTS to v2 as part of restore
-	return	; code by reference
-}
-;################################################################################
-					  Restore_MLSExpAssign(&code, convert:=true, deleteTag:=true)
-;################################################################################
-{
-; 2024-06-30 AMB, ADDED
-; restore expession var assignemnts (multi-line)
-; clsMLSExpAssign class is used for custom convert and restore, but not masking
-
-	clsMLSExpAssign.RestoreAll(&code, 'nMLSExpAssign', convert, deleteTag)	; CONVERTS to v2 as part of restore
-	return	; code by reference
-}
-;################################################################################
-										Restore_MLParenth(&code, deleteTag:=true)
-;################################################################################
-{
-; 2024-06-30 AMB, ADDED
-; restore (general) multi-line continuation blocks (surrounded by parentheses)
-
-	clsPreMask.RestoreAll(&code, 'MLGenCont', deleteTag)	; DOES NOT convert to v2 as part of restore
-	return	; code by reference
-}
-;################################################################################
-								  Restore_LineAndContSect(&code, deleteTag:=true)
-;################################################################################
-{
-; 2024-06-30 AMB, ADDED
-; restore multi-line continuation, that include previous (command) line and trailer
-; clsMLLineCont class is used for custom convert and restore, but not masking
-
-	clsMLLineCont.RestoreAll(&code, 'MLLineCont', deleteTag)	; CONVERTS to v2 as part of restore
-	return	; code by reference
-}
-;################################################################################
-										Restore_FuncCalls(&code, deleteTag:=true)
-;################################################################################
-{
-; proxy func to restore function calls
-
-	clsPreMask.Restore_FC(&code, deleteTag)
-	return	; code by reference
-}
-
-;################################################################################
-																 Remove_BCs(code)
-;################################################################################
-{
-; 2024-07-07 AMB, ADDED - remove block comments from passed code
-
-	return RegExReplace(code,gPtn_BC)	; remove block comments
-}
-;################################################################################
-																 Remove_LCs(code)
-;################################################################################
-{
-; 2024-07-07 AMB, ADDED - remove line comments from passed code
-; 2025-06-12 AMB, UPDATED - to prevent conflicts with " ;" within strings
-
-	; Mask strings first to prevent accidents for strings
-	Mask_Strings(&code)
-	code := RegExReplace(code,gPtn_LC)	; remove line  comments
-	Restore_Strings(&code)
-	return code
-}
-;################################################################################
-															Remove_Comments(code)
-;################################################################################
-{
-; 2024-07-07 AMB, ADDED - remove block and line comments from passed code
-
-	code := Remove_BCs(code)				; remove block comments
-	return	Remove_LCs(code)				; remove line  comments
-}
-;################################################################################
-														   Remove_V1LegMLSV(code)
-;################################################################################
-{
-; 2024-07-07 AMB, ADDED - remove V1 Legacy multi-line strings from passed code
-
-	return RegExReplace(code, gPtn_V1L_MLSV)
-}
-
-
 ;################################################################################
 															 uniqueTag(uniqueStr)
 ;################################################################################
@@ -1270,6 +917,44 @@ class clsMLLineCont extends clsPreMask
 ;			, gTagTrl	:= gTagChar '#'
 
 	return gTagPfx . uniqueStr . gTagTrl
+}
+;################################################################################
+											  hasTag(srcStr := '', tagType := '')
+;################################################################################
+{
+; 2025-06-12 AMB, ADDED
+; Purpose: To determine whether srcStr has...
+;	A. a very specific tag		(tagType := exact tag to search for)
+;		if srcStr is specified, this will only return a positive result if tag is found within srcStr
+;		leave srcStr blank to guarantee a return of orig sub-string from maskList, (even if tag is not found in srcStr)
+;	B. a specific tag type		(tagtype := string identifier for a tag category)
+;	C. any mask tag in general	(tagType := leave empty)
+
+	; make sure tagType is a valid tag
+
+	; A: find very specific mask-tag - return orig sub-string if found in maplist, false otherwise
+	; (note: if srcStr is specified (not blank), will only return orig sub-string if tag is ALSO found in srcStr)
+	;	leave srcStr blank to return orig sub-String regardless
+	validTag	:= '(?i)' uniqueTag('\w+')
+	if ((tagType ~= validTag) && clsMask.HasTag[tagType]) {						; if tag found in masklist...
+		oCode	:= clsMask.GetOrig[tagType]										; ... get orig sub-string
+		; if srcStr specified...
+		;	... only return orig sub-string when tag is found in srcStr
+		; if srcStr NOT specified, return orig sub-string in any case
+		retVal	:= (srcStr) ? ((srcStr ~= tagType) ? oCode : false) : oCode
+		return	retVal
+	}
+
+	; setup for B: or C:
+	tagType		:= RegExReplace(tagType, '_$') . '_'							; ensure its last char is underscore
+	nTagType	:= '(?i)' uniqueTag(tagType '\w+')								; build tagType needle
+
+	; B: find specific type of mask-tag
+	; C: find any mask-tag in general
+	; return first matching tag found, false otherwise
+	retval		:= (srcStr) ? (RegExMatch(srcStr, nTagType, &mTag) ? mTag[] : false) : false
+	return		retVal
+;	return !!(srcStr ~= tagType)		; T or F
 }
 ;################################################################################
 															escRegexChars(srcStr)
@@ -1287,75 +972,13 @@ class clsMLLineCont extends clsPreMask
 	return outStr
 }
 ;################################################################################
-											  hasTag(srcStr := '', tagType := '')
+																literalRegex(str)
 ;################################################################################
 {
-; 2025-06-12 AMB, ADDED
-; Purpose: Convenient way to determine whether a string has...
-;	A. a very specific tag		(tagType := exact tag to search for)
-;		if srcStr is specified, this will only return a positive result if tag is found within srcStr
-;		leave srcStr blank to guarantee a return of orig code from maskList, (even if tag is not found in srcStr)
-;	B. a specific tag type		(tagtype := type of tag)
-;	C. any mask tag in general	(tagType := leave empty)
+; 2025-06-12 AMB, ADDED, part of Fix #333 (use as needed)
+; TODO - CURRENTLY NOT USED - use escRegexChars() instead
 
-	; A: find very specific mask-tag - return original code if found in maplist, false otherwise
-	; (note: if srcStr is specified (not blank), will only return origCode if tag is ALSO found in srcStr)
-	;	leave srcStr blank to return origCode regardless
-	if (clsPreMask.maskList.has(tagType)) {
-		oCode	:= clsPreMask.maskList[tagType].OrigCode
-		retVal	:= (srcStr) ? ((srcStr ~= tagType) ? oCode : false) : oCode
-		return	retVal
-	}
-
-	; setup for B: or C:
-	tagType		.= (tagType) ? ((tagType ~= '^\w+_$') ? '' : '_') : ''	; if tagType is not blank, ensure its last char is underscore
-	nTagType	:= '(?i)' uniqueTag(tagType '\w+')						; build tagType needle
-
-	; B: find specific type of mask-tag
-	; C: find any mask-tag in general
-	; return first matching tag found, false otherwise
-	retval	:= (srcStr) ? (RegExMatch(srcStr, nTagType, &mTag) ? mTag[] : false) : false
-	return	retVal
-;	return !!(srcStr ~= tagType)		; T or F
-}
-;################################################################################
-														  hasValidV1Label(srcStr)
-;################################################################################
-{
-; 2025-06-12 AMB, ADDED
-; returns srcStr if any valid v1 label is found in string
-; https://www.autohotkey.com/docs/v1/misc/Labels.htm
-; invalid v1 label chars are...
-;	comma, double-colon (except at beginning),
-;	whitespace, accent (that's not used as escape)
-; see gPtn_LBLDecl for label declaration needle
-
-	tempStr := trim(Remove_LCs(srcStr))	; remove line comments and trim ws
-
-	; return full string if valid v1 label is found anywhere in string
-	if (tempStr ~= '(?m)' . gPtn_LblBLK)	; multi-line check
-		return srcStr		; appears to have valid v1 label somewhere
-	return ''				; no valid v1 label found in srcStr
-}
-;################################################################################
-														   isValidV1Label(srcStr)
-;################################################################################
-{
-; 2025-06-12 AMB, ADDED
-; returns extracted label if it resembles a valid v1 label
-; 	does not verify that it is a valid v2 label (see validV2Label for that)
-; https://www.autohotkey.com/docs/v1/misc/Labels.htm
-; invalid v1 label chars are...
-;	comma, double-colon (except at beginning),
-;	whitespace, accent (that's not used as escape)
-; see gPtn_LBLDecl for label declaration needle
-
-	tempStr := trim(Remove_LCs(srcStr))	; remove line comments and trim ws
-
-	; return just the label if it resembles a valid v1 label
-	if (RegExMatch(tempStr, gPtn_LblBLK, &m))	; single-line check
-		return m[1]			; appears to be valid v1 label
-	return ''				; not a valid v1 label
+	return '\Q' StrReplace(str, '\E', '\E\\E\Q') '\E'
 }
 ;################################################################################
 				   StrReplaceAt(haystack, needle, repl, cs:=0, pos:=1, limit:=-1)
@@ -1371,16 +994,6 @@ class clsMLLineCont extends clsPreMask
 	newTrail	:= StrReplace(trail, needle, repl, cs,, limit)
 	return		lead . newTrail
 }
-;################################################################################
-																literalRegex(str)
-;################################################################################
-{
-; 2025-06-12 AMB, ADDED, part of Fix #333 (use as needed)
-; TODO - CURRENTLY NOT USED - use escRegexChars() instead
-
-	return '\Q' StrReplace(str, '\E', '\E\\E\Q') '\E'
-}
-
 ;################################################################################
 																 buildPtn_QS_DQ()
 ;################################################################################
@@ -1413,52 +1026,67 @@ class clsMLLineCont extends clsPreMask
 															   buildPtn_MLBlock()
 ;################################################################################
 {
-;	2025-06-12 AMB, ADDED to support general multi-line blocks
-;	NOTE: these needles are designed as VERY POSSESSIVE (for efficiency and avoid errors)
+; 2025-06-12 AMB, ADDED to support general multi-line blocks
+; NOTE: these needles are designed as VERY POSSESSIVE (for efficiency and avoid errors)
+; 2025-06-22 AMB, UPDATED needles to include/exclude trailer
 
 	opt 		:= '(?im)'																	; CALLER MUST ADD this needle option manually (ignore case, multi-line)
 	TG			:= '(?<tag>\h*+#TAG★(?:LC|BC|QS)\w++★#)'									; mask tags (line/block comment or quoted-string ONLY!)
-	entry		:= '(?<entry>(?:(?&tag)|\h*+\R)++)'											; any tags or CRLFs before opening parenthesis
-;	mlOpt1		:= '(?:(?:(?<TJ>[LR]TRIM[^\v\)]*+|JOIN[^\v\)]*+)\R'							; ML string options (optional)
+	neck		:= '(?<neck>(?:(?&tag)|\h*+\R)++)'											; any tags or CRLFs before opening parenthesis
 	mlOpt1		:= '(?:(?:(?<TJ>[LR]TRIM[^\v\)]*+|JOIN[^\v\)]*+)'							; ML string options (optional)
-;	mlOpt2		:= '(?:(?:C(?:OM(?:MENTS?)?)?)?(?:\h(?&TJ))?' TG '*+)\R'					; ML string comment or tags (optional)
 	mlOpt2		:= '(?:(?:C(?:OM(?:MENTS?)?)?)?(?:\h(?&TJ))?' TG '*+)'						; ML string comment or tags (optional)
-;	mlOpts		:= '(?<mlOpts>(?<=^|\v)\h*+(?<!``)\(\h*+' mlOpt1 '|' mlOpt2 ')))'			; all options for declaration line
 	mlOpts		:= '(?<mlOpts>(?<=^|\v)\h*+(?<!``)\(\h*+' mlOpt1 '|' mlOpt2 ')))\h*+'		; all options for declaration line
 	lines		:= '(?<lines>\R*+[^\v]++)+?'												; lines that follow open parenthesis (lazy - one at a time)
 	cls			:= '(?<cls>\s*+(?<!``)\))'													; closing parenthesis
 	guts		:= '(?<guts>' cls '|' lines ')'												; all lines, then close
-;	parBlk		:= '(?<ParBlk>' mlOpts guts '(?(-2)|(?&cls)))'								; full body from open to close parentheses
 	parBlk		:= '(?<ParBlk>' mlOpts '\R' guts '(?(-2)|(?&cls)))'							; full body from open to close parentheses
-;	fullBlk		:= '(?im)(?<FullBlk>' . entry . parBlk ')'									; full multi-line block, including general entry
-	fullBlk		:= '(?im)(?<FullBlk>' . entry . parBlk ')(?<trail>.*+)'						; full multi-line block, including general entry
-;	pattern		:= opt . fullBlk															; only used for testing
-
-;	define		:= '(?im)(^|\R)' mlOpts
+	fullBlk		:= '(?im)(?<FullBlk>' . neck . parBlk ')'									; full multi-line block, No Trailer
+	fullT		:= fullBlk . '(?<trail>.*+)'												; full multi-line block, including general neck
 	define		:= '(?im)(^|\R)' mlOpts . '$'
 	nextLine	:= '[^\v]*+\R?'																; used in MaskAll of ML_Parenth class - for custom masking
 	closer		:= '^(\h*(?<!``)\))[^\v]*+'													; used in MaskAll of ML_Parenth class - for custom masking
+	return		{nOpt:opt,full:fullBlk,fullT:fullT,ParBlk:ParBlk,define:define,nextLine:nextLine,closer:closer}
+}
+;################################################################################
+																  buildPtn_CSM1()
+;################################################################################
+{
+; 2025-06-22 AMB, ADDED to support masking of "METHOD 1" continuation sections
+;		described here: https://www.autohotkey.com/docs/v1/Scripts.htm#continuation
+; NOTE: these needles are designed as VERY POSSESSIVE (for efficiency and avoid errors)
 
-;	A_Clipboard := fullBlk
-;	ExitApp
+	opt 		:= '(?im)'
+	exclude		:= '(?:\b(?!#TAG\b|AND\b|OR\b)[^.:?|&\v])'							; chars and terms that are not allowed to begin line 1
+	line1		:= '^\h*\K(?<line1>' . exclude . '.++\R)'							; should avoid false positives
+	TG			:= '(?<tag>\h*+#TAG★(?:LC|BC|QS)\w++★#)'							; mask tags (line/block comment or quoted-string ONLY!)
+	TGLN		:= '(?:' . TG . '\h*+\R++)*+'										; allows full tag lines in between continuation lines
+	CSLine		:= '(?<CSLns>\h*+(?:[,?.]|:(?!:)|\|\||&&|AND\h|OR\h)[^\v]++)'		; continuation line (does not require ws after dot)
+	CSBlk		:= '(?<CSBlk>(?:\R*' TGLN . CSLine . ')+)'							; full continuation section (following (declaration) line1)
+	pattern		:= opt . line1 . CSBlk												; assemple output needle
+	return		pattern
+}
+;################################################################################
+																  buildPtn_CSM2()
+;################################################################################
+{
+; 2025-06-22 AMB, ADDED to support masking of "METHOD 2" continuation sections
+;	described here: https://www.autohotkey.com/docs/v1/Scripts.htm#continuation
+; NOTE: needle is designed as VERY POSSESSIVE (for efficiency and avoid errors)
 
-	return		{nOpt:opt,full:fullBlk,ParBlk:ParBlk,define:define,nextLine:nextLine,closer:closer}
+	return	'(?im)^\h*\K(?<line1>.++)' . buildPtn_MLBlock().FullT
 }
 ;################################################################################
 															 buildPtn_V1LegMLSV()
 ;################################################################################
 {
 ; V1 Legacy multi-line string assignments (non-expression = ), NOT (:=)
-; does not currently support block comments between declaration and opening parenthesis
-;	may add this support later, as required
-; 2024-07-07 AMB, UPDATED for better performance, updated comment needle to bypass escaped semicolon
+; 2024-07-07 AMB, UPDATED for better performance...
+;	updated comment needle to bypass escaped semicolon
 ; 2025-06-12 AMB, UPDATED to reflect actual purpose
 ;	This version will ONLY match assignments WITH VARIABLE NAME
+;	ADDED support for block comments (thru buildPtn_MLBlock())
 
-	opt			:= '(?im)'
-	entry		:= '(?<decl>(?<var>[_a-z]\w*)\h*+``?=)'		; var - variable name (required!)
-	pattern		:= opt . entry . buildPtn_MLBlock().full	; 2025-06-12 - UPDATED block/body
-	return		pattern
+	return	'(?im)(?<decl>(?<var>[_a-z]\w*)\h*+``?=)' . buildPtn_MLBlock().FullT
 }
 ;################################################################################
 															   buildPtn_MLQSPth()
@@ -1470,34 +1098,30 @@ class clsMLLineCont extends clsPreMask
 ; 	see buildPtn_V1LegMLSV() for supporting v1 legacy multi-line string assignments (with variable declaration)
 ; 2025-06-12, UPDATED to fix #333 (improper string masking)
 
-	opt			:= '(?im)'
-	entry		:= '(?:[:.]=|,|%)?\K\h*+("|\B`').*+'
-	return		opt . entry . buildPtn_MLBlock().full . '\h*+(?1)'	; '"(string)"' misc formats
+	; MUST ADD NEEDLE OPTIONS MANUALLY
+	return	'(?:[:.]=|,|%)?\K\h*+("|\B`').*+' . buildPtn_MLBlock().full . '\h*+(?1)[^\v]*+'
 }
 ;################################################################################
 																 buildPtn_Label()
 ;################################################################################
 {
-; Label
-; 2024-08-06 AMB, ADDED
-; WORK IN PROGRESS
+; 2024-08-06 AMB, ADDED - Label (block - NOT YET)
+; WORK IN PROGRESS - IS CURRENTLY ONLY LABEL DECLARATION AND COMMENT
+;	DOES NOT (YET) INCLUDE LINES THAT FOLLOW LABEL DECLARATION
 
-	opt 		:= '(?i)'												; pattern options
-	LC			:= '(?:' gnLineComment ')'								; line comment (allows lead ws to be consumed already)
-	TG			:= '(?:' uniqueTag('\w++') ')'							; mask tags
-	CT			:= '(?<CT>(?:\h*+(?>' LC '|' TG ')))'					; line-comment OR tag
-	trail		:= '(?<trail>' . CT . '|\h*+(?=\v|$))'					; line-comment, tag, or end of line
-;	declare		:= '^\h*+(?<name>[^;,\s``]+)(?<!:):(?!:)'				; label declaration
-	declare		:= gPtn_LBLDecl											; label declaration
-	pattern		:= opt . declare . trail
-	return		pattern
+	opt 		:= '(?i)'													; pattern options
+	LC			:= '(?:' gnLineComment ')'									; line comment (allows lead ws to be consumed already)
+	TG			:= '(?:' uniqueTag('\w++') ')'								; mask tags
+	CT			:= '(?<CT>(?:\h*+(?>' LC '|' TG ')))'						; line-comment OR tag
+	trail		:= '(?<trail>' . CT . '|\h*+(?=\v|$))'						; line-comment, tag, or end of line
+	return		opt . gPtn_LBLDecl . trail									; see globals at top on this file
 }
 ;################################################################################
 																buildPtn_HotKey()
 ;################################################################################
 {
-; hotkey.
-; 2024-08-06 AMB, ADDED
+; 2024-08-06 AMB, ADDED - Hotkey declaration
+; 2025-06-22 AMB, UPDATED
 
 	opt 	:= '(?i)'														; pattern options
 	k01		:= '(?:[$~]?\*?)'												; special commands
@@ -1506,21 +1130,19 @@ class clsMLLineCont extends clsPreMask
 	k04		:= "[.?)(\][}{$|+*^:\\'``-]"									; symbols 1 (regex special)
 	k05		:= '(?:``;|[<>,"~!@#%&=_])'										; symbols 2
 	k06		:= '(?:[lrm]?(?:alt|c(?:on)?tro?l|shift|win|button)(?:\h+up)?)'	; modifiers - long
-	k07		:= 'numpad(?:\d|end|add)'										; numpad special
+	k07		:= 'numpad(?:\d|end|add|sub)'									; numpad special
 	k08		:= 'wheel(?:up|down)'											; mouse
 	k09		:= '(?:f|joy)\d++'												; func keys or joystick button
 	k10		:= '(?:(?:appskey|bkspc|(?:back)?space|del|delete|'				; named keys
-			   . 'end|enter|esc(?:ape)?|home|pgdn|pgdn|pause|tab|'
+			   . 'end|enter|esc(?:ape)?|home|pgdn|pgup|pause|tab|'
 			   . 'up|dn|down|left|right|(?:caps|scroll)lock)(?:\h+up)?)'
+	k11		:= '(?:sc[a-f0-9]{3})'											; 2025-06-22 ADDED - scancodes
 	repeat	:= '(?:\h++(?:&\h++)?(?-1))*'									; allow repeated keys
-	pattern	:= opt '^(\s*+' k01 '(' k02 '(?:' k03 '|' k04 '|' k05 '|' k06
-			. '|' k07 '|' k08 '|' k09 '|' k10 '))' . repeat . '::)' ;.*'
-
-
-;	A_Clipboard := pattern
-;	ExitApp
-	return	pattern
-
+	hotKeys := k01 '(' k02 '(?:' k03 '|' k04 '|' k05 '|' k06
+			. '|' k07 '|' k08 '|' k09 '|' k10 '|' k11 '))' . repeat . '::'
+	HKLWS	:= opt . '^(\s*+' . hotKeys . ')'								; supports leading blank lines
+	NOLWS	:= opt . '^(\h*+' . hotKeys . ')'								; DOES NOT support leading blank lines
+	return	{noLWS:NOLWS,LWS:HKLWS}
 }
 ;################################################################################
 																   buildPtn_CLS()
@@ -1565,9 +1187,8 @@ class clsMLLineCont extends clsPreMask
 																	buildPtn_IF()
 ;################################################################################
 {
-; IF block
-; 2024-08-06 AMB, ADDED
-; WORK IN PROGRESS
+; 2024-08-06 AMB, ADDED - IF block
+; WORK IN PROGRESS - NOT CURRENTLY USED
 
 	opt 	:= '(*UCP)(?im)'													; pattern options
 	noPth	:= '(?:.*+)'														; no parentheses
@@ -1604,228 +1225,118 @@ class clsMLLineCont extends clsPreMask
 	return	pattern
 }
 
+
+; 2025-06-22 - MOVED here from ContSections.ahk (for now)...
+;	... to avoid Include requirement when using MaskCode.ahk outside of converter (for testing)
+;	... will eventually be moved back to original file
 ;################################################################################
-															  getScriptVer(&code)
+															conv_ContParBlk(code)
 ;################################################################################
 {
-; 2025-06-12 AMB, ADDED
-; TODO - WORK IN PROGRESS - CURRENTLY NOT USED
-; inspects code to determine which AHK version it appears to be
-; returns
-;	10 for v1.0 (legacy)
-;	11 for v1.1 (cur v1)
-;	20 for v2.0+
-;	0 for unknown
+; 2025-06-12 AMB, ADDED - WORK IN PROGRESS
+; 2025-06-22 AMB, UPDATED
+; converts code within string continuation (parentheses) block
+; TODO - WORK IN PROGRESS
 
-;	Also see for more info
-;	'script code version 04-14.011.ahk'
-;	'Pre-process ahk files 01e.ahk'
-;	'Script Converter stuff 01.ahk'
-
-	nV_1_0 := '														; v1 legacy
-	(c
-	#(?:commentflag|delimiter|(?:deref|escape)char)					; directives
-	\bif(?:not)?equal(?:,|\h+%)										; legacy if 1
-	\bif(?:not)?exist(?:,|\h+%)										; legacy if 2
-	\bif(?:not)?instring(?:,|\h+%)									; legacy if 3
-	\bif(?:less|greater)(?:orequal)?(?:,|\h+%)						; legacy if 4
-	\bifwin(?:not)?(?:active|exist)(?:,|\h+%)						; legacy if 5
-	\bcomobj(?:[eu]nwrap|missing|parameter)\h*\(					; ComObj
-	\b(?:env(?:div|mult)|set(?:env|format))							; deprecated cmds
-	\b(?:onexit|getKeyState)\h*(?!\()(?!:)(?:,|\h+%)				; cmds that are not funcs
-	\bsplash(?:text(?:on|off)|image)								; splash variants
-	\bstring(?:getpos|len|mid|replace|split|(trim)?(?:left|right))	; string variants
-;	\b(?:progress|transform)										; could conflict with user defined
-	)'
-
-	nV_1_1 := '														; v1 expression
-	(c
-	#(?:noenv|persistent|singleinstance,)							; common directives
-	\b(?:sleep|msgbox|loop|gui|run|while|return)(?:,|\h+%)			; common cmds	- followed by , or %
-	\b(?:CoordMode|Critical|gui|Hotkey|InputBox)(?:,|\h+%)			; common cmds	- followed by , or %
-	\b(?:Mouse(?:GetPos|move)(?:,|\h+%)								; common cmds	- followed by , or %
-	\b(?:DetectHiddenWindows|SetTimer|SetWorkingDir)(?:,|\h+%)		; common cmds	- followed by , or %
-	\b(?:Pause|Sort|SoundBeep|SplitPath|Thread|WinSet)(?:,|\h+%)	; common cmds	- followed by , or %
-	\b(?:WinGet(?:class|pos|title)?(?:,|\h+%)						; common cmds	- followed by , or %
-	\bsend(?:message|event|input|play)?(?:,|\h+%)					; send variants	- followed by , or %
-	\b(?:IfMsgBox|VarSetCapacity)\b
-	\.maxindex\(\)
-	\blv_(?:delete|insert|modify)(?:col)?							; LV methods 1
-	\blv_(?:get(?:count|next|text)|setimagelist)					; LV methods 2
-	\bahk_(?:id|exe)\h+%\w+%										; ahk_xxx, not in quotes, with v1 var
-	)'
-
-	nV_2_0 := '		; WORK IN PROGRESS
-	(c
-	)'
-
-	/*
-	v1
-	% "ahk_id "
-
-	v2
-	buffer()
-	map()
-	Integer()
-	fileRead()
-	functions with pointer vars
-	regexMatch with pointer var
-	static methods/functions
-	'string' (single-quote strings
-	.DefineProp
-	coordMode with strings
-
-	*/
-
-	; requires directive (v1 or 2)
-	if (RegExMatch(code, '(?im)^\h*+\K#REQUIRES\h++AUTOHOTKEY\h++v?[><=]*(\d).*+', &m))
-		return (m[1]<2) ? 11 : 20
-
-	; v1.0 clues
-	needles := StrSplit(nV_1_0, '`n', '`r')
-	for idx, needle in needles
-	{
-		if (code ~= '(?im)' needle)
-			return 10
-	}
-	; v1.1 clues
-	needles := StrSplit(nV_1_1, '`n', '`r')
-	for idx, needle in needles
-	{
-		if (code ~= '(?im)' needle)
-			return 11
-	}
-;	nFuncCalls := '(?im)[_a-z]\w*+(\((?>[^)(]+|(?-1))*\))'
-	pos := 0
-	while (pos := RegExMatch(code, gPtn_FuncCall, &m, pos+1))
-	{
-		match := StrLower(m[])
-		if (InStr(match, 'byref'))
-			return 11
-		pos += StrLen(match)
+	; verify code matches pattern
+	if (!RegExMatch(code, '(?im)' . buildPtn_MLBlock().ParBlk, &mML)) {		; if code does not match CS pattern...
+		return false														; ... return negatory!
 	}
 
+	body	:= code															; [parentheses block - working var]
+	oBdy	:= body															; orig block code - will need this later
 
-;	; v2 clues
-;	needles := StrSplit(nV_2_0, '`n', '`r')
-;	for idx, needle in needles
-;	{
-;		if (code ~= '(?im)' needle)
-;			return 20
-;	}
+	; separate/tag leading and trailing ws
+	nSep := '(?is)\((?<LWS>[^\v]*\R\s*)(?<guts>.*?)(?<TWS>\h*\R\h*)\)'		; [separation needle]
+	RegExMatch(body, nSep, &mSep)											; fill vars - TODO - CHANGE TO VERIFICATION IF ?
+	oLWS	:= mSep.LWS														; save orig leading  WS for restore later
+	oTWS	:= mSep.TWS														; save orig trailing WS for restore later
+	oGuts	:= mSep.guts													; save orig guts contents (excluding lead/trail ws)
+	tLWS	:= gTagPfx 'LWS' gTagTrl										; create temp tag for leading  WS
+	tTWS	:= gTagPfx 'TWS' gTagTrl										; create temp tag for trailing WS
+	body	:= RegExReplace(body, '^\(' oLWS, '(' tLWS)						; replace orig lead  ws with a temp tag
+	body	:= RegExReplace(body, oTWS '\)$', tTWS ')')						; replace orig trail ws with a temp tag
 
-	return false	; unknown
+	; work on guts of body
+	uGuts	:= oGuts														; updated/new guts - will be changed below
+	MaskR(&uGuts, 'str')													; remove masking from strings within guts only
+	uGuts	:= '"' uGuts '"'												; add surounding double-quotes to guts (to prep for next step)
+	v2_DQ_Literals(&uGuts)													; change "" to `" within guts only
+	uGuts	:= RegExReplace(uGuts, '(?s)^"(.+)"$', '$1')					; remove surrounding DQs (to prep for next step)
+	uGuts	:= RegExReplace(uGuts, '(?<!``)"', '``"')						; replace " (single) with `"
+	uGuts	:= '"' uGuts '"'												; add surounding double-quotes to guts (again)
 
+	; mask all %var% within guts
+	nV1Var := '(?<!``)%([^%]+)(?<!``)%'										; [identifies %var%]
+	clsMask.MaskAll(&uGuts, 'V1VAR', nV1Var)								; mask/hide all %var%s for now
 
-;	Restore_PreMask(&code)
-;	code := Remove_BCs(code)
-;	code := Remove_LCs(code)
-;	clsPreMask.MaskAll(&code, 'DQStr', buildPtn_QS_DQ())
-;	; v2 single-quote strings
-;	if (RegExMatch(code, buildPtn_QS_SQ(), &m))
-;	{
-;		match := m[]
-;		SplitPath gFilePath, &FName, &dir, &ext, &FnNoExt, &drv
-;		matchCount++
-;		gFileList .= gFilePath '`r`n' match '`r`n'
-;;		MsgBox "[" gFileList "]"
-;		newFN := 'C:\Users\notch\Desktop\All Scripts 2025-05-08.073\sorted\V2\' FName
-;		FileMove(gFilePath, newFN)
-;		ToolTip(matchCount, 10, A_ScreenHeight-300, 13)
-;	}
+	; add quotes before and after v1 vars
+	nV1VarTag := gTagPfx 'V1VAR_\w+' gTagTrl								; [identifies V1Var tags]
+	pos := 1
+	While(pos := RegexMatch(uGuts, nV1VarTag, &mVarTag, pos)) {				; for each V1Var tag found...
+		oTag	:= mVarTag[]												; tag found (orig)
+		qTag	:= '" ' oTag ' "'											; ... add concat quotes around tag (INCLUDE CONCAT DOTS ALSO?)
+		uGuts	:= RegExReplace(uGuts, oTag, qTag,,1,pos)					; replace orig tag with quoted tag
+		pos		+= StrLen(qTag)												; prep for next loop iteration
+	}
+	uGuts		:= RegExReplace(uGuts, '^""\h*')							; cleanup any leading  "" (un-needed)
+	uGuts		:= RegExReplace(uGuts, '\h*""$')							; cleanup any trailing "" (un-needed)
+	body		:= StrReplace(body, oGuts, uGuts)							; replace orig guts with new guts
 
-/*
+	; restore original %VAR%s, then replace each with VAR (remove %)
+	clsMask.RestoreAll(&body, 'V1VAR')										; restore orig %VAR%s
+	pos := 1
+	While(pos := RegexMatch(body, nV1Var, &mVar, pos)) {					; for each %VAR% found...
+		pVar	:= mVar[]													; %VAR%
+		eVar	:= mVar[1]													; extracted var [gets VAR from %VAR%]
+		body	:= RegExReplace(body, pVar, eVar,,1,pos)					; replace %VAR% with VAR
+		pos		+= StrLen(eVar)												; prep for next loop iteration
+	}
 
-Commands := {KeyNames:"Alt AppsKey Backspace Break Browser_Back Browser_Favorites Browser_Forward Browser_Home Browser_Refresh Browser_Search Browser_Stop CapsLock Control CtrlBreak Delete Down End Enter Escape F1 F2 F3 F4 F5 F6 F7 F8 F9 F10 F11 F12 F13 F14 F15 F16 F17 F18 F19 F20 F21 F22 F23 F24 Help Home Insert LAlt Launch_App1 Launch_App2 Launch_Mail Launch_Media LButton LControl Left LShift LWin MButton Media_Next Media_Play_Pause Media_Prev Media_Stop NumLock Numpad Numpad0 Numpad1 Numpad2 Numpad3 Numpad4 Numpad5 Numpad6 Numpad7 Numpad8 Numpad9 NumpadAdd NumpadAdd NumpadClear NumpadDel NumpadDiv NumpadDiv NumpadDot NumpadDown NumpadEnd NumpadEnter NumpadEnter NumpadHome NumpadIns NumpadLeft NumpadMult NumpadMult NumpadPgDn NumpadPgUp NumpadRight NumpadSub NumpadSub NumpadUp Pause PgDn PgUp PrintScreen RAlt RButton RControl Right RShift RWin ScrollLock Shift Space Tab Up Volume_Down Volume_Mute Volume_Up WheelDown WheelLeft WheelRight WheelUp XButton1 XButton2"
-,Directives:"#ClipboardTimeout #CommentFlag #ErrorStdOut #EscapeChar #HotkeyInterval #HotkeyModifierTimeout #Hotstring #If #IfTimeout #IfWinActive #IfWinExist #Include #InputLevel #InstallKeybdHook #InstallMouseHook #KeyHistory #MaxHotkeysPerInterval #MaxMem #MaxThreads #MaxThreadsBuffer #MaxThreadsPerHotkey #MenuMaskKey #NoEnv #NoTrayIcon #Persistent #SingleInstance #UseHook #Warn #WinActivateForce"
-,Indent:"Catch else for Finally if IfEqual IfExist IfGreater IfGreaterOrEqual IfInString IfLess IfLessOrEqual IfMsgBox IfNotEqual IfNotExist IfNotInString IfWinActive IfWinExist IfWinNotActive IfWinNotExist Loop Try while"
-,BuiltIn:"A_AhkPath A_ScriptHwnd A_AhkVersion A_AppData A_AppDataCommon A_AutoTrim A_BatchLines A_CaretX A_CaretY A_ComputerName A_ControlDelay A_Cursor A_DD A_DDD A_DDDD A_DefaultMouseSpeed A_Desktop A_DesktopCommon A_DetectHiddenText A_DetectHiddenWindows A_EndChar A_EventInfo A_ExitReason A_FormatFloat A_FormatInteger A_Gui A_GuiControl A_GuiControlEvent A_GuiEvent A_GuiHeight A_GuiWidth A_GuiX A_GuiY A_Hour A_IconFile A_IconHidden A_IconNumber A_IconTip A_Index A_IPAddress1 A_IPAddress2 A_IPAddress3 A_IPAddress4 A_IsAdmin A_IsCompiled A_IsCritical A_IsPaused A_IsSuspended A_IsUnicode A_KeyDelay A_Language A_LastError A_LineFile A_LineNumber A_LoopField A_LoopFileAttrib A_LoopFileDir A_LoopFileExt A_LoopFileFullPath A_LoopFileLongPath A_LoopFileName A_LoopFileShortName A_LoopFileShortPath A_LoopFileSize A_LoopFileSizeKB A_LoopFileSizeMB A_LoopFileTimeAccessed A_LoopFileTimeCreated A_LoopFileTimeModified A_LoopReadLine A_LoopRegKey A_LoopRegName A_LoopRegSubkey A_LoopRegTimeModified A_LoopRegType A_MDAY A_Min A_MM A_MMM A_MMMM A_Mon A_MouseDelay A_MSec A_MyDocuments A_Now A_NowUTC A_NumBatchLines A_OSType A_OSVersion A_PriorHotkey A_ProgramFiles A_Programs A_ProgramsCommon A_PtrSize A_ScreenHeight A_ScreenWidth A_ScriptDir A_ScriptFullPath A_ScriptName A_Sec A_Space A_StartMenu A_StartMenuCommon A_Startup A_StartupCommon A_StringCaseSense A_Tab A_Temp A_ThisFunc A_ThisHotkey A_ThisLabel A_ThisMenu A_ThisMenuItem A_ThisMenuItemPos A_TickCount A_TimeIdle A_TimeIdlePhysical A_TimeSincePriorHotkey A_TimeSinceThisHotkey A_TitleMatchMode A_TitleMatchModeSpeed A_UserName A_WDay A_WinDelay A_WinDir A_WorkingDir A_YDay A_YEAR A_YWeek A_YYYY true false"
-,Commands:"AutoTrim BlockInput Click ClipWait Control ControlClick ControlFocus ControlGet ControlGetFocus ControlGetPos ControlGetText ControlMove ControlSend ControlSetText CoordMode DetectHiddenText DetectHiddenWindows Drive DriveGet DriveSpaceFree Edit EnvAdd EnvDiv EnvGet EnvMult EnvSet EnvSub EnvUpdate FileAppend FileCopy FileCopyDir FileCreateDir FileCreateShortcut FileDelete FileEncoding FileInstall FileGetAttrib FileGetShortcut FileGetSize FileGetTime FileGetVersion FileMove FileMoveDir FileOpen FileRead FileReadLine FileRecycle FileRecycleEmpty FileRemoveDir FileSelectFile FileSelectFolder FileSetAttrib FileSetTime FormatTime GetKeyState GroupActivate GroupAdd GroupClose GroupDeactivate Gui GuiControl GuiControlGet Hotkey ImageSearch IniDelete IniRead IniWrite Input InputBox KeyHistory KeyWait ListHotkeys ListLines ListVars #LTrim Menu MouseClick MouseClickDrag MouseGetPos MouseMove MsgBox OnClipboardChange OutputDebug Pause PixelGetColor PixelSearch PostMessage Process Progress Random RegDelete RegRead RegWrite Reload Run RunAs RunWait Sleep Send SendRaw SendInput SendPlay SendLevel SendMessage SendMode SetCapslockState SetControlDelay SetDefaultMouseSpeed SetEnv SetFormat SetKeyDelay SetMouseDelay SetNumlockState SetScrollLockState SetRegView SetStoreCapslockMode SetTitleMatchMode SetWinDelay SetWorkingDir Shutdown Sort SoundBeep SoundGet SoundGetWaveVolume SoundPlay SoundSet SoundSetWaveVolume SplashImage SplashTextOn SplashTextOff SplitPath StatusBarGetText StatusBarWait StringCaseSense StringGetPos StringLeft StringLen StringLower StringMid StringReplace StringRight StringSplit StringTrimLeft StringTrimRight StringUpper SysGet ToolTip Transform TrayTip Trim UrlDownloadToFile WinActivate WinActivateBottom WinClose WinGetActiveStats WinGetActiveTitle WinGetClass WinGet WinGetPos WinGetText WinGetTitle WinHide WinKill WinMaximize WinMenuSelectItem WinMinimize WinMinimizeAll WinMinimizeAll Undo WinMove WinRestore WinSet WinSetTitle WinShow WinWait WinWaitActive WinWaitClose WinWaitNotActive"
-,Functions:"Abs Asc ACos ASin ATan Ceil Chr ComObjActive ComObjArray ComObjConnect ComObjCreate ComObjEnwrap ComObjError ComObjFlags ComObjGet ComObjMissing ComObjParameter ComObjQuery ComObjType ComObjValue Cos DllCall Exp FileExist Floor Func GetKeyName GetKeySC GetKeyVK InStr IsByRef IsFunc IsLabel IsObject Ln Log Mod NumGet NumPut OnMessage RegExMatch RegExReplace RegisterCallback Round Sin Sqrt StrGet StrLen StrPut StrSplit SubStr Tan VarSetCapacity WinExist"
-,Keywords:"Abort AboveNormal Add ahk_class ahk_group ahk_id ahk_pid All alnum alpha AltDown AltSubmit AltTab AltTabAndMenu AltTabMenu AltTabMenuDismiss AltUp AlwaysOnTop and AutoHDR AutoSize Background BackgroundTrans BelowNormal between BitAnd BitNot BitOr BitShiftLeft BitShiftRight BitXOr Blind bold Border Bottom Button Buttons ByRef Cancel Capacity Caption Center Check Check3 Checkbox Checked CheckedGray Choose ChooseString Clipboard ClipboardAll Close Color ComboBox ComSpec contains ControlList Count CtrlDown CtrlUp date DateTime Days DDL Default DeleteAll Delimiter Deref Destroy digit Disable Disabled DropDownList Eject Enable Enabled Error ErrorLevel Exist Expand ExStyle FileSystem First Flash Float FloatFast Focus Font FromCodePage global Grid Group GroupBox GuiClose GuiContextMenu GuiDropFiles GuiEscape GuiSize Hdr Hidden Hide High HKCC HKCR HKCU HKEY_CLASSES_ROOT HKEY_CURRENT_CONFIG HKEY_CURRENT_USER HKEY_LOCAL_MACHINE HKEY_USERS HKLM HKU Hours HScroll Icon IconSmall ID IDLast Ignore ImageList in Integer IntegerFast Interrupt italic Join Label LastFound LastFoundExist Limit Lines List ListBox ListView local LocalSameAsGlobal Lock Logoff Low lower Lowercase MainWindow Margin Maximize MaximizeBox MaxSize Minimize MinimizeBox MinMax MinSize Minutes MonthCal Mouse Move Multi NA No NoActivate NoDefault NoHide NoIcon NoMainWindow norm Normal NoSort NoSortHdr NoStandard not NoTab NoTimers number Off Ok On or OwnDialogs Owner Parse Password Pic Picture Pixel Pos Pow Priority ProcessName ProgramFiles Radio Range Raw Read ReadOnly Realtime Redraw REG_BINARY REG_DWORD REG_EXPAND_SZ REG_MULTI_SZ REG_SZ Region Relative Remove Rename Report Resize Restore Retry RGB RWinDown RWinUp Screen Seconds Section Select Serial SetLabel ShiftAltTab ShiftDown ShiftUp Show Single Slider SortDesc ss Standard static Status StatusBar StatusCD strike Style Submit SysMenu Tab2 TabStop Text Theme Tile time Tip ToCodePage ToggleCheck ToggleEnable ToolWindow Top Topmost TransColor Transparent Tray TreeView TryAgain Type UnCheck underline Unicode Unlock UpDown upper Uppercase UseEnv UseErrorLevel UseUnsetGlobal UseUnsetLocal Vis VisFirst Visible VScroll Wait WaitClose WantCtrlA WantF2 WantReturn WinMinimizeAllUndo Wrap xdigit xm xp xs Yes ym yp ys"
-,Flow:"Break Continue Critical Exit ExitApp Gosub Goto OnExit Pause return SetBatchLines SetTimer Suspend Thread Throw Until"}
+	; restore original lead/trail ws
+	body := RegExReplace(body, tLWS, oLWS)									; replace leadWS  tag with orig ws code
+	body := RegExReplace(body, tTWS, oTWS)									; replace trailWS tag with orig ws code
 
-*/
+	; add leading empty lines to quoted text								; (simulate same output as v1)
+	RegExReplace(oLWS, '\R',, &cCRLF)										; count CRLFs - will tells us how many (leading) empty lines
+	if (cCRLF > 1) {	; first CRLF doesn't count							; if one or more empty lines...
+		nBlk := '(?s)(\([^\v]*)(\R)(\s+)"(.+?)(\))'							; [separates block anatomy]
+		body := RegExReplace(body, nBlk, '$1$2"$3$4$5')						; include those empty lines in quoted text (move leading DQ)
+	}
 
+	; if block is empty (it happens), add empty quotes
+	if (RegExReplace(body, '\s') = '()') {									; if body is empty...
+		body := RegExReplace(body, '(?s)(\(\R)', '$1""',,1)					; add empty string quotes below opening parenthesis
+	}
+
+	MaskR(&body, 'C&S')														; restore comments/strings
+	return body
 }
 
-;;################################################################################
-;														v2_ConvertV1L_MLSV(&code)
-;;################################################################################
-;{
-;; 2025-06-12 AMB, MOVED and updated
-;; Purpose: Convert V1 Legacy multi-line string assignments, with variable declaration
-;; see the following for logic and needle (hopefully this covers all cases)
-;; needle tweaks are found in buildPtn_MLQSPth() and buildPtn_MLBlock in MaskCode.ahk
-;/*
-;	1. if is legacy = (yes always)
-;			convert = to  :=
-;	2. if guts contain %var%
-;			send each line to converter individually
-;			do not add quotes to exterior
-;		else
-;			leave guts alone (do not process)
-;			add quotes to exterior
+; 2025-06-22 MOVED here from ConvLoopFuncs.ahk (for now)...
+;	... to avoid Include requirement when using MaskCode.ahk outside of converter (for testing)
+;	... will eventually be moved back to original file
+;################################################################################
+														 v2_DQ_Literals(&lineStr)
+;################################################################################
+{
+; 2025-06-12 AMB, redesigned and moved to dedicated routine for cleaner convert loop
+; Purpose: convert double-quote literals from "" (v1) to `" (v2) format
+;	handles all of them, whether in function call params or not
 
-;	Legacy [=] multi-line block needle for reference	(?im)(?<decl>(?<var>[_a-z]\w*)\h*+`?=)(?im)(?<FullBlk>(?<entry>(?:(?&tag)|\h*+\R)++)(?<ParBlk>(?<mlOpts>(?<=^|\v)\h*+(?<!`)\(\h*+(?:(?:(?<TJ>[LR]TRIM[^\v\)]*+|JOIN[^\v\)]*+)|(?:(?:C(?:OM(?:MENTS?)?)?)?(?:\h(?&TJ))?(?<tag>\h*+#TAG★(?:LC|BC|QS)\w++★#)*+))))\R(?<guts>(?<cls>\s*+(?<!`)\))|(?<lines>\R*+[^\v]++)+?)(?(-2)|(?&cls))))
-;*/
+	MaskT(&lineStr, 'DQStr')									; tag any DQ strings, so they are easy to find
 
-;	; parse code and convert v1 legacy multi-line to v2 expression multi-line
-;	pos := 1, convCode := code
-;	Restore_PreMask(&convCode)																			; chances are that... strings, comments, etc are masked
-;	nlegacyVar	:= 'im)%[_a-z]\w*%'																		; needle for %var%
-;	nDeclare	:= '^(?i)(\h*[_a-z]\w*\h*=)'															; needle for non-expression equals
-;	; find each occurence of... v1 legacy var assignment wih multi-line block
-;	while (pos	:= RegExMatch(convCode, gPtn_V1L_MLSV, &m, pos)) {
-;		outStr	:= '', mBlk := m[], blkLen := StrLen(mBlk)
-;		declare	:= m.decl, entry := m.entry, mlOpts := m.mlopts, guts := m.guts, cls := m.cls, pBlk := m.ParBlk							; grab match parts
-;		; if block guts does NOT have a legacy %var%...
-;		;	change [=] to [:= "] , and add closing quote to end of block
-;		if (!(guts	 ~= nlegacyVar)) {																	; if block guts does NOT have a legacy %var%...
-;;			MsgBox "[" pBlk "]"
-;;			declare	 := RegExReplace(declare, '=', ':= "')												; ... convert to expression and add begin quote
-;			declare	 := RegExReplace(declare, '=', ':=')												; ... convert to expression and add begin quote
-;;			pBlk	 .= '"'	; becomes )"																; [add ending quote to  )"]
-;			pBlk := (MLStr := isMLStr(pBlk)) ? MLStr : pBlk
-;			outStr	 := trim(declare . entry . pBlk, '`r`n')											; output string
-;;			outStr	 := trim(declare entry mlOpts guts cls '`r`n')											; output string
-;		}
-;		; else, convert each line of block individually using _convertLines()
-;		else {
-;			varEquals	:= declare	 ; var =															; non-expression equals declaration
-;			expEquals	:= RegExReplace(varEquals, '=', ':=',,1)										; change = to := for needle
-;			outStr		:= ''																			; will be output string
-;			; convert each line of block indivdually by sending thru _convertLines()
-;			for idx, line in StrSplit(mBlk, '`n', '`r'){
-;				MsgBox "[" line "]"
-;				; if var declaration line (first line)
-;				if (idx=1 && (line~=nDeclare)) {														; if declaration line (first line)...
-;					outStr := expEquals																	; ... ensure declaration is :=
-;					continue																			; move to next line
-;				}
-;				; if NO %var% found on THIS line, convert normally
-;				if (!(line	~= nlegacyVar)) {															; if line does not have %var%...
-;					outStr	.= '`r`n' . trim(_convertLines(line), '`r`n')								; ... convert using _convertLines() directly
-;					MsgBox "[" outStr "]"
-;;					outStr	.= '`r`n' . trim(toExp(line), '`r`n')								; ... convert using _convertLines() directly
-;					continue																			; move to next line
-;				}
-;				; has %var% on THIS line - make adj and let _convertLines() handle it (convenience)
-;				RegExMatch(line, '^(?<LWS>\h*)(?<line_str>.*)$', &mLineParts)							; separate/preserve leading whitespce
-;				tempLine	:= varEquals . mLineParts.line_str											; add tempVar declaration for pass to _convertLines()
-;;				convLine	:= trim(_convertLines(tempLine), '`r`n')									; convert templine to v2 expression
-;				convLine	:= trim(toExp(tempLine), '`r`n')									; convert templine to v2 expression
-;				; Remove tempVar declaration from converted output
-;				; 2025-06-12 - the conversion above doesn't always convert tempLine's = to :=
-;				; ... so, ensure BOTH 'tempVar =' AND 'tempVar :=' are removed, just in case
-;				convLine	:= RegExReplace(convLine, escRegexChars(varEquals)	'(.*)', '$1')			; 2025-06-12, part of Fix #333
-;				convLine	:= RegExReplace(convLine, escRegexChars(expEquals) 	'(.*)', '$1')			; 2025-06-12, part of Fix #333
-;				outStr		.= '`r`n' . mLineParts.LWS . convLine										; save line conversion results
-;			}
-;		}
-;		convCode := RegExReplace(convCode, escRegexChars(mBlk), outStr,,1) ;,pos) ; IS pos REQ HERE?	; update working var
-;		pos += StrLen(mBlk)																				; prep for next search/match
-;	}
-;	code := convCode
-;	return				; code by reference
-;}
+	; grab each string mask one at a time from lineStr
+	nDQTag		:= gTagPfx 'DQ_\w+' gTagTrl						; [regex for DQ string tags]
+	pos			:= 1
+	While (pos	:= RegexMatch(lineStr, nDQTag, &mTag, pos)) {	; find each DQ string tag (masked-string)
+		tagStr	:= mTag[]										; [temp var to handle tag and replacement]
+		MaskR(&tagStr,'DQStr')									; get orig string for current tag
+		tagStr	:= SubStr(tagStr, 2, -1)						; strip outside DQ chars from each end of extracted string
+		tagStr	:= RegExReplace(tagStr, '""', '``"')			; replace all remaining "" with `"
+		tagStr	:= '"' tagStr '"'								; add DQ chars back to each end
+		lineStr	:= StrReplace(lineStr, mTag[], tagStr)			; replace tag within lineStr with newly converted string
+		pos		+= StrLen(tagStr)								; prep for next search
+	}
+	return
+}

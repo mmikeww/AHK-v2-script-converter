@@ -1,32 +1,32 @@
 MsgBox(
 (
     "1"
-))  ; 1-p
+)) ; 1-p
 MsgBox("a, 22, 
 (
     33
-), 44")  ; 1-p mode
+), 44") ; 1-p mode
 
 
 MsgBox("", "22
 (
     
-)", 1)  ; 4-p mode
+)", 1) ; 4-p mode
 MsgBox(
 (
     "33"
-), 22, 1)  ; 4-p mode
+), 22, 1) ; 4-p mode
 
 MsgBox(
 (
     "33"
-), 22, "1 T44")  ; 4-p
+), 22, "1 T44") ; 4-p
 MsgBox("
 (
     33
-), dd", 22, 1)  ; 4-p (no timeout)
+), dd", 22, 1) ; 4-p (no timeout)
 
 MsgBox("
 (
     33
-), 44, 55", 22, 1)  ; 4-p (no timeout)
+), 44, 55", 22, 1) ; 4-p (no timeout)

@@ -44,19 +44,21 @@
     if !FileExist(A_ScriptDir "\AutoHotKey Exe\AutoHotkeyV2.exe")
         FileInstall(".\AutoHotKey Exe\AutoHotkeyV2.exe", A_ScriptDir "\AutoHotKey Exe\AutoHotkeyV2.exe")
     ; Diffing Tool
-    DirCreate(A_ScriptDir "\diff\lib\Exo")
-    DirCreate(A_ScriptDir "\diff\lib\mergely")
-    FileInstall('diff/template.html', 'diff/template.html')
-    FileInstall('diff/VisualDiff.ahk', 'diff/VisualDiff.ahk')
-    FileInstall('diff/lib/Exo/API.ahk', 'diff/lib/Exo/API.ahk')
-    FileInstall('diff/lib/Exo/FileObject.ahk', 'diff/lib/Exo/FileObject.ahk')
-    FileInstall('diff/lib/Exo/WB_onKey.ahk', 'diff/lib/Exo/WB_onKey.ahk')
-    FileInstall('diff/lib/mergely/codemirror.js', 'diff/lib/mergely/codemirror.js')
-    FileInstall('diff/lib/mergely/codemirror.css', 'diff/lib/mergely/codemirror.css')
-    FileInstall('diff/lib/mergely/jquery.min.js', 'diff/lib/mergely/jquery.min.js')
-    FileInstall('diff/lib/mergely/mergely.js', 'diff/lib/mergely/mergely.js')
-    FileInstall('diff/lib/mergely/mergely.css', 'diff/lib/mergely/mergely.css')
-    FileInstall('diff/lib/mergely/searchcursor.js', 'diff/lib/mergely/searchcursor.js')
+    If !DirExist(A_ScriptDir '\diff') {
+        DirCreate(A_ScriptDir "\diff\lib\Exo")
+        DirCreate(A_ScriptDir "\diff\lib\mergely")
+        FileInstall('diff/template.html', 'diff/template.html')
+        FileInstall('diff/VisualDiff.ahk', 'diff/VisualDiff.ahk')
+        FileInstall('diff/lib/Exo/API.ahk', 'diff/lib/Exo/API.ahk')
+        FileInstall('diff/lib/Exo/FileObject.ahk', 'diff/lib/Exo/FileObject.ahk')
+        FileInstall('diff/lib/Exo/WB_onKey.ahk', 'diff/lib/Exo/WB_onKey.ahk')
+        FileInstall('diff/lib/mergely/codemirror.js', 'diff/lib/mergely/codemirror.js')
+        FileInstall('diff/lib/mergely/codemirror.css', 'diff/lib/mergely/codemirror.css')
+        FileInstall('diff/lib/mergely/jquery.min.js', 'diff/lib/mergely/jquery.min.js')
+        FileInstall('diff/lib/mergely/mergely.js', 'diff/lib/mergely/mergely.js')
+        FileInstall('diff/lib/mergely/mergely.css', 'diff/lib/mergely/mergely.css')
+        FileInstall('diff/lib/mergely/searchcursor.js', 'diff/lib/mergely/searchcursor.js')
+    }
 }
 { ;VARIABLES:
     global icons, TestMode, TestFailing, FontSize, ViewExpectedCode, UIDarkMode, GuiIsMaximised, GuiWidth, GuiHeight

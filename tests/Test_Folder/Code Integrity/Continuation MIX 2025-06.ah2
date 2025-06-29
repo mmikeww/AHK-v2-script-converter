@@ -299,7 +299,7 @@ echo and you'll get the output."
 
 title := "complex MB"
 Line45 := "`nLine 4 and 5"
-TO := "4"
+TO := 4
 MsgBox(	; comment 1 ; additional comment
 /*
 should support block comments OR (comment2)

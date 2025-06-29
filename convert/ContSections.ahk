@@ -90,7 +90,7 @@ class CSect
 	;	if not... returns false
 	static FilterAndConvert(code)
 	{
-		MaskT(&code, 'C&S', false)													; mask comments/strings, don't mask multi-line strings!
+		Mask_T(&code, 'C&S', false)													; mask comments/strings, don't mask multi-line strings!
 
 		if (!RegExMatch(code, CSect.MLLineCont, &mCS)) {							; if does not match profile (head + body + optional trailer)
 			return false															; ... return negatory!
@@ -148,11 +148,11 @@ class CSect
 		if (dq)																; if cmd line had "...
 			body	:= conv_ContParBlk(body)								; ... convert the block code
 		else
-			MaskR(&body, 'C&S')												; restore comments/strings
+			Mask_R(&body, 'C&S')												; restore comments/strings
 			body	:= RegExReplace(body, '""', '``"')						; change "" to `", nothing else
 		trail		:= RegExReplace(mML.trail, '^"')						; remove any [optional] trailing DQ following ')"'
 		outStr		:= head . neck . body . trail							; assemble output string
-		MaskR(&outStr, 'C&S')												; restore comments/strings
+		Mask_R(&outStr, 'C&S')												; restore comments/strings
 		return 		outStr													; return converted output
 	}
 
@@ -173,7 +173,7 @@ class CSect
 		body		:= conv_ContParBlk(mML.parBlk)							; convert contents of parentheses block '(...)'
 		trail		:= RegExReplace(mML.trail, '^"')						; remove any [optional] trailing DQ following ')"'
 		outStr		:= head . neck . body . trail							; assemble output string
-		MaskR(&outStr, 'C&S')												; restore comments/strings
+		Mask_R(&outStr, 'C&S')												; restore comments/strings
 		return 		outStr													; return converted output
 	}
 
@@ -195,7 +195,7 @@ class CSect
 		body		:= conv_ContParBlk(mML.parBlk)							; convert contents of parentheses block '(...)'
 		trail		:= RegExReplace(mML.trail, '^"')						; remove any [optional] trailing DQ following ')"'
 		outStr		:= head . neck . body . trail							; assemble output string
-		MaskR(&outStr, 'C&S')												; restore comments/strings
+		Mask_R(&outStr, 'C&S')												; restore comments/strings
 		return 		outStr													; return converted output
 	}
 
@@ -219,7 +219,7 @@ class CSect
 		body		:= conv_ContParBlk(mML.parBlk)							; convert contents of parentheses block '(...)'
 		trail		:= RegExReplace(mML.trail, '^"')						; remove any [optional] trailing DQ following ')"'
 		outStr		:= head . neck . body . trail							; assemble output string
-		MaskR(&outStr, 'C&S')												; restore comments/strings
+		Mask_R(&outStr, 'C&S')												; restore comments/strings
 		return 		outStr													; return converted output
 	}
 
@@ -242,7 +242,75 @@ class CSect
 		body		:= conv_ContParBlk(mML.parBlk)							; convert contents of parentheses block '(...)'
 		trail		:= RegExReplace(mML.trail, '^"')						; remove any [optional] trailing DQ following ')"'
 		outStr		:= head . neck . body . trail							; assemble output string
-		MaskR(&outStr, 'C&S')												; restore comments/strings
+		Mask_R(&outStr, 'C&S')												; restore comments/strings
 		return 		outStr													; return converted output
 	}
+}
+
+;################################################################################
+											addContsToLine(&curLine, &EOLComment)
+;################################################################################
+{
+; 2025-06-12 AMB, Moved to dedicated routine for cleaner convert loop
+; Purpose: adds continuation lines to current line
+; TODO -	EVENTUALLY - USE CONTINUATION SECTION MASKING INSTEAD
+;			Ternary DOES NOT require ws - might need to adjust these needles
+;	WORK IN PROGRESS - MAY BE MERGING INTO CSect class soon
+
+	global gOScriptStr, gO_Index, gEOLComment_Cont
+
+	outStr := ''	; will hold all added lines, then be added to curLine
+	loop
+	{
+		; watch for last line in script
+		if (gOScriptStr.Length < gO_Index + 1) {
+;		if (!gOScriptStr.HasNext) {
+			break	; reached last line in script - exit
+		}
+
+		; grab next line for inspection
+;		nextLine	:= LTrim(gOScriptStr[gO_Index + 1])
+		nextLine	:= LTrim(gOScriptStr.GetLine(gO_Index + 1))
+		nlChar1		:= SubStr(Trim(nextLine), 1, 1)												; first char of next line
+
+		; prevent these from interferring with detection of continuation lines
+		Mask_T(&nextLine, 'HK')																	; mask hotkey declarations
+		Mask_T(&nextLine, 'HS')																	; mask hotstring declartions
+		Mask_T(&nextLine, 'labels')																; mask label declarations
+
+		; inspect each line after current line, to see whether a continuaton section exist...
+		;	if so, add each continuation line to the working var, which will then be added to curLine (and returned)
+		; continuation can start with any of [ comma, dot, ternary, &&, ||, and, or ]
+		if (nextLine ~= '(?i)^(?:[,.?]|:(?!:)|\|\||&&|AND|OR)')									; valid continuation chars
+		{
+			; 2025-05-24 Banaanae, ADDED for fix #296
+;			removeEOLComments(gOScriptStr[gO_Index + 1], nlChar1, &EOLComment)
+			removeEOLComments(gOScriptStr.GetLine(gO_Index + 1), nlChar1, &EOLComment)
+			gEOLComment_Cont.Push(EOLComment)	; TODO - can lead to errors, need to investigate
+
+			gO_Index++																			; adjust main-loop line-index
+			gOScriptStr.SetIndex(gO_Index)
+;			outStr .= '`r`n' . RegExReplace(gOScriptStr[gO_Index], '(\h+`;.*)$', '')			; update output string as we go
+			outStr .= '`r`n' . RegExReplace(gOScriptStr.GetLine(gO_Index), '(\h+`;.*)$', '')	; update output string as we go
+
+			; these are not really needed... they serve no purpose here...
+			;	only included to cleanup reference within PreMask.masklist
+			Mask_R(&nextLine, 'labels')															; restore label declarations
+			Mask_R(&nextLine, 'HS')																; restore hotstring declarations
+			Mask_R(&nextLine, 'HK')																; restore hotkey declarations
+		}
+		else {
+			break	; reached end of continuation section
+		}
+	}
+	curLine .= outStr																			; update curLine to be returned
+
+	; 2025-05-24 Banaanae, ADDED for fix #296
+	if (gEOLComment_Cont.Length != 1) {
+		EOLComment := ''
+	}
+	else {
+		gEOLComment_Cont.Pop()
+	}
+	return false
 }

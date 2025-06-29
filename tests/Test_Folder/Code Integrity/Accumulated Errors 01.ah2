@@ -421,7 +421,7 @@ retStr := RegExReplace(retStr, "(?m)^((?:(?>`"[^`"\v]*`"|[^`"\v;]*)*)*)(;.*)+", 
 ;################################################################################
 
    myGui := Gui()
-   myGui.MarginX := "20", myGui.MarginY := "20"
+   myGui.MarginX := 20, myGui.MarginY := 20
    ogcButtonOrder1234 := myGui.Add("Button", "ym", "Order 1, 2, 3, 4")
    ogcButtonOrder1234.OnEvent("Click", Order123.Bind("Normal"))
    ogcButtonOrder3214 := myGui.Add("Button", "ym", "Order 3, 2, 1, 4")

@@ -37,7 +37,7 @@ return  ; End of auto-execute section. The script is idle until the user does so
 EmptyTest(A_GuiEvent := "", A_GuiControl := "", Info := "", *)
 { ; V1toV2: Added bracket
 global ; V1toV2: Made function global
-oSaved := myGui.Submit("0")
+oSaved := myGui.Submit(0)
 FirstName := oSaved.FirstName
 MyCheckBox := oSaved.MyCheckBox
 MyRadio := oSaved.MyRadio

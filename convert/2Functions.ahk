@@ -384,67 +384,6 @@ _OnMessage(p) {
   }
 }
 
-_RegExMatch(p) {
-  global gaList_MatchObj, gaList_PseudoArr
-  ; V1: FoundPos := RegExMatch(Haystack, NeedleRegEx , OutputVar, StartingPos := 1)
-  ; V2: FoundPos := RegExMatch(Haystack, NeedleRegEx , &OutputVar, StartingPos := 1)
-
-  if (p[3] != "") {
-    OrigPattern := P[2]
-    OutputVar := p[3]
-
-    CaptNames := [], pos := 1
-    while pos := RegExMatch(OrigPattern, "(?<!\\)(?:\\\\)*\(\?<(\w+)>", &Match, pos)
-      pos += Match.Len, CaptNames.Push(Match[1])
-
-    Out := ""
-    if (RegExMatch(OrigPattern, '^"([^"(])*O([^"(])*\)(.*)$', &Match)) {
-      ; Mode 3 (match object)
-      ; v1OutputVar.Value(1) -> v2OutputVar[1]
-      ; The v1 methods Count and Mark are properties in v2.
-      P[2] := ( Match[1] || Match[2] ? '"' Match[1] Match[2] ")" : '"' ) . Match[3] ; Remove the "O" from the options
-      gaList_MatchObj.Push(OutputVar)
-    } else if (RegExMatch(OrigPattern, '^"([^"(])*P([^"(])*\)(.*)$', &Match)) {
-      ; Mode 2 (position-and-length)
-      ; v1OutputVar -> v2OutputVar.Len
-      ; v1OutputVarPos1 -> v2OutputVar.Pos[1]
-      ; v1OutputVarLen1 -> v2OutputVar.Len[1]
-      P[2] := ( Match[1] || Match[2] ? '"' Match[1] Match[2] ")" : '"' ) . Match[3] ; Remove the "P" from the options
-      gaList_PseudoArr.Push({name: OutputVar "Len", newname: OutputVar '.Len'})
-      gaList_PseudoArr.Push({name: OutputVar "Pos", newname: OutputVar '.Pos'})
-      gaList_PseudoArr.Push({strict: true, name: OutputVar, newname: OutputVar ".Len"})
-      for CaptName in CaptNames {
-        gaList_PseudoArr.Push({strict: true, name: OutputVar "Len" CaptName, newname: OutputVar '.Len["' CaptName '"]'})
-        gaList_PseudoArr.Push({strict: true, name: OutputVar "Pos" CaptName, newname: OutputVar '.Pos["' CaptName '"]'})
-      }
-    } else if (RegExMatch(OrigPattern, 'i)^"[a-z``]*\)')) ; Explicit options.
-      || RegExMatch(OrigPattern, 'i)^"[^"]*[^a-z``]') { ; Explicit no options.
-      ; Mode 1 (Default)
-      ; v1OutputVar -> v2OutputVar[0]
-      ; v1OutputVar1 -> v2OutputVar[1]
-      ; 2024-06-22 AMB - Added regex property to be used in ConvertPseudoArray()
-      gaList_PseudoArr.Push({regex: true, name: OutputVar})
-      gaList_PseudoArr.Push({regex: true, strict: true, name: OutputVar, newname: OutputVar "[0]"})
-;      gaList_PseudoArr.Push({name: OutputVar})
-;      gaList_PseudoArr.Push({strict: true, name: OutputVar, newname: OutputVar "[0]"})
-      for CaptName in CaptNames
-        gaList_PseudoArr.Push({strict: true, name: OutputVar CaptName, newname: OutputVar '["' CaptName '"]'})
-    } else {
-      ; Unknown mode. Unclear options, possibly variables obscuring the parameter.
-      ; Treat as default mode?... The unhandled options O and P will make v2 throw anyway.
-      ; 2024-06-22 AMB - Added regex property to be used in ConvertPseudoArray()
-      gaList_PseudoArr.Push({regex: true, name: OutputVar})
-      gaList_PseudoArr.Push({regex: true, strict: true, name: OutputVar, newname: OutputVar "[0]"})
-;      gaList_PseudoArr.Push({name: OutputVar})
-;      gaList_PseudoArr.Push({strict: true, name: OutputVar, newname: OutputVar "[0]"})
-    }
-    Out .= Format("RegExMatch({1}, {2}, &{3}, {4})", p*)
-  } else {
-    Out := Format("RegExMatch({1}, {2}, , {4})", p*)
-  }
-  Return RegExReplace(Out, "[\s\,]*\)$", ")")
-}
-
 _StrReplace(p) {
   global gaScriptStrsUsed
   CaseSense := gaScriptStrsUsed.StringCaseSense ? "A_StringCaseSense" : ""

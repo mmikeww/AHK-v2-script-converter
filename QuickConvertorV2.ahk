@@ -1233,6 +1233,17 @@ On_WM_MOVE(wParam, lParam, msg, hwnd){
         }
     }
 }
+
+WM_CTLCOLORBTN(checkboxes, wParam, lParam, *) {
+    static Brushes := {}
+    hDC := wParam
+    for k, v in checkboxes {
+       if (lParam = v.hwnd) {
+          DllCall("SetBkColor", "Ptr", hDC, "UInt", v.backColor)
+          Return HasProp(Brushes, v.hwnd) ? Brushes.%v.hwnd% : Brushes.%v.hwnd% := DllCall("CreateSolidBrush", "UInt", v.backColor, "Ptr")
+       }
+    }
+ }
 ;################################################################################
 setUIMode(GuiObj, DarkMode:=false)
 {
@@ -1274,6 +1285,22 @@ setUIMode(GuiObj, DarkMode:=false)
                 V2ExpectedEdit.SetFont("cWhite")
                 CheckBoxV2E.Opt("BackgroundF0F0F0")             ; unable to change text color, so keep bkgd light
                 CheckBoxViewSymbols.Opt("BackgroundF0F0F0")     ; unable to change text color, so keep bkgd light
+                OnMessage(0x135, WM_CTLCOLORBTN.Bind([
+                    {hwnd: ButtonEvaluateTests.hwnd, backColor: 0x353535},
+                    {hwnd: ButtonEvalSelected.hwnd, backColor: 0x353535},
+                    {hwnd: ButtonRunV1.hwnd, backColor: 0x353535},
+                    {hwnd: ButtonCloseV1.hwnd, backColor: 0x353535},
+                    {hwnd: oButtonConvert.hwnd, backColor: 0x353535},
+                    {hwnd: ButtonRunV2.hwnd, backColor: 0x353535},
+                    {hwnd: ButtonCloseV2.hwnd, backColor: 0x353535},
+                    {hwnd: ButtonCompDiffV2.hwnd, backColor: 0x353535},
+                    {hwnd: ButtonCompVscV2.hwnd, backColor: 0x353535},
+                    {hwnd: ButtonRunV2E.hwnd, backColor: 0x353535},
+                    {hwnd: ButtonCloseV2E.hwnd, backColor: 0x353535},
+                    {hwnd: ButtonCompDiffV2.hwnd, backColor: 0x353535},
+                    {hwnd: ButtonCompVscV2E.hwnd, backColor: 0x353535},
+                    {hwnd: ButtonValidateConversion.hwnd, backColor: 0x353535}
+                ]), 1)
 			}
 			default:
 			{

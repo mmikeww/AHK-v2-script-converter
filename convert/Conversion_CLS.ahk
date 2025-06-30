@@ -137,7 +137,7 @@ toExpEquals(code)
 {
 	retCode := ''
 	if (RegExMatch(code, "(?i)^(\h*[a-z_%][a-z_0-9%]*\h*)=([^;\v]*)", &m)) {
-		retCode := RTrim(m[1]) . " := " . ToStringExpr(m[2])   ; regex above keeps the gIndent already
+		retCode := RTrim(m[1]) . " := " . ToExp(m[2],,1)   ; regex above keeps the gIndent already
 	}
 	return retCode
 }

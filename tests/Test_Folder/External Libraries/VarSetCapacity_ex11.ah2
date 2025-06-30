@@ -10,7 +10,7 @@ return
 ButtonConvert(A_GuiEvent := "", A_GuiControl := "", Info := "", *)
 { ; V1toV2: Added bracket
 global ; V1toV2: Made function global
-oSaved := myGui.Submit("0")
+oSaved := myGui.Submit(0)
 KeyName := oSaved.KeyName
 MsgBox("GetKeyName: " GetKeyName(KeyName)
     .  "`nGetKeyChar: " GetKeyChar(KeyName))

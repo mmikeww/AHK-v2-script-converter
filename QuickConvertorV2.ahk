@@ -63,12 +63,12 @@
 { ;VARIABLES:
     global icons, TestMode, TestFailing, FontSize, ViewExpectedCode, UIDarkMode, GuiIsMaximised, GuiWidth, GuiHeight
 
-    ; TreeRoot will be the root folder for the TreeView.
-    ;   Note: Loading might take a long time if an entire drive such as C:\ is specified.
-    global TreeRoot := A_ScriptDir "\Tests\Test_Folder"
-
     ; Help file paths
     getHelpPath()
+    ; gTreeRoot will be the root folder for the TreeView.
+    ;   Note: Loading might take a long time if an entire drive such as C:\ is specified.
+    global gTreeRoot
+    gTreeRoot := ((A_ScriptDir '\Tests\Test_Folder') . ((gV2Conv) ? '' : 'V1'))
 
     ;READ INI VARIABLES WITH DEFAULTS
     IniFile := "QuickConvertorV2.ini"
@@ -84,7 +84,7 @@
     TreeViewWidth       := IniRead(IniFile, Section, "TreeViewWidth", 280)
     ViewExpectedCode    := IniRead(IniFile, Section, "ViewExpectedCode", 0)
     UIDarkMode          := IniRead(IniFile, Section, "UIDarkMode", 0)
-    OnExit(ExitFunc)
+ ;   OnExit(ExitFunc)
     ;WRITE BACK VARIABLES SO THAT DEFAULTS ARE SAVED TO INI (Seems like this should be moved to exit routine SEE Esc::)
 
 }
@@ -115,6 +115,20 @@
     }
 
     TempV1Script := FileExist(FileTempScript) ? FileRead(FileTempScript) : ""
+
+;    ; Prompt to test V1 or V2
+;    Result := MsgBox("Test conversion for V1.1 ONLY?`n`n`tY =`tV1.1`n`tN =`tV2","WHICH MODE?", "YNC")
+;    if (result="yes") {
+;        gV2Conv := false
+;    }
+;    else if (result="no") {
+;        gV2Conv := true
+;    }
+;    else if (result="cancel") {
+;        ExitApp
+;    }
+
+    gTreeRoot := ((A_ScriptDir '\Tests\Test_Folder') . ((gV2Conv) ? '' : 'V1'))
     GuiTest(TempV1Script)
 
 
@@ -239,7 +253,8 @@ ButtonGenerateTest(*)
         SelectedText := DirList[TV.GetSelection()]
     }
     Else{
-        SelectedText := A_ScriptDir "\tests\Test_Folder"
+;        SelectedText := A_ScriptDir "\tests\Test_Folder"
+        SelectedText := gTreeRoot
     }
 
     if Instr(SelectedText,".ah1") {
@@ -351,7 +366,7 @@ CompDiffV2(*)
     }
     FileAppend V1Edit.Text, TempAhkFileV1
 
-   RunWait('"' A_ScriptDir '\diff\VisualDiff.ahk" "' . TempAhkFileV1 . '" "' . TempAhkFileV2 . '"')
+    RunWait('"' A_ScriptDir '\diff\VisualDiff.ahk" "' . TempAhkFileV1 . '" "' . TempAhkFileV2 . '"')
 
     Return
 }
@@ -374,7 +389,7 @@ CompDiffV2E(*)
     }
     FileAppend V2ExpectedEdit.Text, TempAhkFileV2E
 
-   RunWait('"' A_ScriptDir '\diff\VisualDiff.ahk" "' . TempAhkFileV2 . '" "' . TempAhkFileV2E . '"')
+    RunWait('"' A_ScriptDir '\diff\VisualDiff.ahk" "' . TempAhkFileV2 . '" "' . TempAhkFileV2E . '"')
 
     Return
 }
@@ -438,7 +453,7 @@ Edit_Change(*)
 }
 EvalSelectedTest(thisCtrl, *)
 {
-    global Number_Tests, Number_Tests_Pass, TreeRoot
+    global Number_Tests, Number_Tests_Pass, gTreeRoot
 
     selItemID := TV.GetSelection()
     parentPaths := Array()
@@ -454,7 +469,7 @@ EvalSelectedTest(thisCtrl, *)
     if parentPaths.Length = 0 {
       return
     }
-    fullParentPath := TreeRoot
+    fullParentPath := gTreeRoot
     for fd in parentPaths {
         fullParentPath .= "/" fd
     }
@@ -508,8 +523,30 @@ Gui_DropFiles(GuiObj, GuiCtrlObj, FileArray, X, Y)
 {
     V1Edit.Text := StrReplace(StrReplace(FileRead(FileArray[1]), "`r`n", "`n"), "`n", "`r`n")
 }
+;################################################################################
+resAdj(val)
+{
+; 2025-06-29 AMB, ADDED - calculates/returns compensation multiplier for screen DPI
+
+    return round(val * (A_ScreenDPI / 96))
+}
+;################################################################################
+getEditWidth(guiWidth)
+{
+; 2025-06-29 AMB, ADDED - calculates/returns edit-control width...
+;   divides UI real-estate width evenly between edit controls
+;   width value depends on whether expected-edit control is visible of not
+
+    V2ExpectedEdit.GetPos(,, &w)    ; get current width of expected-edit control
+    TV.GetPos(,, &TV_W)             ; get current width of treeView control
+    NumberEdits := (w > 0 && V2ExpectedEdit.Text != '') ? 3 : 2
+    return round((guiWidth-TV_W) / NumberEdits)
+}
+;################################################################################
 Gui_Size(thisGui, MinMax, Width, Height)  ; Expand/Shrink ListView and TreeView in response to the user's resizing.
 {
+; 2025-06-29 AMB, UPDATED to fix GUI width when toggling expected-edit control visibility
+
     DllCall("LockWindowUpdate", "Uint",myGui.Hwnd)
     Height := Height - 23 ; Compensate the statusbar
     EditHeight := Height-30
@@ -535,13 +572,7 @@ Gui_Size(thisGui, MinMax, Width, Height)  ; Expand/Shrink ListView and TreeView 
     V2ExpectedEdit.GetPos(,, &V2ExpectedEdit_W)
 
     TreeViewWidth := TV_W
-    if (V2ExpectedEdit_W>0 and V2ExpectedEdit.Text!=""){
-        NumberEdits := 3
-    }
-    else{
-        NumberEdits := 2
-    }
-    EditWidth := (Width-TreeViewWidth)/NumberEdits
+    EditWidth := getEditWidth(Width)
 
     V1Edit.Move(TreeViewWidth,,EditWidth,EditHeight)
     V2Edit.Move(TreeViewWidth+EditWidth,,EditWidth,EditHeight)
@@ -586,7 +617,7 @@ Gui_Size(thisGui, MinMax, Width, Height)  ; Expand/Shrink ListView and TreeView 
     IniWrite(GuiY, IniFile, Section, "GuiY")
 
 }
-
+;################################################################################
 Gui_Close(thisGui){
     FileTempScript := A_IsCompiled ? A_ScriptDir "\TempScript.ah1" : A_ScriptDir "\Tests\TempScript.ah1"
     if (FileExist(FileTempScript)){
@@ -610,7 +641,7 @@ GuiTest(strV1Script:="")
     global
     ListViewWidth := A_ScreenWidth/2 - TreeViewWidth - 30
 
-    ; Create the MyGui window and display the source directory (TreeRoot) in the title bar:
+    ; Create the MyGui window and display the source directory (gTreeRoot) in the title bar:
     MyGui := Gui("+Resize")  ; Allow the user to maximize or drag-resize the window.
     Mygui.SetFont('s' FontSize)
     MyGui.Title := "Quick Convertor V2"
@@ -640,7 +671,7 @@ GuiTest(strV1Script:="")
     M.Show("w200")
 
     if TestMode{
-        DirList := AddSubFoldersToTree(TreeRoot, Map())
+        DirList := AddSubFoldersToTree(gTreeRoot, Map())
     }
     else{
         DirList := Map()
@@ -652,7 +683,7 @@ GuiTest(strV1Script:="")
     TV.OnEvent("ItemSelect", TV_ItemSelect)
     ButtonEvaluateTests := MyGui.Add("Button", "", "Eval Tests")
     ButtonEvaluateTests.StatusBar := "Evaluate all the tests again"
-    ButtonEvaluateTests.OnEvent("Click", AddSubFoldersToTree.Bind(TreeRoot, DirList,"0"))
+    ButtonEvaluateTests.OnEvent("Click", AddSubFoldersToTree.Bind(gTreeRoot, DirList,"0"))
     ButtonEvalSelected := MyGui.Add("Button", "", "Eval 1 test")
     ButtonEvalSelected.StatusBar := "Evaluate the one selected test again"
     ButtonEvalSelected.OnEvent("Click", EvalSelectedTest.Bind())
@@ -724,7 +755,7 @@ GuiTest(strV1Script:="")
         ButtonCompVscV2E.Visible := 0
     }
     ButtonCompVscV2E.OnEvent("Click", CompVscV2E)
-    CheckBoxV2E := MyGui.Add("CheckBox", "yp x+50 Checked", "Expected")
+    CheckBoxV2E := MyGui.Add("CheckBox", "yp x+50", "View Exp")
     CheckBoxV2E.Value := ViewExpectedCode
 
     CheckBoxV2E.StatusBar := "Display expected V2 code if it exists"
@@ -744,7 +775,7 @@ GuiTest(strV1Script:="")
     FileMenu := Menu()
     if !A_IsCompiled {
         FileMenu.Add "Run Yunit tests", (*) => Run('"' A_ScriptDir "\AutoHotKey Exe\AutoHotkeyV2.exe" '" "' A_ScriptDir '\Tests\Tests.ahk"')
-        FileMenu.Add "Open test folder", (*) => Run(TreeRoot)
+        FileMenu.Add "Open test folder", (*) => Run(gTreeRoot)
     } else {
         FileMenu.Add "Delete all temp files", FileDeleteTemp
     }
@@ -925,11 +956,9 @@ MenuViewDark(*)
 }
 MenuViewExpected(*)
 {
-    CheckBoxV2E.Value := !CheckBoxV2E.Value
-    IniWrite(CheckBoxV2E.Value, IniFile, Section, "ViewExpectedCode")
-    ViewV2E(myGui)
-    MyGui.GetPos(,, &Width,&Height)
-    Gui_Size(MyGui, 0, Width - 14, Height - 60)
+; 2025-06-29 AMB, UPDATED to fix synchonization between menu item and checkbox
+    CheckBoxV2E.value := !CheckBoxV2E.value     ; simulate clicking on checkbox
+    ViewV2E(myGui)                              ; pass handling, for consistency
 }
 MenuViewTree(*)
 {
@@ -1050,6 +1079,8 @@ RunV2E(*)
 }
 TV_ItemSelect(thisCtrl, Item)  ; This function is called when a new item is selected.
 {
+; 2025-06-29 AMB, UPDATED to fix inconsistency with UI update when toggling expected-edit control
+
     ; Put the files into the ListView:
     ; LV.Delete  ; Clear all rows.
     ; LV.Opt("-Redraw")  ; Improve performance by disabling redrawing during load.
@@ -1070,8 +1101,8 @@ TV_ItemSelect(thisCtrl, Item)  ; This function is called when a new item is sele
         DllCall("QueryPerformanceCounter", "Int64*", &CounterAfter := 0)
         SB.SetText("Conversion completed in " Format("{:.4f}", (CounterAfter - CounterBefore) / freq * 1000) "ms", 4)
         V2ExpectedEdit.Text := StrReplace(StrReplace(FileRead(StrReplace(DirList[Item],".ah1",".ah2")), "`r`n", "`n"), "`n", "`r`n")
-        MyGui.GetPos(,, &Width,&Height)
-        Gui_Size(MyGui, 0, Width - 14, Height - 60)
+        CheckBoxV2E.Value := true   ; make sure this is updated to reflect current setting
+        ViewV2E(MyGui)              ; pass UI update to here
         ; ControlSetText V1Edit, V1Edit
         ; MsgBox(v1Text)
     }
@@ -1095,21 +1126,49 @@ ViewSymbols(*)
         V2ExpectedEdit.Value := StrReplace(StrReplace(StrReplace(StrReplace(V2ExpectedEdit.Text,"\r`r","`r"),"\n`r`n","`n"),"·"," "),"→","`t",)
     }
 }
+;################################################################################
 ViewV2E(*)
 {
-    ViewMenu.ToggleCheck("View Expected Code")
-    V2ExpectedEdit.GetPos(,, &V2ExpectedEdit_W)
-    MyGui.GetPos(&X,, &Width,&Height)
-    if (!CheckBoxV2E.Value){
-        V2ExpectedEdit.Move(,,0,)
-        WinMove(, , Width+3,,MyGui)
+; 2025-06-29 AMB, UPDATED - to fix GUI width issues when toggling expected-edit control visibility
+;   and to provide consistent synchonization between checkbox and menu item
+
+    global viewExpectedCode
+    static lastEditWidth := -1, lastViewToggle := -1                ; used to avoid unnecessary UI flickering
+
+    viewExpectedCode := CheckBoxV2E.Value                           ; update global flag
+
+    ; get current width of expected-edit control
+    V2ExpectedEdit.GetPos(,, &V2ExpectedEdit_W)                     ; get current width of expected-edit control
+
+    ; compare current view to last view (last func visit)
+    ; if no changes, don't update GUI (prevent unnecessary flashing)
+    curView  := V2ExpectedEdit_W * viewExpectedCode
+    lastView := lastEditWidth * lastViewToggle
+    if (curView = lastView) {
+        return  ; no changes have been made to view
     }
-    else{
-        V2ExpectedEdit.Move(,,180,)
-        WinMove(, , Width-3,,MyGui)
+
+    ; view has changed in size and/or visibility
+    ; update menu item and record new ini setting
+    if (viewExpectedCode) {
+        ViewMenu.Check("View Expected Code")
+    } else {
+        ViewMenu.UnCheck("View Expected Code")
     }
-    IniWrite(CheckBoxV2E.Value, "QuickConvertorV2.ini", "Convertor", "ViewExpectedCode")
+    IniWrite(CheckBoxV2E.Value, IniFile, Section, "ViewExpectedCode")
+
+    ; update expected-edit width and GUI
+    MyGui.GetPos(,, &Width,&Height)                                 ; get current width and height of GUI
+    expEditWith := (viewExpectedCode) ? getEditWidth(Width) : 0     ; editWidth/3 (if visible) or 0 (if hidden)
+    V2ExpectedEdit.Move(,,expEditWith)                              ; resize expected-edit control
+    Gui_Size(MyGui, 0, Width - 14, Height - 60)                     ; update GUI
+
+    ; update static vars
+    V2ExpectedEdit.GetPos(,, &eeW)                                  ; get updated width for expected-edit control (no DPI compensation)
+    lastEditWidth   := (eeW) ? eeW : -1
+    lastViewToggle  := (viewExpectedCode) ? 1 : -1
 }
+;################################################################################
 ViewDrk(*)
 {
     ViewMenu.ToggleCheck("DarkMode")

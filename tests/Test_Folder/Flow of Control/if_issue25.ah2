@@ -1,4 +1,4 @@
-var := "3"
+var := 3
 if (var = 3)
     if (var > 1)
         if (var < 5)

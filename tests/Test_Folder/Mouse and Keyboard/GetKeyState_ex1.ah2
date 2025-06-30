@@ -1,7 +1,7 @@
-state := GetKeyState("RButton", ) ? "D" : "U"  ; Right mouse button.
-state := GetKeyState("Joy2", ) ? "D" : "U"  ; The second button of the first joystick.
+state := GetKeyState("RButton") ? "D" : "U"  ; Right mouse button.
+state := GetKeyState("Joy2") ? "D" : "U"  ; The second button of the first joystick.
 
-state := GetKeyState("Shift", ) ? "D" : "U"
+state := GetKeyState("Shift") ? "D" : "U"
 if (state = "D")
     MsgBox("At least one Shift key is down.")
 else

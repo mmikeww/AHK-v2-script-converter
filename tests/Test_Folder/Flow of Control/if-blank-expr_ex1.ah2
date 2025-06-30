@@ -1,3 +1,3 @@
-var := "3"
+var := 3
 if (var != "")
     MsgBox(var)

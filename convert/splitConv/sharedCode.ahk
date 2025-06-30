@@ -116,3 +116,12 @@ v1v2_CorrectNEQ(&lineStr) {
    Mask_R(&lineStr, 'STR')
    return   ; lineStr by reference
 }
+;################################################################################
+																	   isHex(val)
+;################################################################################
+{
+; 2025-06-30 AMB, ADDED - determines whether val is a hex val
+
+	val := trim(val)
+	return ((IsNumber(val)) && (val ~= '(?i)^0x[0-9a-f]+$'))
+}

@@ -1,23 +1,4 @@
-;;################################################################################
-;														  hasValidV1Label(srcStr)
-;;################################################################################
-;{
-;; 2025-06-12 AMB, ADDED
-;; returns srcStr if any valid v1 label is found in string
-;; https://www.autohotkey.com/docs/v1/misc/Labels.htm
-;; invalid v1 label chars are...
-;;	comma, double-colon (except at beginning),
-;;	whitespace, accent (that's not used as escape)
-;; see gPtn_LBLDecl for label declaration needle
 
-;	tempStr := trim(RemovePtn(srcStr, 'LC'))		; remove line comments and trim ws
-
-;	; return full srcStr if valid v1 label is...
-;	;	found anywhere in srcStr
-;	if (tempStr ~= '(?m)' . gPtn_LblBLK)			; multi-line check
-;		return srcStr								; appears to have valid v1 label somewhere
-;	return ''										; no valid v1 label found in srcStr
-;}
 ;################################################################################
 															isValidV1Label(srcStr)
 ;################################################################################
@@ -51,20 +32,6 @@
 	v1v2_If_VarIn(&lineStr, &lineOpen)						; v1/v2		- if var in
 	v1v2_If_VarContains(&lineStr, &lineOpen)				; v1/v2		- if var contains
 	v1v2_fixTernaryBlanks(&lineStr)							; v1/v2 - fixes blank/missing ternary fields
-;	if (gV2Conv) {	; v2 only conversion
-;		v2_If_Between(&lineStr, &lineOpen)					; v2		- if between
-;		v2_If_VarIsType(&lineStr, &lineOpen)				; v2		- if var is type
-;		v2_fixElseError(&lineStr, &lineOpen, &lineClose)	; V2 - fixes 'Unexpected Else' error
-;	}
-
-;	; NOT USED ?? (seems to have no effect for unit tests)
-;	; Moving the if/else/While statement to the lineOpen
-;;	if (RegExMatch(curLine, "i)(^\s*[\}]?\s*(else|while|if)[\s\(][^\{]*{\s*)(.*$)", &Equation)) {
-;	if (RegExMatch(curLine, "i)^(\h*[\}]?\h*(else|while|if)[\h\(][^\{]*{\h*)(.*)$", &m)) {
-;		lineOpen .= m[1]
-;		lineStr := m[3]
-;	}
-
 	return		; vars by reference
 }
 ;################################################################################
@@ -145,13 +112,12 @@
 	lineStr		:= m[6]				; trailing portion
 	return		true
 }
-
-
 ;################################################################################
+									ToExp(text, valToStr:=false, forceDot:=false)
+;################################################################################
+{
 ; Convert traditional statements to expressions
 ;	Don't pass whole commands, instead pass one parameter at a time
-ToExp(text, valToStr:=false, forceDot:=false)
-{
 ; Used for v1 or v2 conversion
 ; 2025-06-23 AMB, UPDATED, MOVED from ConvertFuncs.ahk and...
 ;	Merged with ToStringExp() [approval from Banaanae]
@@ -185,7 +151,6 @@ ToExp(text, valToStr:=false, forceDot:=false)
 	; text has a var - parse to separate string from var
 	; might be cleaner using masking/regex, but this works		; TODO - might update at some point
 	sep		:= (forceDot) ? ' . ' : ' '							; separator - fat-dot for forced str, space otherwise
-;	sep := ' . '
 	outStr	:= '', prevChar := '', deRef := false
 	Loop Parse, text {
 		char := A_LoopField										; [working var for current char]
@@ -204,8 +169,6 @@ ToExp(text, valToStr:=false, forceDot:=false)
 		outStr .= '"'											; ... close string with quote
 	return outStr												; return final string/var
 }
-
-
 ;################################################################################
 _EnvDiv() {
 	; see gmAhkCmdsToConvertV1 map
@@ -472,7 +435,6 @@ _StringGetPos(p) {
 
 		p4FirstChar := SubStr(p[4], 1, 1)
 		p4LastChar := SubStr(p[4], -1)
-		; msgbox(p[4] "`np4FirstChar=" p4FirstChar "`np4LastChar=" p4LastChar)
 		if (p4FirstChar = "`"") && (p4LastChar = "`"")	; remove start/end quotes, would be nice if a non-expr was passed in
 		{
 			; the text param was already conveted to expr based on the SideT2E param definition
@@ -480,8 +442,6 @@ _StringGetPos(p) {
 			p4noquotes	:= SubStr(p[4], 2, -1)
 			p4char1		:= SubStr(p4noquotes, 1, 1)
 			occurrences	:= SubStr(p4noquotes, 2)
-			;msgbox, % p[4]
-			; p[4] := occurrences ? occurrences : 1
 
 			if (StrUpper(p4char1) = "R") {
 				; only add occurrences param to InStr func if occurrences > 1
@@ -505,7 +465,6 @@ _StringGetPos(p) {
 			return format("{2} := InStr({3}, {4},{1}, ({6})+1) - 1", CaseSense, p*)
 		}
 		else {
-			; msgbox( p.Length "`n" p[1] "`n" p[2] "`n" p[3] "`n[" p[4] "]`n[" p[5] "]")
 			; else then a variable was passed (containing the "L#|R#" string),
 			;	or literal text converted to expr, something like: "L" . A_Index
 			; output something anyway even though it won't work, so that they can see something to fix
@@ -536,7 +495,6 @@ _StringMid(p) {
 		return Format("{1} := SubStr({2}, 1, {3})", p*)
 	else
 	{
-		;msgbox, % p[5] "`n" SubStr(p[5], 1, 2)
 		; any string that starts with 'L' is accepted
 		if (StrUpper(SubStr(p[5], 2, 1) = "L"))
 			; Very ugly fix, but handles pseudo characters
@@ -573,8 +531,6 @@ _StringReplace(p) {
 	else
 	{
 		p5char1 := SubStr(p[5], 1, 1)
-		; MsgBox(p[5] "`n" p5char1)
-
 		if (p[5] = "UseErrorLevel")		; UseErrorLevel also implies ReplaceAll
 			Out := format("{2} := StrReplace({3}, {4}, {5},{1}, &ErrorLevel)", CaseSense, p*)
 		else if (p5char1 = "1") || (StrUpper(p5char1) = "A")

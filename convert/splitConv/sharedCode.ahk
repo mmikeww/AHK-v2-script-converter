@@ -90,8 +90,6 @@
 ; [var ? "1" : ] => [var ? "1" : ""]
 ; TODO - Add unit tests for this... see below
 
-;return
-
 	Mask_T(&lineStr, 'STR')
 		; for blank/missing 'true' value, single or multi-line
 		lineStr := RegExReplace(lineStr, '(?im)^(.*?\s*+)\?(\h*+)(\s*+):(\h*+)(.+)$', '$1?$2""$3:$4$5')
@@ -104,17 +102,19 @@
 	return		; lineStr by reference
 }
 ;################################################################################
-v1v2_CorrectNEQ(&lineStr) {
+														v1v2_CorrectNEQ(&lineStr)
+;################################################################################
+{
 ; 2025-06-12 AMB, UPDATED - some var and funcCall names
 ; Converts <> to !=
 
-   if (!InStr(lineStr, '<>'))
-      return
+	if (!InStr(lineStr, '<>'))
+		return
 
-   Mask_T(&lineStr, 'STR')   ; protect "<>" within strings
-   lineStr := StrReplace(lineStr, '<>', '!=')
-   Mask_R(&lineStr, 'STR')
-   return   ; lineStr by reference
+	Mask_T(&lineStr, 'STR')		; protect "<>" within strings
+		lineStr := StrReplace(lineStr, '<>', '!=')
+	Mask_R(&lineStr, 'STR')
+	return						; lineStr by reference
 }
 ;################################################################################
 																	   isHex(val)

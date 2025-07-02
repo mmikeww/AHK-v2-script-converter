@@ -67,8 +67,10 @@
     getHelpPath()
     ; gTreeRoot will be the root folder for the TreeView.
     ;   Note: Loading might take a long time if an entire drive such as C:\ is specified.
-    global gTreeRoot
-    gTreeRoot := ((A_ScriptDir '\Tests\Test_Folder') . ((gV2Conv) ? '' : 'V1'))
+    global gTreeRoot, gAhkV1Exe, gAhkV2Exe
+    gTreeRoot   := ((A_ScriptDir '\Tests\Test_Folder') . ((gV2Conv) ? '' : 'V1'))
+    gAhkV1Exe   := A_ScriptDir "\AutoHotKey Exe\AutoHotkeyV1.exe"
+    gAhkV2Exe   := A_ScriptDir "\AutoHotKey Exe\AutoHotkeyV2.exe"
 
     ;READ INI VARIABLES WITH DEFAULTS
     IniFile := "QuickConvertorV2.ini"
@@ -116,17 +118,17 @@
 
     TempV1Script := FileExist(FileTempScript) ? FileRead(FileTempScript) : ""
 
-;    ; Prompt to test V1 or V2
-;    Result := MsgBox("Test conversion for V1.1 ONLY?`n`n`tY =`tV1.1`n`tN =`tV2","WHICH MODE?", "YNC")
-;    if (result="yes") {
-;        gV2Conv := false
-;    }
-;    else if (result="no") {
-;        gV2Conv := true
-;    }
-;    else if (result="cancel") {
-;        ExitApp
-;    }
+    ; Prompt to test V1 or V2
+    Result := MsgBox("Test conversion for V1.1 ONLY?`n`n`tY =`tV1.1`n`tN =`tV2","WHICH MODE?", "YNC")
+    if (result="yes") {
+        gV2Conv := false
+    }
+    else if (result="no") {
+        gV2Conv := true
+    }
+    else if (result="cancel") {
+        ExitApp
+    }
 
     gTreeRoot := ((A_ScriptDir '\Tests\Test_Folder') . ((gV2Conv) ? '' : 'V1'))
     GuiTest(TempV1Script)
@@ -157,18 +159,18 @@ AddSubFoldersToTree(Folder, DirList, ParentItemID := 0,*)
             ItemID := TV.Add(A_LoopFileName, ParentItemID, icons.Folder)
         }
         else If InStr(A_LoopFileFullPath,".ah1") {
-            FileFullPathV2Expected := StrReplace(A_LoopFileFullPath, ".ah1", ".ah2")
-            if FileExist(FileFullPathV2Expected) {
-                TextV1 := StrReplace(StrReplace(FileRead(A_LoopFileFullPath), "`r`n", "`n"), "`n", "`r`n")
-                TextV2Expected := StrReplace(StrReplace(FileRead(StrReplace(A_LoopFileFullPath, ".ah1", ".ah2")), "`r`n", "`n"), "`n", "`r`n")
-                TextV2Converted := StrReplace(StrReplace(Convert(TextV1), "`r`n", "`n"), "`n", "`r`n")
+            FileFullPathAh2 := StrReplace(A_LoopFileFullPath, ".ah1", ".ah2")
+            if FileExist(FileFullPathAh2) {
+                TextSrc := StrReplace(StrReplace(FileRead(A_LoopFileFullPath), "`r`n", "`n"), "`n", "`r`n")
+                TextCnv := StrReplace(StrReplace(Convert(TextSrc), "`r`n", "`n"), "`n", "`r`n")
+                TextExp := StrReplace(StrReplace(FileRead(StrReplace(A_LoopFileFullPath, ".ah1", ".ah2")), "`r`n", "`n"), "`n", "`r`n")
                 Number_Tests++
-                if (TextV2Expected=TextV2Converted){
+                if (TextExp=TextCnv){
                     ItemID := TV.Add(A_LoopFileName, ParentItemID, icons.pass)
                     Number_Tests_Pass++
                 }
                 else{
-                    ;MsgBox("[" TextV2Expected "]`n`n[" TextV2Converted "]")
+                    ;MsgBox("[" TextExp "]`n`n[" TextCnv "]")
                     ItemID := TV.Add(A_LoopFileName, ParentItemID, icons.fail)
                     TV.Modify(ParentItemID, "Expand")
                     ParentItemID_ := ParentItemID
@@ -224,27 +226,26 @@ getHelpPath() {
         }
     }
 }
-ButtonConvert(*)
+btnConvert(*)
 {
-    if (CheckBoxViewSymbols.Value){
-        MenuShowSymols()
+    if (cbViewSymbols.Value){
+        MenuShowSymbols()
     }
     DllCall("QueryPerformanceFrequency", "Int64*", &freq := 0)
     DllCall("QueryPerformanceCounter", "Int64*", &CounterBefore := 0)
-    V2Edit.Text := Convert(V1Edit.Text)
+    editCnv.Text := Convert(editSrc.Text)
     DllCall("QueryPerformanceCounter", "Int64*", &CounterAfter := 0)
     time := Format("{:.4f}", (CounterAfter - CounterBefore) / freq * 1000)
     SB.SetText("Conversion completed in " time "ms", 4)
     Return time
 }
-ButtonGenerateTest(*)
+btnGenerateTest(*)
 {
-
-    if (CheckBoxViewSymbols.Value){
-        MenuShowSymols()
+    if (cbViewSymbols.Value){
+        MenuShowSymbols()
     }
-    input_script := V1Edit.Text
-    expected_script := V2Edit.Text
+    input_script := editSrc.Text
+    expected_script := editCnv.Text
     if (expected_script= "" or input_script =""){
         SB.SetText("No text was found.", 3)
         Return
@@ -258,7 +259,7 @@ ButtonGenerateTest(*)
     }
 
     if Instr(SelectedText,".ah1") {
-        if (FileRead(SelectedText) = V1Edit.text){
+        if (FileRead(SelectedText) = editSrc.text){
             msgResult := MsgBox("Do You want to overwrite the existing test?", , 308)
             if (msgResult="YES"){
                 if FileExist(StrReplace(SelectedText,".ah1",".ah2")){
@@ -304,7 +305,7 @@ ButtonGenerateTest(*)
 
         FileAppend(input_script,SelectedFile)
         FileAppend(expected_script,StrReplace(SelectedFile,".ah1",".ah2"))
-        V2ExpectedEdit.Text := V2Edit.Text
+        editExp.Text := editCnv.Text
         SB.SetText("Test is saved.", 3)
         SplitPath(SelectedFile, &OutFileName, &OutDir)
 
@@ -314,127 +315,127 @@ ButtonGenerateTest(*)
     }
 
 }
-CloseV1(*)
+CloseSrc(*)
 {
-    TempAhkFile := A_MyDocuments "\testV1.ahk"
+    TempAhkFile := A_MyDocuments "\testCodeSrc.ahk"
     DetectHiddenWindows(1)
     if WinExist(TempAhkFile . " ahk_class AutoHotkey"){
         WinClose(TempAhkFile . " ahk_class AutoHotkey")
     }
-    if WinExist("testV1.ahk"){
+    if WinExist("testCodeSrc.ahk"){
         WinClose()
     }
-    try ButtonCloseV1.Opt("+Disabled")
+    try btnCloseSrc.Opt("+Disabled")
 }
-CloseV2(*)
+CloseCnv(*)
 {
-    TempAhkFile := A_MyDocuments "\testV2.ahk"
+    TempAhkFile := A_MyDocuments "\testCodeConv.ahk"
     DetectHiddenWindows(1)
     if WinExist(TempAhkFile . " ahk_class AutoHotkey"){
         WinClose(TempAhkFile . " ahk_class AutoHotkey")
     }
-    if WinExist("testV2.ahk"){
+    if WinExist("testCodeConv.ahk"){
         WinClose()
     }
-    try ButtonCloseV2.Opt("+Disabled")
+    try btnCloseCnv.Opt("+Disabled")
 }
-CloseV2E(*)
+CloseExp(*)
 {
-    TempAhkFile := A_MyDocuments "\testV2E.ahk"
+    TempAhkFile := A_MyDocuments "\testCodeExp.ahk"
     DetectHiddenWindows(1)
     if WinExist(TempAhkFile . " ahk_class AutoHotkey"){
         WinClose(TempAhkFile . " ahk_class AutoHotkey")
     }
-    try ButtonCloseV2E.Opt("+Disabled")
+    try btnCloseExp.Opt("+Disabled")
 }
-CompDiffV2(*)
+CompCnvDif(*)
 {
-    if (CheckBoxViewSymbols.Value){
-        MenuShowSymols()
+    if (cbViewSymbols.Value){
+        MenuShowSymbols()
     }
-    TempAhkFileV2 := A_MyDocuments "\testV2.ahk"
+    TempAhkFileConv := A_MyDocuments "\testCodeConv.ahk"
     oSaved := MyGui.Submit(0)  ; Save the contents of named controls into an object.
     try {
-        FileDelete TempAhkFileV2
+        FileDelete TempAhkFileConv
     }
-    FileAppend V2Edit.text , TempAhkFileV2
+    FileAppend editCnv.text , TempAhkFileConv
 
-    TempAhkFileV1 := A_MyDocuments "\testV1.ahk"
+    TempAhkFileSrc := A_MyDocuments "\testCodeSrc.ahk"
     oSaved := MyGui.Submit(0)  ; Save the contents of named controls into an object.
     try {
-        FileDelete TempAhkFileV1
+        FileDelete TempAhkFileSrc
     }
-    FileAppend V1Edit.Text, TempAhkFileV1
+    FileAppend editSrc.Text, TempAhkFileSrc
 
-    RunWait('"' A_ScriptDir '\diff\VisualDiff.ahk" "' . TempAhkFileV1 . '" "' . TempAhkFileV2 . '"')
+    RunWait('"' A_ScriptDir '\diff\VisualDiff.exe" "' . TempAhkFileSrc . '" "' . TempAhkFileConv . '"')
 
     Return
 }
-CompDiffV2E(*)
+CompExpDif(*)
 {
-    if (CheckBoxViewSymbols.Value){
-        MenuShowSymols()
+    if (cbViewSymbols.Value){
+        MenuShowSymbols()
     }
-    TempAhkFileV2 := A_MyDocuments "\testV2.ahk"
+    TempAhkFileConv := A_MyDocuments "\testCodeConv.ahk"
     oSaved := MyGui.Submit(0)  ; Save the contents of named controls into an object.
     try {
-        FileDelete TempAhkFileV2
+        FileDelete TempAhkFileConv
     }
-    FileAppend V2Edit.text , TempAhkFileV2
+    FileAppend editCnv.text , TempAhkFileConv
 
-    TempAhkFileV2E := A_MyDocuments "\testV2E.ahk"
+    TempAhkFileExp := A_MyDocuments "\testCodeExp.ahk"
     oSaved := MyGui.Submit(0)  ; Save the contents of named controls into an object.
     try {
-        FileDelete TempAhkFileV2E
+        FileDelete TempAhkFileExp
     }
-    FileAppend V2ExpectedEdit.Text, TempAhkFileV2E
+    FileAppend editExp.Text, TempAhkFileExp
 
-    RunWait('"' A_ScriptDir '\diff\VisualDiff.ahk" "' . TempAhkFileV2 . '" "' . TempAhkFileV2E . '"')
+    RunWait('"' A_ScriptDir '\diff\VisualDiff.exe" "' . TempAhkFileConv . '" "' . TempAhkFileExp . '"')
 
     Return
 }
-CompVscV2(*)
+CompCnvVsc(*)
 {
-    if (CheckBoxViewSymbols.Value){
-        MenuShowSymols()
+    if (cbViewSymbols.Value){
+        MenuShowSymbols()
     }
-    TempAhkFileV2 := A_MyDocuments "\testV2.ahk"
-    AhkV2Exe := A_ScriptDir "\AutoHotKey Exe\AutoHotkeyV2.exe"
+    TempAhkFileConv := A_MyDocuments "\testCodeConv.ahk"
+    ;AhkV2Exe := A_ScriptDir "\AutoHotKey Exe\AutoHotkeyV2.exe"
     oSaved := MyGui.Submit(0)  ; Save the contents of named controls into an object.
     try {
-        FileDelete TempAhkFileV2
+        FileDelete TempAhkFileConv
     }
-    FileAppend V2Edit.text , TempAhkFileV2
+    FileAppend editCnv.text , TempAhkFileConv
 
-    TempAhkFileV1 := A_MyDocuments "\testV1.ahk"
-    AhkV1Exe :=  A_ScriptDir "\AutoHotKey Exe\AutoHotkeyV1.exe"
+    TempAhkFileSrc := A_MyDocuments "\testCodeSrc.ahk"
+    ;AhkV1Exe :=  A_ScriptDir "\AutoHotKey Exe\AutoHotkeyV1.exe"
     oSaved := MyGui.Submit(0)  ; Save the contents of named controls into an object.
     try {
-        FileDelete TempAhkFileV1
+        FileDelete TempAhkFileSrc
     }
-    FileAppend V1Edit.Text, TempAhkFileV1
-    Run "C:\Users\" A_UserName "\AppData\Local\Programs\Microsoft VS Code\Code.exe -d `"" TempAhkFileV1 "`" `"" TempAhkFileV2 "`""
+    FileAppend editSrc.Text, TempAhkFileSrc
+    Run "C:\Users\" A_UserName "\AppData\Local\Programs\Microsoft VS Code\Code.exe -d `"" TempAhkFileSrc "`" `"" TempAhkFileConv "`""
     Return
 }
-CompVscV2E(*)
+CompExpVsc(*)
 {
-    if (CheckBoxViewSymbols.Value){
-        MenuShowSymols()
+    if (cbViewSymbols.Value){
+        MenuShowSymbols()
     }
-    TempAhkFileV2 := A_MyDocuments "\testV2.ahk"
+    TempAhkFileConv := A_MyDocuments "\testCodeConv.ahk"
     oSaved := MyGui.Submit(0)  ; Save the contents of named controls into an object.
     try {
-        FileDelete TempAhkFileV2
+        FileDelete TempAhkFileConv
     }
-    FileAppend V2Edit.Text , TempAhkFileV2
+    FileAppend editCnv.Text , TempAhkFileConv
 
-    TempAhkFileV2E := A_MyDocuments "\testV2E.ahk"
+    TempAhkFileExp := A_MyDocuments "\testCodeExp.ahk"
     oSaved := MyGui.Submit(0)  ; Save the contents of named controls into an object.
     try {
-        FileDelete TempAhkFileV2E
+        FileDelete TempAhkFileExp
     }
-    FileAppend V2ExpectedEdit.Text, TempAhkFileV2E
-    Run "C:\Users\" A_UserName "\AppData\Local\Programs\Microsoft VS Code\Code.exe -d `"" TempAhkFileV2 "`" `"" TempAhkFileV2E "`""
+    FileAppend editExp.Text, TempAhkFileExp
+    Run "C:\Users\" A_UserName "\AppData\Local\Programs\Microsoft VS Code\Code.exe -d `"" TempAhkFileConv "`" `"" TempAhkFileExp "`""
     Return
 }
 Edit_Change(*)
@@ -445,7 +446,7 @@ Edit_Change(*)
         ;       where its still possible to edit
         CurrentCol := EditGetCurrentCol(GuiCtrlObj)
       CurrentLine := EditGetCurrentLine(GuiCtrlObj)
-        PreText := GuiCtrlObj.Name="vCodeV1" ? "Autohotkey V1" : GuiCtrlObj.Name="vCodeV2" ? "Autohotkey V2" : GuiCtrlObj.Name="vCodeV2Expected" ? "Autohotkey V2 (Expected)" : ""
+        PreText := GuiCtrlObj.Name="vCodeSrc" ? "AHK Source" : GuiCtrlObj.Name="vCodeConv" ? "AHK Converted" : GuiCtrlObj.Name="vCodeExp" ? "AHK Expected" : ""
         if (PreText !=""){
       SB.SetText(PreText ", Ln " CurrentLine ",  Col " CurrentCol , 2)
         }
@@ -473,24 +474,24 @@ EvalSelectedTest(thisCtrl, *)
     for fd in parentPaths {
         fullParentPath .= "/" fd
     }
-    file_v1_name := TV.GetText(selItemID)
-    file_v2_name := StrReplace(file_v1_name, ".ah1", ".ah2")
-    file_v1      := fullParentPath "/" file_v1_name
-    file_v2      := fullParentPath "/" file_v2_name
+    FN_ah1      := TV.GetText(selItemID)
+    FN_ah2      := StrReplace(FN_ah1, ".ah1", ".ah2")
+    file_ah1    := fullParentPath "/" FN_ah1
+    file_ah2    := fullParentPath "/" FN_ah2
 
     parentAttr  := FileExist(fullParentPath)
-    selItemAttr := FileExist(file_v1)
+    selItemAttr := FileExist(file_ah1)
     if (not parentAttr) or InStr(selItemAttr, "D") { ; return on subfolders
         return
     }
 
     TV.Opt("-Redraw")
-    if FileExist(file_v1) and FileExist(file_v2){
-        TextV1 := FileRead(file_v1)
-        TextV2Expected := FileRead(file_v2)
-        TextV2Converted := Convert(TextV1)
+    if FileExist(file_ah1) and FileExist(file_ah2){
+        TextSrc := FileRead(file_ah1)
+        TextExp := FileRead(file_ah2)
+        TextCnv := Convert(TextSrc)
         ; Number_Tests++
-        if (TextV2Expected=TextV2Converted){
+        if (TextExp=TextCnv){
             TV.Modify(selItemID, icons.pass)
             Number_Tests_Pass++
         }
@@ -521,7 +522,7 @@ gui_AhkHelp(SearchString,Version:="V2")
 }
 Gui_DropFiles(GuiObj, GuiCtrlObj, FileArray, X, Y)
 {
-    V1Edit.Text := StrReplace(StrReplace(FileRead(FileArray[1]), "`r`n", "`n"), "`n", "`r`n")
+    editSrc.Text := StrReplace(StrReplace(FileRead(FileArray[1]), "`r`n", "`n"), "`n", "`r`n")
 }
 ;################################################################################
 resAdj(val)
@@ -537,9 +538,9 @@ getEditWidth(guiWidth)
 ;   divides UI real-estate width evenly between edit controls
 ;   width value depends on whether expected-edit control is visible of not
 
-    V2ExpectedEdit.GetPos(,, &w)    ; get current width of expected-edit control
+    editExp.GetPos(,, &w)    ; get current width of expected-edit control
     TV.GetPos(,, &TV_W)             ; get current width of treeView control
-    NumberEdits := (w > 0 && V2ExpectedEdit.Text != '') ? 3 : 2
+    NumberEdits := (w > 0 && editExp.Text != '') ? 3 : 2
     return round((guiWidth-TV_W) / NumberEdits)
 }
 ;################################################################################
@@ -548,64 +549,73 @@ Gui_Size(thisGui, MinMax, Width, Height)  ; Expand/Shrink ListView and TreeView 
 ; 2025-06-29 AMB, UPDATED to fix GUI width when toggling expected-edit control visibility
 
     DllCall("LockWindowUpdate", "Uint",myGui.Hwnd)
-    Height := Height - 23 ; Compensate the statusbar
-    EditHeight := Height-30
-    ButtonHeight := EditHeight+3
-    ButtonWidth  := 70
+    hHeader := 20   ; 2025-07-01
+    Height  := Height - 23 ; Compensate the statusbar
+    EditHeight := Height - (hHeader+30)
+    btnHeight := EditHeight+3 + hHeader
+    btnWidth  := 70
     if MinMax = -1  ; The window has been minimized.  No action needed.
         return
     ; Otherwise, the window has been resized or maximized. Resize the controls to match.
     TV.GetPos(,, &TV_W)
-    TV.Move(,,, EditHeight)  ; -30 for StatusBar and margins.
+    TV.Move(,hHeader,, EditHeight)  ; -30 for StatusBar and margins.
     if !TestMode{
         TV_W := 0
         TV.Move(, , 0, )
-        ButtonEvaluateTests.Visible := false
-        ButtonEvalSelected.Visible  := false
-        CheckBoxV2E.Visible := false
+        btnEvaluateTests.Visible := false
+        btnEvalSelected.Visible  := false
+        cbExp.Visible := false
     }
     else{
-        ButtonEvaluateTests.Visible := true
-        ButtonEvalSelected.Visible  := true
-        CheckBoxV2E.Visible := true
+        btnEvaluateTests.Visible := true
+        btnEvalSelected.Visible  := true
+        cbExp.Visible := true
     }
-    V2ExpectedEdit.GetPos(,, &V2ExpectedEdit_W)
+    editExp.GetPos(,, &editExp_W)
 
     TreeViewWidth := TV_W
     EditWidth := getEditWidth(Width)
 
-    V1Edit.Move(TreeViewWidth,,EditWidth,EditHeight)
-    V2Edit.Move(TreeViewWidth+EditWidth,,EditWidth,EditHeight)
-    ButtonEvaluateTests.Move(,ButtonHeight)
-    ButtonEvalSelected.Move(ButtonWidth+15,ButtonHeight)
-    CheckBoxViewSymbols.Move(TreeViewWidth+EditWidth-160,EditHeight+6)
-    ButtonRunV1.Move(TreeViewWidth,ButtonHeight)
-    ButtonCloseV1.Move(TreeViewWidth+28,ButtonHeight)
-    oButtonConvert.Move(TreeViewWidth+EditWidth-80,ButtonHeight)
-    ButtonRunV2.Move(TreeViewWidth+EditWidth,ButtonHeight)
-    ButtonCloseV2.Move(TreeViewWidth+EditWidth+28,ButtonHeight)
-    ButtonCompDiffV2.Move(TreeViewWidth+EditWidth+56,ButtonHeight)
-    ButtonCompVscV2.Move(TreeViewWidth+EditWidth+84,ButtonHeight)
-    if (V2ExpectedEdit_W){
-        V2ExpectedEdit.Move(TreeViewWidth+EditWidth*2,,EditWidth,EditHeight)
-        ButtonRunV2E.Move(TreeViewWidth+EditWidth*2,ButtonHeight)
-        ButtonCloseV2E.Move(TreeViewWidth+EditWidth*2+28,ButtonHeight)
-        ButtonCompDiffV2E.Move(TreeViewWidth+EditWidth*2+56,ButtonHeight)
-        ButtonCompVscV2E.Move(TreeViewWidth+EditWidth*2+84,ButtonHeight)
-        ButtonRunV2E.Visible := 1
-        ButtonCloseV2E.Visible := 1
-        ButtonCompDiffV2E.Visible := 1
-        ButtonCompVscV2E.Visible := 1
+    ; 2025-07-01 AMB, ADDED header adj
+    txtSrc.Move(TreeViewWidth,,EditWidth)
+    txtCnv.Move(TreeViewWidth+EditWidth,,EditWidth)
+    txtExp.Move(TreeViewWidth+EditWidth*2,,EditWidth)
+
+    editSrc.Move(TreeViewWidth,hHeader,EditWidth,EditHeight)
+    editCnv.Move(TreeViewWidth+EditWidth,hHeader,EditWidth,EditHeight)
+    btnEvaluateTests.Move(,btnHeight)
+    btnEvalSelected.Move(btnWidth+15,btnHeight)
+    cbViewSymbols.Move(TreeViewWidth+EditWidth-160,EditHeight+hHeader+6)
+    btnRunCodeSrc.Move(TreeViewWidth,btnHeight)
+    btnCloseSrc.Move(TreeViewWidth+28,btnHeight)
+    obtnConvert.Move(TreeViewWidth+EditWidth-80,btnHeight)
+    btnRunCodeCnv.Move(TreeViewWidth+EditWidth,btnHeight)
+    btnCloseCnv.Move(TreeViewWidth+EditWidth+28,btnHeight)
+    btnCompCnvDif.Move(TreeViewWidth+EditWidth+56,btnHeight)
+    btnCompCnvVsc.Move(TreeViewWidth+EditWidth+84,btnHeight)
+    if (editExp_W){
+        editExp.Move(TreeViewWidth+EditWidth*2,hHeader,EditWidth,EditHeight)
+        btnRunCodeExp.Move(TreeViewWidth+EditWidth*2,btnHeight)
+        btnCloseExp.Move(TreeViewWidth+EditWidth*2+28,btnHeight)
+        btnCompExpDif.Move(TreeViewWidth+EditWidth*2+56,btnHeight)
+        btnCompExpVsc.Move(TreeViewWidth+EditWidth*2+84,btnHeight)
+        btnRunCodeExp.Visible := 1
+        btnCloseExp.Visible := 1
+        btnCompExpDif.Visible := 1
+        ; 2025-07-01
+        if (FileExist("C:\Users\" A_UserName "\AppData\Local\Programs\Microsoft VS Code\Code.exe")) {
+            btnCompExpVsc.Visible := 1
+        }
     }
     else{
-        ButtonRunV2E.Visible := 0
-        ButtonCloseV2E.Visible := 0
-        ButtonCompDiffV2E.Visible := 0
-        ButtonCompVscV2E.Visible := 0
+        btnRunCodeExp.Visible := 0
+        btnCloseExp.Visible := 0
+        btnCompExpDif.Visible := 0
+        btnCompExpVsc.Visible := 0
     }
 
-    CheckBoxV2E.Move(Width-115,EditHeight+6)
-    ButtonValidateConversion.Move(Width-30,ButtonHeight)
+    cbExp.Move(Width-115,EditHeight+hHeader+6)
+    btnValidateConversion.Move(Width-30,btnHeight)
     DllCall("LockWindowUpdate", "Uint",0)
     thisGui.GetPos(&GuiX,&GuiY)
     thisGui.GetClientPos(,,&GuiW,&GuiH)
@@ -623,7 +633,7 @@ Gui_Close(thisGui){
     if (FileExist(FileTempScript)){
         FileDelete(FileTempScript)
     }
-    FileAppend(V1Edit.Text,FileTempScript)
+    FileAppend(editSrc.Text,FileTempScript)
     thisGui.GetPos(&GuiX,&GuiY)
     thisGui.GetClientPos(,,&GuiW,&GuiH)
     GuiIsMaximised := WinGetMinMax(thisGui.title)
@@ -656,8 +666,15 @@ GuiTest(strV1Script:="")
     IL_Add(ImageListID,"shell32.dll",1)     ;Icon6    ;Blank
     icons := {folder: "Icon1", fail: "Icon2", issue: "Icon3", pass: "Icon4", detail: "Icon5", blank: "Icon6"}
 
+    ; 2025-07-01 AMB, ADDED header that reflects code versions
+    codeVer := (gV2Conv) ? " (V2.x)" : " (V1.1)"
+    txtTV   := MyGui.Add("Text", "+border backgroundCCCCCC +center h20 w" TreeViewWidth, "Unit Tests")
+    txtSrc  := MyGui.Add("Text", "+border backgroundCCCCCC +center yp h20", "Source Code (V1)")
+    txtCnv  := MyGui.Add("Text", "+border backgroundCCCCCC +center yp h20", "Converted Code" codeVer)
+    txtExp  := MyGui.Add("Text", "+border backgroundCCCCCC +center yp h20", "Expected Code" codeVer)
+
     ; Create a TreeView and a ListView side-by-side to behave like Windows Explorer:
-    TV := MyGui.Add("TreeView", "r20 w" TreeViewWidth " ImageList" ImageListID)
+    TV := MyGui.Add("TreeView", "x0 r20 w" TreeViewWidth " ImageList" ImageListID)
     ; LV := MyGui.Add("ListView", "r20 w" ListViewWidth " x+10", ["Name","Modified"])
 
     ; Create a Status Bar to give info about the number of files and their total size:
@@ -665,10 +682,10 @@ GuiTest(strV1Script:="")
     SB.SetParts(300, 300, 300)  ; Create four parts in the bar (the fourth part fills all the remaining width).
 
     ; Add folders and their subfolders to the tree. Display the status in case loading takes a long time:
-;    M := Gui("ToolWindow -SysMenu Disabled AlwaysOnTop", "Loading the tree..."), M.Show("w200 h0")
-    M := Gui("ToolWindow -SysMenu Disabled", "Loading the tree...")
-    LoadingFileName := M.AddText("w200")
-    M.Show("w200")
+;    LT := Gui("ToolWindow -SysMenu Disabled AlwaysOnTop", "Loading the tree..."), LT.Show("w200 h0")
+    LT := Gui("ToolWindow -SysMenu Disabled", "Loading the tree...")
+    LoadingFileName := LT.AddText("w200")
+    LT.Show("w200")
 
     if TestMode{
         DirList := AddSubFoldersToTree(gTreeRoot, Map())
@@ -677,94 +694,95 @@ GuiTest(strV1Script:="")
         DirList := Map()
     }
 
-    M.Hide()
+    LT.Hide()
 
     ; Call TV_ItemSelect whenever a new item is selected:
     TV.OnEvent("ItemSelect", TV_ItemSelect)
-    ButtonEvaluateTests := MyGui.Add("Button", "", "Eval Tests")
-    ButtonEvaluateTests.StatusBar := "Evaluate all the tests again"
-    ButtonEvaluateTests.OnEvent("Click", AddSubFoldersToTree.Bind(gTreeRoot, DirList,"0"))
-    ButtonEvalSelected := MyGui.Add("Button", "", "Eval 1 test")
-    ButtonEvalSelected.StatusBar := "Evaluate the one selected test again"
-    ButtonEvalSelected.OnEvent("Click", EvalSelectedTest.Bind())
-    CheckBoxViewSymbols := MyGui.Add("CheckBox", "yp x+60", "Symbols")
-    CheckBoxViewSymbols.StatusBar := "Display invisible symbols like spaces, tabs and linefeeds"
-    CheckBoxViewSymbols.OnEvent("Click", ViewSymbols)
+    btnEvaluateTests := MyGui.Add("Button", "h24", "Eval Tests")
+    btnEvaluateTests.StatusBar := "Evaluate all the tests again"
+    btnEvaluateTests.OnEvent("Click", AddSubFoldersToTree.Bind(gTreeRoot, DirList,"0"))
+    btnEvalSelected := MyGui.Add("Button", "h24", "Eval 1 test")
+    btnEvalSelected.StatusBar := "Evaluate the one selected test again"
+    btnEvalSelected.OnEvent("Click", EvalSelectedTest.Bind())
+    cbViewSymbols := MyGui.Add("CheckBox", "yp x+60", "Symbols")
+    cbViewSymbols.StatusBar := "Display invisible symbols like spaces, tabs and linefeeds"
+    cbViewSymbols.OnEvent("Click", ViewSymbols)
     try {
-        V1Edit := MyGui.Add("Edit", "x280 y0 w600 vvCodeV1 +Multi +WantTab +0x100", strV1Script)  ; Add a fairly wide edit control at the top of the window.
+        editSrc := MyGui.Add("Edit", "x280 y0 w600 vvCodeSrc +Multi +WantTab +0x100", strV1Script)  ; Add a fairly wide edit control at the top of the window.
     } catch Error as e {
         ; Failed to create control, likely because script is too large
         msgResult := MsgBox("The v1 script control could not be created`nThis is likely due to the saved script being too large.`nAdding the script after pressing Yes should work`n`nRetry without loading script?", e.Message, 0x34)
         if (msgResult = "Yes") {
-            V1Edit := MyGui.Add("Edit", "x280 y0 w600 vvCodeV1 +Multi +WantTab +0x100")
+            editSrc := MyGui.Add("Edit", "x280 y0 w600 vvCodeSrc +Multi +WantTab +0x100")
         } else {
             Reload
         }
     }
-    V1Edit.OnEvent("Change",Edit_Change)
+    editSrc.OnEvent("Change",Edit_Change)
 
-    ButtonRunV1 := MyGui.AddPicButton("w24 h24", "mmcndmgr.dll","icon33 h23")
-    ButtonRunV1.StatusBar := "Run the V1 code"
-    ButtonRunV1.OnEvent("Click", RunV1)
+    btnRunCodeSrc := MyGui.AddPicButton("w24 h24", "mmcndmgr.dll","icon33 h23")
+    btnRunCodeSrc.StatusBar := "Run source code (V1)"
+    btnRunCodeSrc.OnEvent("Click", RunCodeSrc)
 
-    ButtonCloseV1 := MyGui.AddPicButton("w24 h24 x+10 yp Disabled", "mmcndmgr.dll","icon62 h23")
-    ButtonCloseV1.StatusBar := "Close the running V1 code"
-    ButtonCloseV1.OnEvent("Click", CloseV1)
+    btnCloseSrc := MyGui.AddPicButton("w24 h24 x+10 yp Disabled", "mmcndmgr.dll","icon62 h23")
+    btnCloseSrc.StatusBar := "Close the running source-code"
+    btnCloseSrc.OnEvent("Click", CloseSrc)
 
 
-    oButtonConvert := MyGui.AddPicButton("w60 h22", "netshell.dll","icon98 h20")
-    oButtonConvert.StatusBar := "Convert V1 code again to V2"
-    oButtonConvert.OnEvent("Click", ButtonConvert)
-    V2Edit := MyGui.Add("Edit", "x600 ym w600 vvCodeV2 +Multi +WantTab +0x100", "")  ; Add a fairly wide edit control at the top of the window.
-    V2Edit.OnEvent("Change",Edit_Change)
-    V2ExpectedEdit := MyGui.Add("Edit", "x1000 ym w600 H100 vvCodeV2Expected +Multi +WantTab +0x100", "")  ; Add a fairly wide edit control at the top of the window.
-    V2ExpectedEdit.OnEvent("Change",Edit_Change)
+    obtnConvert := MyGui.AddPicButton("w60 h24", "netshell.dll","icon98 h20")
+    obtnConvert.StatusBar := "Convert source code again"
+    obtnConvert.OnEvent("Click", btnConvert)
+    editCnv := MyGui.Add("Edit", "x600 ym w600 vvCodeConv +Multi +WantTab +0x100", "")  ; Add a fairly wide edit control at the top of the window.
+    editCnv.OnEvent("Change",Edit_Change)
+    editExp := MyGui.Add("Edit", "x1000 ym w600 H100 vvCodeExp +Multi +WantTab +0x100", "")  ; Add a fairly wide edit control at the top of the window.
+    editExp.OnEvent("Change",Edit_Change)
 
-    ButtonRunV2 := MyGui.AddPicButton("w24 h24", "mmcndmgr.dll","icon33 h23")
-    ButtonRunV2.StatusBar := "Run this code in Autohotkey V2"
-    ButtonRunV2.OnEvent("Click", RunV2)
 
-    ButtonCloseV2 := MyGui.AddPicButton("w24 h24 x+10 yp Disabled", "mmcndmgr.dll","icon62 h23")
-    ButtonCloseV2.StatusBar := "Close the running V2 code"
-    ButtonCloseV2.OnEvent("Click", CloseV2)
+    btnRunCodeCnv := MyGui.AddPicButton("w24 h24", "mmcndmgr.dll","icon33 h23")
+    btnRunCodeCnv.StatusBar := "Run converted code" codeVer
+    btnRunCodeCnv.OnEvent("Click", RunCodeCnv)
 
-    ButtonCompDiffV2 := MyGui.AddPicButton("w24 h24", "shell32.dll","icon239 h20")
-    ButtonCompDiffV2.StatusBar := "Compare V1 and V2 code"
-    ButtonCompDiffV2.OnEvent("Click", CompDiffV2)
-    ButtonCompVscV2 := MyGui.Add("Button", " x+10 yp w100", "Compare VSC" )
-    ButtonCompVscV2.StatusBar := "Compare V1 and V2 code in VS Code"
-    if !FileExist("C:\Users\" A_UserName "\AppData\Local\Programs\Microsoft VS Code\Code.exe"){
-        ButtonCompVscV2.Visible := 0
+    btnCloseCnv := MyGui.AddPicButton("w24 h24 x+10 yp Disabled", "mmcndmgr.dll","icon62 h23")
+    btnCloseCnv.StatusBar := "Close the running converted-code"
+    btnCloseCnv.OnEvent("Click", CloseCnv)
+
+    btnCompCnvDif := MyGui.AddPicButton("w24 h24", "shell32.dll","icon239 h20")
+    btnCompCnvDif.StatusBar := "Compare source and converted code"
+    btnCompCnvDif.OnEvent("Click", CompCnvDif)
+    btnCompCnvVsc := MyGui.Add("Button", "w100 h24 x+10 yp", "Compare VSC" )
+    btnCompCnvVsc.StatusBar := "Compare source and converted code in VS Code"
+    if !FileExist("C:\Users\" A_UserName "\AppData\Local\Programs\Microsoft VS Code\Code.exe") {
+        btnCompCnvVsc.Visible := 0
     }
-    ButtonCompVscV2.OnEvent("Click", CompVscV2)
+    btnCompCnvVsc.OnEvent("Click", CompCnvVsc)
 
-    ButtonRunV2E := MyGui.AddPicButton("w24 h24 x+10 yp", "mmcndmgr.dll","icon33 h23")
-    ButtonRunV2.StatusBar := "Run expected V2 code"
-    ButtonRunV2E.OnEvent("Click", RunV2E)
+    btnRunCodeExp := MyGui.AddPicButton("w24 h24 x+10 yp", "mmcndmgr.dll","icon33 h23")
+    btnRunCodeExp.StatusBar := "Run expected code" codeVer
+    btnRunCodeExp.OnEvent("Click", RunCodeExp)
 
-    ButtonCloseV2E := MyGui.AddPicButton("w24 h24 Disabled", "mmcndmgr.dll","icon62 h23")
-    ButtonCloseV2E.StatusBar := "Close the running expected V2 code"
-    ButtonCloseV2E.OnEvent("Click", CloseV2E)
+    btnCloseExp := MyGui.AddPicButton("w24 h24 Disabled", "mmcndmgr.dll","icon62 h23")
+    btnCloseExp.StatusBar := "Close the running expected-code"
+    btnCloseExp.OnEvent("Click", CloseExp)
 
-    ButtonCompDiffV2E := MyGui.AddPicButton("w24 h24", "shell32.dll","icon239 h20")
-    ButtonCompDiffV2E.StatusBar := "Compare V2 and expected V2 code"
-    ButtonCompDiffV2E.OnEvent("Click", CompDiffV2E)
-    ButtonCompVscV2E := MyGui.Add("Button", " x+10 yp w100", "Compare VSC" )
-    ButtonCompVscV2E.StatusBar := "Compare V2 and Expected V2 code in VS Code"
-    if !FileExist("C:\Users\" A_UserName "\AppData\Local\Programs\Microsoft VS Code\Code.exe"){
-        ButtonCompVscV2E.Visible := 0
+    btnCompExpDif := MyGui.AddPicButton("w24 h24", "shell32.dll","icon239 h20")
+    btnCompExpDif.StatusBar := "Compare converted and expected code"
+    btnCompExpDif.OnEvent("Click", CompExpDif)
+    btnCompExpVsc := MyGui.Add("Button", "w100 h24 x+10 yp", "Compare VSC" )
+    btnCompExpVsc.StatusBar := "Compare converted and expected code in VS Code"
+    if !FileExist("C:\Users\" A_UserName "\AppData\Local\Programs\Microsoft VS Code\Code.exe") {
+        btnCompExpVsc.Visible := 0
     }
-    ButtonCompVscV2E.OnEvent("Click", CompVscV2E)
-    CheckBoxV2E := MyGui.Add("CheckBox", "yp x+50", "View Exp")
-    CheckBoxV2E.Value := ViewExpectedCode
+    btnCompExpVsc.OnEvent("Click", CompExpVsc)
+    cbExp := MyGui.Add("CheckBox", "yp x+50", "View Exp")
+    cbExp.Value := ViewExpectedCode
 
-    CheckBoxV2E.StatusBar := "Display expected V2 code if it exists"
-    CheckBoxV2E.OnEvent("Click", ViewV2E)
+    cbExp.StatusBar := "Display expected code if it exists"
+    cbExp.OnEvent("Click", ViewExp)
 
     ; Save as test
-    ButtonValidateConversion := MyGui.AddPicButton("w24 h24", "shell32.dll","icon259 h18")
-    ButtonValidateConversion.StatusBar := "Save the converted code as valid test"
-    ButtonValidateConversion.OnEvent("Click", ButtonGenerateTest)
+    btnValidateConversion := MyGui.AddPicButton("w24 h24", "shell32.dll","icon259 h18")
+    btnValidateConversion.StatusBar := "Save the converted code as valid test"
+    btnValidateConversion.OnEvent("Click", btnGenerateTest)
 
     ; Call Gui_Size whenever the window is resized:
     MyGui.OnEvent("Size", Gui_Size)
@@ -788,13 +806,13 @@ GuiTest(strV1Script:="")
     OutputMenu.Add("Remove converter comments", MenuRemoveComments)
     OutputMenu.Add("Replace \n with \r\n", MenuFixLineEndings)
     TestMenu := Menu()
-    TestMenu.Add("AddBracketToHotkeyTest", (*) => V2Edit.Text := AddBracket(V1Edit.Text))
-    TestMenu.Add("GetAltLabelsMap", (*) => V2Edit.Text := GetAltLabelsMap(V1Edit.Text))
+    TestMenu.Add("AddBracketToHotkeyTest", (*) => editCnv.Text := AddBracket(editSrc.Text))
+    TestMenu.Add("GetAltLabelsMap", (*) => editCnv.Text := GetAltLabelsMap(editSrc.Text))
     TestMenu.Add("Performance Test", MenuPerformanceTest)
     ViewMenu := Menu()
     ViewMenu.Add("Zoom In`tCtrl+NumpadAdd", MenuZoomIn)
     ViewMenu.Add("Zoom Out`tCtrl+NumpadSub", MenuZoomOut)
-    ViewMenu.Add("Show Symols", MenuShowSymols)
+    ViewMenu.Add("Show Symbols", MenuShowSymbols)
     ViewMenu.Add()
     ViewMenu.Add("View Tree",MenuViewtree)
     ViewMenu.Add("View Expected Code",MenuViewExpected)
@@ -854,7 +872,7 @@ GuiTest(strV1Script:="")
     }
 
     if (strV1Script!=""){
-        ButtonConvert(myGui)
+        btnConvert(myGui)
     }
 
     OnMessage(0x0200, On_WM_MOUSEMOVE)
@@ -893,10 +911,10 @@ MenuCommandHelp(*)
             Run(URL)
     }
 }
-MenuShowSymols(*)
+MenuShowSymbols(*)
 {
-    ViewMenu.ToggleCheck("Show Symols")
-    CheckBoxViewSymbols.Value := !CheckBoxViewSymbols.Value
+    ViewMenu.ToggleCheck("Show Symbols")
+    cbViewSymbols.Value := !cbViewSymbols.Value
     ViewSymbols()
 }
 FileDeleteTemp(*)
@@ -913,16 +931,16 @@ MenuTestMode(*)
     TestMode := !TestMode
     if TestMode{
         TV.Move(, , TreeViewWidth, )
-        ButtonEvaluateTests.Visible := true
-        ButtonEvalSelected.Visible  := true
-        CheckBoxV2E.Visible := true
+        btnEvaluateTests.Visible := true
+        btnEvalSelected.Visible  := true
+        cbExp.Visible := true
         ViewMenu.Check("View Tree")
     }
     else {
         TV.Move(, , 0, )
-        ButtonEvaluateTests.Visible := false
-        ButtonEvalSelected.Visible  := false
-        CheckBoxV2E.Visible := false
+        btnEvaluateTests.Visible := false
+        btnEvalSelected.Visible  := false
+        cbExp.Visible := false
         ViewMenu.UnCheck("View Tree")
     }
     IniWrite(TestMode, IniFile, Section, "TestMode")
@@ -939,13 +957,13 @@ MenuTestFailing(*)
 MenuRemoveComments(*)
 {
     global
-    V2Edit.Value := RegExReplace(V2Edit.Value, "m)^; V1toV2: [^;\n]*\n") ; for Removed X comments
-    V2Edit.Value := RegExReplace(V2Edit.Value, "; V1toV2: [^;\n]*")
+    editCnv.Value := RegExReplace(editCnv.Value, "m)^; V1toV2: [^;\n]*\n") ; for Removed X comments
+    editCnv.Value := RegExReplace(editCnv.Value, "; V1toV2: [^;\n]*")
 }
 MenuFixLineEndings(*) {
     global
-    V1Edit.Value := RegExReplace(V1Edit.Value, "(?<!\r)\n", "`r`n")
-    V2Edit.Value := RegExReplace(V2Edit.Value, "(?<!\r)\n", "`r`n")
+    editSrc.Value := RegExReplace(editSrc.Value, "(?<!\r)\n", "`r`n")
+    editCnv.Value := RegExReplace(editCnv.Value, "(?<!\r)\n", "`r`n")
 }
 MenuViewDark(*)
 {
@@ -957,8 +975,8 @@ MenuViewDark(*)
 MenuViewExpected(*)
 {
 ; 2025-06-29 AMB, UPDATED to fix synchonization between menu item and checkbox
-    CheckBoxV2E.value := !CheckBoxV2E.value     ; simulate clicking on checkbox
-    ViewV2E(myGui)                              ; pass handling, for consistency
+    cbExp.value := !cbExp.value     ; simulate clicking on checkbox
+    ViewExp(myGui)                              ; pass handling, for consistency
 }
 MenuViewTree(*)
 {
@@ -966,13 +984,13 @@ MenuViewTree(*)
     TV.GetPos(,, &TV_W)
     if (TV_W>0){
         TV.Move(,,0,)
-        ButtonEvaluateTests.Visible := false
-        ButtonEvalSelected.Visible  := false
+        btnEvaluateTests.Visible := false
+        btnEvalSelected.Visible  := false
     }
     else{
         TV.Move(,,TreeViewWidth,)
-        ButtonEvaluateTests.Visible := true
-        ButtonEvalSelected.Visible  := true
+        btnEvaluateTests.Visible := true
+        btnEvalSelected.Visible  := true
     }
     MyGui.GetPos(,, &Width,&Height)
     Gui_Size(MyGui, 0, Width - 14, Height - 60)
@@ -983,7 +1001,7 @@ MenuPerformanceTest(*)
     timeMean := 0
     Loop(250)
     {
-        timeArr.Push(ButtonConvert())
+        timeArr.Push(btnConvert())
     }
     for , time in timeArr
     {
@@ -999,8 +1017,8 @@ MenuZoomIn(*)
     if (FontSize>71){
         FontSize := 71
     }
-    V1Edit.SetFont("s" FontSize)
-    V2Edit.SetFont("s" FontSize)
+    editSrc.SetFont("s" FontSize)
+    editCnv.SetFont("s" FontSize)
     ; SB.SetText(" " (FontSize)*10 "%" , 3)
     sleep(10)
 }
@@ -1011,8 +1029,8 @@ MenuZoomOut(*)
     if (FontSize=0){
         FontSize := 1
     }
-    V1Edit.SetFont("s" FontSize)
-    V2Edit.SetFont("s" FontSize)
+    editSrc.SetFont("s" FontSize)
+    editCnv.SetFont("s" FontSize)
     ; SB.SetText(" " (FontSize)*10 "%" , 3)
     sleep(10)
 }
@@ -1029,53 +1047,55 @@ On_WM_MOUSEMOVE(wparam, lparam, msg, hwnd)
         PrevHwnd := Hwnd
     }
 }
-RunV1(*)
+RunCodeSrc(*)
 {
-    CloseV1(myGui)
-    if (CheckBoxViewSymbols.Value){
-        MenuShowSymols()
+    CloseSrc(myGui)
+    if (cbViewSymbols.Value){
+        MenuShowSymbols()
     }
-    TempAhkFile := A_MyDocuments "\testV1.ahk"
-    AhkV1Exe :=  A_ScriptDir "\AutoHotKey Exe\AutoHotkeyV1.exe"
+    TempAhkFile := A_MyDocuments "\testCodeSrc.ahk"
+    ;AhkV1Exe :=  A_ScriptDir "\AutoHotKey Exe\AutoHotkeyV1.exe"
     oSaved := MyGui.Submit(0)  ; Save the contents of named controls into an object.
     try {
         FileDelete TempAhkFile
     }
-    FileAppend V1Edit.Text, TempAhkFile
-    Run AhkV1Exe " " Format('"{1}"', TempAhkFile)
-    ButtonCloseV1.Opt("-Disabled")
+    FileAppend editSrc.Text, TempAhkFile
+    Run gAhkV1Exe " " Format('"{1}"', TempAhkFile)
+    btnCloseSrc.Opt("-Disabled")
 }
-RunV2(*)
+RunCodeCnv(*)
 {
-    CloseV2(myGui)
-    if (CheckBoxViewSymbols.Value){
-        MenuShowSymols()
+    CloseCnv(myGui)
+    if (cbViewSymbols.Value){
+        MenuShowSymbols()
     }
-    TempAhkFile := A_MyDocuments "\testV2.ahk"
-    AhkV2Exe := A_ScriptDir "\AutoHotKey Exe\AutoHotkeyV2.exe"
+    TempAhkFile := A_MyDocuments "\testCodeConv.ahk"
+    ;AhkV2Exe := A_ScriptDir "\AutoHotKey Exe\AutoHotkeyV2.exe"
     oSaved := MyGui.Submit(0)  ; Save the contents of named controls into an object.
     try {
         FileDelete TempAhkFile
     }
-    FileAppend oSaved.vCodeV2 , TempAhkFile
-    Run AhkV2Exe " " Format('"{1}"', TempAhkFile)
-    ButtonCloseV2.Opt("-Disabled")
+    FileAppend oSaved.vCodeConv , TempAhkFile
+    ahkExe := (gV2Conv) ? gAhkV2Exe : gAhkV1Exe
+    Run ahkExe " " Format('"{1}"', TempAhkFile)
+    btnCloseCnv.Opt("-Disabled")
 }
-RunV2E(*)
+RunCodeExp(*)
 {
-    CloseV2E(myGui)
-    if (CheckBoxViewSymbols.Value){
-        MenuShowSymols()
+    CloseExp(myGui)
+    if (cbViewSymbols.Value){
+        MenuShowSymbols()
     }
-    TempAhkFile := A_MyDocuments "\testV2E.ahk"
-    AhkV2Exe := A_ScriptDir "\AutoHotKey Exe\AutoHotkeyV2.exe"
+    TempAhkFile := A_MyDocuments "\testCodeExp.ahk"
+    ;AhkV2Exe := A_ScriptDir "\AutoHotKey Exe\AutoHotkeyV2.exe"
     oSaved := MyGui.Submit(0)  ; Save the contents of named controls into an object.
     try {
         FileDelete TempAhkFile
     }
-    FileAppend V2ExpectedEdit.Text , TempAhkFile
-    Run AhkV2Exe " " Format('"{1}"', TempAhkFile)
-    ButtonCloseV2E.Opt("-Disabled")
+    FileAppend editExp.Text , TempAhkFile
+    ahkExe := (gV2Conv) ? gAhkV2Exe : gAhkV1Exe
+    Run ahkExe " " Format('"{1}"', TempAhkFile)
+    btnCloseExp.Opt("-Disabled")
 }
 TV_ItemSelect(thisCtrl, Item)  ; This function is called when a new item is selected.
 {
@@ -1093,18 +1113,18 @@ TV_ItemSelect(thisCtrl, Item)  ; This function is called when a new item is sele
     ; LV.Opt("+Redraw")
     ;
     if InStr(DirList[Item],".ah1") {
-        v1Text := StrReplace(StrReplace(FileRead(DirList[Item]),"`r`n","`n"), "`n", "`r`n")
-        V1Edit.Text := v1Text
+        srcTxt := StrReplace(StrReplace(FileRead(DirList[Item]),"`r`n","`n"), "`n", "`r`n")
+        editSrc.Text := srcTxt
         DllCall("QueryPerformanceFrequency", "Int64*", &freq := 0)
         DllCall("QueryPerformanceCounter", "Int64*", &CounterBefore := 0)
-        V2Edit.Text := Convert(v1Text)
+        editCnv.Text := Convert(srcTxt)
         DllCall("QueryPerformanceCounter", "Int64*", &CounterAfter := 0)
         SB.SetText("Conversion completed in " Format("{:.4f}", (CounterAfter - CounterBefore) / freq * 1000) "ms", 4)
-        V2ExpectedEdit.Text := StrReplace(StrReplace(FileRead(StrReplace(DirList[Item],".ah1",".ah2")), "`r`n", "`n"), "`n", "`r`n")
-        CheckBoxV2E.Value := true   ; make sure this is updated to reflect current setting
-        ViewV2E(MyGui)              ; pass UI update to here
-        ; ControlSetText V1Edit, V1Edit
-        ; MsgBox(v1Text)
+        editExp.Text := StrReplace(StrReplace(FileRead(StrReplace(DirList[Item],".ah1",".ah2")), "`r`n", "`n"), "`n", "`r`n")
+        cbExp.Value := true   ; make sure this is updated to reflect current setting
+        ViewExp(MyGui)              ; pass UI update to here
+        ; ControlSetText editSrc, editSrc
+        ; MsgBox(srcTxt)
     }
 
     ; Update the three parts of the status bar to show info about the currently selected folder:
@@ -1114,20 +1134,20 @@ TV_ItemSelect(thisCtrl, Item)  ; This function is called when a new item is sele
 }
 ViewSymbols(*)
 {
-    ViewMenu.ToggleCheck("Show Symols")
-    if (CheckBoxViewSymbols.Value){
-        V1Edit.Value := StrReplace(StrReplace(StrReplace(StrReplace(V1Edit.Text,"`r","\r`r"),"`n","\n`n")," ","·"),"`t","→")
-        V2Edit.Value := StrReplace(StrReplace(StrReplace(StrReplace(V2Edit.Text,"`r","\r`r"),"`n","\n`n")," ","·"),"`t","→")
-        V2ExpectedEdit.Value := StrReplace(StrReplace(StrReplace(StrReplace(V2ExpectedEdit.Text,"`r","\r`r"),"`n","\n`n")," ","·"),"`t","→")
+    ViewMenu.ToggleCheck("Show Symbols")
+    if (cbViewSymbols.Value){
+        editSrc.Value := StrReplace(StrReplace(StrReplace(StrReplace(editSrc.Text,"`r","\r`r"),"`n","\n`n")," ","·"),"`t","→")
+        editCnv.Value := StrReplace(StrReplace(StrReplace(StrReplace(editCnv.Text,"`r","\r`r"),"`n","\n`n")," ","·"),"`t","→")
+        editExp.Value := StrReplace(StrReplace(StrReplace(StrReplace(editExp.Text,"`r","\r`r"),"`n","\n`n")," ","·"),"`t","→")
     }
     else{
-        V1Edit.Value := StrReplace(StrReplace(StrReplace(StrReplace(V1Edit.Text,"\r`r","`r"),"\n`r`n","`n"),"·"," "),"→","`t",)
-        V2Edit.Value := StrReplace(StrReplace(StrReplace(StrReplace(V2Edit.Text,"\r`r","`r"),"\n`r`n","`n"),"·"," "),"→","`t",)
-        V2ExpectedEdit.Value := StrReplace(StrReplace(StrReplace(StrReplace(V2ExpectedEdit.Text,"\r`r","`r"),"\n`r`n","`n"),"·"," "),"→","`t",)
+        editSrc.Value := StrReplace(StrReplace(StrReplace(StrReplace(editSrc.Text,"\r`r","`r"),"\n`r`n","`n"),"·"," "),"→","`t",)
+        editCnv.Value := StrReplace(StrReplace(StrReplace(StrReplace(editCnv.Text,"\r`r","`r"),"\n`r`n","`n"),"·"," "),"→","`t",)
+        editExp.Value := StrReplace(StrReplace(StrReplace(StrReplace(editExp.Text,"\r`r","`r"),"\n`r`n","`n"),"·"," "),"→","`t",)
     }
 }
 ;################################################################################
-ViewV2E(*)
+ViewExp(*)
 {
 ; 2025-06-29 AMB, UPDATED - to fix GUI width issues when toggling expected-edit control visibility
 ;   and to provide consistent synchonization between checkbox and menu item
@@ -1135,14 +1155,14 @@ ViewV2E(*)
     global viewExpectedCode
     static lastEditWidth := -1, lastViewToggle := -1                ; used to avoid unnecessary UI flickering
 
-    viewExpectedCode := CheckBoxV2E.Value                           ; update global flag
+    viewExpectedCode := cbExp.Value                           ; update global flag
 
     ; get current width of expected-edit control
-    V2ExpectedEdit.GetPos(,, &V2ExpectedEdit_W)                     ; get current width of expected-edit control
+    editExp.GetPos(,, &editExp_W)                     ; get current width of expected-edit control
 
     ; compare current view to last view (last func visit)
     ; if no changes, don't update GUI (prevent unnecessary flashing)
-    curView  := V2ExpectedEdit_W * viewExpectedCode
+    curView  := editExp_W * viewExpectedCode
     lastView := lastEditWidth * lastViewToggle
     if (curView = lastView) {
         return  ; no changes have been made to view
@@ -1155,16 +1175,16 @@ ViewV2E(*)
     } else {
         ViewMenu.UnCheck("View Expected Code")
     }
-    IniWrite(CheckBoxV2E.Value, IniFile, Section, "ViewExpectedCode")
+    IniWrite(cbExp.Value, IniFile, Section, "ViewExpectedCode")
 
     ; update expected-edit width and GUI
     MyGui.GetPos(,, &Width,&Height)                                 ; get current width and height of GUI
-    expEditWith := (viewExpectedCode) ? getEditWidth(Width) : 0     ; editWidth/3 (if visible) or 0 (if hidden)
-    V2ExpectedEdit.Move(,,expEditWith)                              ; resize expected-edit control
+    editExpWidth := (viewExpectedCode) ? getEditWidth(Width) : 0    ; editWidth/3 (if visible) or 0 (if hidden)
+    editExp.Move(,,editExpWidth)                                    ; resize expected-edit control
     Gui_Size(MyGui, 0, Width - 14, Height - 60)                     ; update GUI
 
     ; update static vars
-    V2ExpectedEdit.GetPos(,, &eeW)                                  ; get updated width for expected-edit control (no DPI compensation)
+    editExp.GetPos(,, &eeW)                                  ; get updated width for expected-edit control (no DPI compensation)
     lastEditWidth   := (eeW) ? eeW : -1
     lastViewToggle  := (viewExpectedCode) ? 1 : -1
 }
@@ -1182,9 +1202,9 @@ ViewDrk(*)
 $Esc::     ;Exit application - Using either <Esc> Hotkey or Goto("MyExit")
 {
 MyExit:
-    CloseV1(myGui) ; Close active scripts
-    CloseV2(myGui)
-    CloseV2E(myGui)
+    CloseSrc(myGui) ; Close active scripts
+    CloseCnv(myGui)
+    CloseExp(myGui)
     ;WRITE BACK VARIABLES SO THAT DEFAULTS ARE SAVED TO INI
     IniWrite(FontSize,           IniFile, Section, "FontSize")
     IniWrite(TestMode,           IniFile, Section, "TestMode")
@@ -1212,9 +1232,9 @@ XButton1::
     Clipboard1 := A_Clipboard
     A_Clipboard := ClipSaved   ; Restore the original clipboard. Note the use of A_Clipboard (not ClipboardAll).
     ClipSaved := ""  ; Free the memory in case the clipboard was very large.
-    V1Edit.Text := Clipboard1
-    V2ExpectedEdit.Text := ""
-   ButtonConvert(myGui)
+    editSrc.Text := Clipboard1
+    editExp.Text := ""
+   btnConvert(myGui)
    WinActivate(myGui)
 }
 ^XButton1::
@@ -1235,24 +1255,24 @@ XButton2::
     if (FileExist(FileTempScript)){
         FileDelete(FileTempScript)
     }
-    FileAppend(V1Edit.Text,FileTempScript)
+    FileAppend(editSrc.Text,FileTempScript)
     Reload
 }
 ~LButton::
 {
-    if WinActive("testV2.ahk"){
-        ErrorText := WinGetText("testV2.ahk")
-        Line := RegexReplace(WinGetText("testV2.ahk"),"s).*Error at line (\d*)\..*","$1",&RegexCount)
+    if WinActive("testCodeConv.ahk"){
+        ErrorText := WinGetText("testCodeConv.ahk")
+        Line := RegexReplace(WinGetText("testCodeConv.ahk"),"s).*Error at line (\d*)\..*","$1",&RegexCount)
         if (RegexCount){
-            LineCount := EditGetLineCount(V2Edit)
+            LineCount := EditGetLineCount(editCnv)
             if (Line>LineCount){
                 return ; The line number is beyond the total number of lines
             }
             else{
-                FoundPos := InStr(V2Edit.Text, "`n", , , Line-1)
+                FoundPos := InStr(editCnv.Text, "`n", , , Line-1)
                 WinActivate myGui
-                ControlFocus(V2Edit)
-                SendMessage(0xB1, FoundPos, FoundPos+1,,V2Edit)
+                ControlFocus(editCnv)
+                SendMessage(0xB1, FoundPos, FoundPos+1,,editCnv)
                 Sleep(300)
                 SendInput("{Right}{Left}")
             }
@@ -1264,9 +1284,9 @@ XButton2::
 }
 
 ExitFunc(ExitReason, ExitCode){
-    CloseV1(myGui) ; Close active scripts
-    CloseV2(myGui)
-    CloseV2E(myGui)
+    CloseSrc(myGui) ; Close active scripts
+    CloseCnv(myGui)
+    CloseExp(myGui)
     IniWrite(FontSize,           IniFile, Section, "FontSize")
     IniWrite(TestMode,           IniFile, Section, "TestMode")
     IniWrite(TestFailing,        IniFile, Section, "TestFailing")
@@ -1323,16 +1343,20 @@ setUIMode(GuiObj, DarkMode:=false)
 				DllCall(SetPreferredAppMode, "Int", PreferredAppMode["ForceDark"])
 				DllCall(FlushMenuThemes)
 				GuiObj.BackColor := DarkColors["Background"]
+                txtTV.Opt("BackgroundCCCCCC")
                 TV.Opt("Background353535")
                 TV.SetFont("cWhite")
-                V1Edit.Opt("Background353535")
-                V1Edit.SetFont("cWhite")
-                V2Edit.Opt("Background353535")
-                V2Edit.SetFont("cWhite")
-                V2ExpectedEdit.Opt("Background353535")
-                V2ExpectedEdit.SetFont("cWhite")
-                CheckBoxV2E.Opt("BackgroundF0F0F0")             ; unable to change text color, so keep bkgd light
-                CheckBoxViewSymbols.Opt("BackgroundF0F0F0")     ; unable to change text color, so keep bkgd light
+                txtSrc.Opt("BackgroundCCCCCC")
+                editSrc.Opt("Background353535")
+                editSrc.SetFont("cWhite")
+                txtCnv.Opt("BackgroundCCCCCC")
+                editCnv.Opt("Background353535")
+                editCnv.SetFont("cWhite")
+                txtExp.Opt("BackgroundCCCCCC")
+                editExp.Opt("Background353535")
+                editExp.SetFont("cWhite")
+                cbExp.Opt("BackgroundF0F0F0")             ; unable to change text color, so keep bkgd light
+                cbViewSymbols.Opt("BackgroundF0F0F0")     ; unable to change text color, so keep bkgd light
 			}
 			default:
 			{
@@ -1340,16 +1364,20 @@ setUIMode(GuiObj, DarkMode:=false)
 				DllCall(SetPreferredAppMode, "Int", PreferredAppMode["Default"])
 				DllCall(FlushMenuThemes)
 				GuiObj.BackColor := "Default"
+                txtTV.Opt("BackgroundFFFFFF")
                 TV.Opt("BackgroundFFFFFF")
                 TV.SetFont("cBlack")
-                V1Edit.Opt("BackgroundFFFFFF")
-                V1Edit.SetFont("cBlack")
-                V2Edit.Opt("BackgroundFFFFFF")
-                V2Edit.SetFont("cBlack")
-                V2ExpectedEdit.Opt("BackgroundFFFFFF")
-                V2ExpectedEdit.SetFont("cBlack")
-                CheckBoxV2E.Opt("BackgroundF0F0F0")             ; unable to change text color, so keep bkgd light
-                CheckBoxViewSymbols.Opt("BackgroundF0F0F0")     ; unable to change text color, so keep bkgd light
+                txtSrc.Opt("BackgroundFFFFFF")
+                editSrc.Opt("BackgroundFFFFFF")
+                editSrc.SetFont("cBlack")
+                txtCnv.Opt("BackgroundFFFFFF")
+                editCnv.Opt("BackgroundFFFFFF")
+                editCnv.SetFont("cBlack")
+                txtExp.Opt("BackgroundFFFFFF")
+                editExp.Opt("BackgroundFFFFFF")
+                editExp.SetFont("cBlack")
+                cbExp.Opt("BackgroundF0F0F0")             ; unable to change text color, so keep bkgd light
+                cbViewSymbols.Opt("BackgroundF0F0F0")     ; unable to change text color, so keep bkgd light
 			}
 		}
 	}

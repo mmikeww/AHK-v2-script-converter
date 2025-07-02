@@ -122,14 +122,19 @@
 ; 2025-06-23 AMB, UPDATED, MOVED from ConvertFuncs.ahk and...
 ;	Merged with ToStringExp() [approval from Banaanae]
 ;	Set 'valToStr' to true for old ToStringExp() calls
+; 2025-07-01 AMB, UPDATED - added support for v1.1 conversion
+
+;	return v1_ToExp(text, valToStr, forceDot)
 
 	text := Trim(text, ' `t')									; trim horz ws
 
 	; handle specific cases
 	if (text = '')												; if text is empty...
 		return '""'												; ... return two double quotes
-	else if (SubStr(text, 1, 2) = '% ')							; if this param was a forced expression...
-		return SubStr(text, 3)									; ... just remove leading '% ', return rest
+	else if (SubStr(text, 1, 2) = '% ') {						; if this param was a forced expression...
+;		return SubStr(text, 3)									; ... just remove leading '% ', return rest
+		return (gV2Conv) ? SubStr(text, 3) : text				; ... v2 - just remove leading '% ', v1.1 - return as is
+	}
 
 	if (!valToStr && isNumber(text)) {							; if a number and should NOT be treated as string
 		if (IsFloat(text) || IsHex(text)) {
@@ -140,9 +145,15 @@
 		}
 	}
 
-	; escape literal quotes, remove escape from comma
-	text := RegExReplace(text, '(?<!``)"', '``"')				; escape literal quotes
-	text := StrReplace(text, '``,', ',')						; remove escape char from comma
+
+	if (gV2Conv) {	; v2 conversion
+		; escape literal quotes, remove escape from comma
+		text := RegExReplace(text, '(?<!``)"', '``"')				; escape v2 literal quotes
+		text := StrReplace(text, '``,', ',')						; remove escape char from comma
+	}
+	else {			; v1.1 conversion
+		text := RegExReplace(text, '"', '""')						; escape v1 literal quotes
+	}
 
 	; if text has no variable
 	if (!RegExMatch(text, '(?<!``)%'))
@@ -167,6 +178,8 @@
 	}
 	if (char != '%')											; if last char was not a closing % for var
 		outStr .= '"'											; ... close string with quote
+
+	outStr := (gV2Conv) ? outStr : '% ' outStr					; add leading % for v1.1 conversions
 	return outStr												; return final string/var
 }
 ;################################################################################
@@ -179,7 +192,7 @@ _EnvMult() {
 }
 ;################################################################################
 _GetKeyState(p) {
-; 2025-06-29 AMB, ADDED to fix empty params
+; 2025-07-01 AMB, ADDED to fix empty params
 
 	out		:= format('{1} := GetKeyState({2}', p[1], p[2])
 	out		.= ((p[3]) ? (', ' p[3]) : '') . ') ? "D" : "U"'
@@ -486,6 +499,7 @@ _StringLen() {
 }
 ;################################################################################
 _StringMid(p) {
+; 2025-07-01 AMB, UPDATED to fix (missing) indent issue
 
 	if (IsEmpty(p[4]) && IsEmpty(p[5]))
 		return format("{1} := SubStr({2}, {3})", p*)
@@ -496,18 +510,18 @@ _StringMid(p) {
 	else
 	{
 		; any string that starts with 'L' is accepted
-		if (StrUpper(SubStr(p[5], 2, 1) = "L"))
+		if (StrUpper(SubStr(p[5], 2, 1) = "L")) {
 			; Very ugly fix, but handles pseudo characters
 			; (When StartChar is larger than InputVar on L mode)
 			; Use below for shorter but more error prone conversion
 			; return format("{1} := SubStr(SubStr({2}, 1, {3}), -{4})", p*)
 			return format("{1} := SubStr(SubStr({2}, 1, {3}), StrLen({2}) >= {3} ? -{4} : StrLen({2})-{3})", p*)
-		else
-		{
+		}
+		else {
 			out := format("if (SubStr({5}, 1, 1) = `"L`")", p*) . "`r`n"
-			out .= format("	{1} := SubStr(SubStr({2}, 1, {3}), -{4})", p*) . "`r`n"
-			out .= format("else", p) . "`r`n"
-			out .= format("	{1} := SubStr({2}, {3}, {4})", p*)
+			out .= format(gIndent "`t{1} := SubStr(SubStr({2}, 1, {3}), -{4})", p*) . "`r`n"
+			out .= format(gIndent "else", p) . "`r`n"
+			out .= format(gIndent "`t{1} := SubStr({2}, {3}, {4})", p*)
 			return out
 		}
 	}

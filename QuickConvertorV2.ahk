@@ -118,17 +118,17 @@
 
     TempV1Script := FileExist(FileTempScript) ? FileRead(FileTempScript) : ""
 
-    ; Prompt to test V1 or V2
-    Result := MsgBox("Test conversion for V1.1 ONLY?`n`n`tY =`tV1.1`n`tN =`tV2","WHICH MODE?", "YNC")
-    if (result="yes") {
-        gV2Conv := false
-    }
-    else if (result="no") {
-        gV2Conv := true
-    }
-    else if (result="cancel") {
-        ExitApp
-    }
+;    ; Prompt to test V1 or V2
+;    Result := MsgBox("Test conversion for V1.1 ONLY?`n`n`tY =`tV1.1`n`tN =`tV2","WHICH MODE?", "YNC")
+;    if (result="yes") {
+;        gV2Conv := false
+;    }
+;    else if (result="no") {
+;        gV2Conv := true
+;    }
+;    else if (result="cancel") {
+;        ExitApp
+;    }
 
     gTreeRoot := ((A_ScriptDir '\Tests\Test_Folder') . ((gV2Conv) ? '' : 'V1'))
     GuiTest(TempV1Script)

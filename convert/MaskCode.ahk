@@ -62,7 +62,650 @@ global	  gTagChar		:= chr(0x2605) ; '★'															; unique char to ensure 
 		, gPtn_SQ_1L	:= buildPtn_QS_SQ()																; UPDATED - SQ-string, 1l (ADDED 2025-06-12)
 		, gPtn_QS_MLPth	:= buildPtn_MLQSPth()															; UPDATED - quoted-string, ml (within parentheses)
 		, gPtn_QS_ML	:= '(?<line1>:=\h*)\K"(([^"\v]++)\R)(?:\h*+[.|&,](?-2)*+)(?-1)++"'				; UPDATED - quoted-string, ml cont sect (not within parentheses)
+		, gPtn_Switch	:= buildPtn_Switch()															; 2025-07-01 AMB, ADDED - Switch statement block
 
+;################################################################################
+											  hasTag(srcStr := '', tagType := '')
+;################################################################################
+{
+; 2025-06-12 AMB, ADDED
+; Purpose: To determine whether srcStr has...
+;	A. a very specific tag		(tagType := exact tag to search for)
+;		if srcStr is specified, this will only return a positive result if tag is found within srcStr
+;		leave srcStr blank to guarantee a return of orig sub-string from maskList, (even if tag is not found in srcStr)
+;	B. a specific tag type		(tagtype := string identifier for a tag category)
+;	C. any mask tag in general	(tagType := leave empty)
+
+	; make sure tagType is a valid tag
+
+	; A: find very specific mask-tag - return orig sub-string if found in maplist, false otherwise
+	; (note: if srcStr is specified (not blank), will only return orig sub-string if tag is ALSO found in srcStr)
+	;	leave srcStr blank to return orig sub-String regardless
+	validTag	:= '(?i)' uniqueTag('\w+')
+	if ((tagType ~= validTag) && clsMask.HasTag[tagType]) {						; if tag found in masklist...
+		oCode	:= clsMask.GetOrig[tagType]										; ... get orig sub-string
+		; if srcStr specified...
+		;	... only return orig sub-string when tag is found in srcStr
+		; if srcStr NOT specified, return orig sub-string in any case
+		retVal	:= (srcStr) ? ((srcStr ~= tagType) ? oCode : false) : oCode
+		return	retVal
+	}
+
+	; setup for B: or C:
+	tagType		:= RegExReplace(tagType, '_$') . '_'							; ensure its last char is underscore
+	nTagType	:= '(?i)' uniqueTag(tagType '\w+')								; build tagType needle
+
+	; B: find specific type of mask-tag
+	; C: find any mask-tag in general
+	; return first matching tag found, false otherwise
+	retval		:= (srcStr) ? (RegExMatch(srcStr, nTagType, &mTag) ? mTag[] : false) : false
+	return		retVal
+;	return !!(srcStr ~= tagType)		; T or F
+}
+;################################################################################
+															 uniqueTag(uniqueStr)
+;################################################################################
+{
+; 2025-06-12 AMB, ADDED - returns unique tag based on passed unique-string
+;	see top of this file for global var declaration
+;	global	  gTagChar	:= chr(0x2605) ; '★'
+;			, gTagPfx	:= '#TAG' gTagChar
+;			, gTagTrl	:= gTagChar '#'
+
+	return gTagPfx . uniqueStr . gTagTrl
+}
+;################################################################################
+									Mask_T(&code, targ, option:=0, sessID:=unset)
+;################################################################################
+{
+; 2025-06-22 AMB, ADDED as central hub for tagging code (rather than dedicated funcs)
+;	Replaces targetted SUBSTRINGS, within passed code, with UNIQUE TAGS
+; the multiple targ 'case' strings below are for convenience...
+;	they can be reduced to a single exclusive string if desired...
+;	(I can't always remember which string should be used, so convering more than one option. lol)
+;	TODO - might just set exclusive strings and a popup in Default when 'targ' is unknown
+;
+; CODE param	- source-code/haystack that will be searched (for target sub-string type)
+; TARG param	- UNIQUE term/str/key that identifies the switch-case below.
+;					the cases below will route the Mask_T() request to target the appropriate UNIQUE TYPE of sub-string
+;					add a custom (UNIQUE) case or term as desired below (and matching UNIQUE cases for Mask_R() below)
+;				  if TARG is not found in case-list below, it will be considered a one-time (custom) target TERM
+;					the TERM provided in TARG param will be used to create a UNIQUE TAG, so use a UNIQUE TERM here.
+; OPTION param	- means different things for different targets - see comments for details
+;					if TARG is custom (not covered in case-list below), use option as param for custom regex needle
+;					TODO - provide a list of what the option param does for each targ type
+; SESSID param	- identifies the exclusive masking session that should be used during restore process
+;					Use clsMask.NewSession() prior to calling Mask_T() to create a sessID for this param
+;						that sessID will be passed along the chain with your masking request
+;					Use this same sessID with Mask_R() when restoring tags to their orignal sub-string
+;						only tags that are associated with the sessID will be restored (rather than global restore)
+; NOTES:
+;	many of the case below have recursive calls back to this function...
+;	these recursive calls are for pre-masking requirements.
+;	These pre-masks hide other substrings temporarily so they do not interfere with the main request
+;	these additional steps are done automatically so the caller does not need to worry about coding these steps manually
+;	in other words... a single 'main-request' performs all the steps required 'behind the scenes'
+
+	switch targ,false	; case-insensitive
+	{
+		case	'C&S':										; COMMENTS AND STRINGS...
+				Mask_T(&code,	 'BC',	,sessID?)			; 	recursion call - mask block comments
+				Mask_T(&code,	 'LC',	,sessID?)			; 	recursion call - mask line  comments
+				Mask_T(&code,	 'QS',	,sessID?)			; 	recursion call - mask quoted-strings (1line)
+				if (option)	; whether to mask ML strings	; if mask ML strings ?
+					Mask_T(&code, 'MLQS',,sessID?)			; 	recursion call - mask quoted-strings (ML)
+
+		case	'BC':										; BLOCK COMMENTS
+				clsMask.MaskAll(&code, 'BC'
+					, gPtn_BC, sessID?)
+
+		case	'LC':										; LINE COMMENTS
+				clsMask.MaskAll(&code, 'LC'
+					, gPtn_LC, sessID?)
+
+		case	'HK','HOTKEY':								; HOT KEYS (declaration)
+				nGblHK := '(?im)' gPtn_HOTKEY				; support searching script globally
+;				nGblHK := gPtn_HOTKEY						; support searching script globally
+				clsMask.MaskAll(&code, 'HK'
+					, nGblHK, sessID?)
+
+		case	'HS','HOTSTR':								; HOT STRINGS (declaration)
+				nGblHS := '(?im)' gPtn_HOTSTR				; support searching script globally
+				clsMask.MaskAll(&code, 'HS'
+					, nGblHS, sessID?)
+
+		case	'LBL','LABELS':								; LABELS (declaration)
+;				nGblLabel := '(?im)' gPtn_LblDecl			; support searching script globally
+				clsMask.MaskAll(&code, 'LBL'
+					, gPtn_LblDecl, sessID?)				; currently already supports (?im)
+
+		case	'KV','KVO','KVP','KEYVAL':					; KEY/VAL pair/objects
+				clsMask.MaskAll(&code, 'KVO'
+					, gPtn_KVO, sessID?)
+
+		case	'SW','SWITCH':								; SWITCH block
+				clsMask.MaskAll(&code, 'SW'
+					, gPtn_Switch, sessID?)
+
+		case	'DQ','DQSTR':								; QUOTED-STRINGS (1line, "" only)
+				clsMask.MaskAll(&code, 'DQ'
+					, gPtn_DQ_1L, sessID?)
+
+		case	'SQ','SQSTR':								; QUOTED-STRINGS (1line, '' only)
+				clsMask.MaskAll(&code, 'SQ'
+					, gPtn_SQ_1L, sessID?)
+
+		case	'QS','QSTR':								; QUOTED-STRINGS (1line, "" and/or '')
+				clsMask.MaskAll(&code, 'QS'
+					, gPtn_QS_1L, sessID?)
+
+		case	'MLQS','MLSTR':								; QUOTED-STRINGS (multi-line)
+				clsMask.MaskAll(&code, 'MLQS'
+					, gPtn_QS_MLPth, sessID?)
+
+		case	'V1MLS','V1LEGMLS':							; V1 LEGACY (non-expression) MULTI-LINE STRING
+				clsMask.MaskAll(&code, 'V1LEGMLS'
+					, gPtn_V1L_MLSV, sessID?)
+
+		case	'STR','STRINGS':							; STRINGS (1line and ML)
+				Mask_T(&code,	 'QS',	,sessID?)			; 	recursion call - mask quoted-strings (1line)
+				Mask_T(&code,	 'MLQS',,sessID?)			; 	recursion call - mask quoted-strings (ML)
+
+		case	'CS','CSECT':								; CONTINUATION SECTIONS (ANY)
+				; 2025-06-22 - DONT MERGE THIS IDEA YET
+				;Mask_T(&code,	'CS1',	,sessID?)			; 	recursion call - mask 'method 1' Cont Sects
+				Mask_T(&code, 	'CS2',	,sessID?)			; 	recursion call - mask 'method 2' Cont Sects
+
+		case	'CS1','CSECT1':								; CONTINUATION SECTIONS (METHOD 1)
+				Mask_T(&code,	'C&S',0	,sessID?)			; 	recursion call - mask comments/strings (NOT ML strings!)
+				Mask_T(&code,	'HK',	,sessID?)			; 	recursion call - mask hotkey declarations
+				Mask_T(&code,	'HS',	,sessID?)			; 	recursion call - mask hotstring declarations
+				Mask_T(&code,	'LBL',	,sessID?)			; 	recursion call - mask label declarations
+				clsMask.MaskAll(&code, 'MLCSECTM1'			; 	mask all METHOD 1 continuation sections
+					, gPtn_CSectM1, sessID?)
+				Mask_R(&code,	'LBL',	,sessID?)			; 	restore label declarations
+				Mask_R(&code,	'HS',	,sessID?)			; 	restore hotstring declarations
+				Mask_R(&code,	'HK',	,sessID?)			; 	restore hotkey declarations
+				Mask_R(&code,	'C&S',	,sessID?)			; 	restore comments/strings
+
+		case	'CS2','CSECT2':								; CONTINUATION SECTIONS (METHOD 2)
+				Mask_T(&code,	'C&S',0	,sessID?)			; 	recursion call - mask comments/strings (NOT ML strings!)
+				clsMask.MaskAll(&code, 'MLCSECTM2'			; 	mask all METHOD 2 continuation sections
+					, gPtn_CSectM2, sessID?)
+
+		case	'FC','FCALL':								; FUNCTION CALLS
+				if (!IsSet(sessID)) {
+					sessID := clsMask.NewSession()
+				}
+				Mask_T(&code,	'STR',	,sessID?)			; 	recursion call - mask strings
+				clsMask.MaskAll(&code, 'FC'
+					, gPtn_FuncCall, sessID?)
+				if (option) {								; if Restore-strings requested ?
+					Mask_R(&code, 'STR',	,sessID?)			;	restore all strings [FROM TEMP SESSION]
+				}
+
+		case	'BLOCKS', 'FUNC&CLS':						; FUNCTIONS AND CLASSES
+				clsNodeMap.Mask_Blocks(&code)
+
+		default:
+				; targ not found in case-list above...
+				; ... so it may be a custom target for custom masking...
+				; submit it as custom masking, not covered above
+				; NOTE: needle should be provided thru OPTION param
+				customNeedle := option	; making it clear
+				clsMask.MaskAll(&code, targ
+					, customNeedle, sessID?)
+	}
+	return
+}
+;################################################################################
+				  Mask_R(&code, targ, delTag:=true, sessID:=unset, convert:=true)
+;################################################################################
+{
+; 2025-06-22 AMB, ADDED as central hub for restoring substrings that were masked/tagged with Mask_T
+;	Replaces targetted TAGS, within passed code, with ORIG substrings.
+;	Also performs conversion (indirectly), of that restored substr, in most cases
+; the multiple targ 'case' strings below are for convenience...
+;	they can be reduced to a single exclusive string if desired...
+;	(I can't always remember which string should be used, so convering more than one option. lol)
+;	TODO - might just set exclusive strings and a popup in Default when 'targ' is unknown
+; delTag param - whether to remove the tag from the global (static) tag list or not
+;	removing the tag from the list is the default behavior...
+;	... but this should be disabled for a call, if the tag will be needed again later, for restoration
+; convert param - whether to convert code as part of masking restore
+;	has no relevance with clsMask.RestoreAll() since this code is not converted
+;	but sub-class (custom) RestoreAll()'s use it (clsMLLineCont.RestoreAll at the moment)
+;
+; CODE param	- source-code/haystack that will be searched (for target TAGS), and ultimately converted (see CONVERT below)
+; TARG param	- UNIQUE term/str/key that identifies the switch-case below.
+;					the cases below will route the Mask_R() request to target the appropriate UNIQUE TYPE of sub-string
+;					add a custom (UNIQUE) case or term as desired below (and matching UNIQUE cases for Mask_T() above)
+;				  if TARG is not found in case-list below, it will be considered a one-time (custom) target TERM
+;					the TERM provided will be used to search for tags that have this UNIQUE TERM identifier
+;					if tags are found with that UNIQUE TERM, they will be restored to their orig sub-string
+; DELTAG param	- whether to permanantly remove the tag from the global (static) tag list or not (after Mask_R() call)
+;					removing the tag from the list is the default behavior...
+;					... but this should be disabled for a call, if the tag will be needed again later, for restoration
+;						in other words... disable for temp calls, so other calls can have access to tags as well.
+; SESSID param	- identifies the exclusive masking session that should be used during restore process
+;					Use clsMask.NewSession() prior to calling Mask_T() (above) to create a sessID for this param
+;						that sessID will be passed along the chain with your Mask_T() request (and can then be used with Mask_R())
+;					Use this same sessID with Mask_R() when restoring tags to their orignal sub-string
+;						only tags that are associated with the sessID will be restored (rather than global restore)
+; CONVERT param	- Only used for CUSTOM-Restores - flag to tell a CUSTOM-restore whether to convert CODE (param) as part of the current Mask_R() call
+;					Conversion is usually enabled by default (for CUSTOM-Restores only)...
+;						... in that case... Mask_R() will return the CODE after being converted...
+;							... but, if you wish to inspect the ORIGINAL CODE (non-converted)... set this flag to false/0
+
+	switch targ,false	; case-insensitive
+	{
+		case	'C&S','S&C':								; COMMENTS AND STRINGS...
+				; ORDER MATTERS - reverse order of Mask_T
+				Mask_R(&code, 'MLQS',delTag, sessID?)		; 	recursion call - restore quoted-strings (ML)
+				Mask_R(&code, 'QS',	delTag, sessID?)		; 	recursion call - restore quoted-strings (1line)
+				Mask_R(&code, 'LC',	delTag, sessID?)		; 	recursion call - restore line  comments
+				Mask_R(&code, 'BC',	delTag, sessID?)		; 	recursion call - restore block comments
+
+		case	'BC':										; BLOCK COMMENTS
+				clsMask.RestoreAll(&code, 'BC'
+					, delTag, sessID?)
+
+		case	'LC':										; LINE COMMENTS
+				clsMask.RestoreAll(&code, 'LC'
+					, delTag, sessID?)
+
+		case	'HK','HOTKEY':								; HOT KEYS (declaration)
+				clsMask.RestoreAll(&code, 'HK'
+					, delTag, sessID?)
+
+		case	'HS','HOTSTR':								; HOT STRINGS (declaration)
+				clsMask.RestoreAll(&code, 'HS'
+					, delTag, sessID?)
+
+		case	'LBL','LABELS',:							; LABELS (declaration)
+				clsMask.RestoreAll(&code, 'LBL'
+					, delTag, sessID?)
+
+		case	'KV','KVO','KVP','KEYVAL':					; KEY/VAL pair/objects
+				clsMask.RestoreAll(&code, 'KVO'
+					, delTag, sessID?)
+
+		case	'SW','SWITCH':								; SWITCH block
+				clsMask.RestoreAll(&code, 'SW'
+					, delTag, sessID?)
+
+		case	'DQ','DQSTR':								; QUOTED-STRINGS (1line, "" only)
+				clsMask.RestoreAll(&code, 'DQ'
+					, delTag, sessID?)
+
+		case	'SQ','SQSTR':								; QUOTED-STRINGS (1line, '' only)
+				clsMask.RestoreAll(&code, 'SQ'
+					, delTag, sessID?)
+
+		case	'QS', 'QSTR':								; QUOTED-STRINGS (1line, "" and/or '')
+				clsMask.RestoreAll(&code, 'QS'
+					, delTag, sessID?)
+
+		case	'MLQS','MLSTR':								; QUOTED-STRINGS (multi-line)
+				clsMask.RestoreAll(&code, 'MLQS'
+					, delTag, sessID?)
+
+		case	'V1MLS','V1LEGMLS':							; V1 LEGACY (non-expression) MULTI-LINE STRING
+				clsMask.RestoreAll(&code, 'V1LEGMLS'
+					, delTag, sessID?)
+
+		case	'STR', 'STRINGS':							; STRINGS (1line and ML)
+				; ORDER MATTERS - reverse order of Mask_T
+				Mask_R(&code, 'MLQS',delTag, sessID?)		; 	recursion call - restore quoted-strings (ML)
+				Mask_R(&code, 'QS',	delTag, sessID?)		; 	recursion call - restore quoted-strings (1line)
+
+		case	'CS','CSECT':								; CONTINUATION SECTIONS (ANY)
+				; reverse order of Mask_T
+				Mask_R(&code, 'CS2', delTag, sessID?)		; 	recursion call - restore method 2 cont sects
+;				Mask_R(&code, 'CS1', delTag, sessID?)		; 	recursion call - restore method 1 cont sects
+
+		case	'CS1','CSECT1':								; CONTINUATION SECTIONS (METHOD 1)
+				; Subclass providing custom restore
+				clsMLLineCont.RestoreAll(&code, 'MLCSECTM1'
+					, delTag, sessID?, convert)				; will convert as part of restore, unless convert is set to 0
+
+		case	'CS2','CSECT2':								; CONTINUATION SECTIONS (METHOD 2)
+				; Subclass providing custom restore
+				clsMLLineCont.RestoreAll(&code, 'MLCSECTM2'
+					, delTag, sessID?, convert)				; will convert as part of restore, unless convert is set to 0
+
+		case	'FC','FCALL':								; FUNCTION CALLS
+				clsMask.RestoreAll(&code, 'FC'
+					, delTag, sessID?)
+				Mask_R(&code, 'STR',	,sessID?)
+
+		case	'BLOCKS', 'FUNC&CLS':						; FUNCTIONS AND CLASSES
+				clsNodeMap.Restore_Blocks(&code)
+
+		default:
+				; targ not found in case-list above...
+				; ... so it may be a custom target...
+				; submit is as custom restore, not covered above
+				clsMask.RestoreAll(&code, targ
+					, delTag, sessID?)
+	}
+	return
+}
+;################################################################################
+															RemovePtn(code, targ)
+;################################################################################
+{
+; 2025-06-22 AMB, ADDED as central hub for removing targ substrings
+;	Removes target substrings from passed code
+
+	switch targ, false	; case-insensitive
+	{
+		case 'BC':
+			return RegExReplace(code, gPtn_BC)				; remove block comments
+
+		case 'LC':
+			; Mask strings first to prevent interference
+			sess := clsMask.NewSession()					; temp masking session
+			Mask_T(&code, 'STR',, sess)						; mask strings, within isolated session
+				code := RegExReplace(code, gPtn_LC)			; remove line  comments
+			Mask_R(&code, 'STR',, sess)						; restore strings, within isolated session
+			return code
+
+		case 'C', 'COM', 'LC&BC', 'COMMENTS':
+			code := RemovePtn(code, 'BC')					; remove block comments
+			return	RemovePtn(code, 'LC')					; remove line  comments
+
+		case 'V1LEGMLS':
+			return RegExReplace(code, gPtn_V1L_MLSV)		; remove v1 legacy (non-expression) ML string assignments
+
+		default:
+			MsgBox "RemovePtn - UNKNOWN TARG [" targ "]"
+			; TODO - provide a list of valid 'targ' strings
+	}
+	return
+}
+;################################################################################
+class clsMask
+{
+; Class responisible for masking (tagging/restoring) code
+; Blocks of code are passed to MaskAll(), where targetted pattern substrings will be replaced with unique tags...
+;	... the passed code is accompanied with a regex needle that identifies the targeted substrings
+;	... the extracted substrings are then stored, and replaced with a unique tags (hiding them from conversion routines)
+; When restoration is needed, the tagged-code is sent to RestoreAll() where...
+;	... (unique) tags will be replaced with original code, but...
+;	... as part of the restoration process, the substrings are usually sent to a custom converter prior to restoration.
+; This class should be able to handle just about any type of masking/tagging desired
+;	It just needs a well formed regex needle to identify the taggeted subsrings, and conversion func if required
+;	These needles can be as simple or complex as your talents allow
+;	Contact one of the developers/contributers, if you would like assisitance with a custom needle
+
+	codePtn		:= ''
+	maskType	:= ''
+	origcode	:= ''
+	mTag		:= ''
+
+	__new(code, mTag, maskType, pattern)
+	{
+		this.origCode	:= code
+		this.mTag		:= mTag
+		this.maskType	:= maskType
+		this.codePtn	:= pattern
+	}
+
+	;################################################################################
+
+	static masklist		:= map()			; holds all premask objects, origCode/tags
+	static uniqueIdList	:= map()			; ensures tags have unique ID
+	;static maxMasks	:= 16**4			; 65K - CAUSED BUG!! NOT ENOUGH FOR HEAVY TESTING
+	static maxMasks		:= 16**6			; 16.7 million (must be enough for heavy testing!!!)
+	static maskCountT	:= 0				; 2025-06-12 - to prevent endless-loop bug
+
+
+	; PUBLIC - establishes new masking session using clsMask._session
+	; this can be used to control which tags are accessed/restored/deleted
+	static NewSession()
+	{
+		uniqID	:= clsMask._genUniqueID()
+		sessObj	:= clsMask._session(uniqID)
+		return	sessObj
+	}
+
+	; PUBLIC property - read only
+	; TODO - return orig substr instead of T/F?
+	Static HasTag[tagID] {
+		get => this.masklist.Has(tagID)		; does tag exist in mask list?
+	}
+
+	; PUBLIC property - read only
+	; returns orig substr for passed tag (if available), 0 otherwise
+	Static GetOrig[tag] {
+		get => (this.masklist.Has(tag)) ? (this.masklist[tag].origCode) : 0		; return 0 rather than '' for debug purposes
+	}
+
+	; PRIVATE - removes tag record from maskList map
+	static _deleteTag(tag)	; tag := list key
+	{
+		if (clsMask.masklist.has(tag)) {
+			clsMask.maskList.Delete(tag)
+		}
+		return
+	}
+
+	; PRIVATE - generates a unique 6bit hex value
+	; used for unique tag ids and session ids
+	Static _genUniqueID()
+	{
+		while(true) {
+			; make sure lockup (endless loop) does not occur (again)
+			if (clsMask.maskCountT >= clsMask.maxMasks) {
+				MsgBox('Fatal Error: Max number of masks (' clsMask.maxMasks ') have been used.`nEnding program!')
+				ExitApp
+			}
+			; generate random 6 bit hex value (string)
+			rnd	:= Random(1, clsMask.maxMasks), rHx	:= format('{:06}',Format('{:X}', rnd))	; 6 char hex string
+			if (!clsMask.uniqueIdList.has(rHx)) {	; make sure value is not already in use
+				clsMask.uniqueIdList[rHx] := true, clsMask.maskCountT++
+				break
+			}
+		}
+		return rHx
+	}
+
+
+	; PUBLIC - searches for sub-pattern in code and masks/tags the occurences (sub-strings)
+	; not for classes or functions - see clsNodeMap methods for those
+	; param defaults set to empty to avoid errors when custom calls have missing args
+	;	the following are required for any call: code, maskType, pattern
+	;	sessObj is optional
+	static MaskAll(&code:='', maskType:='', pattern:='', sessObj:=unset)
+	{
+		; ensure required args have been provided by caller
+		if (!code || !maskType || !pattern) {											; prevent issues with missing args
+			return
+		}
+
+		; search for targ-pattern, replace matching substrs with tags, save original substr
+		uniqStr := ''
+		mMsg := ''	; DEBUG
+		while (pos := RegExMatch(code, pattern, &m, pos??1))
+		{
+			; record match details
+			mCode := m[], mLen := m.Len
+
+			; setup unique tag id - only generate as needed
+			maskType	:= RegExReplace(maskType, '_$') . '_'							; ensure its last char is underscore
+			uniqStr		:= (uniqStr='')
+						? (maskType clsMask._genUniqueID() '_')
+						: uniqStr
+
+;			collectMatches(masktype, mCode, &mMsg)										; DEBUG
+
+			; create tag, and store orig code using premask object
+			mTag  := uniqueTag(uniqStr A_Index '_P' pos '_L' mLen)						; tag to be used for masking
+			pmObj := clsMask(mCode, mTag, maskType, pattern)							; create new clsMask object
+			clsMask.masklist[mTag] := pmObj												; add object to shared maplist (using unique tag as key)
+
+			; add tag to session if sessObj was provided by caller
+			if (IsSet(sessObj) && Type(sessObj)='clsMask._session') {					; if caller provided a session id (session object)
+				sessObj.AddTag(mTag)													; store tag in that session as well
+			}
+
+			; Replace original code with a unique tag
+			code	:= RegExReplace(code, escRegexChars(mCode), mTag,,1,pos)			; supports position
+			pos		+= StrLen(mTag)														; set position for next search
+		}
+		return
+	}
+
+
+	; PUBLIC - finds tags within code and replaces the tags with original substr
+	; No conversion is performed here by default...
+	; OVERRIDE this method in sub-classes (for custom restores/conversions)
+	; TODO - MAY IMPLEMENT FUNC-CALLBACK PARAM FOR CUSTOM CONVERSIONS/RESTORES...
+	;	(RATHER THAN SUB-CLASS REQUIREMENT)
+	; param defaults set to empty to avoid errors when custom calls have missing args
+	;	the following are required for any call: code, maskType
+	;	sessObj is optional
+	static RestoreAll(&code:='', maskType:='', deleteTag:=true, sessObj:=unset)
+	{
+		; ensure required args have been provided by caller
+		if (!code || !maskType) {												; prevent issues with missing args
+			return
+		}
+
+		; setup unique tag id
+		maskType	:= RegExReplace(maskType, '_$') . '_'						; ensure its last char is underscore
+		nMTag		:= uniqueTag(maskType '\w+')								; needle to find a tag that has maskType identifier
+
+		; search for targ-pattern, replace matching tags with orig substr
+		while (pos := RegExMatch(code, nMTag, &m, pos??1))
+		{
+			mTag	:= m[]														; [working var for tag]
+
+			; if sessObj was provided...
+			;	... restore substrs for tags associated...
+			;	... with that session only
+			if (IsSet(sessObj) && Type(sessObj)='clsMask._session') {			; if caller provided a session id (session obj)...
+				if (!sessObj.HasTag[mTag]) {									; ... if tag is not found in session list, ignore it
+					pos += StrLen(mTag)											; prep for next search
+					continue													; skip to next search
+				}
+			}
+
+			; restore orig substr for current tag
+			oCode	:= clsMask.GetOrig[mTag]									; get orig substr (for current tag) from tag list
+			code	:= StrReplace(code, mTag, oCode)							; replace current (unique) tag with orig substr
+			pos		+= StrLen(oCode)											; prep for next search
+
+			; this is included to enhance performance of map...
+			;	does it help at all??
+			; sometimes removes tags prematurely								; if tags are removed prematurely, try using session masking instead
+			if (deleteTag) {
+				clsMask._deleteTag(mTag)										; clean up - does this enhance performance of map??
+			}
+		}
+		return
+	}
+
+	; OVERRIDE in sub-classes (for custom conversions)
+	static _convertCode(&code)
+	{
+	}
+
+	;################################################################################
+	; PRIVATE
+	class _session
+	{
+	; 2025-06-22 AMB, ADDED - to support masking/access/restore of select set of tags (only)
+	; Intented to be accessed/used excelusively by clsMask
+	; This helps prevent restoring/deleting of tags that may still be in use by other routines
+	; ... each session keeps its own list of tags that belong to that session only
+	; these session tags are also listed in the static/shared clsMask.Masklist map
+
+		_sessList	:= map()						; holds session tag ids
+		_sessID		:= ''							; unique session id
+
+		__new(sessID) {
+			this._sessID := sessID
+		}
+
+		; PUBLIC property - read only
+		HasTag[tagID] {
+			get => this._sessList.Has(tagID)		; does tag exist in session list?
+		}
+
+		; PUBLIC method to add tag to session map
+		AddTag(tagID) {
+			this._sessList[tagID] := true
+		}
+	}
+}
+;################################################################################
+class clsMLLineCont extends clsMask
+{
+; 2025-06-12 AMB, ADDED - WORK IN PROGRESS, may move to ContSection.ahk
+; for multi-line continuation sections, including previous line and optional trailer params
+
+;	; 2025-06-12 AMB, ADDED for consistency
+;	;	but is not used - clsMLLineCont utilizes internal call to parent class (clsMask) for Masking
+;	; PUBLIC - searches for sub-pattern in code and masks/tags the occurences (sub-strings)
+;	; OVERRIDES clsMask MaskAll method
+;	static MaskAll(&code, maskType, pattern) {
+;	}
+
+
+	; PUBLIC - finds tags within code and replaces the tags with converted substr
+	; OVERRIDES clsMask.RestoreAll() method for custom conversion
+	; note: currently not forcing/verifying masktype (tags) as 'MLCSECTM2' here...
+	;	since the assumption is... no code should pass thru here unless it has a 'MLCSECTM2' tag
+	;	if this turns out to be a false assumption, will address it then
+	; 	(don't want the converter code to be too specific, so it can be copy/pasted/used elsewhere)
+	; param defaults set to empty to avoid errors with missing args (although, should not happen)
+	;	the following are required for any call: code, maskType
+	;	sessObj is optional
+	static RestoreAll(&code:='', maskType:='', deleteTag:=true, sessObj:=unset, convert:=true)
+	{
+		; ensure required args have been provided by caller
+		if (!code || !maskType) {											; prevent issues with missing args
+			return
+		}
+
+		; setup unique tag id
+		maskType	:= RegExReplace(maskType, '_$') . '_'					; ensure its last char is underscore
+		nMTag		:= uniqueTag(maskType '\w+')							; needle to find a tag that has maskType identifier
+
+		; search for targ-pattern, replace matching tags with orig substr
+		while (pos := RegExMatch(code, nMTag, &m)) {						; position is unnecessary
+			mTag	:= m[]													; [working var for tag]
+
+			; this is actually accessing clsMask.masklist
+			oCode	:= clsMLLineCont.masklist[mTag].origCode				; get original substr (for current tag) from tag list
+
+			; this masking is general in scope. Need to vet orig code...
+			; send orig substr thru a filter which will...
+			;	... redirect conversion to the appropiate routine
+			if (convert) {
+				clsMLLineCont._convertCode(&oCode)							; [THIS STEP IS THE REASON for the dedicated clsMLLineCont sub-class]
+			}
+			code := StrReplace(code, mTag, oCode)							; replace current tag with original (converted) substr
+
+			; this is included to enhance performance of map...
+			;	does it help at all??
+			; sometimes removes tags prematurely							; if tags are removed prematurely, try using session masking instead
+			if (deleteTag) {
+				clsMLLineCont._deleteTag(mTag)								; clean up - does this enhance performance of map??
+			}
+		}
+		return
+	}
+
+	; Overrides clsMask._convertCode() method for custom conversion
+	Static _convertCode(&code)
+	{
+		code := CSect.FilterAndConvert(code)								; 2025-06-22 - redirected conversion (should be permanent)
+	}
+
+}
 ;################################################################################
 class clsNodeMap	; 'block map' might be better term
 {
@@ -198,7 +841,7 @@ class clsNodeMap	; 'block map' might be better term
 				if ((p:=RegExMatch(code, gPtn_CLASS, &m, pos))=pos)				; node position is known and specific
 				{
 					mCopy := m[]												; is premasked code - copy to prep for v2 conversion
-					MaskR(&mCopy, 'C&S')										; restore comments/strings (should now be orig)
+					Mask_R(&mCopy, 'C&S')										; restore comments/strings (should now be orig)
 					node.ConvCode := _convertLines(mCopy)						; now convert orig code to v2, store for final restoration
 					; replace block of premasked-code with tag
 					code := RegExReplace(code, escRegexChars(m[]), mTag,,1,pos)	; 2025-06-12, part of Fix #333
@@ -212,7 +855,7 @@ class clsNodeMap	; 'block map' might be better term
 				if ((p:=RegExMatch(code, gPtn_FUNC, &m, pos))=pos)				; node position is known and specific
 				{
 					mCopy := m[]												; is premasked code - copy to prep for v2 conversion
-					MaskR(&mCopy, 'C&S')										; restore comments/strings (should now be orig)
+					Mask_R(&mCopy, 'C&S')										; restore comments/strings (should now be orig)
 					node.ConvCode := _convertLines(mCopy)						; now convert orig code to v2, store for final restoration
 					; replace block of premasked-code with tag
 					code := RegExReplace(code, escRegexChars(m[]), mTag,,1,pos)	; 2025-06-12, part of Fix #333
@@ -226,11 +869,11 @@ class clsNodeMap	; 'block map' might be better term
 	; converts original code in the process, stores it to be retrieved by Restore_Blocks()
 	static Mask_Blocks(&code)
 	{
-		MaskT(&code, 'C&S')										; mask comments/strings - might be redundant
+		Mask_T(&code, 'C&S')										; mask comments/strings - might be redundant
 			; mask classes and functions
 			clsNodeMap.BuildNodeMap(code)						; prep for masking/conversion
 			clsNodeMap.maskAndConvertNodes(&code)
-		MaskR(&code, 'C&S')										; restore comments/strings
+		Mask_R(&code, 'C&S')										; restore comments/strings
 		return
 	}
 
@@ -291,283 +934,6 @@ class clsNodeMap	; 'block map' might be better term
 	}
 }
 ;################################################################################
-class clsMask
-{
-; Class responisible for masking (tagging/restoring) code
-; Blocks of code are passed to MaskAll(), where targetted pattern substrings will be replaced with unique tags...
-;	... the passed code is accompanied with a regex needle that identifies the targeted substrings
-;	... the extracted substrings are then stored, and replaced with a unique tags (hiding them from conversion routines)
-; When restoration is needed, the tagged-code is sent to RestoreAll() where...
-;	... (unique) tags will be replaced with original code, but...
-;	... as part of the restoration process, the substrings are usually sent to a custom converter prior to restoration.
-; This class should be able to handle just about any type of masking/tagging desired
-;	It just needs a well formed regex needle to identify the taggeted subsrings, and conversion func if required
-;	These needles can be as simple or complex as your talents allow
-;	Contact one of the developers/contributers, if you would like assisitance with a custom needle
-
-	codePtn		:= ''
-	maskType	:= ''
-	origcode	:= ''
-	mTag		:= ''
-
-	__new(code, mTag, maskType, pattern)
-	{
-		this.origCode	:= code
-		this.mTag		:= mTag
-		this.maskType	:= maskType
-		this.codePtn	:= pattern
-	}
-
-	;################################################################################
-
-	static masklist		:= map()			; holds all premask objects, origCode/tags
-	static uniqueIdList	:= map()			; ensures tags have unique ID
-	;static maxMasks	:= 16**4			; 65K - CAUSED BUG!! NOT ENOUGH FOR HEAVY TESTING
-	static maxMasks		:= 16**6			; 16.7 million (must be enough for heavy testing!!!)
-	static maskCountT	:= 0				; 2025-06-12 - to prevent endless-loop bug
-
-
-	; PUBLIC - establishes new masking session using clsMask._session
-	; this can be used to control which tags are accessed/restored/deleted
-	static NewSession()
-	{
-		uniqID	:= clsMask._genUniqueID()
-		sessObj	:= clsMask._session(uniqID)
-		return	sessObj
-	}
-
-	; PUBLIC property - read only
-	; TODO - return orig substr instead of T/F?
-	Static HasTag[tagID] {
-		get => this.masklist.Has(tagID)		; does tag exist in mask list?
-	}
-
-	; PUBLIC property - read only
-	; returns orig substr for passed tag (if available), 0 otherwise
-	Static GetOrig[tag] {
-		get => (this.masklist.Has(tag)) ? (this.masklist[tag].origCode) : 0		; return 0 rather than '' for debug purposes
-	}
-
-	; PRIVATE - removes tag record from maskList map
-	static _deleteTag(tag)	; tag := list key
-	{
-		if (clsMask.masklist.has(tag)) {
-			clsMask.maskList.Delete(tag)
-		}
-		return
-	}
-
-	; PRIVATE - generates a unique 6bit hex value
-	; used for unique tag ids and session ids
-	Static _genUniqueID()
-	{
-		while(true) {
-			; make sure lockup (endless loop) does not occur (again)
-			if (clsMask.maskCountT >= clsMask.maxMasks) {
-				MsgBox('Fatal Error: Max number of masks (' clsMask.maxMasks ') have been used.`nEnding program!')
-				ExitApp
-			}
-			; generate random 6 bit hex value (string)
-			rnd	:= Random(1, clsMask.maxMasks), rHx	:= format('{:06}',Format('{:X}', rnd))	; 6 char hex string
-			if (!clsMask.uniqueIdList.has(rHx)) {	; make sure value is not already in use
-				clsMask.uniqueIdList[rHx] := true, clsMask.maskCountT++
-				break
-			}
-		}
-		return rHx
-	}
-
-
-	; PUBLIC - searches for sub-pattern in code and masks/tags the occurences (sub-strings)
-	; not for classes or functions - see clsNodeMap methods for those
-	; param defaults set to empty to avoid errors when custom calls have missing args
-	;	the following are required for any call: code, maskType, pattern
-	;	sessObj is optional
-	static MaskAll(&code:='', maskType:='', pattern:='', sessObj:=unset)
-	{
-		; ensure required args have been provided by caller
-		if (!code || !maskType || !pattern) {											; prevent issues with missing args
-			return
-		}
-
-		; search for targ-pattern, replace matching substrs with tags, save original substr
-		pos	 := 1, uniqStr := ''
-		mMsg := ''	; DEBUG
-		while (pos := RegExMatch(code, pattern, &m, pos))
-		{
-			; record match details
-			mCode := m[], mLen := m.Len
-
-			; setup unique tag id - only generate as needed
-			maskType	:= RegExReplace(maskType, '_$') . '_'							; ensure its last char is underscore
-			uniqStr		:= (uniqStr='')
-						? (maskType clsMask._genUniqueID() '_')
-						: uniqStr
-
-			; create tag, and store orig code using premask object
-			mTag  := uniqueTag(uniqStr A_Index '_P' pos '_L' mLen)						; tag to be used for masking
-			pmObj := clsMask(mCode, mTag, maskType, pattern)							; create new clsMask object
-			clsMask.masklist[mTag] := pmObj												; add object to shared maplist (using unique tag as key)
-
-			; add tag to session if sessObj was provided by caller
-			if (IsSet(sessObj) && Type(sessObj)='clsMask._session') {					; if caller provided a session id (session object)
-				sessObj.AddTag(mTag)													; store tag in that session as well
-			}
-
-			; Replace original code with a unique tag
-			code	:= RegExReplace(code, escRegexChars(mCode), mTag,,1,pos)			; supports position
-			pos		+= StrLen(mTag)														; set position for next search
-		}
-	}
-
-
-	; PUBLIC - finds tags within code and replaces the tags with original substr
-	; No conversion is performed here by default...
-	; OVERRIDE this method in sub-classes (for custom restores/conversions)
-	; TODO - MAY IMPLEMENT FUNC-CALLBACK PARAM FOR CUSTOM CONVERSIONS/RESTORES...
-	;	(RATHER THAN SUB-CLASS REQUIREMENT)
-	; param defaults set to empty to avoid errors when custom calls have missing args
-	;	the following are required for any call: code, maskType
-	;	sessObj is optional
-	static RestoreAll(&code:='', maskType:='', deleteTag:=true, sessObj:=unset)
-	{
-		; ensure required args have been provided by caller
-		if (!code || !maskType) {												; prevent issues with missing args
-			return
-		}
-
-		; setup unique tag id
-		maskType	:= RegExReplace(maskType, '_$') . '_'						; ensure its last char is underscore
-		nMTag		:= uniqueTag(maskType '\w+')								; needle to find a tag that has maskType identifier
-
-		; search for targ-pattern, replace matching tags with orig substr
-		pos := 1
-		while (pos := RegExMatch(code, nMTag, &m, pos))
-		{
-			mTag	:= m[]														; [working var for tag]
-
-			; if sessObj was provided...
-			;	... restore substrs for tags associated...
-			;	... with that session only
-			if (IsSet(sessObj) && Type(sessObj)='clsMask._session') {			; if caller provided a session id (session obj)...
-				if (!sessObj.HasTag[mTag]) {									; ... if tag is not found in session list, ignore it
-					pos += StrLen(mTag)											; reposition search pointer
-					continue													; skip to next mact
-				}
-			}
-
-			; restore orig substr for current tag
-			oCode	:= clsMask.GetOrig[mTag]									; get original substr (for current tag) from tag list
-			code	:= StrReplace(code, mTag, oCode)							; replace current (unique) tag with original substr
-			pos		+= StrLen(oCode)											; prep for next search
-
-			; this is included to enhance performance of map...
-			;	does it help at all??
-			; sometimes removes tags prematurely								; if tags are removed prematurely, try using session masking instead
-			if (deleteTag) {
-				clsMask._deleteTag(mTag)										; clean up - does this enhance performance of map??
-			}
-		}
-	}
-
-	; OVERRIDE in sub-classes (for custom conversions)
-	static _convertCode(&code)
-	{
-	}
-
-	;################################################################################
-	; PRIVATE
-	class _session
-	{
-	; 2025-06-22 AMB, ADDED - to support masking/access/restore of select set of tags
-	; Intented to be accessed/used excelusively by clsMask
-	; This helps prevent restoring/deleting of tags that may still be in use by other routines
-	; each session keeps its own list of tags that belong to that session only
-	; these session tags are also listed in the static/shared clsMask.Masklist map
-
-		_sessList	:= map()						; holds session tag ids
-		_sessID		:= ''							; unique session id
-
-		__new(sessID) {
-			this._sessID := sessID
-		}
-
-		; PUBLIC property - read only
-		HasTag[tagID] {
-			get => this._sessList.Has(tagID)		; does tag exist in session list?
-		}
-
-		; PUBLIC method to add tag to session map
-		AddTag(TagID) {
-			this._sessList[TagID] := true
-		}
-	}
-}
-;################################################################################
-class clsMLLineCont extends clsMask
-{
-; 2025-06-12 AMB, ADDED - WORK IN PROGRESS, may move to ConvContSect.ahk
-; for multi-line continuation sections, including previous line and optional trailer params
-
-;	; 2025-06-12 AMB, ADDED for consistency
-;	;	but is not used - clsMLLineCont utilizes internal call to parent class (clsMask) for Masking
-;	; PUBLIC - searches for sub-pattern in code and masks/tags the occurences (sub-strings)
-;	; OVERRIDES clsMask MaskAll method
-;	static MaskAll(&code, maskType, pattern) {
-;	}
-
-	; PUBLIC - finds tags within code and replaces the tags with converted substr
-	; OVERRIDES clsMask.RestoreAll() method for custom conversion
-	; note: currently not forcing/verifying masktype (tags) as 'MLCSECTM2' here...
-	;	since the assumption is... no code should pass thru here unless it has a 'MLCSECTM2' tag
-	;	if this turns out to be a false assumption, will address it then
-	; 	(don't want the converter code to be too specific, so it can be copy/pasted/used elsewhere)
-	; param defaults set to empty to avoid errors with missing args (although, should not happen)
-	;	the following are required for any call: code, maskType
-	;	sessObj is optional
-	static RestoreAll(&code:='', maskType:='', deleteTag:=true, sessObj:=unset, convert:=true)
-	{
-		; ensure required args have been provided by caller
-		if (!code || !maskType) {											; prevent issues with missing args
-			return
-		}
-
-		; setup unique tag id
-		maskType	:= RegExReplace(maskType, '_$') . '_'					; ensure its last char is underscore
-		nMTag		:= uniqueTag(maskType '\w+')							; needle to find a tag that has maskType identifier
-
-		; search for targ-pattern, replace matching tags with orig substr
-		while (pos := RegExMatch(code, nMTag, &m)) {						; position is unnecessary
-			mTag	:= m[]													; [working var for tag]
-
-			; this is actually accessing clsMask.masklist
-			oCode	:= clsMLLineCont.masklist[mTag].origCode				; get original substr (for current tag) from tag list
-
-			; this masking is general in scope. Need to vet orig code...
-			; send orig substr thru a filter which will...
-			;	... redirect conversion to the appropiate routine
-			if (convert) {
-				clsMLLineCont._convertCode(&oCode)							; [THIS STEP IS THE REASON for the dedicated clsMLLineCont sub-class]
-			}
-			code := StrReplace(code, mTag, oCode)							; replace current (unique) tag with original substr
-
-			; this is included to enhance performance of map...
-			;	does it help at all??
-			; sometimes removes tags prematurely							; if tags are removed prematurely, try using session masking instead
-			if (deleteTag) {
-				clsMLLineCont._deleteTag(mTag)								; clean up - does this enhance performance of map??
-			}
-		}
-	}
-
-	; Overrides clsMask._convertCode() method for custom conversion
-	Static _convertCode(&code)
-	{
-		code := CSect.FilterAndConvert(code)								; 2025-06-22 - redirected conversion (should be permanent)
-	}
-
-}
-;################################################################################
 								 _getNodeNameList(code, nodeType, parentName:='')
 ;################################################################################
 {
@@ -607,7 +973,7 @@ class clsMLLineCont extends clsMask
 ; Those nodes contain the details of the particualr block
 ; 	additional details can then be extracted from those nodes
 
-	MaskT(&code, 'C&S')								; mask comments/strings
+	Mask_T(&code, 'C&S')								; mask comments/strings
 	clsNodeMap.BuildNodeMap(code)					; build node map
 
 	; go thru node list and extract function names
@@ -642,319 +1008,6 @@ class clsMLLineCont extends clsMask
 ;	use -1 to return func names that are not top level (only child-func names)
 
 	return _getNodeNameList(code, 'FUNC', parentName)
-}
-;################################################################################
-									 MaskT(&code, targ, option:=0, sessID:=unset)
-;################################################################################
-{
-; 2025-06-22 AMB, ADDED as central hub for tagging code (rather than dedicated funcs)
-;	Replaces targetted SUBSTRINGS, within passed code, with UNIQUE TAGS
-; the multiple targ 'case' strings below are for convenience...
-;	they can be reduced to a single exclusive string if desired...
-;	(I can't always remember which string should be used, so convering more than one option. lol)
-;	TODO - might just set exclusive strings and a popup in Default when 'targ' is unknown
-; the option param can mean different things for different targets - see comments for details
-;	if targ is custom (not covered in case-list below), use option as param for custom regex needle
-;	TODO - provide a list of what the option param does for each targ type
-
-	switch targ,false	; case-insensitive
-	{
-		case	'C&S':										; COMMENTS AND STRINGS...
-				MaskT(&code,	 'BC',	,sessID?)			; 	recursion call - mask block comments
-				MaskT(&code,	 'LC',	,sessID?)			; 	recursion call - mask line  comments
-				MaskT(&code,	 'QS',	,sessID?)			; 	recursion call - mask quoted-strings (1line)
-				if (option)	; whether to mask ML strings	; if mask ML strings ?
-					MaskT(&code, 'MLQS',,sessID?)			; 	recursion call - mask quoted-strings (ML)
-
-		case	'BC':										; BLOCK COMMENTS
-				clsMask.MaskAll(&code, 'BC'
-					, gPtn_BC, sessID?)
-
-		case	'LC':										; LINE COMMENTS
-				clsMask.MaskAll(&code, 'LC'
-					, gPtn_LC, sessID?)
-
-		case	'HK','HOTKEY':								; HOT KEYS (declaration)
-				nGblHK := '(?im)' gPtn_HOTKEY				; support searching script globally
-;				nGblHK := gPtn_HOTKEY						; support searching script globally
-				clsMask.MaskAll(&code, 'HK'
-					, nGblHK, sessID?)
-
-		case	'HS','HOTSTR':								; HOT STRINGS (declaration)
-				nGblHS := '(?im)' gPtn_HOTSTR				; support searching script globally
-				clsMask.MaskAll(&code, 'HS'
-					, nGblHS, sessID?)
-
-		case	'LBL','LABELS':								; LABELS (declaration)
-;				nGblLabel := '(?im)' gPtn_LblDecl			; support searching script globally
-				clsMask.MaskAll(&code, 'LBL'
-					, gPtn_LblDecl, sessID?)				; currently already supports (?im)
-
-		case	'KV','KVO','KVP','KEYVAL':					; KEY/VAL pair/objects
-				clsMask.MaskAll(&code, 'KVO'
-					, gPtn_KVO, sessID?)
-
-		case	'DQ','DQSTR':								; QUOTED-STRINGS (1line, "" only)
-				clsMask.MaskAll(&code, 'DQ'
-					, gPtn_DQ_1L, sessID?)
-
-		case	'SQ','SQSTR':								; QUOTED-STRINGS (1line, '' only)
-				clsMask.MaskAll(&code, 'SQ'
-					, gPtn_SQ_1L, sessID?)
-
-		case	'QS','QSTR':								; QUOTED-STRINGS (1line, "" and/or '')
-				clsMask.MaskAll(&code, 'QS'
-					, gPtn_QS_1L, sessID?)
-
-		case	'MLQS','MLSTR':								; QUOTED-STRINGS (multi-line)
-				clsMask.MaskAll(&code, 'MLQS'
-					, gPtn_QS_MLPth, sessID?)
-
-		case	'V1MLS','V1LEGMLS':							; V1 LEGACY (non-expression) MULTI-LINE STRING
-				clsMask.MaskAll(&code, 'V1LEGMLS'
-					, gPtn_V1L_MLSV, sessID?)
-
-		case	'STR','STRINGS':							; STRINGS (1line and ML)
-				MaskT(&code,	 'QS',	,sessID?)			; 	recursion call - mask quoted-strings (1line)
-				MaskT(&code,	 'MLQS',,sessID?)			; 	recursion call - mask quoted-strings (ML)
-
-		case	'CS','CSECT':								; CONTINUATION SECTIONS (ANY)
-				; 2025-06-22 - DONT MERGE THIS IDEA YET
-				;MaskT(&code,	'CS1',	,sessID?)			; 	recursion call - mask 'method 1' Cont Sects
-				MaskT(&code, 	'CS2',	,sessID?)			; 	recursion call - mask 'method 2' Cont Sects
-
-		case	'CS1','CSECT1':								; CONTINUATION SECTIONS (METHOD 1)
-				MaskT(&code,	'C&S',	,sessID?)			; 	recursion call - mask comments/strings (NOT ML strings!)
-				MaskT(&code,	'HK',	,sessID?)			; 	recursion call - mask hotkey declarations
-				MaskT(&code,	'HS',	,sessID?)			; 	recursion call - mask hotstring declarations
-				MaskT(&code,	'LBL',	,sessID?)			; 	recursion call - mask label declarations
-				clsMask.MaskAll(&code, 'MLCSECTM1'
-					, gPtn_CSectM1, sessID?)
-				MaskR(&code,	'LBL',	,sessID?)			; 	restore label declarations
-				MaskR(&code,	'HS',	,sessID?)			; 	restore hotstring declarations
-				MaskR(&code,	'HK',	,sessID?)			; 	restore hotkey declarations
-				MaskR(&code,	'C&S',	,sessID?)			; 	restore comments/strings
-
-		case	'CS2','CSECT2':								; CONTINUATION SECTIONS (METHOD 2)
-				MaskT(&code,	'C&S',	,sessID?)			; 	recursion call - mask comments/strings (NOT ML strings!)
-				clsMask.MaskAll(&code, 'MLCSECTM2'
-					, gPtn_CSectM2, sessID?)
-
-		case	'FC','FCALL':								; FUNCTION CALLS
-				if (!IsSet(sessID)) {
-					sessID := clsMask.NewSession()
-				}
-				MaskT(&code,	'STR',	,sessID?)			; 	recursion call - mask strings
-				clsMask.MaskAll(&code, 'FC'
-					, gPtn_FuncCall, sessID?)
-				if (option) {								; if Restore-strings requested ?
-					MaskR(&code, 'STR',	,sessID?)			;	restore all strings [FROM TEMP SESSION]
-				}
-
-		case	'BLOCKS', 'FUNC&CLS':						; FUNCTIONS AND CLASSES
-				clsNodeMap.Mask_Blocks(&code)
-
-		default:
-				; targ not found in case-list above...
-				; ... so it may be a custom target for custom masking...
-				; submit it as custom masking, not covered above
-				; NOTE: needle should be provided thru OPTION param
-				customNeedle := option	; making it clear
-				clsMask.MaskAll(&code, targ
-					, customNeedle, sessID?)
-	}
-	return
-}
-;################################################################################
-				   MaskR(&code, targ, delTag:=true, sessID:=unset, convert:=true)
-;################################################################################
-{
-; 2025-06-22 AMB, ADDED as central hub for restoring substrings that were masked/tagged with MaskT
-;	Replaces targetted TAGS, within passed code, with ORIG substrings.
-;	Also performs conversion (indirectly), of that restored substr, in most cases
-; the multiple targ 'case' strings below are for convenience...
-;	they can be reduced to a single exclusive string if desired...
-;	(I can't always remember which string should be used, so convering more than one option. lol)
-;	TODO - might just set exclusive strings and a popup in Default when 'targ' is unknown
-; delTag param - whether to remove the tag from the global (static) tag list or not
-;	removing the tag from the list is the default behavior...
-;	... but this should be disabled for a call, if the tag will be needed again later, for restoration
-; convert param - whether to convert code as part of masking restore
-;	has no relevance with clsMask.RestoreAll() since this code is not converted
-;	but sub-class (custom) RestoreAll()'s use it (clsMLLineCont.RestoreAll at the moment)
-
-	switch targ,false	; case-insensitive
-	{
-		case	'C&S','S&C':								; COMMENTS AND STRINGS...
-				; ORDER MATTERS - reverse order of MASKT
-				MaskR(&code, 'MLQS',delTag, sessID?)		; 	recursion call - restore quoted-strings (ML)
-				MaskR(&code, 'QS',	delTag, sessID?)		; 	recursion call - restore quoted-strings (1line)
-				MaskR(&code, 'LC',	delTag, sessID?)		; 	recursion call - restore line  comments
-				MaskR(&code, 'BC',	delTag, sessID?)		; 	recursion call - restore block comments
-
-		case	'BC':										; BLOCK COMMENTS
-				clsMask.RestoreAll(&code, 'BC'
-					, delTag, sessID?)
-
-		case	'LC':										; LINE COMMENTS
-				clsMask.RestoreAll(&code, 'LC'
-					, delTag, sessID?)
-
-		case	'HK','HOTKEY':								; HOT KEYS (declaration)
-				clsMask.RestoreAll(&code, 'HK'
-					, delTag, sessID?)
-
-		case	'HS','HOTSTR':								; HOT STRINGS (declaration)
-				clsMask.RestoreAll(&code, 'HS'
-					, delTag, sessID?)
-
-		case	'LBL','LABELS',:							; LABELS (declaration)
-				clsMask.RestoreAll(&code, 'LBL'
-					, delTag, sessID?)
-
-		case	'KV','KVO','KVP','KEYVAL':					; KEY/VAL pair/objects
-				clsMask.RestoreAll(&code, 'KVO'
-					, delTag, sessID?)
-
-		case	'DQ','DQSTR':								; QUOTED-STRINGS (1line, "" only)
-				clsMask.RestoreAll(&code, 'DQ'
-					, delTag, sessID?)
-
-		case	'SQ','SQSTR':								; QUOTED-STRINGS (1line, '' only)
-				clsMask.RestoreAll(&code, 'SQ'
-					, delTag, sessID?)
-
-		case	'QS', 'QSTR':								; QUOTED-STRINGS (1line, "" and/or '')
-				clsMask.RestoreAll(&code, 'QS'
-					, delTag, sessID?)
-
-		case	'MLQS','MLSTR':								; QUOTED-STRINGS (multi-line)
-				clsMask.RestoreAll(&code, 'MLQS'
-					, delTag, sessID?)
-
-		case	'V1MLS','V1LEGMLS':							; V1 LEGACY (non-expression) MULTI-LINE STRING
-				clsMask.RestoreAll(&code, 'V1LEGMLS'
-					, delTag, sessID?)
-
-		case	'STR', 'STRINGS':							; STRINGS (1line and ML)
-				; ORDER MATTERS - reverse order of MASKT
-				MaskR(&code, 'MLQS',delTag, sessID?)		; 	recursion call - restore quoted-strings (ML)
-				MaskR(&code, 'QS',	delTag, sessID?)		; 	recursion call - restore quoted-strings (1line)
-
-		case	'CS','CSECT':								; CONTINUATION SECTIONS (ANY)
-				; reverse order of MaskT
-				MaskR(&code, 'CS2', delTag, sessID?)		; 	recursion call - restore method 2 cont sects
-;				MaskR(&code, 'CS1', delTag, sessID?)		; 	recursion call - restore method 1 cont sects
-
-		case	'CS1','CSECT1':								; CONTINUATION SECTIONS (METHOD 1)
-				; Subclass providing custom restore
-				clsMLLineCont.RestoreAll(&code, 'MLCSECTM1'
-					, delTag, sessID?, convert)				; will convert as part of restore
-
-		case	'CS2','CSECT2':								; CONTINUATION SECTIONS (METHOD 2)
-				; Subclass providing custom restore
-				clsMLLineCont.RestoreAll(&code, 'MLCSECTM2'
-					, delTag, sessID?, convert)				; will convert as part of restore
-
-		case	'FC','FCALL':								; FUNCTION CALLS
-				clsMask.RestoreAll(&code, 'FC'
-					, delTag, sessID?)
-				MaskR(&code, 'STR',	,sessID?)
-
-		case	'BLOCKS', 'FUNC&CLS':						; FUNCTIONS AND CLASSES
-				clsNodeMap.Restore_Blocks(&code)
-
-		default:
-				; targ not found in case-list above...
-				; ... so it may be a custom target...
-				; submit is as custom restore, not covered above
-				clsMask.RestoreAll(&code, targ
-					, delTag, sessID?)
-	}
-	return
-}
-;################################################################################
-															RemovePtn(code, targ)
-;################################################################################
-{
-; 2025-06-22 AMB, ADDED as central hub for removing targ substrings
-;	Removes target substrings from passed code
-
-	switch targ, false	; case-insensitive
-	{
-		case 'BC':
-			return RegExReplace(code, gPtn_BC)				; remove block comments
-
-		case 'LC':
-			; Mask strings first to prevent interference
-			sess := clsMask.NewSession()					; temp masking session
-			MaskT(&code, 'STR',, sess)						; mask strings, within isolated session
-				code := RegExReplace(code, gPtn_LC)			; remove line  comments
-			MaskR(&code, 'STR',, sess)						; restore strings, within isolated session
-			return code
-
-		case 'C', 'COM', 'LC&BC', 'COMMENTS':
-			code := RemovePtn(code, 'BC')					; remove block comments
-			return	RemovePtn(code, 'LC')					; remove line  comments
-
-		case 'V1LEGMLS':
-			return RegExReplace(code, gPtn_V1L_MLSV)		; remove v1 legacy (non-expression) ML string assignments
-
-		default:
-			MsgBox "RemovePtn - UNKNOWN TARG [" targ "]"
-			; TODO - provide a list of valid 'targ' strings
-	}
-	return
-}
-;################################################################################
-															 uniqueTag(uniqueStr)
-;################################################################################
-{
-; 2025-06-12 AMB, ADDED - returns unique tag based on passed unique-string
-;	see top of this file for global var declaration
-;	global	  gTagChar	:= chr(0x2605) ; '★'
-;			, gTagPfx	:= '#TAG' gTagChar
-;			, gTagTrl	:= gTagChar '#'
-
-	return gTagPfx . uniqueStr . gTagTrl
-}
-;################################################################################
-											  hasTag(srcStr := '', tagType := '')
-;################################################################################
-{
-; 2025-06-12 AMB, ADDED
-; Purpose: To determine whether srcStr has...
-;	A. a very specific tag		(tagType := exact tag to search for)
-;		if srcStr is specified, this will only return a positive result if tag is found within srcStr
-;		leave srcStr blank to guarantee a return of orig sub-string from maskList, (even if tag is not found in srcStr)
-;	B. a specific tag type		(tagtype := string identifier for a tag category)
-;	C. any mask tag in general	(tagType := leave empty)
-
-	; make sure tagType is a valid tag
-
-	; A: find very specific mask-tag - return orig sub-string if found in maplist, false otherwise
-	; (note: if srcStr is specified (not blank), will only return orig sub-string if tag is ALSO found in srcStr)
-	;	leave srcStr blank to return orig sub-String regardless
-	validTag	:= '(?i)' uniqueTag('\w+')
-	if ((tagType ~= validTag) && clsMask.HasTag[tagType]) {						; if tag found in masklist...
-		oCode	:= clsMask.GetOrig[tagType]										; ... get orig sub-string
-		; if srcStr specified...
-		;	... only return orig sub-string when tag is found in srcStr
-		; if srcStr NOT specified, return orig sub-string in any case
-		retVal	:= (srcStr) ? ((srcStr ~= tagType) ? oCode : false) : oCode
-		return	retVal
-	}
-
-	; setup for B: or C:
-	tagType		:= RegExReplace(tagType, '_$') . '_'							; ensure its last char is underscore
-	nTagType	:= '(?i)' uniqueTag(tagType '\w+')								; build tagType needle
-
-	; B: find specific type of mask-tag
-	; C: find any mask-tag in general
-	; return first matching tag found, false otherwise
-	retval		:= (srcStr) ? (RegExMatch(srcStr, nTagType, &mTag) ? mTag[] : false) : false
-	return		retVal
-;	return !!(srcStr ~= tagType)		; T or F
 }
 ;################################################################################
 															escRegexChars(srcStr)
@@ -1035,14 +1088,14 @@ class clsMLLineCont extends clsMask
 	neck		:= '(?<neck>(?:(?&tag)|\h*+\R)++)'											; any tags or CRLFs before opening parenthesis
 	mlOpt1		:= '(?:(?:(?<TJ>[LR]TRIM[^\v\)]*+|JOIN[^\v\)]*+)'							; ML string options (optional)
 	mlOpt2		:= '(?:(?:C(?:OM(?:MENTS?)?)?)?(?:\h(?&TJ))?' TG '*+)'						; ML string comment or tags (optional)
-	mlOpts		:= '(?<mlOpts>(?<=^|\v)\h*+(?<!``)\(\h*+' mlOpt1 '|' mlOpt2 ')))\h*+'		; all options for declaration line
+	mlOpts		:= '(?<mlOpts>(?<=^|\v)\h*+(?<!``)\(\h*+' mlOpt1 '|' mlOpt2 ')))\h*+'		; all options for definition/declaration line
 	lines		:= '(?<lines>\R*+[^\v]++)+?'												; lines that follow open parenthesis (lazy - one at a time)
 	cls			:= '(?<cls>\s*+(?<!``)\))'													; closing parenthesis
 	guts		:= '(?<guts>' cls '|' lines ')'												; all lines, then close
 	parBlk		:= '(?<ParBlk>' mlOpts '\R' guts '(?(-2)|(?&cls)))'							; full body from open to close parentheses
-	fullBlk		:= '(?im)(?<FullBlk>' . neck . parBlk ')'									; full multi-line block, No Trailer
-	fullT		:= fullBlk . '(?<trail>.*+)'												; full multi-line block, including general neck
-	define		:= '(?im)(^|\R)' mlOpts . '$'
+	fullBlk		:= '(?im)(?<FullBlk>' . neck . parBlk ')'									; full multi-line block, including general neck (NO Trailer)
+	fullT		:= fullBlk . '(?<trail>.*+)'												; full multi-line block, adds/allows trailer
+	define		:= '(?im)(^|\R)' mlOpts . '$'												; can be used as signature to identiy ML string block
 	nextLine	:= '[^\v]*+\R?'																; used in MaskAll of ML_Parenth class - for custom masking
 	closer		:= '^(\h*(?<!``)\))[^\v]*+'													; used in MaskAll of ML_Parenth class - for custom masking
 	return		{nOpt:opt,full:fullBlk,fullT:fullT,ParBlk:ParBlk,define:define,nextLine:nextLine,closer:closer}
@@ -1164,6 +1217,23 @@ class clsMLLineCont extends clsMask
 	return		pattern
 }
 ;################################################################################
+																buildPtn_Switch()
+;################################################################################
+{
+; CLASS-BLOCK pattern
+; 2024-07-07 AMB, UPDATED comment needle to bypass escaped semicolon
+
+	opt 		:= '(?im)'												; pattern options
+	LC			:= '(?:' gnLineComment ')'								; line comment (allows lead ws to be consumed already)
+	TG			:= '(?:' uniqueTag('\w++') ')'							; mask tags
+	CT			:= '(?:' . LC . '|' . TG . ')*+'						; optional line comment OR tag
+	TCT			:= '(?>\s*+' . CT . ')*+'								; optional trailing comment or tag (MUST BE ATOMIC)
+	declare		:= '^\h*+\bSWITCH\b\h++\(?\h*(?<val>\w*)\h*\)?'			; declare	- identifies command and captures value
+	brcBlk		:= '\s*+(?<brcBlk>\{(?<BBC>(?>[^{}]|\{(?&BBC)})*+)})'	; brcBlk	- braces block, BBC - block contents (allows multi-line span)
+	pattern		:= opt . '(?<declare>' declare . TCT . ')' . brcBlk
+	return		pattern
+}
+;################################################################################
 																  buildPtn_FUNC()
 ;################################################################################
 {
@@ -1216,9 +1286,6 @@ class clsMLLineCont extends clsMask
 	eBB		:= '(?<eBB>\{(?<eBBC>(?>[^{}]|\{(?&eBBC)})*+)})'					; eBB		- (optional) block with braces, eBBC - brace block contents
 	eBlk	:= '(?<eBlk>\s++(?:(?:' . eBB . ')|(?:' . noBB . ')))'				; eBlk		- block (either brace block or single line)
 	eStr	:= '(?<eStr>\s*+\bELSE\b' . eBLK . ')'								; eStr		- ELSE block string
-;	pattern := opt . ifStr . ifBLCT . '(' . efStr . efBLCT . '|' . eStr . ')*'
-
-;	A_Clipboard := pattern
 
 	; 2024-? - simplified version - work in progress
 	pattern := '(?im)^\h*+\bIF\b(?<all>(?>(?>\h*+(!?\((?>[^)(]++|(?-1))*+\))|[^;&|{\v]++|\s*+(?>and|or|&&|\|\|))++)(?<brc>\s*+\{(?>[^}{]++|(?-1))*+\}))((\s*+\bELSE IF\b(?&all))*+)((\s*+\bELSE\b(?&brc))*+)'
@@ -1259,7 +1326,7 @@ class clsMLLineCont extends clsMask
 
 	; work on guts of body
 	uGuts	:= oGuts														; updated/new guts - will be changed below
-	MaskR(&uGuts, 'str')													; remove masking from strings within guts only
+	Mask_R(&uGuts, 'str')													; remove masking from strings within guts only
 	uGuts	:= '"' uGuts '"'												; add surounding double-quotes to guts (to prep for next step)
 	v2_DQ_Literals(&uGuts)													; change "" to `" within guts only
 	uGuts	:= RegExReplace(uGuts, '(?s)^"(.+)"$', '$1')					; remove surrounding DQs (to prep for next step)
@@ -1309,7 +1376,7 @@ class clsMLLineCont extends clsMask
 		body := RegExReplace(body, '(?s)(\(\R)', '$1""',,1)					; add empty string quotes below opening parenthesis
 	}
 
-	MaskR(&body, 'C&S')														; restore comments/strings
+	Mask_R(&body, 'C&S')														; restore comments/strings
 	return body
 }
 
@@ -1324,14 +1391,14 @@ class clsMLLineCont extends clsMask
 ; Purpose: convert double-quote literals from "" (v1) to `" (v2) format
 ;	handles all of them, whether in function call params or not
 
-	MaskT(&lineStr, 'DQStr')									; tag any DQ strings, so they are easy to find
+	Mask_T(&lineStr, 'DQStr')									; tag any DQ strings, so they are easy to find
 
 	; grab each string mask one at a time from lineStr
 	nDQTag		:= gTagPfx 'DQ_\w+' gTagTrl						; [regex for DQ string tags]
 	pos			:= 1
 	While (pos	:= RegexMatch(lineStr, nDQTag, &mTag, pos)) {	; find each DQ string tag (masked-string)
 		tagStr	:= mTag[]										; [temp var to handle tag and replacement]
-		MaskR(&tagStr,'DQStr')									; get orig string for current tag
+		Mask_R(&tagStr,'DQStr')									; get orig string for current tag
 		tagStr	:= SubStr(tagStr, 2, -1)						; strip outside DQ chars from each end of extracted string
 		tagStr	:= RegExReplace(tagStr, '""', '``"')			; replace all remaining "" with `"
 		tagStr	:= '"' tagStr '"'								; add DQ chars back to each end

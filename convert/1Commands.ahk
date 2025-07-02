@@ -77,7 +77,7 @@ global gmAhkCmdsToConvertV1 := OrderedMap(
   , "EnvMult,var,valueCBE2E" ,
     "{1} *= {2}"
   , "GetKeyState,OutputVar,KeyNameT2E,ModeT2E" ,
-    '{1} := GetKeyState({2}, {3}) ? "D" : "U"'
+     "*_GetKeyState"
   , "IfEqual,var,valueT2QE" ,
     "if ({1} = {2})"
   , "IfNotEqual,var,valueT2QE" ,
@@ -98,14 +98,14 @@ global gmAhkCmdsToConvertV1 := OrderedMap(
     "if FileExist({1})"
   , "IfNotExist,fileT2E" ,
     "if !FileExist({1})"
-  , "IfWinExist,titleT2E,textT2E,excltitleT2E,excltextT2E" ,
-    "if WinExist({1}, {2}, {3}, {4})"
-  , "IfWinNotExist,titleT2E,textT2E,excltitleT2E,excltextT2E" ,
-    "if !WinExist({1}, {2}, {3}, {4})"
   , "IfWinActive,titleT2E,textT2E,excltitleT2E,excltextT2E" ,
     "if WinActive({1}, {2}, {3}, {4})"
   , "IfWinNotActive,titleT2E,textT2E,excltitleT2E,excltextT2E" ,
     "if !WinActive({1}, {2}, {3}, {4})"
+  , "IfWinExist,titleT2E,textT2E,excltitleT2E,excltextT2E" ,
+    "if WinExist({1}, {2}, {3}, {4})"
+  , "IfWinNotExist,titleT2E,textT2E,excltitleT2E,excltextT2E" ,
+    "if !WinExist({1}, {2}, {3}, {4})"
   , "OnExit,Func,AddRemove" ,
     "*_OnExit"
   , "Progress, ProgressParam1,SubTextT2E,MainTextT2E,WinTitleT2E,FontNameT2E" ,
@@ -128,12 +128,14 @@ global gmAhkCmdsToConvertV1 := OrderedMap(
     "*_StringMid"
   , "StringRight,OutputVar,InputVar,CountCBE2E" ,
     "{1} := SubStr({2}, -1*({3}))"
+  , "StringReplace,OutputVar,InputVar,SearchTxtT2E,ReplTxtT2E,ReplAll" ,
+    "*_StringReplace"
+  , "StringSplit,OutputArray,InputVar,DelimitersT2E,OmitCharsT2E" ,
+    "*_StringSplit"
   , "StringTrimLeft,OutputVar,InputVar,CountCBE2E" ,
     "{1} := SubStr({2}, ({3})+1)"
   , "StringTrimRight,OutputVar,InputVar,CountCBE2E" ,
     "{1} := SubStr({2}, 1, -1*({3}))"
-  , "StringReplace,OutputVar,InputVar,SearchTxtT2E,ReplTxtT2E,ReplAll" ,
-    "*_StringReplace"
   , "Transform,OutputVar,SubCommand,Value1T2E,Value2T2E" ,
     " *_Transform"
   )
@@ -399,8 +401,6 @@ global gmAhkCmdsToConvertV2 := OrderedMap(
     " StatusBarWait({1}, {2}, {3}, {4}, {5}, {6})"
   , "StringCaseSense,OnOffLocaleOn2True" ,
     "*_StringCaseSense"
-  , "StringSplit,OutputArray,InputVar,DelimitersT2E,OmitCharsT2E" ,
-    "*_StringSplit"
   , "StringUpper,OutputVar,InputVar,TT2E" ,
     "*_StringUpper"
   , "StringLower,OutputVar,InputVar,TT2E" ,

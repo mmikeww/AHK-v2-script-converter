@@ -131,12 +131,15 @@
 	if (text = '')												; if text is empty...
 		return '""'												; ... return two double quotes
 	else if (SubStr(text, 1, 2) = '% ')	  {						; if this param was a forced expression...
-;		return SubStr(text, 3)									; ... just remove leading '% ', return rest
 		return (gV2Conv) ? SubStr(text, 3) : text				; ... v2 - just remove leading '% ', v1.1 - return as is
 	}
 	else if (!valToStr && isNumber(text)) {						; if a number and should NOT be treated as string
-		if (IsFloat(text) || IsHex(text)) {
-			return text											; return float or hex as is
+		if (IsFloat(text)) {
+			return text											; return float as is
+		}
+		else if (IsHex(text)) {									; output for HEX is tricky...
+			return text											; ... sometimes no-change is best...
+			; OR... allow to fall thru?							; ... other times, surrounding in quotes is best.
 		}
 		else {													; return number
 			return (text +0)									; note - remove +0 if it causes issues
@@ -281,8 +284,8 @@ _IfNotInString(p) {
 }
 ;################################################################################
 _OnExit(p) {
+; V1 OnExit,Func,AddRemove
 
-	;V1 OnExit,Func,AddRemove
 	if (RegexMatch(gOrig_ScriptStr, "\n(\s*)" p[1] ":\s")) {
 		gaList_LblsToFuncO.Push({label: p[1]
 				, parameters: "A_ExitReason, ExitCode"
@@ -294,11 +297,10 @@ _OnExit(p) {
 }
 ;################################################################################
 _Progress(p) {
-
-	;V1 : Progress, ProgressParam1, SubTextT2E, MainTextT2E, WinTitleT2E, FontNameT2E
-	;V1 : Progress , Off
-	;V2 : Removed
-	; To be improved to interpreted the options
+; V1 : Progress, ProgressParam1, SubTextT2E, MainTextT2E, WinTitleT2E, FontNameT2E
+; V1 : Progress , Off
+; V2 : Removed
+; To be improved to interpreted the options
 
 	if (p[1] = "Off") {
 		Out := "ProgressGui.Destroy"
@@ -377,11 +379,10 @@ _SetEnv() {
 }
 ;################################################################################
 _SplashImage(p) {
-
-	;V1 : SplashImage, ImageFile, Options, SubText, MainText, WinTitle, FontName
-	;V1 : SplashImage, Off
-	;V2 : Removed
-	; To be improved to interpreted the options
+; V1 : SplashImage, ImageFile, Options, SubText, MainText, WinTitle, FontName
+; V1 : SplashImage, Off
+; V2 : Removed
+; To be improved to interpreted the options
 
 	if (p[1] = "Off") {
 		Out := "SplashImageGui.Destroy"
@@ -420,9 +421,9 @@ _SplashTextOff() {
 }
 ;################################################################################
 _SplashTextOn(p) {
+; V1 : SplashTextOn,Width,Height,TitleT2E,TextT2E
+; V2 : Removed
 
-	;V1 : SplashTextOn,Width,Height,TitleT2E,TextT2E
-	;V2 : Removed
 	P[1] := P[1] = "" ? 200: P[1]
 	P[2] := P[2] = "" ? 0: P[2]
 	return "SplashTextGui := Gui(`"ToolWindow -Sysmenu Disabled`", " p[3] "), SplashTextGui.Add(`"Text`",, " p[4] "), SplashTextGui.Show(`"w" p[1] " h" p[2] "`")"
@@ -525,11 +526,11 @@ _StringMid(p) {
 }
 ;################################################################################
 _StringReplace(p) {
+; v1
+; StringReplace, OutputVar, InputVar, SearchText [, ReplaceText, ReplaceAll?]
+; v2
+; ReplacedStr := StrReplace(Haystack, Needle [, ReplaceText, CaseSense, OutputVarCount, Limit])
 
-	; v1
-	; StringReplace, OutputVar, InputVar, SearchText [, ReplaceText, ReplaceAll?]
-	; v2
-	; ReplacedStr := StrReplace(Haystack, Needle [, ReplaceText, CaseSense, OutputVarCount, Limit])
 	global gIndent, gSingleIndent
 	if gaScriptStrsUsed.StringCaseSense
 		CaseSense := " A_StringCaseSense"

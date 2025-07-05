@@ -2,10 +2,10 @@ a := "var"
 b := "1"
 c := "2"
 
-%a%%b% := "Hi"
-%a%%c% := ""
+%a%%b%:="Hi"
+%a%%c%:=""
 
-v%a% := "abc"
+v%a%:="abc"
 
 MsgBox(var1)
 

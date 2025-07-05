@@ -160,6 +160,7 @@ class CSect
 	; Public - 2025-06-22 AMB, UPDATED
 	; head	->	,? %? "?
 	; body	->	(...)"?
+	; 2025-07-03 AMB, UPDATED to simulate v1 indention behavior
 	static _conv_LegExp(code)
 	{
 		; verify code matches pattern
@@ -167,10 +168,19 @@ class CSect
 		if (!RegExMatch(code, nML, &mML)) {
 			return false
 		}
-		tag1		:= mML.tag1												; optional comment (masked) on cmd line
+		CorP		:= mML[1]			; optional							; comma and/or % (will be omitted)
+		expQuote	:= trim(mML[2])		; optional							; expression double-quote - will be used to force indention
+		tag1		:= mML.tag1			; optional							; comment (masked) on cmd line
 		head		:= tag1													; remove all of these -> , % " (from cmd line)
 		neck		:= mML.neck												; portion between head and opening body '('
 		body		:= conv_ContParBlk(mML.parBlk)							; convert contents of parentheses block '(...)'
+		; force indention behavior for expression, if necessary
+		nBlk		:= buildPtn_MLBlock().parBlk							; [block/body needle]
+		if (expQuote && RegExMatch(body, nBlk, &mBlk)) {					; if exp quote was found above, force indention if present
+			guts	:= mBlk.guts											; get current guts from block
+			wsGuts	:= RegExReplace(guts, '^(\s+)"', ' "$1')				; incl lead ws (move lead "), [lead space req for v1.1])
+			body	:= RegExReplace(body, guts, wsGuts,,1)					; update body to include leading ws (force indention)
+		}
 		trail		:= RegExReplace(mML.trail, '^"')						; remove any [optional] trailing DQ following ')"'
 		outStr		:= head . neck . body . trail							; assemble output string
 		Mask_R(&outStr, 'C&S')												; restore comments/strings
@@ -271,7 +281,6 @@ class CSect
 		; grab next line for inspection
 ;		nextLine	:= LTrim(gOScriptStr[gO_Index + 1])
 		nextLine	:= LTrim(gOScriptStr.GetLine(gO_Index + 1))
-		nlChar1		:= SubStr(Trim(nextLine), 1, 1)												; first char of next line
 
 		; prevent these from interferring with detection of continuation lines
 		Mask_T(&nextLine, 'HK')																	; mask hotkey declarations
@@ -284,8 +293,8 @@ class CSect
 		if (nextLine ~= '(?i)^(?:[,.?]|:(?!:)|\|\||&&|AND|OR)')									; valid continuation chars
 		{
 			; 2025-05-24 Banaanae, ADDED for fix #296
-;			removeEOLComments(gOScriptStr[gO_Index + 1], nlChar1, &EOLComment)
-			removeEOLComments(gOScriptStr.GetLine(gO_Index + 1), nlChar1, &EOLComment)
+;			separateComment(gOScriptStr[gO_Index + 1], nlChar1, &EOLComment)
+			separateComment(gOScriptStr.GetLine(gO_Index + 1), &EOLComment)
 			gEOLComment_Cont.Push(EOLComment)	; TODO - can lead to errors, need to investigate
 
 			gO_Index++																			; adjust main-loop line-index

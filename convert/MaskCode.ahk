@@ -40,6 +40,7 @@ global	  gTagChar		:= chr(0x2605) ; '★'															; unique char to ensure 
 		, gTagTrl		:= gTagChar . '#'																; common tag-trailer
 
 		, gnLineComment	:= '(?<=^|\s)(?<!``);[^\v]*+'													; UPDATED - line comment (allows lead ws to be consumed already)
+		, gnCmd_Comment	:= '^((?|[^;\s]++|(?<=``);|\h(?!\h+;))+)?((?|^|\h+);.*)$'	; supports [`;]		; 2025-07-03 - separates command side from first comment occurence
 		, gPtn_LC		:= '(?m)' . gnLineComment														; UPDATED - line comments found on any line
 		, gPtn_BC		:= '(?m)^\h*(/\*((?>[^*/]+|\*[^/]|/[^*])*)(?>(?-2)(?-1))*(?:\*/|\Z))'			; block comments
 		, gPtn_KVO		:= '\{([^:,}\v]++:[^:,}]++)(,(?1))*+\}'											; UPDATED - {key1:val1,key2:val2} obects
@@ -47,7 +48,7 @@ global	  gTagChar		:= chr(0x2605) ; '★'															; unique char to ensure 
 		, gPtn_PrnthML	:= '\(\R(?>[^\v\))]+|(?<!\n)\)|\R)*?\R\h*\)'				; very general		; nested parentheses block, MULTI-LINE ONLY
 		. gPtn_CSectM1	:= buildPtn_CSM1()																; ADDED - line, plus cont sect 'method 1'
 		, gPtn_CSectM2	:= buildPtn_CSM2()											; general			; ADDED - line, plus cont sect 'method 2', plus trailer
-		, gPtn_FuncCall := '(?im)(?<FcName>[_a-z]\w*+)' . gPtn_PrnthBlk									; UPDATED - function call (supports ml and nested parentheses)
+		, gPtn_FuncCall := '(?im)(?<FcName>[_a-z](?|\w++|\.(?=\w))*+)' . gPtn_PrnthBlk					; UPDATED - function call (supports ml and nested parentheses)
 		, gPtn_FUNC		:= buildPtn_FUNC()																; function block (supports nesting)
 		, gPtn_CLASS	:= buildPtn_CLS()																; class block (supports nesting)
 		, gPtn_V1L_MLSV	:= buildPtn_V1LegMLSV()															; UPDATED - v1 legacy (non-expr) multi-line string assignment
@@ -63,6 +64,7 @@ global	  gTagChar		:= chr(0x2605) ; '★'															; unique char to ensure 
 		, gPtn_QS_MLPth	:= buildPtn_MLQSPth()															; UPDATED - quoted-string, ml (within parentheses)
 		, gPtn_QS_ML	:= '(?<line1>:=\h*)\K"(([^"\v]++)\R)(?:\h*+[.|&,](?-2)*+)(?-1)++"'				; UPDATED - quoted-string, ml cont sect (not within parentheses)
 		, gPtn_Switch	:= buildPtn_Switch()															; 2025-07-01 AMB, ADDED - Switch statement block
+		, gPtnVarAssign	:= '(?i)(\h*[_a-z](?|\w++|\.(?=\w))*+\h*+)'	; also supports obj.property		; 2025-07-03 AMB, ADDED - Variable/Object assignment
 
 ;################################################################################
 											  hasTag(srcStr := '', tagType := '')
@@ -241,7 +243,7 @@ global	  gTagChar		:= chr(0x2605) ; '★'															; unique char to ensure 
 				clsMask.MaskAll(&code, 'FC'
 					, gPtn_FuncCall, sessID?)
 				if (option) {								; if Restore-strings requested ?
-					Mask_R(&code, 'STR',	,sessID?)			;	restore all strings [FROM TEMP SESSION]
+					Mask_R(&code, 'STR',	,sessID?)		;	restore all strings [FROM TEMP SESSION]
 				}
 
 		case	'BLOCKS', 'FUNC&CLS':						; FUNCTIONS AND CLASSES
@@ -869,11 +871,11 @@ class clsNodeMap	; 'block map' might be better term
 	; converts original code in the process, stores it to be retrieved by Restore_Blocks()
 	static Mask_Blocks(&code)
 	{
-		Mask_T(&code, 'C&S')										; mask comments/strings - might be redundant
+		Mask_T(&code, 'C&S')									; mask comments/strings - might be redundant
 			; mask classes and functions
 			clsNodeMap.BuildNodeMap(code)						; prep for masking/conversion
 			clsNodeMap.maskAndConvertNodes(&code)
-		Mask_R(&code, 'C&S')										; restore comments/strings
+		Mask_R(&code, 'C&S')									; restore comments/strings
 		return
 	}
 
@@ -973,7 +975,7 @@ class clsNodeMap	; 'block map' might be better term
 ; Those nodes contain the details of the particualr block
 ; 	additional details can then be extracted from those nodes
 
-	Mask_T(&code, 'C&S')								; mask comments/strings
+	Mask_T(&code, 'C&S')							; mask comments/strings
 	clsNodeMap.BuildNodeMap(code)					; build node map
 
 	; go thru node list and extract function names
@@ -1138,8 +1140,9 @@ class clsNodeMap	; 'block map' might be better term
 ; 2025-06-12 AMB, UPDATED to reflect actual purpose
 ;	This version will ONLY match assignments WITH VARIABLE NAME
 ;	ADDED support for block comments (thru buildPtn_MLBlock())
+; 2025-07-03 AMB, UPDATED needle to support obj.property
 
-	return	'(?im)(?<decl>(?<var>[_a-z]\w*)\h*+``?=)' . buildPtn_MLBlock().FullT
+	return	'(?im)(?<decl>(?<var>[_a-z](?|\w++|\.(?=\w))*+)\h*+``?=)' . buildPtn_MLBlock().FullT
 }
 ;################################################################################
 															   buildPtn_MLQSPth()
@@ -1376,7 +1379,7 @@ class clsNodeMap	; 'block map' might be better term
 		body := RegExReplace(body, '(?s)(\(\R)', '$1""',,1)					; add empty string quotes below opening parenthesis
 	}
 
-	Mask_R(&body, 'C&S')														; restore comments/strings
+	Mask_R(&body, 'C&S')													; restore comments/strings
 	return body
 }
 

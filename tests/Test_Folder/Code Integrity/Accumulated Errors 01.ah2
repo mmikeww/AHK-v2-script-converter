@@ -54,7 +54,7 @@ MsgBox(HelpText, helptitle, 32)
 
 ;################################################################################
 
-EmptyVar := "" 	; needs empty quotes added
+EmptyVar :="" 	; needs empty quotes added
 
 ;################################################################################
 
@@ -170,7 +170,7 @@ UpdateLayeredWindow(hwnd, hdc, x:="", y:="", w:="", h:="", Alpha:=255)
 
 
 F4C_String := "testing"
-F4C_String := "`"" . F4C_String . "`"" ;If needed, bracket the string in double quotes
+F4C_String:="`"" . F4C_String . "`"" ;If needed, bracket the string in double quotes
 MsgBox("[" F4C_String "]")
 
 str := "changeVar := `n(`n`"" . "change`ntext" . "`"`n)"

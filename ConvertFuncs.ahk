@@ -199,8 +199,8 @@ _convertLines(ScriptString)
 ;      curLine           := gOScriptStr[gO_Index]                    ; current line string to be converted
       curLine           := gOScriptStr.GetNext                      ; current line string to be converted
       gIndent           := RegExReplace(curLine,'^(\h*).*','$1')    ; original line indentation (if present)
-      EOLComment        := procDirectivesAndComment(&curLine)       ; process character directives and extract initial trailing comment from line
-      lineOpen          := splitLine(&curLine)                      ; see splitLine() for details
+      EOLComment        := lp_DirectivesAndComment(&curLine)        ; process character directives and extract initial trailing comment from line
+      lineOpen          := lp_SplitLine(&curLine)                   ; see lp_splitLine() for details
       gEarlyLine        := curLine                                  ; portion of line to process [prior to processing], has no trailing comment
       lineClose         := ''                                       ; initial value, used later
       gEOLComment_Cont  := [EOLComment]                             ; 2025-05-24 fix for #296 - support for multiple comments within line continuations
@@ -210,21 +210,21 @@ _convertLines(ScriptString)
       ;     this will happen in phase 2 of redesign
       ; ORDER MAY MATTER FOR FOLLOWING STEPS...
       addContsToLine(&curLine, &EOLComment)                         ; Adds continuation lines to current line - TODO - USE CONT-MASKING ??
-      fixAssignments(&curLine, &EOLComment)                         ; line conversions related to assignments [var= and var:=] (v1/v2)
-      v1_convert_Ifs(&curline, &lineOpen)                           ; line conversions related to IF (v1/v2)
-      v2_convert_Ifs(&curline, &lineOpen, &lineClose)               ; line conversions related to IF (v1/v2)
+      fixAssignments(&curLine)                                      ; line conversions related to assignments [var= and var:=] (v1/v2)
+      v1_convert_Ifs(&curline, &lineOpen)                           ; line conversions related to IF (v1)
+      v2_convert_Ifs(&curline, &lineOpen, &lineClose)               ; line conversions related to IF (v2)
 
       fCmdConverted := false                                        ; will be set by v2_AHKCommand() thru v2_Conversions() below
-      if (gV2Conv) {                                                ; v2, but currently required for v1 conversion also
+;      if (gV2Conv) {     ; 2025-07-03 - REMOVED TEMPORARILY        ; v2, but currently required for v1 conversion also
          v2_Conversions(&curLine, &lineOpen, &EOLComment            ; line conversions related to V2 only (currently required for v1 conv also)
                       , &fCmdConverted, scriptString)               ; SETS VALUE of fCmdConverted (indirectly)
-      }
+;      }
 
       ; these must come AFTER v2_Conversions()
-      DisableInvalidCmds(&curLine, fCmdConverted)                   ; disable commands no longer supported (turns them into comments)
+      lp_DisableInvalidCmds(&curLine, fCmdConverted)                ; disable commands no longer supported (turns them into comments)
       curLine := lineOpen . curLine . lineClose                     ; reassemble line parts
-      postConversions(&curLine)                                     ; processing for current line that must be performed last
-      ScriptOutput .= updateLineMessages(&curLine,&EOLComment)      ; update conversion messages (to user) for current line. This is final line output.
+      lp_PostConversions(&curLine)                                  ; processing for current line that must be performed last
+      ScriptOutput .= lp_PostLineMsgs(&curLine,&EOLComment)         ; update conversion messages (to user) for current line. This is final line output.
    }  ; END of individual-line conversions (loop)
 
    ; trim the very last (extra) newline from output string
@@ -1293,7 +1293,7 @@ _Hotkey(p) {
 
    ;Convert label to function
 
-   if (RegexMatch(gOrig_ScriptStr, "\n(\s*)" p[2] ":\s")) {
+   if (RegexMatch(gOrig_ScriptStr, "\n(\s*)" p[2] ":(?!=)\s")) {
       gaList_LblsToFuncO.Push({label: p[2], parameters: "ThisHotkey"})
    }
    if (p[1] = "IfWinActive") {
@@ -1494,50 +1494,122 @@ _Loop(p) {
 }
 ;################################################################################
 _MsgBox(p) {
-   ; v1
-   ; MsgBox, Text (1-parameter method)
-   ; MsgBox [, Options, Title, Text, Timeout]
-   ; v2
-   ; Result := MsgBox(Text, Title, Options)
-   ; 2025-06-12 AMB, UPDATED
-   ;    TODO - NEEDS TO BE CLEANED UP AND ORGANIZED BETTER
-   if (RegExMatch(p[1], "i)^((0x)?\d*\h*|\s*%\s*\w+%?\s*)$") && (p.Extra.OrigArr.Length > 1)) {
-      options := p[1]
-      if ( p.Length = 4 && (IsEmpty(p[4]) || IsNumber(p[4]) || RegExMatch(p[4], '\s*%', &m)) ) {
-         ; 2024-08-03 AMB, ADDED support for multiline text that may include variables
-         text := p[3]
-         text := (csStr := CSect.HasContSect(text)) ? csStr : ToExp(text)
-         if (!IsEmpty(p[4]))
-            options .= ' " T" ' ToExp(p[4])
-         title := ToExp(p[2])
-      } else {
-         text := ""
+; 2025-07-03 AMB, CHANGED for dual conversion support
+   return (gV2Conv) ? _MsgBox_V2(p) : _MsgBox_V1(p)
+}
+;################################################################################
+_MsgBox_V1(p)
+{
+; 2025-07-03 AMB, ADDED for v1.1 conversion (WORK IN PROGRESS)
+;   TODO - may merge with _MsgBox_V2() when done
+; v1
+; MsgBox, Text (1-parameter method)
+; MsgBox [, Options, Title, Text, Timeout]
+
+   if (RegExMatch(p[1], 'i)^((0x)?\d*\h*|\h*%\h*\w+%?\h*)$') && (p.Extra.OrigArr.Length > 1)) {
+
+      options   := p[1]
+      title     := ToExp(p[2])
+
+      ; if param 4 is empty, OR is a number, OR has a var (%)
+      if ( p.Length = 4 && (    IsEmpty(   p[4])
+                           ||   IsNumber(  p[4])
+                           ||   RegExMatch(p[4], '\h*%', &mVar)) ) {
+         text   := (csStr := CSect.HasContSect(p[3])) ? csStr : ToExp(p[3])
+         TmOut  := (IsEmpty(p[4])) ? '' : ToExp(p[4])  ; add timeout as needed
+      }
+      else {
+
+         text       := ''
          loop p.Extra.OrigArr.Length - 2
-            text .= "," p.Extra.OrigArr[A_Index + 2]
-         text := ToExp(SubStr(text, 2))
-         title := ToExp(p[2])
+            text    .= ',' p.Extra.OrigArr[A_Index + 2]
+         text       := ToExp(SubStr(text, 2))
       }
-      Out := format("MsgBox({1}, {2}, {3})", text, (title = '""' ? '' : title), ToExp(options))
-      if (Check_IfMsgBox()) {
-         Out := "msgResult := " Out
-      }
-      if IsSet(m) ; If timeout is variable
-         Out := RegExReplace(Out, '``" T``" (\w+)"\)', '" T" $1)') ; Clean up
-      Out := RegExReplace(Out, '``" T``" ', 'T')
-      Out := RegExReplace(Out, '" " T', '" T')
-      Out := RegExReplace(Out, '(,\s*"[^,]*?)\s*"([^,]*"[^,]*?\))$', '$1$2')
+
+      ; format output
+      Out := format('MsgBox {1}, {2}, {3}', ToExp(options), (title = '""' ? '' : title), text)
+      Out .= (TmOut) ? ', ' TmOut : ''
+;      if (Check_IfMsgBox()) {
+;         Out := 'msgResult := ' Out
+;      }
       return Out
-   } else {
+   }
+   else {   ; only has 1 param - could be text, var, func call, or combo of these
+
       ; 2024-08-03 AMB, ADDED support for multiline text that may include variables
-      param := p[1]
-      if (csStr := CSect.HasContSect(param)) {  ; if has continuation section, converts it
-         return "MsgBox(" csStr ")"
+      if (csStr := CSect.HasContSect(p[1])) {  ; if has continuation section, converts it
+         return 'MsgBox %' csStr
       }
+
       ; does not have continuation section
       param := p.Extra.OrigStr
-      Out := format("MsgBox({1})", ((param="") ? "" : ToExp(param)))
+      param := (param='') ? '""' : RegExReplace(ToExp(param), '^%\h+')
+      Out   := format('MsgBox % {1}', param)
+;      if (Check_IfMsgBox()) {
+;         Out := 'msgResult := ' Out
+;      }
+      return Out
+   }
+}
+;################################################################################
+_MsgBox_V2(p)
+{
+; 2025-07-03 AMB, ADDED/UPDATED for dual conversion support (WORK IN PROGRESS)
+;   TODO - may merge with _MsgBox_V1() when done
+; v1
+; MsgBox, Text (1-parameter method)
+; MsgBox [, Options, Title, Text, Timeout]
+; v2
+; Result := MsgBox(Text, Title, Options)
+
+   if (RegExMatch(p[1], 'i)^((0x)?\d*\h*|\h*%\h*\w+%?\h*)$') && (p.Extra.OrigArr.Length > 1)) {
+
+      options   := p[1]
+      title     := ToExp(p[2])
+
+      ; if param 4 is empty, OR is a number, OR has a var (%)
+      if ( p.Length = 4 && (    IsEmpty(   p[4])
+                           ||   IsNumber(  p[4])
+                           ||   RegExMatch(p[4], '\h*%', &mVar)) ) {
+         text       := (csStr := CSect.HasContSect(p[3])) ? csStr : ToExp(p[3])
+         options    .= (IsEmpty(p[4])) ? '' : ' " T" ' ToExp(p[4])  ; add timeout as needed
+      }
+      else {
+
+         text       := ''
+         loop p.Extra.OrigArr.Length - 2
+            text    .= ',' p.Extra.OrigArr[A_Index + 2]
+         text       := ToExp(SubStr(text, 2))
+      }
+
+      ; format output
+      Out := format('MsgBox({1}, {2}, {3})', text, (title = '""' ? '' : title), ToExp(options))
       if (Check_IfMsgBox()) {
-         Out := "msgResult := " Out
+         Out := 'msgResult := ' Out
+      }
+
+      ; clean up options param
+      if IsSet(mVar) {  ; If timeout is variable
+         Out := RegExReplace(Out, '``" T``" (\w+)"\)', '" T" $1)')
+      }
+      Out := RegExReplace(Out, '``" T``" ', 'T')
+      Out := RegExReplace(Out, '" " T', '" T')
+      Out := RegExReplace(Out, '(,\h*"[^,]*?)\h*"([^,]*"[^,]*?\))$', '$1$2')
+
+      return Out
+   }
+   else {   ; only has 1 param - could be text, var, func call, or combo of these
+
+      ; 2024-08-03 AMB, ADDED support for multiline text that may include variables
+      if (csStr := CSect.HasContSect(p[1])) {  ; if has continuation section, converts it
+         return 'MsgBox(' csStr ')'
+      }
+
+      ; does not have continuation section
+      param := p.Extra.OrigStr
+      Out   := format('MsgBox({1})', ((param='') ? '' : ToExp(param)))
+      if (Check_IfMsgBox()) {
+         Out := 'msgResult := ' Out
       }
       return Out
    }
@@ -2571,9 +2643,10 @@ ConvertLabel2Func(ScriptString, Label, Parameters := "", NewFunctionName := "", 
          }
       }
       ; This check needs to be at the bottom.
-      if (Instr(Line, Label ":")) {
-         if (RegexMatch(Line, "is)^(\s*|.*\n\s*)(\Q" Label "\E):(.*)", &Var)) {
-            if (RegExMatch(Line, "is)(\s*)(\Q" Label "\E):(\s*[^\s;].+)")) {
+      ; 2025-07-03 AMB, UPDATED detection to prevent var:= from being mistaken for a label
+      if ((lbl:=isValidV1Label(line)) = Label ':') {    ; 2025-07-03 adj this and 2 needles below (as bkup)
+         if (RegexMatch(Line, "is)^(\s*|.*\n\s*)(\Q" Label "\E):(?!=)(.*)", &Var)) {
+            if (RegExMatch(Line, "is)(\s*)(\Q" Label "\E):(?!=)(\s*[^\s;].+)")) {
                ;Oneline detected
                Line := Var[1] NewFunctionName "(" Parameters "){`r`n   " Var[3] "`r`n}"
                if (IsObject(aRegexReplaceList)) {
@@ -3200,26 +3273,6 @@ getScriptLabels(code)
  ;     MsgBox "[" corrections "]"
    }
    return
-}
-;################################################################################
-removeEOLComments(Line, FirstChar, &EOLComment) {
-; 2025-05-24 Banaanae, ADDED for fix #296
-; 2025-06-12 AMB, UPDATED - to capture far-left line comment, rather than trailing (far right) occurence
-
-   nL2RComment := '^([^;\v]+?)(\h+`;.*)$'               ; far left occurence
-
-   if (FirstChar = ';') {
-      EOLComment    := Line
-      Line          := ''
-   }
-   else if (RegExMatch(Line, nL2RComment, &mL2R)) {     ; capture FIRST (far left) occurence of comment
-      line          := mL2R[1]
-      EOLComment    := mL2R[2]
-   }
-   else {
-      EOLComment    := ''
-   }
-   return Line
 }
 ;################################################################################
 isolateLabels(code)

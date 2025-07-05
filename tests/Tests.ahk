@@ -117,7 +117,7 @@ class ConvertTests
          )"
       expected := "
          (Join`r`n
-                                 msg := "hello world"
+                                 msg :=    "hello world"
                                  FileAppend(msg, "*")
          )"
       ; first test that our expected code actually produces the same results in v2
@@ -587,7 +587,7 @@ class ConvertTests
       expected := "
          (Join`r`n
                                  MyVar := "joe"
-                                 MyVar2 := ""
+                                 MyVar2 :=""
                                  if (MyVar = MyVar2)
                                      FileAppend("The contents of MyVar and MyVar2 are identical.", "*")
                                  else if (MyVar = "")

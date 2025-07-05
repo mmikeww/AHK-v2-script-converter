@@ -530,10 +530,10 @@ findCmdDefs(Command, &v1:=unset, &v2:=unset)
   if (v1_findCmdDefs(Command, &v1, &v2)) {
     return true
   }
-  if (gV2Conv) {
+;  if (gV2Conv) {   ; 2025-07-03 - REMOVED TEMPORARILY
     return v2_findCmdDefs(Command, &v1, &v2)
-  }
-  return false
+;  }
+;  return false
 }
 ;################################################################################
 v1_findCmdDefs(Command, &v1:=unset, &v2:=unset)

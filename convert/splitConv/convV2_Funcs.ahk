@@ -1,4 +1,15 @@
 ;################################################################################
+														  v2_VerCompare(&lineStr)
+;################################################################################
+{
+; 2025-06-12 AMB, Moved to dedicated routine for cleaner convert loop
+; not sure why this is required for conversion ?
+
+	nVer	:= 'i)\b(A_AhkVersion)(\h*[!=<>]+\h*)"?(\d[\w\-\.]*)"?'
+	lineStr	:= RegExReplace(lineStr, nVer, 'VerCompare($1, "$3")${2}0')
+	return		; lineStr by reference
+}
+;################################################################################
 											   v2_RenameLoopRegKeywords(&lineStr)
 ;################################################################################
 {
@@ -6,11 +17,13 @@
 ; separated LoopReg keywords from gmAhkKeywdsToRename map...
 ;	so that they can be treated differently - See 5Keywords.ahk
 ; 2025-06-12 AMB, UPDATED - changed func name, and some var and funcCall names
+; 2025-07-03 AMB, UPDATED - minor
 
 	for v1, v2 in gmAhkLoopRegKeywds {
-		srchtxt := Trim(v1), rplctxt := Trim(v2)
-		if (InStr(lineStr, srchtxt)) {
-			lineStr := RegExReplace(lineStr, 'i)([^\w]|^)\Q' . srchtxt . '\E([^\w]|$)', '$1' . rplctxt . '$2')
+		targ := Trim(v1), repl := Trim(v2)
+		if (InStr(lineStr, targ)) {
+			needle	:= 'i)([^\w]|^)\Q' . targ . '\E([^\w]|$)'
+			lineStr	:= RegExReplace(lineStr, needle, '$1' repl '$2')
 		}
 	}
 	return		; lineStr by reference
@@ -26,21 +39,25 @@
 ; Added the ability to mask the line-strings so that Keywords found within
 ;	strings are no longer converted along with Keyword vars
 ; 2025-06-12 AMB, UPDATED - changed some var and funcCall names
+; 2025-07-03 AMB, UPDATED - minor
 
 	; replace any renamed vars
 	; Fixed - NO LONGER converts text found in strings
 	masked := false
 	for v1, v2 in gmAhkKeywdsToRename {
-		srchtxt := Trim(v1), rplctxt := Trim(v2)
-		if (InStr(lineStr, srchtxt)) {
-			if (!masked) {
-				masked := true, Mask_T(&lineStr, 'STR')		; masking is slow, so only do this as necessary
+		targ := Trim(v1), repl := Trim(v2)
+		if (InStr(lineStr, targ)) {
+			if (!masked) {		; masking is slow, so only do this as necessary
+				masked	:= true
+				sess	:= clsMask.NewSession()
+				Mask_T(&lineStr, 'STR', sess)
 			}
-			lineStr := RegExReplace(lineStr, 'i)([^\w]|^)\Q' . srchtxt . '\E([^\w]|$)', '$1' . rplctxt . '$2')
+			needle	:= 'i)([^\w]|^)\Q' . targ . '\E([^\w]|$)'
+			lineStr	:= RegExReplace(lineStr, needle, '$1' repl '$2')
 		}
 	}
 	if (masked)
-		Mask_R(&lineStr, 'STR')
+		Mask_R(&lineStr, 'STR', sess)
 
 	return		; lineStr by reference
 }
@@ -309,7 +326,6 @@
 ;	1. ENSURING KEYNAMES ARE STILL UNIQUE
 ;	2. UPDATING KEYNAME REFERENCES WITHIN CODE (obj.KEYNAME)
 
-
 	Mask_T(&lineStr, 'STR')	; must be here to avoid errors with next regex			; don't match false positives (found within strings)
 	if (!(lineStr ~= gPtn_KVO))	{													; make sure line has VALID {key:val} object
 		Mask_R(&lineStr, 'STR')														; cleanup before early exit
@@ -470,12 +486,10 @@
 			lineStr := tLine1													; OK to change lineStr now - make it the first (cmd) line
 			fHaveCS := true														; flag to use alternate routine to fill params arrays
 			; deal with any comment on line 1
-			FirstChar	:= SubStr(Trim(lineStr),1,1)							; get first char of line (after leading ws)
-			lineStr		:= removeEOLComments(lineStr, FirstChar, &EOLComment)	; remove first comment found on line1
+			lineStr	:= separateComment(lineStr, &EOLComment)					; separate comment (first occurence) from line1
 			gEOLComment_Cont.Push(EOLComment)									; TODO - can lead to errors, investigate if it continues
 		}
 	}
-
 
 	; look at current line and find/convert v1 command(s) that require conversion
 	; loop will be performed recursively as needed to convert chained commands (if exist)
@@ -575,10 +589,10 @@
 			continue															; skip first element
 		looped		:= true														; flag for gEOLComment_Cont[] below loop
 		curContLine	:= line														; [working var]
-		FirstChar	:= SubStr(Trim(curContLine),1,1)							; capture "(" or ")" if on current line
-		curContLine	:= removeEOLComments(curContLine, FirstChar, &EOLComment)	; remove first comment found on line
+		curContLine	:= separateComment(curContLine, &EOLComment)				; separate comment (first occurence) from line
 		gEOLComment_Cont.Push(EOLComment)										; save comment for CURRENT LINE to be restored later
 
+		FirstChar	:= SubStr(Trim(curContLine),1,1)							; capture "(" or ")" if on current line
 		if (FirstChar == ')')													; if current line appears to be end of cont section
 		{
 			cLParams .= '`r`n' curContLine										; append current continuation line to LINE params

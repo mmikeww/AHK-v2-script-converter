@@ -1,1 +1,1 @@
-static MODULEID := 230909, oldNotify:="*"  ; V1toV2: Assuming this is v1.0 code
+static MODULEID := 230909, oldNotify:="*" 

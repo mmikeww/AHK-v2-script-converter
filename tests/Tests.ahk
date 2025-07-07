@@ -117,7 +117,7 @@ class ConvertTests
          )"
       expected := "
          (Join`r`n
-                                 msg := "hello world"
+                                 msg :=    "hello world"
                                  FileAppend(msg, "*")
          )"
       ; first test that our expected code actually produces the same results in v2
@@ -144,7 +144,7 @@ class ConvertTests
          )"
       expected := "
          (Join`r`n
-                                 var := "2"
+                                 var := 2
                                  if (var = 2)
                                     FileAppend(var, "*")
          )"
@@ -251,11 +251,11 @@ class ConvertTests
       expected := "
          (Join`r`n
                                  Sleep(100)
-                                 var := "
+                                 var :=
                                  `(
-                                 line1
-                                 line2
-                                 `)"
+                                 "line1
+                                 line2"
+                                 `)
                                  FileAppend(var, "*")
          )"
       ; first test that our expected code actually produces the same results in v2
@@ -284,10 +284,10 @@ class ConvertTests
          )"
       expected := "
          (Join`r`n
-                                 var := "
+                                 var :=
                                     `(
-                                    hello world
-                                    `)"
+                                    "hello world"
+                                    `)
                                  FileAppend(var, "*")
          )"
       ; first test that our expected code actually produces the same results in v2
@@ -316,10 +316,10 @@ class ConvertTests
          )"
       expected := "
          (Join`r`n
-                                 var := "
+                                 var :=
                                  `(
-                                 hello
-                                 `)"
+                                 "hello"
+                                 `)
                                  FileAppend(var, "*")
          )"
       ; first test that our expected code actually produces the same results in v2
@@ -439,7 +439,7 @@ class ConvertTests
          )"
       expected := "
          (Join`r`n
-                                 var := "3"
+                                 var := 3
                                  if (var != "")
                                     FileAppend(var, "*")
          )"
@@ -467,7 +467,7 @@ class ConvertTests
          )"
       expected := "
          (Join`r`n
-                                 var := "8"
+                                 var := 8
                                  if (var = 8)
                                     FileAppend(var, "*")
          )"
@@ -495,7 +495,7 @@ class ConvertTests
          )"
       expected := "
          (Join`r`n
-                                 var := "10"
+                                 var := 10
                                  if (var > 8)
                                     FileAppend(var, "*")
          )"
@@ -587,7 +587,7 @@ class ConvertTests
       expected := "
          (Join`r`n
                                  MyVar := "joe"
-                                 MyVar2 := ""
+                                 MyVar2 :=""
                                  if (MyVar = MyVar2)
                                      FileAppend("The contents of MyVar and MyVar2 are identical.", "*")
                                  else if (MyVar = "")
@@ -1231,7 +1231,7 @@ class ConvertTests
          )"
       expected := "
          (Join`r`n
-                                 var := "3"
+                                 var := 3
                                  var *= 5
                                  FileAppend(var, "*")
          )"
@@ -1260,8 +1260,8 @@ class ConvertTests
          )"
       expected := "
          (Join`r`n
-                                 var := "1"
-                                 var2 := "2"
+                                 var := 1
+                                 var2 := 2
                                  var *= var2
                                  FileAppend(var, "*")
          )"
@@ -1289,7 +1289,7 @@ class ConvertTests
          )"
       expected := "
          (Join`r`n
-                                 var := "1"
+                                 var := 1
                                  var += 2
                                  FileAppend(var, "*")
          )"
@@ -1348,7 +1348,7 @@ class ConvertTests
          )"
       expected := "
          (Join`r`n
-                                 var := "4"
+                                 var := 4
                                  two := 2
                                  var += two
                                  FileAppend(var, "*")
@@ -1378,7 +1378,7 @@ class ConvertTests
          )"
       expected := "
          (Join`r`n
-                                 var := "4"
+                                 var := 4
                                  two := 2
                                  var += two
                                  FileAppend(var, "*")
@@ -1407,7 +1407,7 @@ class ConvertTests
          )"
       expected := "
          (Join`r`n
-                                 var := "5"
+                                 var := 5
                                  var -= 2
                                  FileAppend(var, "*")
          )"
@@ -1436,8 +1436,8 @@ class ConvertTests
          )"
       expected := "
          (Join`r`n
-                                 var1 := "20050126"
-                                 var2 := "20040126"
+                                 var1 := 20050126
+                                 var2 := 20040126
                                  var1 := DateDiff(var1, var2, "days")
                                  FileAppend(var1, "*")
          )"
@@ -1466,8 +1466,8 @@ class ConvertTests
          )"
       expected := "
          (Join`r`n
-                                 var := "9"
-                                 value := "6"
+                                 var := 9
+                                 value := 6
                                  var -= value
                                  FileAppend(var, "*")
          )"
@@ -1736,7 +1736,7 @@ class ConvertTests
          )"
       expected := "
          (Join`r`n
-                                 var := "5"
+                                 var := 5
                                  Concat((var=5) ? 5 : 0)
 
                                  Concat(one, two:="hello,world", three := 3, four := "does 2+2=4?")
@@ -2248,7 +2248,7 @@ class ConvertTests
          (Join`r`n
                                  Haystack := "abcdefabcdef"
                                  Needle := "cde"
-                                 var := "2"
+                                 var := 2
                                  pos := InStr(Haystack, Needle,, (var)+1) - 1
                                  if (pos >= 0)
                                      FileAppend("The string was found at position " pos ".", "*")
@@ -2282,7 +2282,7 @@ class ConvertTests
          (Join`r`n
                                  Haystack := "abcdefabcdef"
                                  Needle := "cde"
-                                 var := "1"
+                                 var := 1
                                  pos := InStr(Haystack, Needle,, (var+2)+1) - 1
                                  if (pos >= 0)
                                      FileAppend("The string was found at position " pos ".", "*")
@@ -2316,7 +2316,7 @@ class ConvertTests
          (Join`r`n
                                  Haystack := "abcdefabcdefabcdef"
                                  Needle := "cde"
-                                 var := "0"
+                                 var := 0
                                  pos := InStr(Haystack, Needle,, -1*((var+2)+1), -2) - 1
                                  if (pos >= 0)
                                      FileAppend("The string was found at position " pos ".", "*")
@@ -2530,7 +2530,7 @@ class ConvertTests
          )"
       expected := "
          (Join`r`n
-                                 start := "7"
+                                 start := 7
                                  Source := "Hello this is a test."
                                  out := SubStr(Source, start, 4)
                                  FileAppend(out, "*")
@@ -2561,8 +2561,8 @@ class ConvertTests
          )"
       expected := "
          (Join`r`n
-                                 start := "2"
-                                 count := "4"
+                                 start := 2
+                                 count := 4
                                  Source := "Hello this is a test."
                                  out := SubStr(Source, start+5, count)
                                  FileAppend(out, "*")
@@ -2627,9 +2627,9 @@ class ConvertTests
                                  InputVar := "The Red Fox"
                                  left := "LOL"
                                  if (SubStr(left, 1, 1) = "L")
-                                     out := SubStr(SubStr(InputVar, 1, 7), -3)
+                                 `tout := SubStr(SubStr(InputVar, 1, 7), -3)
                                  else
-                                     out := SubStr(InputVar, 7, 3)
+                                 `tout := SubStr(InputVar, 7, 3)
                                  FileAppend(out, "*")
          )"
       ; first test that our expected code actually produces the same results in v2
@@ -3064,7 +3064,7 @@ class ConvertTests
          )"
       expected := "
          (Join`r`n
-                                 var := "1"
+                                 var := 1
                                  var += 2     ; comment after 5 spaces
                                  FileAppend(var, "*")
          )"
@@ -3092,7 +3092,7 @@ class ConvertTests
          )"
       expected := "
          (Join`r`n
-                                 var := "1"
+                                 var := 1
                                  if (var = 1)     ; comment after 5 spaces
                                     FileAppend(var, "*")
          )"
@@ -3119,7 +3119,7 @@ class ConvertTests
          )"
       expected := "
          (Join`r`n
-                                 var := "1"
+                                 var := 1
                                  ; V1toV2: Removed    #NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
          )"
       ; first test that our expected code actually produces the same results in v2
@@ -3347,7 +3347,7 @@ class ConvertTests
          )"
       expected := "
          (Join`r`n
-                                 var := "3.1415"
+                                 var := 3.1415
                                  if isFloat(var)
                                     FileAppend(var " is float", "*")
                                  else if isInteger(var)
@@ -3378,7 +3378,7 @@ class ConvertTests
          )"
       expected := "
          (Join`r`n
-                                 var := "3.1415"
+                                 var := 3.1415
                                  mytype := "float"
                                  if is%mytype%(var)
                                     FileAppend(var " is float", "*")
@@ -3409,7 +3409,7 @@ class ConvertTests
          )"
       expected := "
          (Join`r`n
-                                 var := "3.1415"
+                                 var := 3.1415
                                  if !isFloat(var)
                                     FileAppend(var " is not float", "*")
                                  else if !isInteger(var)
@@ -3440,9 +3440,6 @@ class ConvertTests
       expected := "
          (Join`r`n
                                  OldStr := "The_quick_brown_fox"
-                                 ; V1toV2: StrReplace() is not case sensitive
-                                 ; check for StringCaseSense in v1 source script
-                                 ; and change the CaseSense param in StrReplace() if necessary
                                  NewStr := StrReplace(OldStr, "_",,,, 1)
                                  FileAppend(NewStr, "*")
          )"
@@ -3471,9 +3468,6 @@ class ConvertTests
       expected := "
          (Join`r`n
                                  OldStr := "The quick brown fox"
-                                 ; V1toV2: StrReplace() is not case sensitive
-                                 ; check for StringCaseSense in v1 source script
-                                 ; and change the CaseSense param in StrReplace() if necessary
                                  NewStr := StrReplace(OldStr, A_Space, "+",,, 1)
                                  FileAppend(NewStr, "*")
          )"
@@ -3502,9 +3496,6 @@ class ConvertTests
       expected := "
          (Join`r`n
                                  OldStr := "The quick brown fox"
-                                 ; V1toV2: StrReplace() is not case sensitive
-                                 ; check for StringCaseSense in v1 source script
-                                 ; and change the CaseSense param in StrReplace() if necessary
                                  NewStr := StrReplace(OldStr, A_Space, "+")
                                  FileAppend(NewStr, "*")
          )"
@@ -3533,9 +3524,6 @@ class ConvertTests
       expected := "
          (Join`r`n
                                  OldStr := "The quick brown fox"
-                                 ; V1toV2: StrReplace() is not case sensitive
-                                 ; check for StringCaseSense in v1 source script
-                                 ; and change the CaseSense param in StrReplace() if necessary
                                  NewStr := StrReplace(OldStr, A_Space)
                                  FileAppend(NewStr, "*")
          )"
@@ -3564,9 +3552,6 @@ class ConvertTests
       expected := "
          (Join`r`n
                                  OldStr := "The quick brown fox"
-                                 ; V1toV2: StrReplace() is not case sensitive
-                                 ; check for StringCaseSense in v1 source script
-                                 ; and change the CaseSense param in StrReplace() if necessary
                                  NewStr := StrReplace(OldStr, A_Space, "+",, &ErrorLevel)
                                  FileAppend("number of replacements: " ErrorLevel, "*")
          )"
@@ -3625,9 +3610,6 @@ class ConvertTests
       expected := "
          (Join`r`n
                                  OldStr := "The quick brown fox"
-                                 ; V1toV2: StrReplace() is not case sensitive
-                                 ; check for StringCaseSense in v1 source script
-                                 ; and change the CaseSense param in StrReplace() if necessary
                                  NewStr := StrReplace(OldStr, " ", "+")
                                  FileAppend(NewStr, "*")
          )"
@@ -3657,8 +3639,8 @@ class ConvertTests
          )"
       expected := "
          (Join`r`n
-                                 start := "2"
-                                 count := "4"
+                                 start := 2
+                                 count := 4
                                  Source := "Hello this is a test."
                                  out := SubStr(Source, start+5, count)
                                  FileAppend(out, "*")
@@ -3692,7 +3674,7 @@ class ConvertTests
          (Join`r`n
                                  Haystack := "abcdefabcdef"
                                  Needle := "cde"
-                                 var := "1"
+                                 var := 1
                                  pos := InStr(Haystack, Needle,, (var+2)+1) - 1
                                  if (pos >= 0)
                                      FileAppend("The string was found at position " pos ".", "*")
@@ -3779,7 +3761,7 @@ class ConvertTests
          )"
       expected := "
          (Join`r`n
-                                 var := "10"
+                                 var := 10
                                  if (var > 4*2)
                                     FileAppend(var, "*")
          )"
@@ -4720,7 +4702,7 @@ class ConvertTests
          )"
       expected := "
          (Join`r`n
-                                 var := "3.1415"
+                                 var := 3.1415
                                  if (var >= 5 && var <= 10)
                                     FileAppend(var " between 5 and 10", "*")
                                  else if (var >= 1 && var <= 4)
@@ -4752,7 +4734,7 @@ class ConvertTests
          )"
       expected := "
          (Join`r`n
-                                 var := "3.1415"
+                                 var := 3.1415
                                  if !(var >= 0.0 && var <= 1.0)
                                     FileAppend(var " not between 0.0 and 1.0", "*")
                                  else if !(var >= 1 && var <= 4)
@@ -4784,9 +4766,9 @@ class ConvertTests
          )"
       expected := "
          (Join`r`n
-                                 var := "3.1415"
-                                 varLow := "2"
-                                 varHigh := "4"
+                                 var := 3.1415
+                                 varLow := 2
+                                 varHigh := 4
                                  if (var >= VarLow && var <= VarHigh)
                                     FileAppend(var " between " VarLow " and " VarHigh, "*")
          )"
@@ -4947,9 +4929,6 @@ class ConvertTests
       expected := "
          (Join`r`n
                                  list := "one,two,three"
-                                 ; V1toV2: StrReplace() is not case sensitive
-                                 ; check for StringCaseSense in v1 source script
-                                 ; and change the CaseSense param in StrReplace() if necessary
                                  list := StrReplace(list, ",", ",",, &ErrorLevel)
                                  FileAppend(ErrorLevel, "*")
          )"
@@ -5162,16 +5141,16 @@ class ToStringExprTests
 {
    SurroundQuotes()
    {
-      Yunit.assert(ToStringExpr("") = "`"`"")
-      Yunit.assert(ToStringExpr("hello") = "`"hello`"")
-      Yunit.assert(ToStringExpr("hello world") = "`"hello world`"")
+      Yunit.assert(ToExp("",1,1) = "`"`"")
+      Yunit.assert(ToExp("hello",1,1) = "`"hello`"")
+      Yunit.assert(ToExp("hello world",1,1) = "`"hello world`"")
    }
 
    QuotesInsideString()
    {
       orig := "the man said, `"hello`""
       expected := "`"the man said, ```"hello```"`""
-      converted := ToStringExpr(orig)
+      converted := ToExp(orig,1,1)
       ;Msgbox, expected: %expected%`nconverted: %converted%
       Yunit.assert(converted = expected)
    }
@@ -5182,27 +5161,27 @@ class ToStringExprTests
       ; "`"hello`" " . A_Index
       orig := "`"hello`" `%A_Index`%"
       expected := "`"```"hello```" `" . A_Index"
-      converted := ToStringExpr(orig)
+      converted := ToExp(orig,1,1)
       ;Msgbox, expected: %expected%`nconverted: %converted%
       Yunit.assert(converted = expected)
    }
 
    RemovePercents()
    {
-      Yunit.assert(ToStringExpr("`%hello`%") = "hello")
-      Yunit.assert(ToStringExpr("`%hello`%world") = "hello . `"world`"")
-      Yunit.assert(ToStringExpr("`%hello`% world") = "hello . `" world`"")
-      Yunit.assert(ToStringExpr("one `%two`% three") = "`"one `" . two . `" three`"")
+      Yunit.assert(ToExp("`%hello`%",1,1) = "hello")
+      Yunit.assert(ToExp("`%hello`%world",1,1) = "hello . `"world`"")
+      Yunit.assert(ToExp("`%hello`% world",1,1) = "hello . `" world`"")
+      Yunit.assert(ToExp("one `%two`% three",1,1) = "`"one `" . two . `" three`"")
    }
 
    RemoveEscapedCommas()
    {
-      Yunit.assert(ToStringExpr("hello``,world") = "`"hello,world`"")
+      Yunit.assert(ToExp("hello``,world",1,1) = "`"hello,world`"")
    }
 
    Numbers()
    {
-      Yunit.assert(ToStringExpr("10") = "`"10`"")
+      Yunit.assert(ToExp("10",1,1) = "`"10`"")
    }
 }
 
@@ -5347,11 +5326,11 @@ With continuation section.
 
       expected := "
          (Join`r`n
-MsgBox
+MsgBox`(
 `(
 "This is the 1-parameter method. Commas (,) do not need to be escaped.
 With continuation section."
-`)
+`)`)
 )"
 
       ; if (this.test_exec = true) {
@@ -5376,7 +5355,7 @@ MsgBox, 4, , This is the 3-parameter method. Commas (,) do not need to be escape
 
       expected := "
          (Join`r`n
-MsgBox("This is the 3-parameter method. Commas (,) do not need to be escaped.", "", 4)
+MsgBox("This is the 3-parameter method. Commas (,) do not need to be escaped.", , 4)
          )"
 
       ; if (this.test_exec = true) {
@@ -5402,7 +5381,7 @@ MsgBox, 4, , 4-parameter method: this MsgBox will time out in 5 seconds.  Contin
 
       expected := "
          (Join`r`n
-MsgBox("4-parameter method: this MsgBox will time out in 5 seconds.  Continue?", "", "4 T5")
+MsgBox("4-parameter method: this MsgBox will time out in 5 seconds.  Continue?", , "4 T5")
          )"
 
       ; if (this.test_exec = true) {
@@ -5592,7 +5571,7 @@ Loop, parse, clipboard, ``n, ``r
          (Join`r`n
 Loop parse, A_Clipboard, "``n", "``r"
 {
-    msgResult := MsgBox("File number " A_Index " is " A_LoopField ".``n``nContinue?", "", 4)
+    msgResult := MsgBox("File number " A_Index " is " A_LoopField ".``n``nContinue?", , 4)
     if (msgResult = "No")
         break
 }

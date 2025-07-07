@@ -70,7 +70,7 @@ MsgBox(HelpText)
 
 ;################################################################################
 
-var := "TESTING"
+var:="TESTING"
 
 CmdlineOpt:=
 (
@@ -249,8 +249,8 @@ Test
 ;#####################################
 
 title := "GREETINGS"
-var1 := "Hello"
-var2 := "Goodbye"
+var1:="Hello"
+var2:="Goodbye"
 secs := 4
 MsgBox(
 (
@@ -273,7 +273,7 @@ MsgBox(
 
 MsgBox(
 (
-		"First physical line - leading HORZ WS IS preserved
+ "		First physical line - leading HORZ WS IS preserved
 	All lines following first physical line - leading HORZ WS is ALSO preserved"
 ))
 
@@ -298,8 +298,8 @@ echo and you'll get the output."
 
 
 title := "complex MB"
-Line45 := "`nLine 4 and 5"
-TO := "4"
+Line45:="`nLine 4 and 5"
+TO:=4
 MsgBox(	; comment 1 ; additional comment
 /*
 should support block comments OR (comment2)
@@ -351,7 +351,7 @@ if (var = "val")
 if (var = "val")
 	MsgBox(
 (
-		"First physical line - leading HORZ WS IS preserved
+ "		First physical line - leading HORZ WS IS preserved
 	All lines following first physical line - leading HORZ WS is ALSO preserved"
 ), "title", "1 T4")
 

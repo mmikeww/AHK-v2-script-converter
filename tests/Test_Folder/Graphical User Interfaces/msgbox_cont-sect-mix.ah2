@@ -9,7 +9,7 @@ if (var = "val")
 if (var = "val")
     MsgBox(
 (
-    "1p forced"
+ "    1p forced"
 ))
 
 if (var = "val")
@@ -21,7 +21,7 @@ if (var = "val")
 if (var = "val")
     MsgBox(
 (
-    "4p forced only text"
+ "    4p forced only text"
 ), "title", 1)
 
 if (var = "val")
@@ -33,5 +33,5 @@ if (var = "val")
 if (var = "val")
     MsgBox(
 (
-    "4p forced with timeout"
+ "    4p forced with timeout"
 ), "title", "1 T4")

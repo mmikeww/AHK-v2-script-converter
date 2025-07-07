@@ -54,7 +54,7 @@ MsgBox(HelpText, helptitle, 32)
 
 ;################################################################################
 
-EmptyVar := "" 	; needs empty quotes added
+EmptyVar :="" 	; needs empty quotes added
 
 ;################################################################################
 
@@ -170,7 +170,7 @@ UpdateLayeredWindow(hwnd, hdc, x:="", y:="", w:="", h:="", Alpha:=255)
 
 
 F4C_String := "testing"
-F4C_String := "`"" . F4C_String . "`"" ;If needed, bracket the string in double quotes
+F4C_String:="`"" . F4C_String . "`"" ;If needed, bracket the string in double quotes
 MsgBox("[" F4C_String "]")
 
 str := "changeVar := `n(`n`"" . "change`ntext" . "`"`n)"
@@ -421,7 +421,7 @@ retStr := RegExReplace(retStr, "(?m)^((?:(?>`"[^`"\v]*`"|[^`"\v;]*)*)*)(;.*)+", 
 ;################################################################################
 
    myGui := Gui()
-   myGui.MarginX := "20", myGui.MarginY := "20"
+   myGui.MarginX := 20, myGui.MarginY := 20
    ogcButtonOrder1234 := myGui.Add("Button", "ym", "Order 1, 2, 3, 4")
    ogcButtonOrder1234.OnEvent("Click", Order123.Bind("Normal"))
    ogcButtonOrder3214 := myGui.Add("Button", "ym", "Order 3, 2, 1, 4")

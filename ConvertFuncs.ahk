@@ -1,4 +1,4 @@
-#Requires AutoHotKey v2.0
+﻿#Requires AutoHotKey v2.0
 #SingleInstance Force
 CoordMode("tooltip", "screen")          ; for debugging msgs
 
@@ -15,10 +15,14 @@ global   gFilePath   := ''              ; TEMP, for testing
 #Include Convert/3Methods.ahk
 #Include Convert/4ArrayMethods.ahk
 #Include Convert/5Keywords.ahk
-#Include Convert/MaskCode.ahk           ; 2024-06-26 ADDED AMB (masking support)
-#Include Convert/ConvLoopFuncs.ahk      ; 2025-06-12 ADDED AMB (separated loop code)
-#Include Convert/Conversion_CLS.ahk     ; 2025-06-12 ADDED AMB (future support of Class version)
-#Include Convert/ContSections.ahk       ; 2025-06-22 ADDED AMB (for support dedicated to continuation sections)
+#Include Convert/MaskCode.ahk                   ; 2024-06-26 ADDED AMB (masking support)
+#Include Convert/ConvLoopFuncs.ahk              ; 2025-06-12 ADDED AMB (separated loop code)
+#Include Convert/Conversion_CLS.ahk             ; 2025-06-12 ADDED AMB (future support of Class version)
+#Include Convert/ContSections.ahk               ; 2025-06-22 ADDED AMB (for support dedicated to continuation sections)
+#Include Convert/SplitConv/ConvV1_Funcs.ahk     ; 2025-07-01 ADDED AMB (for support of separated conversion)
+#Include Convert/SplitConv/ConvV2_Funcs.ahk     ; 2025-07-01 ADDED AMB (for support of separated conversion)
+#Include Convert/SplitConv/SharedCode.ahk       ; 2025-07-01 ADDED AMB (code shared for v1 or v2 converssion)
+#Include Convert/SplitConv/PseudoHandling.ahk   ; 2025-07-01 ADDED AMB (temp while separating dual conversion)
 
 
 ;################################################################################
@@ -70,8 +74,8 @@ Before_LineConverts(&code)
    if (gUseMasking) {
       ; this masking also performs masking for all strings and comments temporarily...
       ; but they are restored prior to exiting this func (behind the scenes)
-      MaskT(&code, 'CSECT2')                            ; global masking of M2 continuation sections (2025-06-22)
-      MaskT(&code, 'FUNC&CLS')                          ; global masking of functions and classes
+      Mask_T(&code, 'CSECT2')                           ; global masking of M2 continuation sections (2025-06-22)
+      Mask_T(&code, 'FUNC&CLS')                         ; global masking of functions and classes
    }
 
    return   ; code by reference
@@ -84,15 +88,15 @@ After_LineConverts(&code)
    ; turn masking on/off at top of SetGlobals()
    if (gUseMasking) {
       ; remove masking from classes, functions (returned as v2 converted)
-      MaskR(&code, 'Func&Cls')              ; remove masking from functions and classes
+      Mask_R(&code, 'Func&Cls')             ; remove masking from functions and classes
    }
 
    ; operations that must be performed last
    ; inspect to see whether your code is best placed here or in the following
    FinalizeConvert(&code)                   ; perform all final operations
 
-   MaskR(&code, 'CSect')                    ; restore remaining cont sects (returned as v2 converted)
-   MaskR(&code, 'C&S')                      ; ensure all comments/strings are restored (just in case)
+   Mask_R(&code, 'CSect')                   ; restore remaining cont sects (returned as v2 converted)
+   Mask_R(&code, 'C&S')                     ; ensure all comments/strings are restored (just in case)
    return    ; code by reference
 }
 
@@ -161,7 +165,7 @@ _convertLines(ScriptString)
 ;   added block-comment masking as a global condition for full ScriptString
 ;   changed many variable and function names
 
-   MaskT(&ScriptString, 'BC')       ; 2025-06-12 AMB, mask all block-comments globally
+   Mask_T(&ScriptString, 'BC')      ; 2025-06-12 AMB, mask all block-comments globally
 
    global gmAltLabel                := GetAltLabelsMap(ScriptString)       ; Create a map of labels who are identical
    global gOrig_ScriptStr           := ScriptString
@@ -195,8 +199,8 @@ _convertLines(ScriptString)
 ;      curLine           := gOScriptStr[gO_Index]                    ; current line string to be converted
       curLine           := gOScriptStr.GetNext                      ; current line string to be converted
       gIndent           := RegExReplace(curLine,'^(\h*).*','$1')    ; original line indentation (if present)
-      EOLComment        := procDirectivesAndComment(&curLine)       ; process character directives and extract initial trailing comment from line
-      lineOpen          := splitLine(&curLine)                      ; see splitLine() for details
+      EOLComment        := lp_DirectivesAndComment(&curLine)        ; process character directives and extract initial trailing comment from line
+      lineOpen          := lp_SplitLine(&curLine)                   ; see lp_splitLine() for details
       gEarlyLine        := curLine                                  ; portion of line to process [prior to processing], has no trailing comment
       lineClose         := ''                                       ; initial value, used later
       gEOLComment_Cont  := [EOLComment]                             ; 2025-05-24 fix for #296 - support for multiple comments within line continuations
@@ -206,25 +210,26 @@ _convertLines(ScriptString)
       ;     this will happen in phase 2 of redesign
       ; ORDER MAY MATTER FOR FOLLOWING STEPS...
       addContsToLine(&curLine, &EOLComment)                         ; Adds continuation lines to current line - TODO - USE CONT-MASKING ??
-      fixAssignments(&curLine, &EOLComment)                         ; line conversions related to assignments [var= and var:=] (v1/v2)
-      convert_Ifs(&curline, &lineOpen, &lineClose)                  ; line conversions related to IF (v1/v2)
+      fixAssignments(&curLine)                                      ; line conversions related to assignments [var= and var:=] (v1/v2)
+      v1_convert_Ifs(&curline, &lineOpen)                           ; line conversions related to IF (v1)
+      v2_convert_Ifs(&curline, &lineOpen, &lineClose)               ; line conversions related to IF (v2)
 
       fCmdConverted := false                                        ; will be set by v2_AHKCommand() thru v2_Conversions() below
-      if (gV2Conv) {                                                ; v2, but currently required for v1 conversion also
+;      if (gV2Conv) {     ; 2025-07-03 - REMOVED TEMPORARILY        ; v2, but currently required for v1 conversion also
          v2_Conversions(&curLine, &lineOpen, &EOLComment            ; line conversions related to V2 only (currently required for v1 conv also)
                       , &fCmdConverted, scriptString)               ; SETS VALUE of fCmdConverted (indirectly)
-      }
+;      }
 
       ; these must come AFTER v2_Conversions()
-      DisableInvalidCmds(&curLine, fCmdConverted)                   ; disable commands no longer supported (turns them into comments)
+      lp_DisableInvalidCmds(&curLine, fCmdConverted)                ; disable commands no longer supported (turns them into comments)
       curLine := lineOpen . curLine . lineClose                     ; reassemble line parts
-      postConversions(&curLine)                                     ; processing for current line that must be performed last
-      ScriptOutput .= updateLineMessages(&curLine,&EOLComment)      ; update conversion messages (to user) for current line. This is final line output.
+      lp_PostConversions(&curLine)                                  ; processing for current line that must be performed last
+      ScriptOutput .= lp_PostLineMsgs(&curLine,&EOLComment)         ; update conversion messages (to user) for current line. This is final line output.
    }  ; END of individual-line conversions (loop)
 
    ; trim the very last (extra) newline from output string
    ScriptOutput := RegExReplace(ScriptOutput, '\r\n$',,,1)          ; 2025-06-12 MOVED to here to eliminate multiple 'finalize' paths/processing
-   MaskR(&ScriptOutput, 'BC')                                       ; 2025-06-12 AMB, Restore all block-comments
+   Mask_R(&ScriptOutput, 'BC')                                      ; 2025-06-12 AMB, Restore all block-comments
    return ScriptOutput
 }
 ;################################################################################
@@ -405,136 +410,6 @@ V1toV2_Functions(ScriptString, Line, &retV2, &gotFunc) {
    }
 }
 ;################################################################################
-; Convert traditional statements to expressions
-;    Don't pass whole commands, instead pass one parameter at a time
-ToExp(Text)
-{
-;   v2_DQ_Literals(&text)           ; not needed and can cause issues
-
-   static qu := '"'    ; Constant for double quotes
-   static bt := "``"   ; Constant for backtick to escape
-   Text := Trim(Text, " `t")
-
-   if (Text = "")                             ; if text is empty
-      return (qu . qu)                        ; Two double quotes
-   else if (SubStr(Text, 1, 2) = "% ")        ; if this param was a forced expression
-      return SubStr(Text, 3)                  ; then just return it without the %
-
-   Text := RegExReplace(Text, '(?<!``)"', bt . qu)     ; first escape literal quotes
-   Text := StrReplace(Text, bt . ",", ",")    ; then remove escape char for comma
-
-   if (RegExMatch(Text, '(?<!``)%'))          ; deref   %var% -> var
-   {
-      TOut := "", DeRef := 0
-      Symbol_Prev := ""
-      Loop Parse, Text
-      {
-         Symbol := A_LoopField
-         ; handle escaped character
-         if (Symbol_Prev = "``")            ; if current char is escaped...
-         {
-            TOut .= Symbol                  ; ... include as is
-            Symbol_Prev := ""               ; treat next char as literal/normal char
-            continue
-         }
-         else if (Symbol = "%")             ; leading or trailing
-         {
-;            if ((DeRef := !DeRef) && (A_Index != 1))
-;               TOut .= qu . " . "           ; trailing quote (with a dot)
-;            else if (!DeRef) && (A_Index != StrLen(Text))
-;               TOut .= " . " . qu           ; trailing quote (with a dot)
-            if ((DeRef := !DeRef) && (A_Index != 1))
-               TOut .= qu . " "          ; trailing quote (with a dot)
-            else if (!DeRef) && (A_Index != StrLen(Text))
-               TOut .= " " . qu           ; trailing quote (with a dot)
-         }
-         else
-         {
-            if (A_Index = 1)
-               TOut .= qu                   ; add leading quote to beginning of string
-            TOut .= Symbol                  ; add current char
-         }
-         Symbol_Prev := Symbol              ; watch for escape char
-      }
-      if (Symbol != "%")
-         TOut .= (qu)                      ; Close string
-   }
-   else if (isNumber(Text))
-   {
-      TOut := Text + 0
-   }
-   else   ; wrap anything else in quotes
-   {
-      TOut := qu . Text . qu
-   }
-   return (TOut)
-}
-;################################################################################
-; nearly identical to ToExp()... EXCEPT...
-;   ... numbers are converted to string, AND...
-;   ... the linkChar is a string-concat instead of a space.
-ToStringExpr(Text)
-{
-;   v2_DQ_Literals(&text)           ; not needed and can cause issues
-
-   static qu := '"'    ; Constant for double quotes
-   static bt := "``"   ; Constant for backtick to escape
-   Text := Trim(Text, " `t")
-
-   if (Text = "")                             ; if text is empty
-      return (qu . qu)                        ; Two double quotes
-   else if (SubStr(Text, 1, 2) = "% ")        ; if this param was a forced expression
-      return SubStr(Text, 3)                  ; then just return it without the %
-
-;   Text := StrReplace(Text, qu, bt . qu)      ; first escape literal quotes
-;   Text := StrReplace(Text, bt . ",", ",")    ; then remove escape char for comma
-   Text := RegExReplace(Text, '(?<!``)"', bt . qu)     ; first escape literal quotes
-   Text := StrReplace(Text, bt . ",", ",")    ; then remove escape char for comma
-
-;   if (InStr(Text, "%"))                      ; deref   %var% -> var
-   if (RegExMatch(Text, '(?<!``)%'))          ; deref   %var% -> var
-   {
-      TOut := "", DeRef := 0
-      Symbol_Prev := ""
-      Loop Parse, Text
-      {
-         Symbol := A_LoopField
-         ; handle escaped character
-         if (Symbol_Prev = "``")            ; if current char is escaped...
-         {
-            TOut .= Symbol                  ; ... include as is
-            Symbol_Prev := ""               ; treat next char as literal/normal char
-            continue
-         }
-         else if (Symbol = "%")             ; leading or trailing
-         {
-            if ((DeRef := !DeRef) && (A_Index != 1))
-               TOut .= qu . " . "           ; trailing quote (with a dot)
-            else if (!DeRef) && (A_Index != StrLen(Text))
-               TOut .= " . " . qu           ; trailing quote (with a dot)
-         }
-         else
-         {
-            if (A_Index = 1)
-               TOut .= qu                   ; add leading quote to beginning of string
-            TOut .= Symbol                  ; add current char
-         }
-         Symbol_Prev := Symbol              ; watch for escape char
-      }
-      if (Symbol != "%")
-         TOut .= (qu)                      ; Close string
-   }
-;   else if (isNumber(Text))
-;   {
-;      TOut := Text + 0
-;   }
-   else   ; wrap anything else in quotes
-   {
-      TOut := qu . Text . qu
-   }
-   return (TOut)
-}
-;################################################################################
 ; change   "text" -> text
 RemoveSurroundingQuotes(text)
 {
@@ -681,16 +556,6 @@ _EnvSub(p) {
    else
       return format("{1} -= {2}", p*)
 }
-;;################################################################################
-;_FileAppend(p) {
-;; 2025-06-12 AMB, ADDED to correct formatting of multi-line text string
-
-;   txt  := (mlStr := isMLStr(p[1])) ? mlStr : ToExp(p[1])
-;   dFN  := (p[2]) ? ', ' p[2] : '' ; already converted to exp (if not blank)
-;   enc  := (p[3]) ? ', ' p[3] : '' ; already converted to exp (if not blank)
-;   out  := 'FileAppend(' txt dFN enc ')'
-;   return out
-;}
 ;################################################################################
 _FileCopyDir(p) {
    global gaScriptStrsUsed
@@ -991,7 +856,7 @@ _Gui(p) {
 
       if (!InStr(gGuiList, "|" GuiNameLine "|")) {
          gGuiList .= GuiNameLine "|"
-         LineResult := GuiNameLine " := Gui(" RegExReplace(ToStringExpr(GuiOpt), '^""$') ")`r`n" gIndent
+         LineResult := GuiNameLine " := Gui(" RegExReplace(ToExp(GuiOpt,1,1), '^""$') ")`r`n" gIndent
 
          ; Add the events if they are used.
          aEventRename := []
@@ -1022,7 +887,7 @@ _Gui(p) {
       }
       if (Var1 = "Show") {
          if (Var3 != "") {
-            LineResult .= GuiNameLine ".Title := " ToStringExpr(Var3) "`r`n" gIndent
+            LineResult .= GuiNameLine ".Title := " ToExp(Var3,1,1) "`r`n" gIndent
             Var3 := ""
          }
       }
@@ -1063,17 +928,17 @@ _Gui(p) {
             gmGuiCtrlType[ControlObject] := var2   ; Create a map containing the type of control
          }
       } else if (var1 = "Color") {
-         Return LineResult GuiNameLine ".BackColor := " ToStringExpr(Var2)
+         Return LineResult GuiNameLine ".BackColor := " ToExp(Var2,,1)
       } else if (var1 = "Margin") {
-         Return LineResult GuiNameLine ".MarginX := " ToStringExpr(Var2) ", " GuiNameLine ".MarginY := " ToStringExpr(Var3)
+         Return LineResult GuiNameLine ".MarginX := " ToExp(Var2,,1) ", " GuiNameLine ".MarginY := " ToExp(Var3,,1)
       }  else if (var1 = "Font") {
          var1 := "SetFont"
-         gGuiActiveFont := ToStringExpr(Var2) ", " ToStringExpr(Var3)
+         gGuiActiveFont := ToExp(Var2,,1) ", " ToExp(Var3,,1)
       } else if (Var1 = "Cancel") {
          Var1 := "Hide"
       } else if (var1 = "New") {
          LineResult := Trim(LineResult LineSuffix,"`n")
-         GuiName :=  ", " ToStringExpr(Var3)
+         GuiName :=  ", " ToExp(Var3,,1)
          LineResult := RegExReplace(LineResult, "(.*)\)(.*)", "$1" (GuiName != ', ""' ? GuiName ')' : ')') "$2")
          return RegExReplace(LineResult, '\r\n,', ',')
       }
@@ -1093,16 +958,16 @@ _Gui(p) {
                   LineSuffix .= ", " match[1] " := " GuiNameLine ".Hwnd"
                   Var1 := StrReplace(Var1, match[])
                }
-               LineResult .= "Opt(" ToStringExpr(Var1)
+               LineResult .= "Opt(" ToExp(Var1,,1)
             } Else {
                LineResult .= Var1 "("
             }
          }
          if (Var2 != "") {
-            LineResult .= ToStringExpr(Var2)
+            LineResult .= ToExp(Var2,,1)
          }
          if (Var3 != "") {
-            LineResult .= ", " ToStringExpr(Var3)
+            LineResult .= ", " ToExp(Var3,,1)
          } else if (Var4 != "") {
             LineResult .= ", "
          }
@@ -1150,13 +1015,13 @@ _Gui(p) {
                         ChooseString := "`" Choose" A_Index - 1 "`""
                         continue
                      }
-                     ObjectValue .= ObjectValue = "[" ? ToStringExpr(A_LoopField) : ", " ToStringExpr(A_LoopField)
+                     ObjectValue .= ObjectValue = "[" ? ToExp(A_LoopField,1,1) : ", " ToExp(A_LoopField,1,1)
                   }
                   ObjectValue .= "]"
                   LineResult .= ChooseString ", " ObjectValue
                }
             } else {
-               LineResult .= ", " ToStringExpr(Var4)
+               LineResult .= ", " ToExp(Var4,1,1)
             }
          }
          if (Var1 != "") {
@@ -1244,13 +1109,13 @@ _GuiControl(p) {
                PreSelected := LoopFieldPrev
                continue
             }
-            ObjectValue .= ObjectValue = "[" ? ToStringExpr(A_LoopField) : ", " ToStringExpr(A_LoopField)
+            ObjectValue .= ObjectValue = "[" ? ToExp(A_LoopField,,1) : ", " ToExp(A_LoopField,,1)
             LoopFieldPrev := A_LoopField
          }
          ObjectValue .= "]"
          Out .= ControlObject ".Add(" ObjectValue ")"
          if (PreSelected != "") {
-            Out .= "`r`n" gIndent ControlID ".ChooseString(" ToStringExpr(PreSelected) ")"
+            Out .= "`r`n" gIndent ControlID ".ChooseString(" ToExp(PreSelected,1,1) ")"
          }
          Return Out
       }
@@ -1268,13 +1133,13 @@ _GuiControl(p) {
                PreSelected := LoopFieldPrev
                continue
             }
-            ObjectValue .= ObjectValue = "[" ? ToStringExpr(A_LoopField) : ", " ToStringExpr(A_LoopField)
+            ObjectValue .= ObjectValue = "[" ? ToExp(A_LoopField,,1) : ", " ToExp(A_LoopField,,1)
             LoopFieldPrev := A_LoopField
          }
          ObjectValue .= "]"
          Out .= ControlObject ".Add(" ObjectValue ")"
          if (PreSelected != "") {
-            Out .= "`r`n" gIndent ControlID ".ChooseString(" ToStringExpr(PreSelected) ")"
+            Out .= "`r`n" gIndent ControlID ".ChooseString(" ToExp(PreSelected,1,1) ")"
          }
          Return Out
       }
@@ -1301,13 +1166,13 @@ _GuiControl(p) {
                PreSelected := LoopFieldPrev
                continue
             }
-            ObjectValue .= ObjectValue = "[" ? ToStringExpr(A_LoopField) : ", " ToStringExpr(A_LoopField)
+            ObjectValue .= ObjectValue = "[" ? ToExp(A_LoopField,,1) : ", " ToExp(A_LoopField,,1)
             LoopFieldPrev := A_LoopField
          }
          ObjectValue .= "]"
          Out .= ControlObject ".Add(" ObjectValue ")"
          if (PreSelected != "") {
-            Out .= "`r`n" gIndent ControlID ".ChooseString(" ToStringExpr(PreSelected) ")"
+            Out .= "`r`n" gIndent ControlID ".ChooseString(" ToExp(PreSelected,1,1) ")"
          }
          Return Out
       }
@@ -1428,7 +1293,7 @@ _Hotkey(p) {
 
    ;Convert label to function
 
-   if (RegexMatch(gOrig_ScriptStr, "\n(\s*)" p[2] ":\s")) {
+   if (RegexMatch(gOrig_ScriptStr, "\n(\s*)" p[2] ":(?!=)\s")) {
       gaList_LblsToFuncO.Push({label: p[2], parameters: "ThisHotkey"})
    }
    if (p[1] = "IfWinActive") {
@@ -1463,52 +1328,6 @@ _Hotkey(p) {
    }
    Out := RegExReplace(Out, "\s*`"`"\s*\)$", ")")
    Return RegExReplace(Out, "[\s\,]*\)$", ")") LineSuffix
-}
-;################################################################################
-_IfGreater(p) {
-   ; msgbox(p[2])
-   if (isNumber(p[2]) || InStr(p[2], "%"))
-      return format("if ({1} > {2})", p*)
-   else
-      return format("if (StrCompare({1}, {2}) > 0)", p*)
-}
-;################################################################################
-_IfGreaterOrEqual(p) {
-   ; msgbox(p[2])
-   if (isNumber(p[2]) || InStr(p[2], "%"))
-      return format("if ({1} > {2})", p*)
-   else
-      return format("if (StrCompare({1}, {2}) >= 0)", p*)
-}
-;################################################################################
-_IfLess(p) {
-   ; msgbox(p[2])
-   if (isNumber(p[2]) || InStr(p[2], "%"))
-      return format("if ({1} < {2})", p*)
-   else
-      return format("if (StrCompare({1}, {2}) < 0)", p*)
-}
-;################################################################################
-_IfLessOrEqual(p) {
-   ; msgbox(p[2])
-   if (isNumber(p[2]) || InStr(p[2], "%"))
-      return format("if ({1} < {2})", p*)
-   else
-      return format("if (StrCompare({1}, {2}) <= 0)", p*)
-}
-;################################################################################
-_IfInString(p) {
-   global gaScriptStrsUsed
-   CaseSense := gaScriptStrsUsed.StringCaseSense ? "A_StringCaseSense" : ""
-   Out := Format("if InStr({2}, {3}, {1})", CaseSense, p*)
-   return RegExReplace(Out, "[\s,]*\)", ")")
-}
-;################################################################################
-_IfNotInString(p) {
-   global gaScriptStrsUsed
-   CaseSense := gaScriptStrsUsed.StringCaseSense ? "A_StringCaseSense" : ""
-   Out := Format("if !InStr({2}, {3}, {1})", CaseSense, p*)
-   return RegExReplace(Out, "[\s,]*\)", ")")
 }
 ;################################################################################
 _Input(p) {
@@ -1675,51 +1494,122 @@ _Loop(p) {
 }
 ;################################################################################
 _MsgBox(p) {
-   ; v1
-   ; MsgBox, Text (1-parameter method)
-   ; MsgBox [, Options, Title, Text, Timeout]
-   ; v2
-   ; Result := MsgBox(Text, Title, Options)
-   ; 2025-06-12 AMB, UPDATED
-   ;    TODO - NEEDS TO BE CLEANED UP AND ORGANIZED BETTER
-   Check_IfMsgBox()
-   if (RegExMatch(p[1], "i)^((0x)?\d*\h*|\s*%\s*\w+%?\s*)$") && (p.Extra.OrigArr.Length > 1)) {
-      options := p[1]
-      if ( p.Length = 4 && (IsEmpty(p[4]) || IsNumber(p[4]) || RegExMatch(p[4], '\s*%', &m)) ) {
-         ; 2024-08-03 AMB, ADDED support for multiline text that may include variables
-         text := p[3]
-         text := (csStr := CSect.HasContSect(text)) ? csStr : ToExp(text)
-         if (!IsEmpty(p[4]))
-            options .= ' " T" ' ToExp(p[4])
-         title := ToExp(p[2])
-      } else {
-         text := ""
+; 2025-07-03 AMB, CHANGED for dual conversion support
+   return (gV2Conv) ? _MsgBox_V2(p) : _MsgBox_V1(p)
+}
+;################################################################################
+_MsgBox_V1(p)
+{
+; 2025-07-03 AMB, ADDED for v1.1 conversion (WORK IN PROGRESS)
+;   TODO - may merge with _MsgBox_V2() when done
+; v1
+; MsgBox, Text (1-parameter method)
+; MsgBox [, Options, Title, Text, Timeout]
+
+   if (RegExMatch(p[1], 'i)^((0x)?\d*\h*|\h*%\h*\w+%?\h*)$') && (p.Extra.OrigArr.Length > 1)) {
+
+      options   := p[1]
+      title     := ToExp(p[2])
+
+      ; if param 4 is empty, OR is a number, OR has a var (%)
+      if ( p.Length = 4 && (    IsEmpty(   p[4])
+                           ||   IsNumber(  p[4])
+                           ||   RegExMatch(p[4], '\h*%', &mVar)) ) {
+         text   := (csStr := CSect.HasContSect(p[3])) ? csStr : ToExp(p[3])
+         TmOut  := (IsEmpty(p[4])) ? '' : ToExp(p[4])  ; add timeout as needed
+      }
+      else {
+
+         text       := ''
          loop p.Extra.OrigArr.Length - 2
-            text .= "," p.Extra.OrigArr[A_Index + 2]
-         text := ToExp(SubStr(text, 2))
-         title := ToExp(p[2])
+            text    .= ',' p.Extra.OrigArr[A_Index + 2]
+         text       := ToExp(SubStr(text, 2))
       }
-      Out := format("MsgBox({1}, {2}, {3})", text, (title = '""' ? '' : title), ToExp(options))
-      if (Check_IfMsgBox()) {
-         Out := "msgResult := " Out
-      }
-      if IsSet(m) ; If timeout is variable
-         Out := RegExReplace(Out, '``" T``" (\w+)"\)', '" T" $1)') ; Clean up
-      Out := RegExReplace(Out, '``" T``" ', 'T')
-      Out := RegExReplace(Out, '" " T', '" T')
-      Out := RegExReplace(Out, '(,\s*"[^,]*?)\s*"([^,]*"[^,]*?\))$', '$1$2')
+
+      ; format output
+      Out := format('MsgBox {1}, {2}, {3}', ToExp(options), (title = '""' ? '' : title), text)
+      Out .= (TmOut) ? ', ' TmOut : ''
+;      if (Check_IfMsgBox()) {
+;         Out := 'msgResult := ' Out
+;      }
       return Out
-   } else {
+   }
+   else {   ; only has 1 param - could be text, var, func call, or combo of these
+
       ; 2024-08-03 AMB, ADDED support for multiline text that may include variables
-      param := p[1]
-      if (csStr := CSect.HasContSect(param)) {  ; if has continuation section, converts it
-         return "MsgBox(" csStr ")"
+      if (csStr := CSect.HasContSect(p[1])) {  ; if has continuation section, converts it
+         return 'MsgBox %' csStr
       }
+
       ; does not have continuation section
       param := p.Extra.OrigStr
-      Out := format("MsgBox({1})", ((param="") ? "" : ToExp(param)))
+      param := (param='') ? '""' : RegExReplace(ToExp(param), '^%\h+')
+      Out   := format('MsgBox % {1}', param)
+;      if (Check_IfMsgBox()) {
+;         Out := 'msgResult := ' Out
+;      }
+      return Out
+   }
+}
+;################################################################################
+_MsgBox_V2(p)
+{
+; 2025-07-03 AMB, ADDED/UPDATED for dual conversion support (WORK IN PROGRESS)
+;   TODO - may merge with _MsgBox_V1() when done
+; v1
+; MsgBox, Text (1-parameter method)
+; MsgBox [, Options, Title, Text, Timeout]
+; v2
+; Result := MsgBox(Text, Title, Options)
+
+   if (RegExMatch(p[1], 'i)^((0x)?\d*\h*|\h*%\h*\w+%?\h*)$') && (p.Extra.OrigArr.Length > 1)) {
+
+      options   := p[1]
+      title     := ToExp(p[2])
+
+      ; if param 4 is empty, OR is a number, OR has a var (%)
+      if ( p.Length = 4 && (    IsEmpty(   p[4])
+                           ||   IsNumber(  p[4])
+                           ||   RegExMatch(p[4], '\h*%', &mVar)) ) {
+         text       := (csStr := CSect.HasContSect(p[3])) ? csStr : ToExp(p[3])
+         options    .= (IsEmpty(p[4])) ? '' : ' " T" ' ToExp(p[4])  ; add timeout as needed
+      }
+      else {
+
+         text       := ''
+         loop p.Extra.OrigArr.Length - 2
+            text    .= ',' p.Extra.OrigArr[A_Index + 2]
+         text       := ToExp(SubStr(text, 2))
+      }
+
+      ; format output
+      Out := format('MsgBox({1}, {2}, {3})', text, (title = '""' ? '' : title), ToExp(options))
       if (Check_IfMsgBox()) {
-         Out := "msgResult := " Out
+         Out := 'msgResult := ' Out
+      }
+
+      ; clean up options param
+      if IsSet(mVar) {  ; If timeout is variable
+         Out := RegExReplace(Out, '``" T``" (\w+)"\)', '" T" $1)')
+      }
+      Out := RegExReplace(Out, '``" T``" ', 'T')
+      Out := RegExReplace(Out, '" " T', '" T')
+      Out := RegExReplace(Out, '(,\h*"[^,]*?)\h*"([^,]*"[^,]*?\))$', '$1$2')
+
+      return Out
+   }
+   else {   ; only has 1 param - could be text, var, func call, or combo of these
+
+      ; 2024-08-03 AMB, ADDED support for multiline text that may include variables
+      if (csStr := CSect.HasContSect(p[1])) {  ; if has continuation section, converts it
+         return 'MsgBox(' csStr ')'
+      }
+
+      ; does not have continuation section
+      param := p.Extra.OrigStr
+      Out   := format('MsgBox({1})', ((param='') ? '' : ToExp(param)))
+      if (Check_IfMsgBox()) {
+         Out := 'msgResult := ' Out
       }
       return Out
    }
@@ -1802,11 +1692,11 @@ _Menu(p) {
    {
       ; should be dealing with the root-menu (not a child menu item)
       if (Var2 = "Tip") {           ; set tooltip for script sysTray root-menu
-         Return LineResult .= "A_IconTip := " ToStringExpr(Var3)
+         Return LineResult .= "A_IconTip := " ToExp(Var3,,1)
       } else if (Var2 = "Icon") {   ; set icon for script systray root-menu
-         LineResult .= "TraySetIcon(" ToStringExpr(Var3)
-         LineResult .= Var4 ? "," ToStringExpr(Var4) : ""
-         LineResult .= Var5 ? "," ToStringExpr(Var5) : ""
+         LineResult .= "TraySetIcon(" ToExp(Var3,,1)
+         LineResult .= Var4 ? "," ToExp(Var4,,1) : ""
+         LineResult .= Var5 ? "," ToExp(Var5,,1) : ""
          LineResult .= ")"
          Return LineResult
       }
@@ -1866,7 +1756,7 @@ _Menu(p) {
       LineResult .= Var2 "("
    }
    if (RegExCount3) {
-      LineResult .= ToStringExpr(Var3)
+      LineResult .= ToExp(Var3,,1)
    } else if (RegExCount4) {
       LineResult .= ", "
    }
@@ -1894,7 +1784,7 @@ _Menu(p) {
          }
       } else {
          if (Var4 != "") {
-            LineResult .= ", " ToStringExpr(Var4)
+            LineResult .= ", " ToExp(Var4,,1)
          }
       }
    }
@@ -1902,7 +1792,7 @@ _Menu(p) {
       if (Var2 = "Insert") {
          LineResult .= ", " Var5
       } else if (Var5 != "") {
-         LineResult .= ", " ToStringExpr(Var5)
+         LineResult .= ", " ToExp(Var5,,1)
       } else if (Var5 = "" && p[6] != "") {
          LineResult .= ",, "
       }
@@ -1920,18 +1810,6 @@ _Menu(p) {
    }
 
    return LineResult
-}
-;################################################################################
-_OnExit(p) {
-   ;V1 OnExit,Func,AddRemove
-   if (RegexMatch(gOrig_ScriptStr, "\n(\s*)" p[1] ":\s")) {
-      gaList_LblsToFuncO.Push({label: p[1]
-                              , parameters: "A_ExitReason, ExitCode"
-                              , aRegexReplaceList: [{NeedleRegEx: "i)^(.*)\bReturn\b([\s\t]*;.*|)$"
-                              , Replacement: "$1Return 1$2"}]})
-   }
-   ; return needs to be replaced by return 1 inside the exitcode
-   Return Format("OnExit({1}, {2})", p*)
 }
 ;################################################################################
 _Pause(p) {
@@ -2078,109 +1956,6 @@ _SoundSet(p) {
    Return RegExReplace(Out, "[\s\,]*\)$", ")")
 }
 ;################################################################################
-_SplashTextOn(p) {
-   ;V1 : SplashTextOn,Width,Height,TitleT2E,TextT2E
-   ;V2 : Removed
-   P[1] := P[1] = "" ? 200: P[1]
-   P[2] := P[2] = "" ? 0: P[2]
-   Return "SplashTextGui := Gui(`"ToolWindow -Sysmenu Disabled`", " p[3] "), SplashTextGui.Add(`"Text`",, " p[4] "), SplashTextGui.Show(`"w" p[1] " h" p[2] "`")"
-}
-;################################################################################
-_SplashImage(p) {
-   ;V1 : SplashImage, ImageFile, Options, SubText, MainText, WinTitle, FontName
-   ;V1 : SplashImage, Off
-   ;V2 : Removed
-   ; To be improved to interpreted the options
-
-   if (p[1] = "Off") {
-      Out := "SplashImageGui.Destroy"
-   } else if (p[1] = "Show") {
-      Out := "SplashImageGui.Show()"
-   } else {
-      mOptions := GetMapOptions(p[1])
-      width := mOptions.Has("W") ? mOptions["W"] : 200
-      Out := "SplashImageGui := Gui(`"ToolWindow -Sysmenu Disabled`")"
-      Out .= (p[5] != "")               ? ", SplashImageGui.Title := " p[5] " " : ""
-      Out .= (p[4] = "" && p[3] = "")   ? ", SplashImageGui.MarginY := 0, SplashImageGui.MarginX := 0" : ""
-      Out .= (p[4] != "")               ? ", SplashImageGui.SetFont(`"bold`"," p[6] "), SplashImageGui.AddText(`"w" width " Center`", " p[4] ")" : ""
-      Out .= ", SplashImageGui.AddPicture(`"w" width " h-1`", " p[1] ")"
-      Out .= (p[4] != "" && p[3] != "") ? ", SplashImageGui.SetFont(`"norm`"," p[6] ")" : (p[3] != "" && p[6] != "") ? ", SplashImageGui.SetFont(," p[6] ")" : ""
-      Out .= (p[3] != "")               ? ", SplashImageGui.AddText(`"w" width " Center`", " p[3] ")" : ""
-      Out .= ", SplashImageGui.Show()"
-   }
-   Out := RegExReplace(Out, "[\s\,]*\)", ")")
-   Return Out
-}
-;################################################################################
-_Progress(p) {
-   ;V1 : Progress, ProgressParam1, SubTextT2E, MainTextT2E, WinTitleT2E, FontNameT2E
-   ;V1 : Progress , Off
-   ;V2 : Removed
-   ; To be improved to interpreted the options
-
-   if (p[1] = "Off") {
-      Out := "ProgressGui.Destroy"
-   } else if (p[1] = "Show") {
-      Out := "ProgressGui.Show()"
-   } else if (p[2] = "" && p[3] = "" && p[4] = "" && p[5] = "") {
-      Out := "gocProgress.Value := " p[1]
-   } else {
-      width := 200
-      mOptions := GetMapOptions(p[1])
-      width := mOptions.Has("W") ? mOptions["W"] : 200
-      GuiOptions := ""
-      GuiShowOptions := ""
-      SubTextFontOptions := ""
-      MainTextFontOptions := ""
-      ProgressOptions := ""
-      ProgressStart := ""
-      if (mOptions.Has("M")) {
-         if (mOptions["M"] = "") {
-            GuiOptions := "ToolWindow -Sysmenu"
-         } else if (mOptions["M"] = "1") {
-            GuiOptions := "ToolWindow -Sysmenu +Resize"
-         } else if (mOptions["M"] = "2") {
-            GuiOptions := "+Resize"
-         }
-      } else {
-         GuiOptions := "ToolWindow -Sysmenu Disabled"
-      }
-      if (mOptions.Has("B")) {
-         if (mOptions["B"] = "") {
-            GuiOptions := "-Caption"
-         } else if (mOptions["B"] = "1") {
-            GuiOptions := "-Caption +Border"
-         } else if (mOptions["B"] = "2") {
-            GuiOptions := "-Border"
-         }
-      }
-      GuiShowOptions .= mOptions.Has("X") ? " X" mOptions["X"] : ""
-      GuiShowOptions .= mOptions.Has("Y") ? " Y" mOptions["Y"] : ""
-      GuiShowOptions .= mOptions.Has("W") ? " W" mOptions["W"] : ""
-      GuiShowOptions .= mOptions.Has("H") ? " H" mOptions["H"] : ""
-      MainTextFontOptions := mOptions.Has("WM") ? "W" mOptions["WM"] : "Bold"
-      MainTextFontOptions .= mOptions.Has("FM") ? " S" mOptions["FM"] : ""
-      SubTextFontOptions := mOptions.Has("WS") ? "W" mOptions["WS"] : mOptions.Has("WM") ? " W400" : ""
-      SubTextFontOptions .= mOptions.Has("FS") ? " S" mOptions["FS"] : mOptions.Has("FM") ? " S8" : ""
-      ProgressOptions .= mOptions.Has("R") ? " Range" mOptions["R"] : ""
-      ProgressStart .= mOptions.Has("P") ? mOptions["P"] : ""
-
-      Out := "ProgressGui := Gui(`"" GuiOptions "`")"
-      Out .= (p[4] != "") ? ", ProgressGui.Title := " p[4] " " : ""
-      Out .= (p[3] = "" && p[2] = "") || mOptions.Has("FM") || mOptions.Has("FS") ? ", ProgressGui.MarginY := 5, ProgressGui.MarginX := 5" : ""
-      Out .= (p[3] != "")
-               ? ", ProgressGui.SetFont(" ToExp(MainTextFontOptions) "," p[5] "), ProgressGui.AddText(`"x0 w" width " Center`", " p[3] ")" : ""
-      Out .= ", gocProgress := ProgressGui.AddProgress(`"x10 w" width - 20 " h20" ProgressOptions "`", " ProgressStart ")"
-      Out .= (p[3] != "" && p[2] != "")
-             ? ", ProgressGui.SetFont(" ToExp(SubTextFontOptions) "," p[5] ")"
-             : (p[2] != "" && p[5] != "") ? ", ProgressGui.SetFont(," p[5] ")" : ""
-      Out .= (p[2] != "") ? ", ProgressGui.AddText(`"x0 w" width " Center`", " p[2] ")" : ""
-      Out .= ", ProgressGui.Show(" ToExp(GuiShowOptions) ")"
-   }
-   Out := RegExReplace(Out, "[\s\,]*\)", ")")
-   Return Out
-}
-;################################################################################
 _Random(p) {
    ; v1: Random, OutputVar, Min, Max
    if (p[1] = "") {
@@ -2272,142 +2047,6 @@ _StringUpper(p) {
       return format("{1} := StrUpper({2})", p*)
 }
 ;################################################################################
-_StringGetPos(p) {
-   global gIndent, gaScriptStrsUsed
-
-   CaseSense := gaScriptStrsUsed.StringCaseSense ? " A_StringCaseSense" : ""
-
-   if (IsEmpty(p[4]) && IsEmpty(p[5]))
-      return RegExReplace(format("{2} := InStr({3}, {4},{1}) - 1", CaseSense, p*), "[\s,]*\)", ")")
-
-   ; modelled off of:
-   ; https://github.com/Lexikos/AutoHotkey_L/blob/9a88309957128d1cc701ca83f1fc5cca06317325/source/script.cpp#L14732
-   else
-   {
-      p[5] := p[5] ? p[5] : 0   ; 5th param is 'Offset' aka starting position. set default value if none specified
-
-      p4FirstChar := SubStr(p[4], 1, 1)
-      p4LastChar := SubStr(p[4], -1)
-      ; msgbox(p[4] "`np4FirstChar=" p4FirstChar "`np4LastChar=" p4LastChar)
-      if (p4FirstChar = "`"") && (p4LastChar = "`"")   ; remove start/end quotes, would be nice if a non-expr was passed in
-      {
-         ; the text param was already conveted to expr based on the SideT2E param definition
-         ; so this block handles cases such as "L2" or "R1" etc
-         p4noquotes := SubStr(p[4], 2, -1)
-         p4char1 := SubStr(p4noquotes, 1, 1)
-         occurrences := SubStr(p4noquotes, 2)
-         ;msgbox, % p[4]
-         ; p[4] := occurrences ? occurrences : 1
-
-         if (StrUpper(p4char1) = "R")
-         {
-            ; only add occurrences param to InStr func if occurrences > 1
-            if (isInteger(occurrences) && (occurrences > 1))
-               return format("{2} := InStr({3}, {4},{1}, -1*(({6})+1), -" . occurrences . ") - 1", CaseSense, p*)
-            else
-               return format("{2} := InStr({3}, {4},{1}, -1*(({6})+1)) - 1", CaseSense, p*)
-         } else
-         {
-            if (isInteger(occurrences) && (occurrences > 1))
-               return format("{2} := InStr({3}, {4},{1}, ({6})+1, " . occurrences . ") - 1", CaseSense, p*)
-            else
-               return format("{2} := InStr({3}, {4},{1}, ({6})+1) - 1", CaseSense, p*)
-         }
-      } else if (p[4] = 1)
-      {
-         ; in v1 if occurrences param = "R" or "1" conduct search right to left
-         ; "1" sounds weird but its in the v1 source, see link above
-         return format("{2} := InStr({3}, {4},{1}, -1*(({6})+1)) - 1", CaseSense, p*)
-      } else if (p[4] = "")
-      {
-         return format("{2} := InStr({3}, {4},{1}, ({6})+1) - 1", CaseSense, p*)
-      } else
-      {
-         ; msgbox( p.Length "`n" p[1] "`n" p[2] "`n" p[3] "`n[" p[4] "]`n[" p[5] "]")
-         ; else then a variable was passed (containing the "L#|R#" string),
-         ;      or literal text converted to expr, something like:   "L" . A_Index
-         ; output something anyway even though it won't work, so that they can see something to fix
-         return format("{2} := InStr({3}, {4},{1}, ({6})+1, {5}) - 1", CaseSense, p*)
-      }
-   }
-}
-;################################################################################
-_StringMid(p) {
-   if (IsEmpty(p[4]) && IsEmpty(p[5]))
-      return format("{1} := SubStr({2}, {3})", p*)
-   else if (IsEmpty(p[5]))
-      return format("{1} := SubStr({2}, {3}, {4})", p*)
-   else if (IsEmpty(p[4]) && SubStr(p[5], 2, 1) = "L")
-      return Format("{1} := SubStr({2}, 1, {3})", p*)
-   else
-   {
-      ;msgbox, % p[5] "`n" SubStr(p[5], 1, 2)
-      ; any string that starts with 'L' is accepted
-      if (StrUpper(SubStr(p[5], 2, 1) = "L"))
-         ; Very ugly fix, but handles pseudo characters
-         ; (When StartChar is larger than InputVar on L mode)
-         ; Use below for shorter but more error prone conversion
-         ; return format("{1} := SubStr(SubStr({2}, 1, {3}), -{4})", p*)
-         return format("{1} := SubStr(SubStr({2}, 1, {3}), StrLen({2}) >= {3} ? -{4} : StrLen({2})-{3})", p*)
-      else
-      {
-         out := format("if (SubStr({5}, 1, 1) = `"L`")", p*) . "`r`n"
-         out .= format("    {1} := SubStr(SubStr({2}, 1, {3}), -{4})", p*) . "`r`n"
-         out .= format("else", p) . "`r`n"
-         out .= format("    {1} := SubStr({2}, {3}, {4})", p*)
-         return out
-      }
-   }
-}
-;################################################################################
-_StringReplace(p) {
-   ; v1
-   ; StringReplace, OutputVar, InputVar, SearchText [, ReplaceText, ReplaceAll?]
-   ; v2
-   ; ReplacedStr := StrReplace(Haystack, Needle [, ReplaceText, CaseSense, OutputVarCount, Limit])
-   global gIndent, gSingleIndent
-   if gaScriptStrsUsed.StringCaseSense
-      CaseSense := " A_StringCaseSense"
-   else
-      CaseSense := ""
-   if (IsEmpty(p[4]) && IsEmpty(p[5]))
-      Out := format("{2} := StrReplace({3}, {4},,{1},, 1)", CaseSense, p*)
-   else if (IsEmpty(p[5]))
-      Out := format("{2} := StrReplace({3}, {4}, {5},{1},, 1)", CaseSense, p*)
-   else
-   {
-      p5char1 := SubStr(p[5], 1, 1)
-      ; MsgBox(p[5] "`n" p5char1)
-
-      if (p[5] = "UseErrorLevel")   ; UseErrorLevel also implies ReplaceAll
-         Out := format("{2} := StrReplace({3}, {4}, {5},{1}, &ErrorLevel)", CaseSense, p*)
-      else if (p5char1 = "1") || (StrUpper(p5char1) = "A")
-      ; if the first char of the ReplaceAll param starts with '1' or 'A'
-      ; then all of those imply 'replace all'
-      ; https://github.com/Lexikos/AutoHotkey_L/blob/master/source/script2.cpp#L7033
-         Out := format("{2} := StrReplace({3}, {4}, {5},{1})", CaseSense, p*)
-      else
-      {
-         Out := "if (not " ToExp(p[5]) ")"
-         Out .= "`r`n" . gIndent . gSingleIndent . format("{2} := StrReplace({3}, {4}, {5},{1},, 1)", CaseSense, p*)
-         Out .= "`r`n" . gIndent . "else"
-         Out .= "`r`n" . gIndent . gSingleIndent . format("{2} := StrReplace({3}, {4}, {5},{1}, &ErrorLevel)", CaseSense, p*)
-      }
-   }
-   Return RegExReplace(Out, "[\s\,]*\)$", ")")
-}
-;################################################################################
-_StringSplit(p) {
-   ;V1 StringSplit,OutputArray,InputVar,DelimitersT2E,OmitCharsT2E
-   ; Output should be checked to replace OutputArray\d to OutputArray[\d]
-   global gaList_PseudoArr
-   VarName := Trim(p[1])
-   gaList_PseudoArr.Push({name: VarName})
-   gaList_PseudoArr.Push({strict: true, name: VarName "0", newname: VarName ".Length"})
-   Out := Format("{1} := StrSplit({2},{3},{4})", p*)
-   Return RegExReplace(Out, "[\s\,]*\)$", ")")
-}
-;################################################################################
 _SuspendV2(p) {
    ;V1 Suspend , Mode
 
@@ -2436,68 +2075,10 @@ _SysGet(p) {
    Return Format("{1} := SysGet({2})", p*)
 }
 ;################################################################################
-_Transform(p) {
-
-   if (p[2] ~= "i)^(Asc|Chr|Mod|Exp|sqrt|log|ln|Round|Ceil|Floor|Abs|Sin|Cos|Tan|ASin|ACos|Atan)") {
-      p[2] := p[2] ~= "i)^(Asc)" ? "Ord" : p[2]
-      Out := format("{1} := {2}({3}, {4})", p*)
-      Return RegExReplace(Out, "[\s\,]*\)$", ")")
-   }
-   p[3] := p[3] ~= "^-.*" ? "(" p[3] ")" : P[3]
-   p[4] := p[4] ~= "^-.*" ? "(" p[4] ")" : P[4]
-   if (p[2] ~= "i)^(Pow)") {
-      Return format("{1} := {3}**{4}", p*)
-   }
-   if (p[2] ~= "i)^(BitNot)") {
-      Return format("{1} := ~{3} `; V1toV2: Now always uses 64-bit signed integers", p*)
-   }
-   if (p[2] ~= "i)^(BitAnd)") {
-      Return format("{1} := {3}&{4}", p*)
-   }
-   if (p[2] ~= "i)^(BitOr)") {
-      Return format("{1} := {3}|{4}", p*)
-   }
-   if (p[2] ~= "i)^(BitXOr)") {
-      Return format("{1} := {3}^{4}", p*)
-   }
-   if (p[2] ~= "i)^(BitShiftLeft)") {
-      Return format("{1} := {3}<<{4}", p*)
-   }
-   if (p[2] ~= "i)^(BitShiftRight)") {
-      Return format("{1} := {3}>>{4}", p*)
-   }
-   Return format("; V1toV2: Removed : Transform({1}, {2}, {3}, {4})", p*)
-}
-;################################################################################
 _WinGetActiveStats(p) {
    Out := format("{1} := WinGetTitle(`"A`")", p*) . "`r`n"
    Out .= format("WinGetPos(&{4}, &{5}, &{2}, &{3}, `"A`")", p*)
    return Out
-}
-;################################################################################
-_WinGet(p) {
-   global gIndent
-   p[2] := p[2] = "ControlList" ? "Controls" : p[2]
-
-   Out := format("{1} := WinGet{2}({3},{4},{5},{6})", p*)
-   if (P[2] = "Class" || P[2] = "Controls" || P[2] = "ControlsHwnd" || P[2] = "ControlsHwnd") {
-      Out := format("o{1} := WinGet{2}({3},{4},{5},{6})", p*) "`r`n"
-      Out .= gIndent "For v in o" P[1] "`r`n"
-      Out .= gIndent "{`r`n"
-      Out .= gIndent "   " P[1] " .= A_index=1 ? v : `"``r``n`" v`r`n"
-      Out .= gIndent "}"
-   }
-   if (P[2] = "List") {
-      Out := format("o{1} := WinGet{2}({3},{4},{5},{6})", p*) "`r`n"
-      Out .= gIndent "a" P[1] " := Array()`r`n"
-      Out .= gIndent P[1] " := o" P[1] ".Length`r`n"
-      Out .= gIndent "For v in o" P[1] "`r`n"
-      Out .= gIndent "{   a" P[1] ".Push(v)`r`n"
-      Out .= gIndent "}"
-      gaList_PseudoArr.Push({name: P[1], newname: "a" P[1]})
-      gaList_PseudoArr.Push({strict: true, name: P[1], newname: "a" P[1] ".Length"})
-   }
-   Return RegExReplace(Out, "[\s\,]*\)$", ")")
 }
 ;################################################################################
 _WinMove(p) {
@@ -2855,11 +2436,6 @@ DebugWindow(Text, Clear := 0, LineBreak := 0, Sleep := 0, AutoHide := 0) {
    return
 }
 ;################################################################################
-Format2(FormatStr, Values*) {
-   ; Removes empty values
-   return Format(FormatStr, Values*)
-}
-;################################################################################
 ;// FormatParam:
 ;//          - param names ending in "T2E" will convert a literal Text param TO an Expression
 ;//              this would be used when converting a Command to a Func or otherwise needing an expr
@@ -2953,68 +2529,6 @@ FormatParam(ParName, ParValue) {
    Return ParValue
 }
 ;################################################################################
-;//  Example array123 => array[123]
-;//  Example array%A_index% => array[A_index]
-;//  Special cases in RegExMatch   => {OutVar: OutVar[0],     OutVar0: ""           }
-;//  Special cases in StringSplit  => {OutVar: "",            OutVar0: OutVar.Length}
-;//  Special cases in WinGet(List) => {OutVar: OutVar.Length, OutVar0: ""           }
-;// Converts PseudoArray to Array
-ConvertPseudoArray(ScriptStringInput, PseudoArrayName) {
-   ; The caller does a fast InStr before calling.
-   ; Summary of suffix variations depending on sources:
-   ;  - StringSplit      => OutVar:Blank;  OutVar0:Length; OutVarN:Items;
-   ;  - WinGet-List      => OutVar:Length; OutVar0:Blank;  OutVarN:Items;
-   ;  - RegExMatch-Mode1 => OutVar:Text;   OutVar0:Blank;  OutVarN:Items;
-   ;  - RegExMatch-Mode2 => OutVar:Length; OutVar0:Blank;  OutVarN:Blank; OutVarPosN:Item-pos; OutVarLenN:Item-len;
-   ;  - RegExMatch-Mode3 => OutVar:Object; OutVar0:Blank;  OutVarN:Blank;
-
-   ArrayName := PseudoArrayName.name
-   NewName := PseudoArrayName.HasOwnProp("newname") ? PseudoArrayName.newname : ArrayName
-   if (RegexMatch(ScriptStringInput,"i)^\s*(local|global|static)\s")) {
-      ; Expecting situations like "local x,v0,v1" to end up as "local x,v".
-      ScriptStringInput := RegExReplace(ScriptStringInput, "is)\b(" ArrayName ")(\d*\s*,\s*(?1)\d*)+\b", NewName)
-   } else if (PseudoArrayName.HasOwnProp("strict") && PseudoArrayName.strict) {
-      ; Replacement without allowing suffix.
-
-      ; 2024-06-22 AMB Added regex property to support regexmatch array validation (has it been set?)
-      ; see _RegExMatch() in 2Functions.ahk to see where this property is set
-      if (PseudoArrayName.HasOwnProp("regex") && PseudoArrayName.regex)
-      {
-         ; this is regexmatch array[0] - validate that array has been set -> (m&&m[0])
-         MaskT(&ScriptStringInput, 'STR')
-         ScriptStringInput := RegExReplace(ScriptStringInput, "is)(?<!\w|&|\.)" ArrayName "(?!&|\w|%|\.|\[|\s*:=)", "(" ArrayName "&&" NewName ")")
-         MaskR(&ScriptStringInput, 'STR')
-      }
-      else
-      {
-         ; anything other than regexmatch
-         ScriptStringInput := RegExReplace(ScriptStringInput, "is)(?<!\w|&|\.)" ArrayName "(?!\w|%|\.|\[|\s*:=)", NewName)
-      }
-   } else {
-      ; General replacement for numerical suffixes and percent signs.
-      ScriptStringInput := RegExReplace(ScriptStringInput, "is)(?<!\w|&|\.)" ArrayName "([1-9]\d*)(?!\w|\.|\[)", NewName "[$1]")
-      ScriptStringInput := RegExReplace(ScriptStringInput, "is)(?<!\w|&|\.)" ArrayName "%(\w+)%(?!\w|\.|\[)", NewName "[$1]")
-   }
-
-   Return ScriptStringInput
-}
-;################################################################################
-;//  Example ObjectMatch.Value(N) => ObjectMatch[N]
-;//  Example ObjectMatch.Len(N) => ObjectMatch.Len[N]
-;//  Example ObjectMatch.Mark() => ObjectMatch.Mark
-;//  Special case ObjectMatch.Name(N) => ObjectMatch.Name(N)
-;//  Special case ObjectMatch.Name => ObjectMatch["Name"]
-;// Converts Object Match V1 to Object Match V2
-ConvertMatchObject(ScriptStringInput, ObjectMatchName) {
-   ; The caller does a fast InStr before calling.
-   ; We try to catch group-names before methods turn into properties.
-   ; ScriptStringInput := RegExReplace(ScriptStringInput, "is)(?<!\w|&)(" ObjectMatchName ")\.(\d+)\b", '$1[$2]') ; Matter of preference.
-   ScriptStringInput := RegExReplace(ScriptStringInput, "is)(?<!\w|&)(" ObjectMatchName ")\.(?=\w*[a-z_])(\w+)(?!\w|\()", '$1["$2"]')
-   ScriptStringInput := RegExReplace(ScriptStringInput, "is)(?<!\w|&)(" ObjectMatchName ")\.(Value)\((.*?)\)", "$1[$3]")
-   ScriptStringInput := RegExReplace(ScriptStringInput, "is)(?<!\w|&)(" ObjectMatchName ")\.(Mark|Count)\(\)", "$1.$2")
-   Return ScriptStringInput
-}
-;################################################################################
 ; Returns a Map of options like x100 y200 ...
 GetMapOptions(Options) {
    mOptions := Map()
@@ -3042,7 +2556,7 @@ GetMapOptions(Options) {
 ConvertLabel2Func(ScriptString, Label, Parameters := "", NewFunctionName := "", aRegexReplaceList := "") {
 ; 2025-06-12 AMB, UPDATED - changed some var and func names, gOScriptStr is now an object
 
-   MaskT(&ScriptString, 'BC')
+   Mask_T(&ScriptString, 'BC')
 ;   gOScriptStr  := StrSplit(ScriptString, "`n", "`r")
    ScriptStr    := ScriptCode(ScriptString)
    Result       := ""
@@ -3129,9 +2643,10 @@ ConvertLabel2Func(ScriptString, Label, Parameters := "", NewFunctionName := "", 
          }
       }
       ; This check needs to be at the bottom.
-      if (Instr(Line, Label ":")) {
-         if (RegexMatch(Line, "is)^(\s*|.*\n\s*)(\Q" Label "\E):(.*)", &Var)) {
-            if (RegExMatch(Line, "is)(\s*)(\Q" Label "\E):(\s*[^\s;].+)")) {
+      ; 2025-07-03 AMB, UPDATED detection to prevent var:= from being mistaken for a label
+      if ((lbl:=isValidV1Label(line)) = Label ':') {    ; 2025-07-03 adj this and 2 needles below (as bkup)
+         if (RegexMatch(Line, "is)^(\s*|.*\n\s*)(\Q" Label "\E):(?!=)(.*)", &Var)) {
+            if (RegExMatch(Line, "is)(\s*)(\Q" Label "\E):(?!=)(\s*[^\s;].+)")) {
                ;Oneline detected
                Line := Var[1] NewFunctionName "(" Parameters "){`r`n   " Var[3] "`r`n}"
                if (IsObject(aRegexReplaceList)) {
@@ -3159,7 +2674,7 @@ ConvertLabel2Func(ScriptString, Label, Parameters := "", NewFunctionName := "", 
    }
    result .= happyTrails    ; add ONLY original trailing blank lines back
 
-   MaskR(&result, 'BC')
+   Mask_R(&result, 'BC')
    return Result
 }
 ;################################################################################
@@ -3171,7 +2686,7 @@ ConvertLabel2Func(ScriptString, Label, Parameters := "", NewFunctionName := "", 
  */
 AddBracket(ScriptString) {
 
-   MaskT(&ScriptString, 'BC')
+   Mask_T(&ScriptString, 'BC')
 
    ; 2024-07-09 AMB, ADDED - fix for trailing CRLF issue
    ; capture any trailing blank lines at end of string
@@ -3290,7 +2805,7 @@ AddBracket(ScriptString) {
    }
    result := RTrim(Result, "`r`n") . happyTrails
 
-   MaskR(&result, 'BC')
+   Mask_R(&result, 'BC')
    return result
 }
 ;################################################################################
@@ -3574,76 +3089,6 @@ ConvertEscapedQuotesInStr(srcStr) {
    return retStr
 }
 ;################################################################################
-v2_RemoveNewKeyword(&lineStr) {
-; 2024-04-09 AMB, MODIFIED to prevent "new" within strings from being removed
-; 2025-06-12 AMB, UPDATED - changed func name, and some var and funcCall names
-
-   if (!InStr(lineStr, 'new'))
-      return
-
-   MaskT(&lineStr, 'STR')   ; protect "new" within strings
-   if (RegExMatch(lineStr, 'i)^(.+?)(:=|\(|,)(\h*)new\h(\h*\w.*)$', &m)) {
-      lineStr := m[1] m[2] m[3] m[4]
-   }
-   MaskR(&lineStr, 'STR')
-   return   ; lineStr by reference
-}
-;################################################################################
-CorrectNEQ(&lineStr) {
-; 2025-06-12 AMB, UPDATED - some var and funcCall names
-; Converts <> to !=
-
-   if (!InStr(lineStr, '<>'))
-      return
-
-   MaskT(&lineStr, 'STR')   ; protect "<>" within strings
-   lineStr := StrReplace(lineStr, '<>', '!=')
-   MaskR(&lineStr, 'STR')
-   return   ; lineStr by reference
-}
-;################################################################################
-v2_RenameLoopRegKeywords(&lineStr) {
-; 2024-04-08 AMB, ADDED
-; separated LoopReg keywords from gmAhkKeywdsToRename map...
-;   so that they can be treated differently - See 5Keywords.ahk
-; 2025-06-12 AMB, UPDATED - changed func name, and some var and funcCall names
-
-   for v1, v2 in gmAhkLoopRegKeywds {
-      srchtxt := Trim(v1), rplctxt := Trim(v2)
-      if (InStr(lineStr, srchtxt)) {
-         lineStr := RegExReplace(lineStr, 'i)([^\w]|^)\Q' . srchtxt . '\E([^\w]|$)', '$1' . rplctxt . '$2')
-      }
-   }
-   return   ; lineStr by reference
-}
-;################################################################################
-RenameKeywords(&lineStr) {
-; 2024-04-08 AMB, ADDED
-; moved this code from main loop to it's own function
-; also separated LoopReg keywords from gmAhkKeywdsToRename map...
-;   so that they can be treated differently - See 5Keywords.ahk
-; Added the ability to mask the line-strings so that Keywords found within
-;   strings are no longer converted along with Keyword vars
-; 2025-06-12 AMB, UPDATED - changed some var and funcCall names
-
-   ; replace any renamed vars
-   ; Fixed - NO LONGER converts text found in strings
-   masked := false
-   for v1, v2 in gmAhkKeywdsToRename {
-      srchtxt := Trim(v1), rplctxt := Trim(v2)
-      if (InStr(lineStr, srchtxt)) {
-         if (!masked) {
-            masked := true, MaskT(&lineStr, 'STR')   ; masking is slow, so only do this as necessary
-         }
-         lineStr := RegExReplace(lineStr, 'i)([^\w]|^)\Q' . srchtxt . '\E([^\w]|$)', '$1' . rplctxt . '$2')
-      }
-   }
-   if (masked)
-      MaskR(&lineStr, 'STR')
-
-   return   ; lineStr by reference
-}
-;################################################################################
 addGuiCBArgs(&code) {
    global gmGuiFuncCBChecks
    for key, val in gmGuiFuncCBChecks {
@@ -3828,26 +3273,6 @@ getScriptLabels(code)
  ;     MsgBox "[" corrections "]"
    }
    return
-}
-;################################################################################
-removeEOLComments(Line, FirstChar, &EOLComment) {
-; 2025-05-24 Banaanae, ADDED for fix #296
-; 2025-06-12 AMB, UPDATED - to capture far-left line comment, rather than trailing (far right) occurence
-
-   nL2RComment := '^([^;\v]+?)(\h+`;.*)$'               ; far left occurence
-
-   if (FirstChar = ';') {
-      EOLComment    := Line
-      Line          := ''
-   }
-   else if (RegExMatch(Line, nL2RComment, &mL2R)) {     ; capture FIRST (far left) occurence of comment
-      line          := mL2R[1]
-      EOLComment    := mL2R[2]
-   }
-   else {
-      EOLComment    := ''
-   }
-   return Line
 }
 ;################################################################################
 isolateLabels(code)

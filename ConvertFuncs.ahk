@@ -2915,7 +2915,7 @@ UpdateGoto(ScriptString) {
  * Fix turning off OnMessage when OnMessage is turned off
  * before it is assigned a callback (by eg using functions)
  */
-FixOnMessage(ScriptString) { ; TODO: If callback *still* isn't found, add this comment  `; V1toV2: Put callback to turn off in param 2
+FixOnMessage(ScriptString) {
    if (!InStr(ScriptString, Chr(1000) Chr(1000) "CallBack_Placeholder" Chr(1000) Chr(1000)))
       Return ScriptString
 
@@ -2936,6 +2936,9 @@ FixOnMessage(ScriptString) { ; TODO: If callback *still* isn't found, add this c
       }
       retScript .= Line "`r`n"
    }
+
+   retScript := RegExReplace(retScript, "ϨϨCallBack_PlaceholderϨϨ(.*)", "$1 `; V1toV2: Put callback to turn off in param 2")
+
    return RTrim(retScript, "`r`n") . happyTrails   ; add back just the trailing CRLFs that code came in with
 }
 ;################################################################################

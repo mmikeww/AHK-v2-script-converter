@@ -265,12 +265,13 @@ FinalizeConvert(&code)
    code := RegExReplace(code, "i)([^(\s]*\.)ϨMaxIndex\(placeholder\)Ϩ", '$1Length != 0 ? $1Length : ""')
    code := RegExReplace(code, "i)([^(\s]*\.)ϨMinIndex\(placeholder\)Ϩ", '$1Length != 0 ? 1 : ""') ; Can be done in 4ArrayMethods.ahk, but done here to add EOLComment
 
-   try code := AddBracket(code)         ; Add Brackets to Hotkeys
-   try code := UpdateGoto(code)         ; Update Goto Label when Label is converted to a func
-   try code := UpdateGotoFunc(code)     ; Update Goto Label when Label is converted to a func
-   try code := FixOnMessage(code)       ; Fix turning off OnMessage when defined after turn off
-   try code := FixVarSetCapacity(code)  ; &buf -> buf.Ptr   &vssc -> StrPtr(vssc)
-   try code := FixByRefParams(code)     ; Replace ByRef with & in func declarations and calls - see related fixFuncParams()
+   try code := AddBracket(code)          ; Add Brackets to Hotkeys
+   try code := UpdateGoto(code)          ; Update Goto Label when Label is converted to a func
+   try code := UpdateGotoFunc(code)      ; Update Goto Label when Label is converted to a func
+   try code := FixOnMessage(code)        ; Fix turning off OnMessage when defined after turn off
+   try code := FixVarSetCapacity(code)   ; &buf -> buf.Ptr   &vssc -> StrPtr(vssc)
+   try code := FixByRefParams(code)      ; Replace ByRef with & in func declarations and calls - see related fixFuncParams()
+   try code := RemoveComObjMissing(code) ; Removes ComObjMissing() and variables
 
    addGuiCBArgs(&code)
    addMenuCBArgs(&code)                 ; 2024-06-26, AMB - Fix #131
@@ -3016,6 +3017,84 @@ FixByRefParams(ScriptString) {
          retScript .= retLine EOLComment "`r`n"
    }
    return RTrim(retScript, "`r`n") . happyTrails
+}
+;################################################################################
+/**
+ * Removes ComObjMissing and references to it from functions
+ * Eg ComValue(0x10, ComObjMissing()) => ComValue(0x10)
+ *    ComValue(0x20, VarForComObjMissing) => ComValue(0x20)
+ */
+RemoveComObjMissing(ScriptString) {
+   if !InStr(ScriptString, 'ComObjMissing()')
+      return ScriptString
+   Mask_T(&ScriptString, 'STR')
+   VarsToRemove := []
+   EOLComments := Map()
+   Lines := StrSplit(ScriptString, "`n", "`r")
+
+   for i, Line in Lines {
+      if RegExMatch(Line, "(\h+`;.*)$", &commentMatch) {
+         Line := RegExReplace(Line, "(\h+`;.*)$")
+         EOLComments[i] := commentMatch[1]
+      } else {
+         EOLComments[i] := ""
+      }
+
+      first := true
+      while InStr(Line, 'ComObjMissing()') {
+         if RegExMatch(Line, "(\w+)\s*:=\s*ComObjMissing\(\)", &assignMatch)
+            VarsToRemove.Push(assignMatch[1])
+
+         Mask_T(&Line, 'FC')
+         parts := StrSplit(Line, ",")
+
+         if parts.Length > 1 {
+            Line := ""
+            for , part in parts {
+               Mask_R(&part, 'FC')
+               if InStr(part, "ComObjMissing()") {
+                  if first {
+                     EOLComments[i] .= " `; V1toV2: Removed"
+                     first := false
+                  }
+                  EOLComments[i] .= " " Trim(part) ","
+               } else {
+                  Line .= part ","
+               }
+            }
+            Line := RTrim(Line, ",")
+         } else {
+            Mask_R(&Line, 'FC')
+            Line := RegExReplace(Line, "(.*?)((?:\w+\s*:=\s*)?ComObjMissing\(\))(.*)", "$1$3" Chr(0x8787) "$2")
+            sLine := StrSplit(Line, Chr(0x8787))
+            Line := sLine[1]
+            EOLComments[i] .= " `; V1toV2: Removed " sLine[2]
+            Line := RegExReplace(Line, "[\s,]+\)", ")")
+         }
+
+         Line := RTrim(Line, ",")
+      }
+
+      Lines[i] := Line
+   }
+
+   for i, Line in Lines {
+      for , var in VarsToRemove {
+         if RegExMatch(Line, "\b" var "\b") {
+            Line := RegExReplace(Line, "\b" var "\b")
+            Line := RegExReplace(Line, "[\s,]+\)", ")")
+            EOLComments[i] .= " `; V1toV2: Removed ComObjMissing() variable " var
+         }
+      }
+      Lines[i] := Line
+   }
+   final := ""
+   for i, Line in Lines {
+      finalLine := Line RTrim(EOLComments.Get(i, ""), ",")
+      finalLine := RegExReplace(finalLine, "^(\s*) (; V1toV2: Removed [^;]*ComObjMissing\(\))", "$1$2")
+      final .= finalLine "`r`n"
+   }
+   return RegExReplace(final, '\r\n$')
 }
 ;################################################################################
 ConvertDblQuotes2(&Line, eqRSide) {

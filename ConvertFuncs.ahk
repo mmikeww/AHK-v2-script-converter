@@ -3071,10 +3071,8 @@ RemoveComObjMissing(ScriptString) {
             EOLComments[i] .= " `; V1toV2: Removed " sLine[2]
             Line := RegExReplace(Line, "[\s,]+\)", ")")
          }
-
          Line := RTrim(Line, ",")
       }
-
       Lines[i] := Line
    }
 

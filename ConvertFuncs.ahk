@@ -3033,12 +3033,8 @@ RemoveComObjMissing(ScriptString) {
    Lines := StrSplit(ScriptString, "`n", "`r")
 
    for i, Line in Lines {
-      if RegExMatch(Line, "(\h+`;.*)$", &commentMatch) {
-         Line := RegExReplace(Line, "(\h+`;.*)$")
-         EOLComments[i] := commentMatch[1]
-      } else {
-         EOLComments[i] := ""
-      }
+      Line := separateComment(Line, &comment:='')
+      EOLComments[i] := comment
 
       first := true
       while InStr(Line, 'ComObjMissing()') {
@@ -3092,6 +3088,7 @@ RemoveComObjMissing(ScriptString) {
       finalLine := RegExReplace(finalLine, "^(\s*) (; V1toV2: Removed [^;]*ComObjMissing\(\))", "$1$2")
       final .= finalLine "`r`n"
    }
+   Mask_R(&final, 'STR')
    return RegExReplace(final, '\r\n$')
 }
 ;################################################################################

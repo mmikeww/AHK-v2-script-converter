@@ -477,7 +477,7 @@
 	if (tag := hasTag(lineStr, 'MLCSECTM2')) {									; is lineStr a continuation tag?
 		; 2025-08-23 AMB, ADDED - to preserve proper leading indent/WS
 		indentWS := ''
-		if (RegExMatch(lineStr, '^(\h*)', &mLWS)) {
+		if (RegExMatch(lineStr, '^(\h+)', &mLWS)) {
 			indentWS := mLWS[1]													; get leading whitespace/indentation
 		}
 		oCode := hasTag(lineStr, tag)											; get orig line + continuation section (does not include indent)
@@ -643,7 +643,7 @@
 
 	; 2025-08-23 AMB, ADDED - separate leading indent/WS from command
 	indentWS := ''
-	if (RegExMatch(lineStr, '(?s)^(\h*)(.+)$', &mLWS)) {
+	if (RegExMatch(lineStr, '(?s)^(\h+)(.+)$', &mLWS)) {
 		indentWS := mLWS[1], lineStr := mLWS[2]
 	}
 

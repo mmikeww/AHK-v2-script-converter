@@ -9,7 +9,9 @@
 */
 
 global gmAhkFuncsToConvert := OrderedMap(
-    "ComObject(vt, value, Flags)" ,
+    "Catch(OutputVar)" ,
+    "*_Catch"
+  , "ComObject(vt, value, Flags)" ,
     "ComValue({1}, {2}, {3})"
   , "ComObjCreate(CLSID , IID)" ,
      "ComObject({1}, {2})"
@@ -115,6 +117,8 @@ global gmAhkFuncsToConvert := OrderedMap(
     "*_VarSetCapacity"
   )
 
+
+; See ConvertFuncs.ahk for _Catch() (also used for command conversion)
 
 _DllCall(p) {
   ParBuffer := ""

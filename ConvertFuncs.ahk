@@ -438,6 +438,17 @@ IsEmpty(param)
 ; Command formatting functions
 ;    They all accept an array of parameters and return command(s) in text form
 ;    These are only called in one place in the script and are called dynamicly
+_Catch(p) {
+   if Trim(p[1], '{ `t') = '' {
+      if InStr(p[1], '{')
+         return 'Catch {'
+      return 'Catch'
+   } if !InStr(p[1], "Error as") {
+      return "Catch Error as " p[1]
+   }
+   return "Catch " p[1]
+}
+;################################################################################
 _Control(p) {
    ; Control, SubCommand , Value, Control, WinTitle, WinText, ExcludeTitle, ExcludeText
 

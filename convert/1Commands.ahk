@@ -147,6 +147,8 @@ global gmAhkCmdsToConvertV2 := OrderedMap(
     "BlockInput({1})"
   , "DriveSpaceFree,OutputVar,PathT2E" ,
     "{1} := DriveGetSpaceFree({2})"
+  , "Catch,OutputVar" ,
+    "*_Catch"
   , "Click,keysT2E" ,
     "Click({1})"
   , "ClipWait,Timeout,WaitForAnyData" ,

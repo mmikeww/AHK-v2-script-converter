@@ -475,15 +475,20 @@
 	; extract original code, see if line1 has a targetted command... if not, exit
 	fHaveCS	:= false															; flag used later
 	if (tag := hasTag(lineStr, 'MLCSECTM2')) {									; is lineStr a continuation tag?
-		oCode := hasTag(lineStr, tag)											; get orignal line + continuation section
+		; 2025-08-23 AMB, ADDED - to preserve proper leading indent/WS
+		indentWS := ''
+		if (RegExMatch(lineStr, '^(\h*)', &mLWS)) {
+			indentWS := mLWS[1]													; get leading whitespace/indentation
+		}
+		oCode := hasTag(lineStr, tag)											; get orig line + continuation section (does not include indent)
 		Mask_R(&oCode, 'C&S', false)											; extract comments/strings that are masked
-		if (RegExMatch(oCode, '(?s)^([^\v]+)(.+)$', &m)) {
-			tLine1 := m[1], contBlk := m[2]										; separate temp_line1 from continuation block
+		if (RegExMatch(oCode, '(?s)^([^\v]+)(.+)$', &m)) {						; will not include indentation
+			tLine1 := m[1], contBlk := m[2]										; separate temp_line1, from continuation block
 			if (!obj := V1LineToProcess.getCmdObject(tLine1)) {					; determine whether line1 has v1 command to be converted
 				return false													; no command to process - exit
 			}
 			; line1 has legit command
-			lineStr := tLine1													; OK to change lineStr now - make it the first (cmd) line
+			lineStr := indentWS . tLine1										; OK to change lineStr now - make it the first (cmd) line, and apply indent
 			fHaveCS := true														; flag to use alternate routine to fill params arrays
 			; deal with any comment on line 1
 			lineStr	:= separateComment(lineStr, &EOLComment)					; separate comment (first occurence) from line1
@@ -636,6 +641,12 @@
 ; 2025-06-12 AMB, Moved from v2_AHKCommands() to dedicated routine
 ; Purpose: performs conversion of line v1 commands/params to v2 format
 
+	; 2025-08-23 AMB, ADDED - separate leading indent/WS from command
+	indentWS := ''
+	if (RegExMatch(lineStr, '(?s)^(\h*)(.+)$', &mLWS)) {
+		indentWS := mLWS[1], lineStr := mLWS[2]
+	}
+
 	; perform special formatting of line params as outlined by command definition
 	maxParamCount := cDParamsArr.Length
 	Loop maxParamCount {																		; for each line param...
@@ -664,14 +675,16 @@
 			; To see the name of the function that will be called...
 			;	use the following to display it
 			;	msgbox("FuncName=" FuncName)
-			lineStr := gIndent . FuncObj(cLParamsArr)	; #3 returns string val					; convert using custom function defined in cmdV2Format
+			lineStr := FuncObj(cLParamsArr)				; #3 returns string val					; convert using custom function defined in cmdV2Format
 		}
 	}
 	else	; or convert using the formatting of cmdV2Format directly
 	{
-		lineStr := gIndent . format(cmdV2Format, cLParamsArr*)									; convert using cmdV2Format directly
+		lineStr := format(cmdV2Format, cLParamsArr*)											; convert using cmdV2Format directly
 		lineStr := RegExReplace(lineStr, '[\h,]*(\))?$', '$1')									; remove any left-over trailing commas
 	}
+	lineStr := indentWS . lineStr																; 2025-08-23 - reapply leading indent/WS
+
 	return true		; sets fCmdConverted which is needed by other functions						; also returns all func params by reference
 }
 ;################################################################################

@@ -2,9 +2,13 @@ Persistent
 SetTimer(WatchActiveWindow,200)
 return
 
+WatchActiveWindow:
 WatchActiveWindow()
-{ ; V1toV2: Added bracket
-global ; V1toV2: Made function global
+return
+
+;###############  V1toV2 FUNCS  ###############
+WatchActiveWindow() { ; V1toV2: Lbl->Func
+global
 oControlList := WinGetControls("A",,,)
 For v in oControlList
 {
@@ -12,4 +16,4 @@ For v in oControlList
 }
 ToolTip(ControlList)
 return
-} ; V1toV2: Added bracket in the end
+}

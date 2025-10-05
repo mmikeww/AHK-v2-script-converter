@@ -141,6 +141,7 @@ global gmAhkCmdsToConvertV1 := OrderedMap(
   )
 
 ; 2025-06-12 AMB, UPDATED - altered for separation of v1.1 and v2 conversions
+; 2025-10-05 AMB, UPDATED - changed Goto to custom handling
 ;global gmAhkCmdsToConvert := OrderedMap(
 global gmAhkCmdsToConvertV2 := OrderedMap(
     "BlockInput,OptionT2E" ,
@@ -261,8 +262,8 @@ global gmAhkCmdsToConvertV2 := OrderedMap(
     "*_GuiControlGet"
   , "Gosub,Label" ,
     "*_Gosub"
-  , "Goto,LabelT2E" ,
-    "Goto({1})"
+  , "Goto,Label" ,
+    "*_Goto"
   , "GroupActivate,GroupNameT2E,ModeT2E" ,
     "GroupActivate({1}, {2})"
   , "GroupAdd,GroupNameT2E,WinTitleT2E,WinTextT2E,LabelT2E,ExcludeTitleT2E,ExcludeTextT2E" ,

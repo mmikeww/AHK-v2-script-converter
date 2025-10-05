@@ -142,7 +142,7 @@ UpdateLayeredWindow(hwnd, hdc, x:="", y:="", w:="", h:="", Alpha:=255)
 
 ;################################################################################
 
-   EscapeStr(&Str,  Quote := True) {
+   EscapeStr(&Str, Quote := True) {
       This.ErrorMsg := ""
       This.ErrorCode := 0
       This.SQL := ""

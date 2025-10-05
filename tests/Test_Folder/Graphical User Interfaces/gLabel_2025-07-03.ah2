@@ -10,11 +10,15 @@ ogcCheckboxMute.OnEvent("Click", Mute.Bind("Normal"))
 If (Mute = 0)	; no confusion here
 	SoundPlay("c:\WINDOWS\Media\chimes.wav")
 
-Mute(A_GuiEvent := "", A_GuiControl := "", Info := "", *)
-{ ; V1toV2: Added bracket
-global ; V1toV2: Made function global
+Mute:
+Mute()
+Return
+
+;###############  V1toV2 FUNCS  ###############
+Mute(A_GuiEvent:="", A_GuiControl:="", Info:="", *) { ; V1toV2: Lbl->Func
+global
 oSaved := myGui.Submit(0)
 Mute := oSaved.Mute
 ControlFocus("Edit1", AppWindow)
 Return
-} ; V1toV2: Added bracket in the end
+}

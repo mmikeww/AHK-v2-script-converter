@@ -11,15 +11,20 @@ WM_LBUTTONDOWN(wParam, lParam, msg, hwnd)
   ToolTip("GUI Clicked")
 }
 
-F5::
-{ ; V1toV2: Added bracket
-global ; V1toV2: Made function global
+F5::HK1_F5()
+
+GuiClose:
+GuiClose()
+ExitApp()
+
+;###############  V1toV2 FUNCS  ###############
+HK1_F5() { ; V1toV2: HK->Func
+global
 OnMessage(0x0201, WM_LBUTTONDOWN, 0)
 Return
-} ; V1toV2: Added bracket before function
-
-GuiClose(*)
-{ ; V1toV2: Added bracket
-global ; V1toV2: Made function global
+}
+;##############################################
+GuiClose(*) { ; V1toV2: Lbl->Func
+global
 ExitApp()
-} ; V1toV2: Added bracket in the end
+}

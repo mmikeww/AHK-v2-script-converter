@@ -1,1 +1,1 @@
-DetectHiddenText(False)
+DetectHiddenText(false)

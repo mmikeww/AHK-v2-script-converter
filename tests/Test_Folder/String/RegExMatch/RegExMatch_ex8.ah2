@@ -12,7 +12,7 @@ Deref(Str)
         spo := fpo + StrLen((m&&m[0]))
         if (m[1])
             out .= %m[2]%
-        else Switch (m[3])
+        else switch (m[3])
         {
             case "a": out .= "`a"
             case "b": out .= "`b"

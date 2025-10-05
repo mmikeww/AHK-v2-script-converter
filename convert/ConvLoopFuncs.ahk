@@ -8,7 +8,7 @@
 
 	; if current line is char-directive declaration, grab the attributes
 	if (RegExMatch(lineStr, 'i)^\h*#(CommentFlag|EscapeChar|DerefChar|Delimiter)\h+.')) {
-		grabCharDirectiveAttribs(lineStr)
+		_grabCharDirectiveAttribs(lineStr)
 		return ''		; might need to change this to actual line comment (EOLComment)
 	}
 	; not a char-directive declaration - update comment character on current line
@@ -37,7 +37,7 @@
 	return EOLComment		; return trailing comment for current line
 }
 ;################################################################################
-												grabCharDirectiveAttribs(lineStr)
+											   _grabCharDirectiveAttribs(lineStr)
 ;################################################################################
 {
 ; 2025-06-12 AMB, ADDED to separate processing of character directives
@@ -197,6 +197,7 @@
 ; 2025-06-12 AMB, Moved to dedicated routine for cleaner convert loop
 ; Updates conversion communication messages to user, for current line
 ; currently the LAST step performed for a line
+; 2025-10-05 AMB, UPDATED - changed source of mask chars
 
 	global gEOLComment_Cont, gEOLComment_Func, gNL_Func
 
@@ -207,7 +208,7 @@
 
 	; V2 ONLY !
 	; Add warning for Array.MinIndex()
-	nMinMaxIndexTag	:= '([^(\s]*\.)ϨMinIndex\(placeholder\)Ϩ'
+	nMinMaxIndexTag	:= '([^(\s]*\.)' gMNPH						; gMNPH - see MaskCode.ahk
 	if (lineStr		~= nMinMaxIndexTag) {
 		EOLComment	.= ' `; V1toV2: Not perfect fix, fails on cases like [ , "Should return 2"]'
 	}

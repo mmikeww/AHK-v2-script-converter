@@ -1,24 +1,22 @@
 
 ;################################################################################
-															isValidV1Label(srcStr)
+														   GetMapOptions(Options)
 ;################################################################################
 {
-; 2025-06-12 AMB, ADDED
-; returns extracted label if it resembles a valid v1 label
-; 	does not verify that it is a valid v2 label (see validV2Label for that)
-; https://www.autohotkey.com/docs/v1/misc/Labels.htm
-; invalid v1 label chars are...
-;	comma, double-colon (except at beginning),
-;	whitespace, accent (that's not used as escape)
-; see gPtn_LBLDecl for details of label declaration needle (in MaskCode.ahk)
+; Returns a Map of options like x100 y200 ...
+; 2025-10-05 AMB, MOVED from ConvertFuncs.ahk
 
-	tempStr := trim(RemovePtn(srcStr, 'LC'))		; remove line comments and trim ws
-
-	; return just the label if...
-	;	it resembles a valid v1 label
-	if (RegExMatch(tempStr, gPtn_LblBLK, &m))		; single-line check
-		return m[1]									; appears to be valid v1 label
-	return ''										; not a valid v1 label
+	mOptions := Map()
+	Loop parse, Options, " "
+	{
+		if (StrLen(A_LoopField) > 0) {
+			mOptions[SubStr(StrUpper(A_LoopField), 1, 1)] := SubStr(A_LoopField, 2)
+		}
+		if (StrLen(A_LoopField) > 2) {
+			mOptions[SubStr(StrUpper(A_LoopField), 1, 2)] := SubStr(A_LoopField, 3)
+		}
+	}
+	return mOptions
 }
 ;################################################################################
 											  v1_convert_Ifs(&lineStr, &lineOpen)
@@ -183,12 +181,30 @@
 	return outStr												; return final string/var
 }
 ;################################################################################
+_EnvAdd(p) {
+; 2025-10-05 AMB, MOVED from ConvertFuncs.ahk
+
+	if (!IsEmpty(p[3]))
+		return format("{1} := DateAdd({1}, {2}, {3})", p*)
+	else
+		return format("{1} += {2}", p*)
+}
+;################################################################################
 _EnvDiv() {
 	; see gmAhkCmdsToConvertV1 map
 }
 ;################################################################################
 _EnvMult() {
 	; see gmAhkCmdsToConvertV1 map
+}
+;################################################################################
+_EnvSub(p) {
+; 2025-10-05 AMB, MOVED from ConvertFuncs.ahk
+
+	if (!IsEmpty(p[3]))
+		return format("{1} := DateDiff({1}, {2}, {3})", p*)
+	else
+		return format("{1} -= {2}", p*)
 }
 ;################################################################################
 _GetKeyState(p) {
@@ -285,12 +301,13 @@ _IfNotInString(p) {
 ;################################################################################
 _OnExit(p) {
 ; V1 OnExit,Func,AddRemove
+; 2025-10-05 AMB, UPDATED - changed gaList_LblsToFuncO to gmList_LblsToFunc
+; TODO - FIX MISSING 2ND PARAM AND "RETURN 1" BEING PLACE AFTER EXITAPP
+;	SEE DRAWLINE 123548C5 FOR EXAMPLE
 
 	if (RegexMatch(gOrig_ScriptStr, "\n(\s*)" p[1] ":\s")) {
-		gaList_LblsToFuncO.Push({label: p[1]
-				, parameters: "A_ExitReason, ExitCode"
-				, aRegexReplaceList: [{NeedleRegEx: "i)^(.*)\bReturn\b([\s\t]*;.*|)$"
-				, Replacement: "$1Return 1$2"}]})
+		gmList_LblsToFunc[p[1]] := ConvLabel('OX', p[1], 'A_ExitReason, ExitCode', ''
+				, regex := {NeedleRegEx: "(?i)^(.*)(\bRETURN\b)([\s\t]*;.*|)$", Replacement: "$1$2 1$3"})
 	}
 	; return needs to be replaced by return 1 inside the exitcode
 	return Format("OnExit({1}, {2})", p*)
@@ -601,5 +618,3 @@ _Transform(p) {
 	}
 	return format("; V1toV2: Removed : Transform({1}, {2}, {3}, {4})", p*)
 }
-
-

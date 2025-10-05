@@ -1,9 +1,13 @@
 Hotstring(":*X:]d", DatePaste)
 Return
 
-DatePaste(*)
-{ ; V1toV2: Added bracket
-global ; V1toV2: Made function global
+DatePaste:
+DatePaste()
+Return
+
+;###############  V1toV2 FUNCS  ###############
+DatePaste(*) { ; V1toV2: Lbl->Func
+global
   Send(A_DD "-" A_MM "-" A_YYYY)
 Return
-} ; V1toV2: Added bracket in the end
+}

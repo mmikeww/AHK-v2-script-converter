@@ -11,8 +11,12 @@ ogcListViewIconNumberDescription.ModifyCol("Hdr")  ; Auto-adjust the column widt
 myGui.Show()
 return
 
-GuiClose(*)  ; Exit the script when the user closes the ListView's GUI window.
-{ ; V1toV2: Added bracket
-global ; V1toV2: Made function global
+GuiClose:  ; Exit the script when the user closes the ListView's GUI window.
+GuiClose()
 ExitApp()
-} ; V1toV2: Added bracket in the end
+
+;###############  V1toV2 FUNCS  ###############
+GuiClose(*) { ; V1toV2: Lbl->Func
+global
+ExitApp()
+}

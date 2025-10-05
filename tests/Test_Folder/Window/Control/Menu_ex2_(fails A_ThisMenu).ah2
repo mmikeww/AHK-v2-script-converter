@@ -16,11 +16,15 @@ MyMenu.Add()  ; Add a separator line below the submenu.
 MyMenu.Add("Item3", MenuHandler)  ; Add another menu item beneath the submenu.
 return  ; End of script's auto-execute section.
 
-MenuHandler(A_ThisMenuItem := "", A_ThisMenuItemPos := "", MyMenu := "", *)
-{ ; V1toV2: Added bracket
-global ; V1toV2: Made function global
-MsgBox("You selected " A_ThisMenuItem " from the menu " A_ThisMenu ".")
+MenuHandler:
+MenuHandler()
 return
-} ; V1toV2: Added Bracket before hotkey or Hotstring
 
 #z::MyMenu.Show()  ; i.e. press the Win-Z hotkey to show the menu.
+
+;###############  V1toV2 FUNCS  ###############
+MenuHandler(A_ThisMenuItem:="", A_ThisMenuItemPos:="", MyMenu:="", *) { ; V1toV2: Lbl->Func
+global
+MsgBox("You selected " A_ThisMenuItem " from the menu " A_ThisMenu ".")
+return
+}

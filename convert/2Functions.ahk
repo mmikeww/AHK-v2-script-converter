@@ -8,6 +8,7 @@
   order of Is important do not change
 */
 
+;################################################################################
 global gmAhkFuncsToConvert := OrderedMap(
     "Catch(OutputVar)" ,
     "*_Catch"
@@ -118,11 +119,13 @@ global gmAhkFuncsToConvert := OrderedMap(
   )
 
 
+;################################################################################
 ; See ConvertFuncs.ahk for _Catch() (also used for command conversion)
+; 2025-10-05 AMB, UPDATED - changed var name gfNoSideEffect to gfLockGlbVars
 
 _DllCall(p) {
   ParBuffer := ""
-  global gfNoSideEffect
+  global gfLockGlbVars
   loop p.Length
   {
     if (p[A_Index] ~= "i)^U?(Str|AStr|WStr|Int64|Int|Short|Char|Float|Double|Ptr)P?\*?$") {
@@ -134,9 +137,9 @@ _DllCall(p) {
     ;  p[A_Index] := SubStr(p[A_Index], 2)
     ;} else
     if (RegExMatch(p[A_Index], NeedleRegEx)) { ; even if it's behind a *0 var assignment preceding it
-      gfNoSideEffect := 1
-      V1toV2_Functions(ScriptString:=p[A_Index], Line:=p[A_Index], &v2:="", &gotFunc:=False)
-      gfNoSideEffect := 0
+      gfLockGlbVars := 1    ; lock global vars (no changes allowed)
+        V1toV2_Functions(ScriptString:=p[A_Index], Line:=p[A_Index], &v2:="", &gotFunc:=False)
+      gfLockGlbVars := 0    ; unlock global vars (changes allowed)
       if (commentPos:=InStr(v2,"`;")) {
         v2 := SubStr(v2, 1, commentPos-1)
       }
@@ -169,11 +172,13 @@ _DllCall(p) {
   Return "DllCall(" ParBuffer ")"
 }
 
+;################################################################################
 _Hotstring(p) {
-  global gaList_LblsToFuncO
+; 2025-10-05 AMB, UPDATED - changed gaList_LblsToFuncO to gmList_LblsToFunc
+  global gmList_LblsToFunc
   if RegExMatch(p[1], '":') and p.Has(2) {
     p[2] := Trim(p[2], '"')
-    gaList_LblsToFuncO.Push({label: p[2], parameters: '*', NewFunctionName: getV2Name(p[2])})
+    gmList_LblsToFunc[p[2]] := ConvLabel('HS', p[2], '*', getV2Name(p[2]))
   }
 
   Out := "Hotstring("
@@ -184,6 +189,7 @@ _Hotstring(p) {
   Return RegExReplace(Out, "[\s\,]*\)$", ")")
 }
 
+;################################################################################
 _InStr(p) {
   global gaScriptStrsUsed
   p[3] := p[3] = "" and gaScriptStrsUsed.StringCaseSense ? "A_StringCaseSense" : p[3]
@@ -191,6 +197,7 @@ _InStr(p) {
   return RegExReplace(Out, "[\s,]*\)", ")")
 }
 
+;################################################################################
 _LV_Add(p) {
   global gLVNameDefault
   Out := gLVNameDefault ".Add("
@@ -201,30 +208,37 @@ _LV_Add(p) {
   ; Out := format("{1}.Add({2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}, {16}, {17})", gLVNameDefault, p*)
   Return RegExReplace(Out, "[\s\,]*\)$", ")")
 }
+;################################################################################
 _LV_Delete(p) {
   global gLVNameDefault
   Return format("{1}.Delete({2})", gLVNameDefault, p*)
 }
+;################################################################################
 _LV_DeleteCol(p) {
   global gLVNameDefault
   Return format("{1}.DeleteCol({2})", gLVNameDefault, p*)
 }
+;################################################################################
 _LV_GetCount(p) {
   global gLVNameDefault
   Return format("{1}.GetCount({2})", gLVNameDefault, p*)
 }
+;################################################################################
 _LV_GetText(p) {
   global gLVNameDefault
   Return format("{2} := {1}.GetText({3})", gLVNameDefault, p*)
 }
+;################################################################################
 _LV_GetNext(p) {
   global gLVNameDefault
   Return format("{1}.GetNext({2},{3})", gLVNameDefault, p*)
 }
+;################################################################################
 _LV_InsertCol(p) {
   global gLVNameDefault
   Return format("{1}.InsertCol({2}, {3}, {4})", gLVNameDefault, p*)
 }
+;################################################################################
 _LV_Insert(p) {
   global gLVNameDefault
   Out := gLVNameDefault ".Insert("
@@ -234,6 +248,7 @@ _LV_Insert(p) {
   Out .= ")"
   Return RegExReplace(Out, "[\s\,]*\)$", ")")
 }
+;################################################################################
 _LV_Modify(p) {
   global gLVNameDefault
   Out := gLVNameDefault ".Modify("
@@ -243,15 +258,18 @@ _LV_Modify(p) {
   Out .= ")"
   Return RegExReplace(Out, "[\s\,]*\)$", ")")
 }
+;################################################################################
 _LV_ModifyCol(p) {
   global gLVNameDefault
   Return format("{1}.ModifyCol({2}, {3}, {4})", gLVNameDefault, p*)
 }
+;################################################################################
 _LV_SetImageList(p) {
   global gLVNameDefault
   Return format("{1}.SetImageList({2}, {3})", gLVNameDefault, p*)
 }
 
+;################################################################################
 _NumGet(p) {
   ;V1: NumGet(VarOrAddress , Offset := 0, Type := "UPtr")
   ;V2: NumGet(Source, Offset, Type)
@@ -264,6 +282,7 @@ _NumGet(p) {
   Out := "NumGet(" P[1] ", " p[2] ", " p[3] ")"
   Return RegExReplace(Out, "[\s\,]*\)$", ")")
 }
+;################################################################################
 _NumPut(p) {
   ;V1 NumPut(Number,VarOrAddress,Offset,Type)
   ;V2 NumPut Type, Number, Type2, Number2, ... Target , Offset
@@ -342,6 +361,7 @@ _NumPut(p) {
   Return RegExReplace(Out, "[\s\,]*\)$", ")")
 }
 
+;################################################################################
 _Object(p) {
   Parameters := ""
   Function := (p.Has(2)) ? "Map" : "Object" ; If parameters are used, a map object is intended
@@ -353,9 +373,12 @@ _Object(p) {
   Return Function "(" Parameters ")"
 }
 
+;################################################################################
 _OnMessage(p) {
+; 2025-10-05 AMB, UPDATED - changed masking src to gCBPH - see MaskCode.ahk
   ; OnMessage(MsgNumber, FunctionQ2T, MaxThreads)
   ; OnMessage({1}, {2}, {3})
+  global gmOnMessageMap
   if (p.Has(1) && p.Has(2) && p[1] != "" && p[2] != "") {
     if InStr(p[2], 'Func(') {
       RegExMatch(p[2], '\.Bind\(.*\)', &bindContent)
@@ -381,13 +404,14 @@ _OnMessage(p) {
       callback := gmOnMessageMap[string(p[1])] ;gmOnMessageMap.%p[1]%
     } Catch {
       ; Didnt find lister to turn off
-      Return "OnMessage(" p[1] ", " Chr(1000) Chr(1000) "CallBack_Placeholder" Chr(1000) Chr(1000) ", 0)"
+      Return "OnMessage(" p[1] ", " gCBPH ", 0)"
     }
     ; Found the listener to turn off
     Return "OnMessage(" p[1] ", " callback ", 0)"
   }
 }
 
+;################################################################################
 _StrReplace(p) {
   global gaScriptStrsUsed
   CaseSense := gaScriptStrsUsed.StringCaseSense ? "A_StringCaseSense" : ""
@@ -395,10 +419,12 @@ _StrReplace(p) {
   return RegExReplace(Out, "[\s,]*\)", ")")
 }
 
+;################################################################################
 _SB_SetText(p) {
   global gSBNameDefault
   Return format("{1}.SetText({2}, {3}, {4})", gSBNameDefault, p*)
 }
+;################################################################################
 _SB_SetParts(p) {
   global gSBNameDefault
   Out := gSBNameDefault ".SetParts("
@@ -407,76 +433,90 @@ _SB_SetParts(p) {
   }
   Return RTrim(Out, ", ") ")"
 }
+;################################################################################
 _SB_SetIcon(p) {
   global gSBNameDefault, gFuncParams
   Return format("{1}.SetIcon({2})", gSBNameDefault, gFuncParams)
 }
 
+;################################################################################
 _TV_Add(p) {
   global gTVNameDefault
   Return format("{1}.Add({2}, {3}, {4})", gTVNameDefault, p*)
 }
+;################################################################################
 _TV_Modify(p) {
   global gTVNameDefault
   Return format("{1}.Modify({2}, {3}, {4})", gTVNameDefault, p*)
 }
+;################################################################################
 _TV_Delete(p) {
   global gTVNameDefault
   Return format("{1}.Delete({2})", gTVNameDefault, p*)
 }
+;################################################################################
 _TV_GetSelection(p) {
   global gTVNameDefault
   Return format("{1}.GetSelection({2})", gTVNameDefault, p*)
 }
+;################################################################################
 _TV_GetParent(p) {
   global gTVNameDefault
   Return format("{1}.GetParent({2})", gTVNameDefault, p*)
 }
+;################################################################################
 _TV_GetChild(p) {
   global gTVNameDefault
   Return format("{1}.GetChild({2})", gTVNameDefault, p*)
 }
+;################################################################################
 _TV_GetPrev(p) {
   global gTVNameDefault
   Return format("{1}.GetPrev({2})", gTVNameDefault, p*)
 }
+;################################################################################
 _TV_GetNext(p) {
   global gTVNameDefault
   Return format("{1}.GetNext({2}, {3})", gTVNameDefault, p*)
 }
+;################################################################################
 _TV_GetText(p) {
   global gTVNameDefault
   Return format("{2} := {1}.GetText({3})", gTVNameDefault, p*)
 }
+;################################################################################
 _TV_GetCount(p) {
   global gTVNameDefault
   Return format("{1}.GetCount()", gTVNameDefault)
 }
+;################################################################################
 _TV_SetImageList(p) {
   global gTVNameDefault
   Return format("{2} := {1}.SetImageList({3})", gTVNameDefault)
 }
 
+;################################################################################
 _VarSetCapacity(p) {
-  global gfrePostFuncMatch, gNL_Func, gEOLComment_Func, gfNoSideEffect
-  if (gfNoSideEffect) {
-    tmp1:="", tmp2:=""
-    lgNL_Func           := &tmp1
-    lEOLComment_Func    := &tmp2
+; 2025-10-05 AMB, UPDATED - changed some var names
+  global gfrePostFuncMatch, gNL_Func, gEOLComment_Func, gfLockGlbVars
+
+  ; if global vars are locked, update local temp vars instead (using ref vars)
+  if (gfLockGlbVars) {
+    vrNL_Func           := &tmp1 := ''
+    vrEOLComment_Func   := &tmp2 := ''
   } else {
-    lgNL_Func           := &gNL_Func
-    lEOLComment_Func   := &gEOLComment_Func
+    vrNL_Func           := &gNL_Func
+    vrEOLComment_Func   := &gEOLComment_Func := ''
   }
-  %lEOLComment_Func%:=""
   reM := gfrePostFuncMatch
   if (p[3] != "") {
-    ; since even multiline continuation allows semicolon comments adding lEOLComment_Func shouldn't break anything, but if it does, add this hacky comment
+    ; since even multiline continuation allows line comments adding vrEOLComment_Func shouldn't break anything, but if it does, add this hacky comment
       ;`{3} + 0*StrLen("V1toV2: comment")`, or when you can't add a 0 (to a buffer)
       ; p.Push("V1toV2: comment")
       ; retStr := Format('RegExReplace("{1} := Buffer({2}, {3}) ``; {4}", " ``;.*$")', p*)
     varA   := Format("{1}"                           , p*)
     retStr := Format("VarSetStrCapacity(&{1}, {2})"  , p*)
-    %lEOLComment_Func% .= format("V1toV2: if '{1}' is a UTF-16 string, use '{2}' and replace all instances of '{1}.Ptr' with 'StrPtr({1})'", varA, retStr)
+    %vrEOLComment_Func% .= format("V1toV2: if '{1}' is a UTF-16 string, use '{2}' and replace all instances of '{1}.Ptr' with 'StrPtr({1})'", varA, retStr)
     gmVarSetCapacityMap.Set(p[1], "B")
     if (!reM) {
       retBuf := Format("{1} := Buffer({2}, {3})"     , p*)
@@ -498,14 +538,14 @@ _VarSetCapacity(p) {
         num := reM[2]
         op2 := reM[3]
         if (Trim(op1)="*" && Trim(num)="0") { ; move to the previous new line, remove regex matches
-          if (%lgNL_Func%) {                       ; add a newline for multiple calls in a line
-            %lgNL_Func% .= "`r`n" ;;;;; but breaks other calls
+          if (%vrNL_Func%) {                       ; add a newline for multiple calls in a line
+            %vrNL_Func% .= "`r`n" ;;;;; but breaks other calls
           }
-          %lEOLComment_Func% .= " NB! if this is part of a control flow block without {}, please enclose this and the next line in {}!"
-          p.Push(%lEOLComment_Func%)
-          %lgNL_Func% .= Format("{1} := Buffer({2}, {3}) `; {4}"   , p*)
+          %vrEOLComment_Func% .= " NB! if this is part of a control flow block without {}, please enclose this and the next line in {}!"
+          p.Push(%vrEOLComment_Func%)
+          %vrNL_Func% .= Format("{1} := Buffer({2}, {3}) `; {4}"   , p*)
           ; DllCall("oleacc", "Ptr", VarSetCapacity(vC,8,0)*0 + &vC)
-          %lEOLComment_Func% := ""
+          %vrEOLComment_Func% := ""
           retBuf := ""
           dbgTT(3, "@_VarSetCapacity: 3 args, Regex 3 groups, NEWLINE", Time:=3,id:=5,x:=-1,y:=-1)
         } else {
@@ -520,7 +560,7 @@ _VarSetCapacity(p) {
     dbgTT(3, "@_VarSetCapacity: 2 args", Time:=3,id:=5,x:=-1,y:=-1)
     varA   := Format("{1}"                           , p*)
     retBuf := Format("{1} := Buffer({2})"            , p*)
-    %lEOLComment_Func% .= format("V1toV2: if '{1}' is NOT a UTF-16 string, use '{2}' and replace all instances of 'StrPtr({1})' with '{1}.Ptr'", varA, retBuf)
+    %vrEOLComment_Func% .= format("V1toV2: if '{1}' is NOT a UTF-16 string, use '{2}' and replace all instances of 'StrPtr({1})' with '{1}.Ptr'", varA, retBuf)
     gmVarSetCapacityMap.Set(p[1], "V")
     if (!reM) {
       retStr := Format("VarSetStrCapacity(&{1}, {2})"  , p*)
@@ -533,7 +573,7 @@ _VarSetCapacity(p) {
     dbgTT(3, "@_VarSetCapacity: fallback", Time:=3,id:=5,x:=-1,y:=-1)
     varA   := Format("{1}", p*)
     retStr := Format("VarSetStrCapacity(&{1}, {2})"        , p*)
-    %lEOLComment_Func% .= format("V1toV2: if '{1}' is a UTF-16 string, use '{2}' and replace all instances of '{1}.Ptr' with 'StrPtr({1})'", varA, retStr)
+    %vrEOLComment_Func% .= format("V1toV2: if '{1}' is a UTF-16 string, use '{2}' and replace all instances of '{1}.Ptr' with 'StrPtr({1})'", varA, retStr)
     gmVarSetCapacityMap.Set(p[1], "B")
     if (!reM) {
       retBuf := Format("{1} := Buffer({2}, {3})"           , p*)
@@ -543,4 +583,147 @@ _VarSetCapacity(p) {
     }
     Return retBuf
   }
+}
+;################################################################################
+; V1toV2_Functions() - Convert a v1 function in a single script line to v2
+;   Can be used from inside _Funcs for nested checks (e.g., function in a DllCall)
+;   Set gfLockGlbVars to 1 to lock global vars from being changed by funcs
+; 2025-06-12 AMB, UPDATED - changed func name and some var and funcCall names
+; 2025-10-05 AMB, MOVED from ConvertFuncs.ahk
+;################################################################################
+V1toV2_Functions(ScriptString, Line, &retV2, &gotFunc) {
+
+    global gFuncParams, gfrePostFuncMatch
+    FuncsRemoved := 0   ; Number of funcs that have been removed during conversion (e.g Arr.Length() -> Arr.Length)
+    loop {
+        if (!InStr(Line, "("))
+            break
+
+
+        oResult := V1ParSplitfunctions(Line, A_Index - FuncsRemoved)
+
+        if (oResult.Found = 0) {
+            break
+        }
+        if (oResult.Hook_Status > 0) {
+            ; This means that the function did not close, probably a continuation section
+            break
+        }
+        if (oResult.Func = "") {
+            continue  ; Not a function, only parenthesis
+        }
+
+        oPar := V1ParamSplit(oResult.Parameters)
+        gFuncParams := oResult.Parameters
+
+        ConvertList := gmAhkFuncsToConvert
+        if (RegExMatch(oResult.Pre, "((?:\w+)|(?:\[.*\])|(?:{.*}))\.$", &Match)) {
+            ObjectName := Match[1]
+            if (RegExMatch(ScriptString, "i)(?<!\w)(\Q" ObjectName "\E)\s*:=\s*(\[|(Array|StrSplit)\()")) {   ; Type Array().
+                ConvertList := gmAhkArrMethsToConvert
+            } else if (RegExMatch(ScriptString, "i)(?<!\w)(\Q" ObjectName "\E)\s*:=\s*(\{|(Object)\()")) {    ; Type Object().
+                ConvertList := gmAhkMethsToConvert
+            } else if (RegExMatch(ScriptString, "i)(?<!\w)(\Q" ObjectName "\E)\s*:=\s*(new\s+|(FileOpen|Func|ObjBindMethod|\w*\.Bind)\()")) { ; Type instance of class.
+                ConvertList := []   ; Unspecified conversion patterns.
+            } else if (RegExMatch(ScriptString, "i)(?<!\w)class\s(\Q" ObjectName "\E)(?!\w)")) {    ; Type Class.
+                ConvertList := []   ; Unspecified conversion patterns.
+            } else {
+                ConvertList := gmAhkMethsToConvert
+                Loop gaList_MatchObj.Length {
+                    if (ObjectName = gaList_MatchObj[A_Index]) {
+                        ConvertList := []   ; Conversions handled elsewhere.
+                        Break
+                    }
+                }
+                Loop gaList_PseudoArr.Length {
+                    if (ObjectName = gaList_PseudoArr[A_Index].name) {
+                        ConvertList := []   ; Conversions handled elsewhere.
+                        Break
+                    }
+                }
+            }
+        }
+        StrReplace(Line, "()",,, &v1FuncCount)
+        for v1, v2 in ConvertList
+        {
+            gfrePostFuncMatch := False
+            ListDelim := InStr(v1, "(")
+            ListFunction := Trim(SubStr(v1, 1, ListDelim - 1))
+            rePostFunc := ""
+
+            if (ListFunction = oResult.func) {
+
+                v1DefParamsArr := SubStr(v1, ListDelim + 1, InStr(v1, ")") - ListDelim - 1)
+                rePostFunc := SubStr(v1, InStr(v1,")")+1)
+
+                oListParam := StrSplit(v1DefParamsArr, ",", " ")
+                ; Fix for when v1DefParamsArr is empty
+                if (v1DefParamsArr = "") {
+                    oListParam.Push("")
+                }
+                v1 := trim(v1)
+                v2 := trim(v2)
+                loop oPar.Length
+                {
+                    if (A_Index > 1 && InStr(oListParam[A_Index - 1], "*")) {
+                        oListParam.InSertAt(A_Index, oListParam[A_Index - 1])
+                    }
+                    ; Uses a function to format the parameters
+                    try
+                    {
+                        a := oListParam[A_Index]
+                    }
+                    catch
+                    {
+                        A_Clipboard := line
+                        MsgBox "[" "error" "]"
+                    }
+
+                    b := oPar[A_Index]
+                    oPar[A_Index] := FormatParam(a,b)
+                }
+                loop oListParam.Length
+                {
+                    if (!oPar.Has(A_Index)) {
+                        oPar.Push("")
+                    }
+                }
+
+                if (SubStr(v2, 1, 1) == "*")    ; if using a special function
+                {
+                    if (rePostFunc != "")
+                    {
+                        ; move post-function's regex match to _Func (it should return back if needed)
+                        RegExMatch(oResult.Post, rePostFunc, &gfrePostFuncMatch)
+                        oResult.Post := RegExReplace(oResult.Post, rePostFunc)
+                    }
+
+                    FuncName := SubStr(v2, 2)
+
+                    FuncObj := %FuncName%   ; // https://www.autohotkey.com/boards/viewtopic.php?p=382662#p382662
+                    if (FuncObj is Func) {
+                        NewFunction := FuncObj(oPar)
+                    }
+                } Else {
+                    FormatString := Trim(v2)
+                    NewFunction := Format(FormatString, oPar*)
+                }
+
+                ; Remove the empty variables
+                NewFunction := RegExReplace(NewFunction, "[\s\,]*\)$", ")")
+
+                Line := oResult.Pre NewFunction oResult.Post
+
+                retV2 := Line
+                gotFunc:=True
+
+                ; TODO: make this count "(" instead, fixes removed funcs with params
+                ;       only breaks if script did Arr.Length(MeaninglessVar)
+                StrReplace(Line, "()",,, &v2FuncCount)
+                FuncsRemoved := Max(0, v1FuncCount - v2FuncCount)
+
+                break   ; Function/Method just found and processed.
+            }
+        }
+    }
 }

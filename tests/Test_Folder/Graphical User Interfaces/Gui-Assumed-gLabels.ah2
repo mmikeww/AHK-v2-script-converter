@@ -16,26 +16,33 @@ ogcButtonButton5 := myGui1.Add("Button", "ys", "Button 5")
 myGui1.Show()
 Return
 
-ButtonButton1(A_GuiEvent := "", A_GuiControl := "", Info := "", *) {
+ButtonButton1(A_GuiEvent:="", A_GuiControl:="", Info:="", *) {
 MsgBox("First Button Pressed")
 Return
 }
 
-ButtonButton2(A_GuiEvent := "", A_GuiControl := "", Info := "", *)
-{ ; V1toV2: Added bracket
-global ; V1toV2: Made function global
+ButtonButton2:
+ButtonButton2()
+Return
+
+ButtonButton3:
+ButtonButton3()
+Return
+
+ButtonButton4(A_GuiEvent:="", A_GuiControl:="", Info:="", *) {
+MsgBox("Fourth Button Pressed via " A_GuiEvent)
+Return
+}
+
+;###############  V1toV2 FUNCS  ###############
+ButtonButton2(A_GuiEvent:="", A_GuiControl:="", Info:="", *) { ; V1toV2: Lbl->Func
+global
 MsgBox("Second Button Pressed")
 Return
-} ; V1toV2: Added Bracket before label
-
-ButtonButton3(A_GuiEvent := "", A_GuiControl := "", Info := "", *)
-{ ; V1toV2: Added bracket
-global ; V1toV2: Made function global
+}
+;##############################################
+ButtonButton3(A_GuiEvent:="", A_GuiControl:="", Info:="", *) { ; V1toV2: Lbl->Func
+global
 MsgBox("Third Button Pressed")
-Return
-} ; V1toV2: Added bracket before function
-
-ButtonButton4(A_GuiEvent := "", A_GuiControl := "", Info := "", *) {
-MsgBox("Fourth Button Pressed via " A_GuiEvent)
 Return
 }

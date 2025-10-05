@@ -16,15 +16,15 @@ SendSuppressedKeyUp(key) {
 
 ; Remap CapsLock to LCtrl in a way compatible with IME.
 *CapsLock::
-{ ; V1toV2: Added bracket
+{ ; V1toV2: Added opening brace for [*CapsLock]
 global ; V1toV2: Made function global
     Send("{Blind}{LCtrl DownR}")
     SendSuppressedKeyUp("LCtrl")
     return
-} ; V1toV2: Added Bracket before hotkey or Hotstring
+} ; V1toV2: Added closing brace for [*CapsLock]
 *CapsLock up::
-{ ; V1toV2: Added bracket
+{ ; V1toV2: Added opening brace for [*CapsLock up]
 global ; V1toV2: Made function global
     Send("{Blind}{LCtrl Up}")
     return
-} ; V1toV2: Added bracket in the end
+} ; V1toV2: Added closing brace for [*CapsLock up]

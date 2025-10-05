@@ -34,9 +34,16 @@ myGui.Title := "Simple Input Example"
 myGui.Show()
 return  ; End of auto-execute section. The script is idle until the user does something.
 
-EmptyTest(A_GuiEvent := "", A_GuiControl := "", Info := "", *)
-{ ; V1toV2: Added bracket
-global ; V1toV2: Made function global
+EmptyTest:
+EmptyTest()
+return
+GuiClose:
+GuiClose()
+ExitApp()
+
+;###############  V1toV2 FUNCS  ###############
+EmptyTest(A_GuiEvent:="", A_GuiControl:="", Info:="", *) { ; V1toV2: Lbl->Func
+global
 oSaved := myGui.Submit(0)
 FirstName := oSaved.FirstName
 MyCheckBox := oSaved.MyCheckBox
@@ -71,10 +78,10 @@ ogcMyTab3.Delete() ; V1toV2: Clean the list
 ogcMyTab3.Add(["Test", "Test2", "Test3"])
 ogcMyStatusbar.SetText("Test")
 return
-} ; V1toV2: Added bracket before function
-GuiClose(*)
+}
+;##############################################
+GuiClose(*) { ; V1toV2: Lbl->Func
+global
 
-{ ; V1toV2: Added bracket
-global ; V1toV2: Made function global
 ExitApp()
-} ; V1toV2: Added bracket in the end
+}

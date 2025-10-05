@@ -8,6 +8,7 @@
   Similar to commands, parameters can be added
 */
 
+; 2025-10-05 AMB, UPDATED - changed source of mask chars
 global gmAhkArrMethsToConvert := OrderedMap(
     "length()" ,
     "Length"
@@ -18,9 +19,9 @@ global gmAhkArrMethsToConvert := OrderedMap(
   , "Remove(Keys*)",
     "*_RemoveAt"
   , "MaxIndex()" ,
-    Chr(1000) "MaxIndex(placeholder)" Chr(1000)
+     gMXPH              ; see MaskCode.ahk
   , "MinIndex()" ,
-    Chr(1000) "MinIndex(placeholder)" Chr(1000)
+     gMNPH              ; see MaskCode.ahk
   )
 
 _InsertAt(p) {

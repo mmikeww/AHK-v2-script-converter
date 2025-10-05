@@ -11,8 +11,12 @@ P2C2C1 := ogcTreeView.Add("Child 2's first child", P2C2)
 myGui.Show()  ; Show the window and its TreeView.
 return
 
-GuiClose(*)  ; Exit the script when the user closes the TreeView's GUI window.
-{ ; V1toV2: Added bracket
-global ; V1toV2: Made function global
+GuiClose:  ; Exit the script when the user closes the TreeView's GUI window.
+GuiClose()
 ExitApp()
-} ; V1toV2: Added bracket in the end
+
+;###############  V1toV2 FUNCS  ###############
+GuiClose(*) { ; V1toV2: Lbl->Func
+global
+ExitApp()
+}

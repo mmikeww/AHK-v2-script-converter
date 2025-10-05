@@ -1,0 +1,6 @@
+
+
+^q::
+namedHK(*) {
+MsgBox("namedHK")
+}

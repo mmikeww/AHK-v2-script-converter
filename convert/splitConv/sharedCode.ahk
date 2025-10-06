@@ -443,12 +443,13 @@ FixOnMessage(ScriptString) {
  * &BufferObj -> BufferObj.Ptr
  * &VarSetStrCapacityObj -> StrPtr(VarSetStrCapacityObj)
  */
-; 2025-10-05 AMB, MOVED from ConvertFuncs.ahk
+; 2025-10-05 AMB, MOVED from ConvertFuncs.ahk, ADDED masking for comments/strings
 FixVarSetCapacity(ScriptString) {
 	tCRLF := ''
 	if (RegExMatch(ScriptString, '.*(\R+)$', &m)) {
 		tCRLF := m[1]	; preserve any trailing CRLFs that code came with
 	}
+	Mask_T(&ScriptString, 'C&S')	; 2025-10-05 - fix issue with incorrectly adding .Ptr to V1ToV2 VarSetCapacity comments
 	retScript := ""
 	loop parse ScriptString, "`n", "`r" {
 		Line := A_LoopField
@@ -468,7 +469,9 @@ FixVarSetCapacity(ScriptString) {
 		}
 		retScript .= Line "`r`n"
 	}
-	return RTrim(retScript, "`r`n") . tCRLF	; preserve any trailing CRLFs that code came with
+	Mask_R(&retScript, 'C&S')
+	retScript := RTrim(retScript, "`r`n") . tCRLF		; preserve any trailing CRLFs that code came with
+	return retScript
 }
 ;################################################################################
 /**

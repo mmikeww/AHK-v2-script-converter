@@ -49,7 +49,7 @@ class clsSection
 	LabelName	=> this._name																; name of LBL/FUNC/CLS, or HK/HS trigger (public shortcut)
 	L1			=> this._line1Details														; line 1 details and its parts (public shortcut)
 	HasCaller	=> (gmList_LblsToFunc.Has(this.LabelName)									; to assist prevention of empty labelToFunc conversions
-				|| 	gmList_GosubToFunc.Has(this.FuncName))
+				|| 	gmList_GosubToFunc.Has(this.LabelName))
 
 	;################################################################################
 	HKFunc {	; PUBLIC (mght add validations later)										; func (name) that is sometimes used as HK block code
@@ -187,6 +187,21 @@ class clsSection
 		}
 	}
 	;################################################################################
+	HK_1LineToML()	; support for issue #322												; converts one-line HK to multi-line HK
+	{
+		if (this._tType != 'HK' || !this.L1.cmd)											; make sure this is HK and has cmd on line1
+			return
+		this.Blk	:= '`r`n' . this.L1.cmd . '`r`nreturn'									; move Line1 cmd to sect block/body
+		LWS			:= this.L1.LWS															; grab Line1 leading ws
+		decl		:= this.L1.decl															; grab Line1 declaration
+		TC			:= this.L1.TC															; grab Line1 trailing comment
+		this.Line1	:= LWS . decl . TC														; remove cmd from Line1
+		this._L1	:=	{ decl:	decl														; preserve Line1 declaration
+						, cmd:	''															; remove   Line1 cmd from line details
+						, TC:	TC															; preserve Line1 trailing comment
+						, LWS:	LWS }														; preserve Line1 leading ws
+	}
+	;################################################################################
 	_line1Details																			; extracts details of Line 1 (declaration lne)
 	{
 		get {
@@ -292,6 +307,7 @@ class clsSection
 		code := this._updateLblToFuncs(code)												; adds v2 formatting to new label funcs
 		code := this._gotoToFC_orig(code)													; converts goto to funcCalls as needed (for orig script funcs only)
 		code := codeChop.RestoreMasksAll(code)												; removes temp-masking, performs cleanup of script code
+		code := this._gosubUpdate(code)														; update Gosub calls (to reflect changes made here, and fix issue #322)
 		return code																			; return updated script code
 	}
 	;################################################################################
@@ -353,80 +369,6 @@ class clsSection
 		cmd		:= separateComment(line1, &TC:='')											; separate cmd from trailing comment
 		LWS		:= RegExReplace(cmd, '(\h*).+','$1')										; get leading ws for line 1
 		return	{decl:decl,cmd:cmd,TC:TC,LWS:LWS}											; return extracted parts
-	}
-	;################################################################################
-	; does script require ANY label conversions? (label to func)
-	;	if lblName is passed, will only be true when lblName requires conversion
-	;################################################################################
-	Static _hasL2F[lblName:='']																; to determine whether label(s) will be conv to func
-	{
-		get {
-			if (lblName) {
-				return (gmList_LblsToFunc.Has(lblname) || gmList_GosubToFunc.Has(lblname))	; true if LBLName requires conversion
-			}
-			return !!(gmList_LblsToFunc.Count || gmList_GosubToFunc.Count)					; true when ANY label requires conversion
-		}
-	}
-	;################################################################################
-	static _hkhsToFunc()																	; deals with HK,HS 'labels'
-	{
-		wcFuncsToUpdate := map()															; used to track named-blocks for HKs (for adding wildcard param)
-
-		; convert HK/HS to func as needed
-		for idx, sect in this.Sects {
-
-			;########################################################################
-			; first, weed out situations to skip
-			if (sect._tType = 'BLKFUNC') {													; if section is a func (tag)...
-				if (wcFuncsToUpdate.Has(sect._tag)											; ... if that func requires wildcard param...
-				&& funcCode := this._addWildcardParam(sect))								; ... AND the param is successfully added...
-					sect.Line1 := funcCode													; ...	update line 1 to include wildcard param
-				continue																	; ... continue to next section
-			}
-			else if (!(sect._tType ~= '(?i)(?:HK|HS)')) {									; if not HK/HS (is label)...
-				continue																	; ... skip it, goto next section
-			}
-			else if (sect.L1.cmd) {															; if cmd on same line as HK/HS...
-				continue																	; ... skip it, goto next section
-			}
-			else if (blkDetails := isBraceBlock(sect.Blk)) {								; if already has brace-blk...
-				continue																	; ... skip it, goto next section
-			}
-			else if (idx < this.Sects.length && !sect.Blk) {								; [if no cmd on line 1], and has no code block...
-				nextSect := this.sects[idx+1]												; ... get next section
-				nextType := nextSect._tType													; ... get next section type
-				if (nextType ~= '(?i)(?:HK|HS)') {											; if next section is also HK/HS...
-					sect.FuncStr := 'SKIP'													; ... flag it so NO func is created later
-					continue																; ... is pass-thru... skip it, goto next section
-				}
-				else if (nextType = 'BLKFUNC') {											; if next section is a func...
-					wcFuncsToUpdate[nextSect._tag] := sect.LabelName						; ... flag func (tag) to be updated with new wilcard param
-					sect.FuncName := nextSect.LabelName										; ... update funcName for current sect so it points to named-func
-					continue																; ... continue to next section
-				}
-			}
-			;########################################################################
-			; handle HK/HS situations
-			lblName	 := sect.LabelName														; get HK/HS declaration
-			; HotStrings
-			if (sect._tType = 'HS' && sect.Blk) {											; if is HS AND has code to execute [but no cmd on L1]...
-				uniqStr	 := ' for [' trim(lblName) ']'										; ... include HS trigger in msg...
-				sect.Blk := sect._addBraces(uniqStr)										; ... surround code-block with braces (convert to func)
-				continue
-			}
-			; HotKeys
-			nextLink := this._nextLogicLink(lblName)										; get next link in logic-chain
-			if (sect._tType = 'HK'															; if is HK...
-				&& (sect.Blk || nextLink))	{												; ... AND has code to execute OR will execute code elsewhere...
-				if (this._hasL2F)			{												; ... if ANY labels will be converted to func...
-					this._makeFuncHK(&sect)													; ...	convert HK to func (will be moved below global code)
-				}																			;		[will be added to script in _makeFuncsStr()]
-				else						{												; ... NO labels will be converted to func, so...
-					uniqStr	 := ' for [' trim(lblName) ']'									; ... 	[include HK trigger in msg]
-					sect.Blk := sect._addBraces(uniqStr)									; ... 	surround code-block with braces, but don't move it
-				}
-			}
-		}
 	}
 	;################################################################################
 	Static _getRawSects(code)																; separates script code into raw sections (LBL,HK,HS,FUNC,CLS)
@@ -499,6 +441,120 @@ class clsSection
 			pos += StrLen(curLine)															; prep for next search, if there are more than 1
 		}
 		return code																			; return code with changes, if applied
+	}
+	;################################################################################
+	Static _gosubUpdate(code)
+	{
+		Mask_T(&code, 'C&S')																; mask comments/strings (since src code has already been restored)
+		outStr := ''																		; ini output
+		nGosub := '(?i)(GOSUB\h+)([^\s]+)(.*)'												; gosub needle [only supports changes made in _Gosub()]
+		for idx, line in StrSplit(code, '`n', '`r') {										; for each line in script...
+			if (pos := InStr(line, 'gosub')) {												; get position of Gosub call, if present
+				leftStr := SubStr(line, 1, pos-1)											; capture characters before Gosub
+				if (RegExMatch(line, nGosub, &m, pos)) {									; capture	Gosub call details
+					GS := m[1], Lbl := m[2], trail := m[3]									; save		Gosub call details
+					if (gmList_GosubToFunc.Has(Lbl)) {										; if label was recorded in _Gosub()...
+						if (obj := clsSection.SectionObj[Lbl]) {							; ... if object is avail for label
+							funcName:= obj.sect.FuncName									; ...	get func name (may be different than labelname)
+							msg		:= ' `; V1toV2:Gosub'									; ...	[conv msg to user]
+							line	:= leftStr . funcName . '()' . msg . trail				; ...	replace Gosub call with func call
+						}
+						else {																; ... UNKNOWN label - probably not global (located in a func maybe?)
+							msg		:= ' `; V1toV2:Gosub (Manual edit required)'			; ... 	flag Gosub call as a manual edit
+							line	:= leftStr . GS . Lbl . msg . trail						; ...	add mssg to Gusub call
+						}
+					}
+				}
+			}
+			outStr .= line . '`r`n'															; add current line to output, whether changes were made or not
+		}
+		outStr := RegExReplace(outStr, '\r\n$',,,1)											; remove last (extra) CRLF from output
+		Mask_R(&outStr, 'C&S')																; restore comments/strings
+		return outStr																		; return output
+	}
+	;################################################################################
+	; does script require ANY label conversions? (label to func)
+	;	if lblName is passed, will only be true when lblName requires conversion
+	;################################################################################
+	Static _hasL2F[lblName:='']																; to determine whether label(s) will be conv to func
+	{
+		get {
+			if (lblName) {
+				return (gmList_LblsToFunc.Has(lblname) || gmList_GosubToFunc.Has(lblname))	; true if LBLName requires conversion
+			}
+			return !!(gmList_LblsToFunc.Count || gmList_GosubToFunc.Count)					; true when ANY label requires conversion
+		}
+	}
+	;################################################################################
+	static _hkhsToFunc()																	; deals with HK,HS 'labels'
+	{
+		wcFuncsToUpdate := map()															; used to track named-blocks for HKs (for adding wildcard param)
+
+		; convert HK/HS to func as needed
+		for idx, sect in this.Sects {
+
+			;########################################################################
+			; first, weed out situations to skip
+			if (sect._tType = 'BLKFUNC') {													; if section is a func (tag)...
+				if (wcFuncsToUpdate.Has(sect._tag)											; ... if that func requires wildcard param...
+				&& funcCode := this._addWildcardParam(sect))								; ... AND the param is successfully added...
+					sect.Line1 := funcCode													; ...	update line 1 to include wildcard param
+				continue																	; ... continue to next section
+			}
+			else if (!(sect._tType ~= '(?i)(?:HK|HS)')) {									; if not HK/HS (is label)...
+				continue																	; ... skip it, goto next section
+			}
+			else if (sect._tType = 'HK' && sect.HasCaller) {								; if is HK and has a caller (gosub, goto)
+				; allow bypass, to HK checks below											; ... drop to HK checks below (support for Issue #322)
+			}
+			else if (sect.L1.cmd) {															; if cmd on same line as HK/HS...
+				continue																	; ... skip it, goto next section
+			}
+			else if (blkDetails := isBraceBlock(sect.Blk)) {								; if already has brace-blk...
+				continue																	; ... skip it, goto next section
+			}
+			else if (idx < this.Sects.length && !sect.Blk) {								; [if no cmd on line 1], and has no code block...
+				nextSect := this.sects[idx+1]												; ... get next section
+				nextType := nextSect._tType													; ... get next section type
+				if (nextType ~= '(?i)(?:HK|HS)') {											; if next section is also HK/HS...
+					sect.FuncStr := 'SKIP'													; ... flag it so NO func is created later
+					continue																; ... is pass-thru... skip it, goto next section
+				}
+				else if (nextType = 'BLKFUNC') {											; if next section is a func...
+					wcFuncsToUpdate[nextSect._tag] := sect.LabelName						; ... flag func (tag) to be updated with new wilcard param
+					sect.FuncName := nextSect.LabelName										; ... update funcName for current sect so it points to named-func
+					continue																; ... continue to next section
+				}
+			}
+			;########################################################################
+			; handle HK/HS situations
+			lblName	 := sect.LabelName														; get HK/HS declaration
+			; HotStrings
+			if (sect._tType = 'HS' && sect.Blk) {											; if is HS AND has code to execute [but no cmd on L1]...
+				uniqStr	 := ' for [' trim(lblName) ']'										; ... include HS trigger in msg...
+				sect.Blk := sect._addBraces(uniqStr)										; ... surround code-block with braces (convert to func)
+				continue
+			}
+			; HotKeys
+			if (sect._tType = 'HK'															; if is HK... (support for Issue #322)
+				&& sect.L1.cmd																; ... AND has cmd on Line1
+				&& sect.HasCaller) {														; ... AND HK has a caller (gosub,goto)
+					sect.HK_1LineToML()														; ...	convert single line HK to multi-line HK
+					this._makeFuncHK(&sect)													; ...	convert HK to func (will be moved below global code)
+					continue
+			}
+			nextLink := this._nextLogicLink(lblName)										; get next link in logic-chain
+			if (sect._tType = 'HK'															; if is HK...
+				&& (sect.Blk || nextLink))	{												; ... AND has code to execute OR will execute code elsewhere...
+				if (this._hasL2F)			{												; ... if ANY labels will be converted to func...
+					this._makeFuncHK(&sect)													; ...	convert HK to func (will be moved below global code)
+				}																			;		[will be added to script in _makeFuncsStr()]
+				else						{												; ... NO labels will be converted to func, so...
+					uniqStr	 := ' for [' trim(lblName) ']'									; ... 	[include HK trigger in msg]
+					sect.Blk := sect._addBraces(uniqStr)									; ... 	surround code-block with braces, but don't move it
+				}
+			}
+		}
 	}
 	;################################################################################
 	Static _labelFromTag(tag)																; extracts label name from a masked tag
@@ -1236,19 +1292,27 @@ _Gosub(p) {
 ; 2024-07-07 AMB, UPDATED - as part of label-to-function naming
 ; 2025-10-05 AMB, UPDATED - to use new gmList_GosubToFunc, updated msg to user
 ; TODO - try to add support for %label%
-	global gmList_GosubToFunc
-	EOLComment	:= ' `; V1toV2:Gosub'
-	p[1]		:= RegExReplace(p[1], '%\h*([^%]+?)\h*$', '%$1%')
-	If (InStr(p[1], '%'))
-		EOLComment	:= ' `; V1toV2: Some labels might not have converted to functions'
-	v2FuncName		:= trim(getV2Name(p[1]))
-	gmList_GosubToFunc[v2FuncName] := true
-	return			v2FuncName . '()' . EOLComment
+
+	; check for Gosub %label% - not yet supported
+	p[1] := RegExReplace(p[1], '%\h*([^%]+?)\h*$', '%$1%')
+	If (InStr(p[1], '%')) {
+		EOLComment	:= ' `; V1toV2:Gosub (Manual edit required)'
+		return 'Gosub ' . Trim(p[1]) . EOLComment
+	}
+
+	; should have legit label, but the labelname may change after calling Update_LBL_HK_HS()
+	; ... so, just record the Gosub call for now, with no chnages to script
+	; ... clsSection._gosubUpdate() will make the final changes ass part of Update_LBL_HK_HS()
+	; ... this also provides support for isssue #322, and similar
+	v1LabelName := Trim(p[1])
+	gmList_GosubToFunc[v1LabelName] := true
+	return 'Gosub ' .  v1LabelName	; no changes here
 }
 ;################################################################################
 _Goto(p) {
 ; 2025-10-05 AMB, ADDED - to support (possible) upcoming changes for Goto
-	v1LabelName	:= p[1]
-	v2FuncName	:= trim(getV2Name(v1LabelName))
+
+	v1LabelName	:= Trim(p[1])
+	v2FuncName	:= Trim(getV2Name(v1LabelName))
 	return 'Goto("' v2FuncName '")'
 }

@@ -161,6 +161,7 @@
 			ws		:= mA[3]											; ws following operator
 			val		:= mA[4]											; value
 			val		:= (val!='') ? val : '""'							; make sure value is not missing
+			val		:= RegExReplace(val, '^%\h+')						; 2025-10-06, fix #377, remove lead % when followed by ws (but allow %var%)
 			newStr	:= var . op . ws . val								; reassemble output string
 			lineStr := RegExReplace(lineStr, mTag, newStr,,1,pos)		; update output str
 			pos		+= StrLen(newStr)									; prep for next search

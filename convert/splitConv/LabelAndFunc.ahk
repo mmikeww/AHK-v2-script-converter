@@ -675,7 +675,7 @@ class clsSection
 		}
 
 		; body does not (already) have braces
-		blk	:= this._gotoToFC_new(blk)													; convert any Goto within HK code-block to funcCall
+		blk	:= this._gotoToFC_new(blk)														; convert any Goto within HK code-block to funcCall
 		blk	:= 'global' blk																	; add global keyword to beginning of body/blk
 		if (nextLink && !obj._xCmd) {														; if there is a next-logic-link, and no exit command...
 			if (nxSect := this.SectionObj[nextLink]) {										; ... get the section obj for the next link
@@ -831,7 +831,7 @@ class clsSection
 					}
 				}
 				else {																		; section code does not have braces
-					fConvGblOK := (this._hasL2F && !sect.HasExit)							; allow global code to be called when section has no exit, and any label will be conv to func
+					fConvGblOK := (this._hasL2F && !sect.HasExit)							; allow gbl code calls when sect has no exit, and lbls will be conv to func
 				}
 			}
 			else if (sect._tType ~= '(?i)(?:CLS|FUNC)'										; if section is CLS/FUNC...

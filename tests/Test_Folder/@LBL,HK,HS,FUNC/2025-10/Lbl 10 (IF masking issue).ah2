@@ -1,6 +1,6 @@
 
-LoadClipboardHistory() ; V1toV2:Gosub
-LoadAutoTextList() ; V1toV2:Gosub
+LoadClipboardHistory() ; V1toV2: Gosub
+LoadAutoTextList() ; V1toV2: Gosub
 
 LoadClipboardHistory:
 LoadClipboardHistory()

@@ -21,8 +21,8 @@ return
 ;##############################################
 HK3_h() { ; V1toV2: HK->Func
 global
-HK1_f() ; V1toV2:Gosub
-HK2_g() ; V1toV2:Gosub
+HK1_f() ; V1toV2: Gosub
+HK2_g() ; V1toV2: Gosub
 Send("f")
 Send("g")
 HK1_f() ; V1toV2: Goto->FuncCall

@@ -32,7 +32,7 @@ return
 HK2_lbutton() { ; V1toV2: HK->Func
 global
 
-	label_with_braces() ; V1toV2:Gosub
+	label_with_braces() ; V1toV2: Gosub
 
 return
 }

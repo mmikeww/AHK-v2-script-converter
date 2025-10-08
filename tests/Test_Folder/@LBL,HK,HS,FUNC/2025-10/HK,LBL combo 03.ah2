@@ -1,6 +1,6 @@
 
 
-guiclose() ; V1toV2:Gosub
+guiclose() ; V1toV2: Gosub
 return
 
 guiclose:

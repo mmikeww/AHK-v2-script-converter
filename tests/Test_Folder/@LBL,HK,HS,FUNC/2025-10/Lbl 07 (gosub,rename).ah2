@@ -1,8 +1,8 @@
 ; https://github.com/mmikeww/AHK-v2-script-converter/issues/236#issuecomment-2216654421
 
-MyFunc__() ; V1toV2:Gosub
+MyFunc__() ; V1toV2: Gosub
 MsgBox("C")
-MyFunc2__() ; V1toV2:Gosub
+MyFunc2__() ; V1toV2: Gosub
 
 MyFunc__:
 MyFunc__()

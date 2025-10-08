@@ -28,21 +28,21 @@ return
 Init_Vars_2(A_GuiEvent:="", A_GuiControl:="", Info:="", *) { ; V1toV2: Lbl->Func
 global
 MsgBox("Created MsgBox")
-Init_Vars_3() ; V1toV2:Gosub
+Init_Vars_3() ; V1toV2: Gosub
 Return
 }
 ;##############################################
 Init_Vars() { ; V1toV2: Lbl->Func
 global
 MsgBox("conflicting label name 1")
-Init_Vars_2() ; V1toV2:Gosub
+Init_Vars_2() ; V1toV2: Gosub
 Return
 }
 ;##############################################
 HK1_i() { ; V1toV2: HK->Func
 global
 MsgBox("hotkey pressed")
-Init_Vars() ; V1toV2:Gosub
+Init_Vars() ; V1toV2: Gosub
 Return
 }
 ;##############################################

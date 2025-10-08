@@ -1,5 +1,5 @@
 ~RControl::
-{ ; V1toV2: Added bracket
+{ ; V1toV2: Added opening brace for [~RControl]
 global ; V1toV2: Made function global
 if (A_PriorHotkey != "~RControl" or A_TimeSincePriorHotkey > 400)
 {
@@ -9,4 +9,4 @@ if (A_PriorHotkey != "~RControl" or A_TimeSincePriorHotkey > 400)
 }
 MsgBox("You double-pressed the right control key.")
 return
-} ; V1toV2: Added bracket in the end
+} ; V1toV2: Added closing brace for [~RControl]

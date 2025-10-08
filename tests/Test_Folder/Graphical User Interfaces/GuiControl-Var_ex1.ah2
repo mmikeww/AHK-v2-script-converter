@@ -5,9 +5,13 @@ ogcEdite1 := myGui.Add("Edit", "ve1", "Some Text")
 myGui.Show()
 Return
 
-b1(A_GuiEvent := "", A_GuiControl := "", Info := "", *)
-{ ; V1toV2: Added bracket
-global ; V1toV2: Made function global
+b1:
+b1()
+return
+
+;###############  V1toV2 FUNCS  ###############
+b1(A_GuiEvent:="", A_GuiControl:="", Info:="", *) { ; V1toV2: Lbl->Func
+global
 Var := "Focus" ; This fix works with focus, others won't
 ogcEdite1.%var%() ; V1toV2: SubCommand passed as variable, check variable contents and docs
-} ; V1toV2: Added bracket in the end
+}

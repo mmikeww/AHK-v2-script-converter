@@ -10,41 +10,71 @@ _3_14()
 
 ; looks like a comment
 	`;notACommentAnymore:
+	Msgbox % "`;notACommentAnymore"
+	return
 
 ; looks like variable de-reference path
 	%A_Desktop%\List.txt:
+	Msgbox % "%A_Desktop%\List.txt"
+	return
 
 ; looks like ahk directive
 	#Persistent:
+	Msgbox % "#Persistent"
+	return
 
 ; valid in v2
 	MYLABEL:
-	
-; non-ascii characters (Valid in v2)
-	★a★b★c:
+	Msgbox % "MYLABEL"
+	return
 
 ; non-ascii characters (NOT valid due to digit prefix)
 	1★a★b★c:
+	Msgbox % "1★a★b★c"
+	return
 
-; begins with colon			FIXED
+; begins with colon
 	:a:
+	Msgbox % ":a"
+	return
 
-; looks like file path			FIXED
+; looks like file path
 	c:\user\desktop\List.txt:
+	Msgbox % "c:\user\desktop\List.txt"
+	return
 
-; looks like regex needle		FIXED
+; looks like regex needle
 	\w+\(.*?\):
-
-; looks like an if statement		FIXED
-	if(a&&b){:
-
-; looks like a function		FIXED
-	IThoughtIWasAFunc(param1:=""){:
+	Msgbox % "\w+\(.*?\)"
+	return
 
 ; begins with digit and has dot , will have name conflict with existing function
 	3.14:
+	Msgbox % "3.14"
+	return
 
 ; begins with digit and has dash, will have name conflict also
 	3-14:
+	Msgbox % "3-14"
+	return
 
 gosub 3-14
+
+return
+
+; Tricky
+
+;; looks like an if statement
+;	if(a&&b){:
+;	Msgbox % "if(a&&b){"
+;	return
+
+; non-ascii characters (Valid in v2)
+	★a★b★c:
+	Msgbox % "★a★b★c"
+	return
+
+; looks like a function
+	IThoughtIWasAFunc(param1:=""){:
+	Msgbox % "IThoughtIWasAFunc(param1:=""){"
+	return

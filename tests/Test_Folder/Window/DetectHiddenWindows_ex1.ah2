@@ -1,1 +1,1 @@
-DetectHiddenWindows(True)
+DetectHiddenWindows(true)

@@ -120,16 +120,27 @@ myGui.Title := "Menu Convertor Stress Test"
 myGui.Show("w640")
 Return
 
-MenuHandler(A_ThisMenuItem := "", A_ThisMenuItemPos := "", MyMenu := "", *)
-{ ; V1toV2: Added bracket
-global ; V1toV2: Made function global
+MenuHandler:
+MenuHandler()
+Return
+
+Delete:
+Delete()
+Return
+
+Exit:
+Exit()
+ExitApp()
+
+;###############  V1toV2 FUNCS  ###############
+MenuHandler(A_ThisMenuItem:="", A_ThisMenuItemPos:="", MyMenu:="", *) { ; V1toV2: Lbl->Func
+global
 MsgBox("You selected `"" A_ThisMenuItem "`".")
 Return
-} ; V1toV2: Added Bracket before label
-
-Delete(A_GuiEvent := "", A_GuiControl := "", Info := "", *)
-{ ; V1toV2: Added bracket
-global ; V1toV2: Made function global
+}
+;##############################################
+Delete(A_GuiEvent:="", A_GuiControl:="", Info:="", *) { ; V1toV2: Lbl->Func
+global
 Tab1.Delete()
 Tab2.Delete()
 Tab3.Delete()
@@ -138,10 +149,9 @@ Tab5.Delete()
 Tab6.Delete()
 Tab7.Delete()
 Return
-} ; V1toV2: Added bracket before function
-
-Exit(A_GuiEvent := "", A_GuiControl := "", Info := "", *)
-{ ; V1toV2: Added bracket
-global ; V1toV2: Made function global
+}
+;##############################################
+Exit(A_GuiEvent:="", A_GuiControl:="", Info:="", *) { ; V1toV2: Lbl->Func
+global
 ExitApp()
-} ; V1toV2: Added bracket in the end
+}

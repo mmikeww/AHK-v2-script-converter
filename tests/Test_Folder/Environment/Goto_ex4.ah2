@@ -3,12 +3,16 @@ ogcButtonbtn := myGui.Add("Button", , "btn")
 ogcButtonbtn.OnEvent("Click", Lbl.Bind("Normal"))
 myGui.Show()
 
-Lbl()
+Goto("Lbl")
 ;Goto, Lbl
 
-Lbl(A_GuiEvent := "", A_GuiControl := "", Info := "", *)
-{ ; V1toV2: Added bracket
-global ; V1toV2: Made function global
+Lbl:
+Lbl()
+Return
+
+;###############  V1toV2 FUNCS  ###############
+Lbl(A_GuiEvent:="", A_GuiControl:="", Info:="", *) { ; V1toV2: Lbl->Func
+global
 MsgBox()
 Return
-} ; V1toV2: Added bracket in the end
+}

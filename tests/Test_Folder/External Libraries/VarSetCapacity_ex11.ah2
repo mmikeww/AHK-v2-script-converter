@@ -7,21 +7,15 @@ ogcButtonConvert := myGui.Add("Button", "Default", "Convert")
 ogcButtonConvert.OnEvent("Click", ButtonConvert.Bind("Normal"))
 myGui.Show()
 return
-ButtonConvert(A_GuiEvent := "", A_GuiControl := "", Info := "", *)
-{ ; V1toV2: Added bracket
-global ; V1toV2: Made function global
-oSaved := myGui.Submit(0)
-KeyName := oSaved.KeyName
-MsgBox("GetKeyName: " GetKeyName(KeyName)
-    .  "`nGetKeyChar: " GetKeyChar(KeyName))
+ButtonConvert:
+ButtonConvert()
 return
-} ; V1toV2: Added bracket before function
-GuiClose(*)
-{ ; V1toV2: Added bracket
-global ; V1toV2: Made function global
+GuiClose:
+GuiClose()
+return
 GuiEscape:
+GuiEscape()
 ExitApp()
-} ; V1toV2: Added bracket before function
 
 GetKeyChar(Key, WinTitle:=0)
 {
@@ -34,4 +28,24 @@ GetKeyChar(Key, WinTitle:=0)
     n := DllCall("ToUnicodeEx", "uint", vk, "uint", sc
 , "ptr", state.Ptr, "ptr", char.Ptr, "int", 2, "uint", 0, "ptr", hkl)
     return StrGet(char.Ptr, n, "utf-16")
+}
+
+;###############  V1toV2 FUNCS  ###############
+ButtonConvert(A_GuiEvent:="", A_GuiControl:="", Info:="", *) { ; V1toV2: Lbl->Func
+global
+oSaved := myGui.Submit(0)
+KeyName := oSaved.KeyName
+MsgBox("GetKeyName: " GetKeyName(KeyName)
+    .  "`nGetKeyChar: " GetKeyChar(KeyName))
+return
+}
+;##############################################
+GuiClose(*) { ; V1toV2: Lbl->Func
+global
+GuiEscape()
+}
+;##############################################
+GuiEscape() { ; V1toV2: Lbl->Func
+global
+ExitApp()
 }

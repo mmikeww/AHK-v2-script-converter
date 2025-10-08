@@ -142,7 +142,7 @@ UpdateLayeredWindow(hwnd, hdc, x:="", y:="", w:="", h:="", Alpha:=255)
 
 ;################################################################################
 
-   EscapeStr(&Str,  Quote := True) {
+   EscapeStr(&Str, Quote := True) {
       This.ErrorMsg := ""
       This.ErrorCode := 0
       This.SQL := ""
@@ -579,6 +579,6 @@ F12::	; lock to vert axis movement only
 ;esc::ExitApp
 ;################################################################################
 LockAxis(lock:=false, x1:=0 , y1:=0, x2:=1, y2:=1) {
-	R := Buffer(16, 0),NumPut("UPtr", x1, R.Ptr+0),NumPut("UPtr", y1, R.Ptr+4),NumPut("UPtr", x2, R.Ptr+8),NumPut("UPtr", y2, R.Ptr+12) ; V1toV2: if 'R' is a UTF-16 string, use 'VarSetStrCapacity(R.Ptr, 16)' and replace all instances of 'R.Ptr' with 'StrPtr(R)'
+	R := Buffer(16, 0),NumPut("UPtr", x1, R.Ptr+0),NumPut("UPtr", y1, R.Ptr+4),NumPut("UPtr", x2, R.Ptr+8),NumPut("UPtr", y2, R.Ptr+12) ; V1toV2: if 'R' is a UTF-16 string, use 'VarSetStrCapacity(&R, 16)' and replace all instances of 'R.Ptr' with 'StrPtr(R)'
 	return (lock) ? DllCall("ClipCursor", "UInt", R.Ptr) : DllCall("ClipCursor")
 }

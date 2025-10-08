@@ -15,14 +15,21 @@ ogcButtonExitThisExample.OnEvent("Click", Exit.Bind("Normal"))
 myGui.Show()
 return
 
-MenuHandler(A_ThisMenuItem := "", A_ThisMenuItemPos := "", MyMenu := "", *)
-{ ; V1toV2: Added bracket
-global ; V1toV2: Made function global
+MenuHandler:
+MenuHandler()
 return
-} ; V1toV2: Added Bracket before label
 
-Exit(A_GuiEvent := "", A_GuiControl := "", Info := "", *)
-{ ; V1toV2: Added bracket
-global ; V1toV2: Made function global
+Exit:
+Exit()
 ExitApp()
-} ; V1toV2: Added bracket in the end
+
+;###############  V1toV2 FUNCS  ###############
+MenuHandler(A_ThisMenuItem:="", A_ThisMenuItemPos:="", MyMenu:="", *) { ; V1toV2: Lbl->Func
+global
+return
+}
+;##############################################
+Exit(A_GuiEvent:="", A_GuiControl:="", Info:="", *) { ; V1toV2: Lbl->Func
+global
+ExitApp()
+}

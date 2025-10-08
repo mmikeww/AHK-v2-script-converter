@@ -10,3 +10,19 @@ Return
 Somewhere:
 MsgBox, Test
 Return
+
+Tag:
+msgbox tag
+return
+
+Test:
+msgbox test
+return
+
+Tag1:
+msgbox tag1
+return
+
+Test1:
+msgbox test1
+return

@@ -6,9 +6,13 @@ ogcButtonSubmit.OnEvent("Click", Clicked.Bind("Normal"))
 myGui.Show()
 Return
 
-Clicked(A_GuiEvent := "", A_GuiControl := "", Info := "", *)
-{ ; V1toV2: Added bracket
-global ; V1toV2: Made function global
+Clicked:
+Clicked()
+Return
+
+;###############  V1toV2 FUNCS  ###############
+Clicked(A_GuiEvent:="", A_GuiControl:="", Info:="", *) { ; V1toV2: Lbl->Func
+global
 MsgBox(test)
 Return
-} ; V1toV2: Added bracket in the end
+}

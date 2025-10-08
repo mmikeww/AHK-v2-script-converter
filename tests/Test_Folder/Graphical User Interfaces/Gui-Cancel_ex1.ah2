@@ -4,8 +4,12 @@ ogcButtonOK.OnEvent("Click", ButtonOK.Bind("Normal"))
 myGui.Show()
 Return
 
-ButtonOK(A_GuiEvent := "", A_GuiControl := "", Info := "", *)
-{ ; V1toV2: Added bracket
-global ; V1toV2: Made function global
+ButtonOK:
+ButtonOK()
+return
+
+;###############  V1toV2 FUNCS  ###############
+ButtonOK(A_GuiEvent:="", A_GuiControl:="", Info:="", *) { ; V1toV2: Lbl->Func
+global
 myGui.Hide()
-} ; V1toV2: Added bracket in the end
+}

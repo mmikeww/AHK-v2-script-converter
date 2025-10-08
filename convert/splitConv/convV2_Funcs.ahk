@@ -255,6 +255,7 @@
 ;################################################################################
 {
 ; 2025-06-12 AMB, Moved to dedicated routine for cleaner convert loop
+; 2025-10-05 AMB, UPDATED
 ; handles v1 to v2 conversion of 'return' commands
 
 	; return % var -> return var
@@ -268,13 +269,13 @@
 	; Fix return that has multiple return values (not common)
 	If (RegExMatch(lineStr, 'i)^(\h*return\h+)(.*)', &m) && InStr(m[2], ',')) {
 		sess := clsMask.NewSession()		; create temp masking session
-		Mask_T(&lineStr, 'FC',1,sess)		; mask func CALLS (also masks strings)
+		Mask_T(&lineStr, 'FC',,sess)		; mask func CALLS (also masks strings)
 		Mask_T(&lineStr, 'KV',,sess)		; don't wrap key/val pair objects
 		if InStr(lineStr, ',') {			; line appears to have multiple return values...
 			lineStr := m[1] '(AHKv1v2_Temp := ' m[2] ', AHKv1v2_Temp) `; V1toV2: Wrapped Multi-statement return with parentheses'
 		}
 		Mask_R(&lineStr, 'KV',,sess)		; restore key/val pairs
-		Mask_R(&lineStr, 'FC',,sess)		; restore function calls (also restores strings)
+		Mask_R(&lineStr, 'FC',,sess)		; restore function calls
 	}
 	return
 }
@@ -443,13 +444,14 @@
 ;################################################################################
 {
 ; 2025-06-12 AMB, Moved to dedicated routine for cleaner convert loop
+; 2025-10-05 AMB, UPDATED - changed gfNoSideEffect to gfLockGlbVars
 ; Purpose: Convert AHK v1 built-in functions to v2 format
 ;	see gmAhkFuncsToConvert() within 2Functions.ahk
 ; TODO - MOVE THIS AND RELATED FUNCTIONS TO 2Functions.ahk ??
 
-	global gfNoSideEffect
+	global gfLockGlbVars
 
-	gfNoSideEffect := False		; TODO - see if this is needed OR rename var to better reflect purpose
+	gfLockGlbVars := False
 	V1toV2_Functions(scriptString, lineStr, &lineFuncV2, &gotFunc:=False)
 	if (gotFunc) {
 		lineStr := lineFuncV2

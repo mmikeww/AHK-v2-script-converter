@@ -15,12 +15,10 @@ WM_LBUTTONDOWN(wParam, lParam, msg, hwnd)
     ToolTip("You left-clicked in Gui window at client coordinates x" X "y" Y)
 }
 
-GuiClose(*)
-{ ; V1toV2: Added bracket
-global ; V1toV2: Made function global
+GuiClose:
+GuiClose()
 ExitApp()
 Return
-} ; V1toV2: Added bracket before function
 
 Off() {
     ToolTip()
@@ -29,4 +27,10 @@ Off() {
 
 On() {
     OnMessage(0x0201, WM_LBUTTONDOWN)
+}
+
+;###############  V1toV2 FUNCS  ###############
+GuiClose(*) { ; V1toV2: Lbl->Func
+global
+ExitApp()
 }

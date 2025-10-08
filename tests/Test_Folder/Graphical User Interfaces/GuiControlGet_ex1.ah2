@@ -6,13 +6,17 @@ ogcButtonCheckResponse.OnEvent("Click", CheckResponse.Bind("Normal"))
 myGui.Show()
 Return
 
-CheckResponse(A_GuiEvent := "", A_GuiControl := "", Info := "", *)
-{ ; V1toV2: Added bracket
-global ; V1toV2: Made function global
+CheckResponse:
+CheckResponse()
+return
+
+;###############  V1toV2 FUNCS  ###############
+CheckResponse(A_GuiEvent:="", A_GuiControl:="", Info:="", *) { ; V1toV2: Lbl->Func
+global
 _Type := ogcRadio_Type.Value
 If (_Type = 1) {
   MsgBox("You Selected Option 1")
 } else {
   MsgBox("You Selected Option 2")
 }
-} ; V1toV2: Added bracket in the end
+}

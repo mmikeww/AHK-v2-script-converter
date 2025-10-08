@@ -4,16 +4,21 @@ ogcButtonMakeMsgBox.OnEvent("Click", InitVars.Bind("Normal"))
 myGui.Show()
 Return
 
-InitVars(A_GuiEvent := "", A_GuiControl := "", Info := "", *)
-{ ; V1toV2: Added bracket
-global ; V1toV2: Made function global
-MsgBox("Created MsgBox")
-Return
-} ; V1toV2: Added Bracket before hotkey or Hotstring
-
-^l::
-{ ; V1toV2: Added bracket
-global ; V1toV2: Made function global
+InitVars:
 InitVars()
 Return
-} ; V1toV2: Added bracket in the end
+
+^l::HK1_l()
+
+;###############  V1toV2 FUNCS  ###############
+InitVars(A_GuiEvent:="", A_GuiControl:="", Info:="", *) { ; V1toV2: Lbl->Func
+global
+MsgBox("Created MsgBox")
+Return
+}
+;##############################################
+HK1_l() { ; V1toV2: HK->Func
+global
+InitVars() ; V1toV2: Goto->FuncCall
+Return
+}

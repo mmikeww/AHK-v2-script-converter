@@ -6,9 +6,13 @@ ogcEditTestnTest.OnEvent("Change", ButtonName.Bind("Normal"))
 myGui.Show("w120")
 Return
 
-ButtonName(A_GuiEvent := "", A_GuiControl := "", Info := "", *)
-{ ; V1toV2: Added bracket
-global ; V1toV2: Made function global
+ButtonName:
+ButtonName()
+return
+
+;###############  V1toV2 FUNCS  ###############
+ButtonName(A_GuiEvent:="", A_GuiControl:="", Info:="", *) { ; V1toV2: Lbl->Func
+global
 A_GuiControl := HasProp(A_GuiControl, "Text") ? A_GuiControl.Text : A_GuiControl
 MsgBox("A_GuiEvent: " A_GuiEvent "`nA_GuiControl: " A_GuiControl)
-} ; V1toV2: Added bracket in the end
+}

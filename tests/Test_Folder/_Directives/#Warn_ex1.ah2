@@ -11,4 +11,4 @@ MsgBox(temp)
 class MyClass {
     prop := "Hello, I am a class property."
 }
-MyClass := MyClass
+MyClass := MyClass()

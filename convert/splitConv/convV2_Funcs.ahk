@@ -65,15 +65,32 @@
 													v2_RemoveNewKeyword(&lineStr)
 ;################################################################################
 {
-; 2024-04-09 AMB, MODIFIED to prevent "new" within strings from being removed
-; 2025-06-12 AMB, UPDATED - changed func name, and some var and funcCall names
+; 2025-10-08 AMB, UPDATED - to fix #379 (object instantiation)
+
+	return v2_NewKywdToObjInstance(&lineStr)	; redirect to also support obj instantiation
+}
+;################################################################################
+												v2_NewKywdToObjInstance(&lineStr)
+;################################################################################
+{
+; 2025-10-08 AMB, ADDED to convert [obj := new cls] -> [obj := cls()]
+;	redirected v2_RemoveNewKeyword() to here
+;	preserves any existing params
+;	can support multi-line params if they exist as part of lineStr (untested)
 
 	if (!InStr(lineStr, 'new'))
 		return
 
-	Mask_T(&lineStr, 'STR')		; protect "new" within strings
-	if (RegExMatch(lineStr, 'i)^(.+?)(:=|\(|,)(\h*)new\h(\h*\w.*)$', &m)) {
-		lineStr := m[1] m[2] m[3] m[4]
+	Mask_T(&lineStr, 'STR')							; protect "new" within strings
+	nNew := 'i)^(.+?)(:=|\(|,)(\h*)\bnew\h(\h*\w+\h*)' . gPtn_PrnthBlk . '?(?<trl>.*)'
+	if (RegExMatch(lineStr, nNew, &m)) {
+		objVar	:= m[1], op := m[2], LWS := m[3], cls := m[4], trail := m.trl
+		clsName := Trim(cls)
+		if (!(gAllClassNames ~= clsName ',')) {		; in case class verification should be supported
+			;MsgBox "class does not exist in script `n[" clsName "]"
+		}
+		params	:= (m.FcParth) ? m.FcParth : '()'	; add empty params if params do not already exist
+		lineStr	:= objVar op LWS cls params trail	; remove 'new' from instantiation line
 	}
 	Mask_R(&lineStr, 'STR')
 	return		; lineStr by reference

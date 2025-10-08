@@ -69,6 +69,7 @@ Before_LineConverts(&code)
 
    ; these must also be declared global here because they are being updated here
    global gAllFuncNames     := getFuncNames(code)                   ; comma-delim stringList of all function names
+   global gAllClassNames    := getClassNames(code)                  ; comma-delim stringList of all class names (2025-10-08)
    global gAllV1LabelNames  := getV1LabelNames(code)                ; comma-delim stringList of all orig v1 label names
    global gmAllV2LablNames  := getV2LabelNames(gAllV1LabelNames)    ; map of v1 label names converted to V2 label/funcNames
    global gMenuBarName      := getMenuBarName(code)                 ; name of GUI main menubar
@@ -114,6 +115,7 @@ setGlobals()
    global gUseMasking            := 1           ; 2024-06-26 - set to 0 to test without masking applied
    ; func and label
    global gAllFuncNames          := ""          ; 2024-07-07 - comma-deliminated string holding the names of all functions
+   global gAllClassNames         := ""          ; 2024-10-08 - comma-deliminated string holding the names of all classes
    global gAllV1LabelNames       := ""          ; 2024-07-09 - comma-deliminated string holding the names of all v1 labels
    global gmAllV2LablNames       := map()       ; 2024-07-07 - map holding v1 labelNames (key) and their new v2 label/FuncName (value)
    global gmList_LblsToFunc      := map()       ; 2025-10-05 - replaces gaList_LblsToFuncO and gaList_LblsToFuncC

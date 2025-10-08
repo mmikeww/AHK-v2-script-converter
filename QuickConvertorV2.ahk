@@ -958,6 +958,8 @@ MenuRemoveComments(*)
     global
     editCnv.Value := RegExReplace(editCnv.Value, "m)^; V1toV2: [^;\n]*\n") ; for Removed X comments
     editCnv.Value := RegExReplace(editCnv.Value, "; V1toV2: [^;\n]*")
+    editCnv.Value := RegExReplace(editCnv.Value, ";#{15}  V1toV2 FUNCS  #{15}\n") ; Label conversion comments
+    editCnv.Value := RegExReplace(editCnv.Value, "m)^;#{46}$")
 }
 MenuFixLineEndings(*) {
     global

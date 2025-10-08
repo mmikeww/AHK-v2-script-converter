@@ -332,7 +332,8 @@ _Gui(p) {
 			lbl			:= ControlLabel
 			params		:= 'A_GuiEvent:="", A_GuiControl:="", Info:="", *'
 			funcName	:= getV2Name(ControlLabel)
-			gmList_LblsToFunc[funcName] := ConvLabel('AG', lbl, params, funcName)
+			; 2025-10-07 AMB - Added regex for A_EventInfo -> Info conversion for new Gui funcs
+			gmList_LblsToFunc[funcName] := ConvLabel('AG', lbl, params, funcName, {NeedleRegEx: "im)^(.*?)\b\QA_EventInfo\E\b(.*+)$", Replacement: "$1Info$2"})
 		}
 		if (ControlHwnd != "") {
 			LineResult .= ", " ControlHwnd " := " ControlObject ".hwnd"

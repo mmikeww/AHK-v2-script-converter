@@ -49,6 +49,7 @@ class clsSection
 	LabelName	=> this._name																; name of LBL/FUNC/CLS, or HK/HS trigger (public shortcut)
 	L1			=> this._line1Details														; line 1 details and its parts (public shortcut)
 	HasCaller	=> (gmList_LblsToFunc.Has(this.LabelName)									; to assist prevention of empty labelToFunc conversions
+				||  gmList_LblsToFunc.Has(this.FuncName)
 				|| 	gmList_GosubToFunc.Has(this.LabelName))
 
 	;################################################################################
@@ -78,7 +79,7 @@ class clsSection
 		if (this.HasExit) {																	; if section has an exit command...
 			oExitCmd := this._xCmd, pos := this._xPos										; ... record details about exit cmd line
 			rExitCmd := (IsSet(RegexObj))													; if Regex replacement is required...
-						? this._applyRegex(oExitCmd, RegexObj)								; ... apply regex changes
+						? clsSection._applyRegex(oExitCmd, RegexObj)						; ... apply regex changes
 						: oExitCmd															; ... otherwise, keep orig exit command
 			EOBStr	 := rExitCmd . cBrc														; exit cmd with closing brace
 ;			blkStr	 := RegExReplace(blkStr, escRegexChars(oExitCmd), EOBStr,,1,pos)		; ! Removes $ by mistake for some reason !
@@ -91,18 +92,6 @@ class clsSection
 		blkStr		:= oBrc . glbl . blkStr													; assemble output
 		;this.Blk	:= blkStr																; this is updated by caller (avoid extra save)
 		return		blkStr																	; return updated (brace) block
-	}
-	;################################################################################
-	_applyRegex(srcStr, RegexArr)															; applies regex replacements as required by some sect/blks
-	{
-		if (Type(RegexArr)='array') {														; if regexs are available for this section...
-			for idx, obj in RegexArr {														; ... apply all regex replacements (can be more than 1)
-				if (obj.NeedleRegEx) {
-					srcStr := RegExReplace(srcStr, obj.NeedleRegEx, obj.Replacement)
-				}
-			}
-		}
-		return srcStr
 	}
 	;################################################################################
 	_exitCmdDetails()																		; gets first legit exit command within section code-block
@@ -325,6 +314,21 @@ class clsSection
 		return ''																			; flag unsuccessful (should not happen)
 	}
 	;################################################################################
+	Static _applyRegex(srcStr, RegexArr)													; applies regex replacements as required some sect/blks
+	{
+		if (Type(RegexArr)='array') {														; if regexs are available in RegexArr...
+			for idx, obj in RegexArr {														; ... apply all regex replacements (can be more than 1)
+				if (obj.NeedleRegEx) {
+					loop {																	; ensure all replacements are made within srcStr
+						saveSrcStr := srcStr												; will be used to control loop exit
+						srcStr := RegExReplace(srcStr, obj.NeedleRegEx, obj.Replacement)	; apply replacement as necessary
+					} Until (srcStr = saveSrcStr)											; exit loop when ALL occurence are replaced
+				}
+			}
+		}
+		return srcStr
+	}
+	;################################################################################
 	Static _buildFuncsList()																; gathers all new funcs into single string
 	{
 		if (!funcListStr := this._makeFuncsStr()) {											; if funcListStr creation is NOT successful...
@@ -443,7 +447,7 @@ class clsSection
 		return code																			; return code with changes, if applied
 	}
 	;################################################################################
-	Static _gosubUpdate(code)
+	Static _gosubUpdate(code)																; handles v1 Gosub to v2 funcCall conversion
 	{
 		Mask_T(&code, 'C&S')																; mask comments/strings (since src code has already been restored)
 		outStr := ''																		; ini output
@@ -895,7 +899,7 @@ class clsSection
 			}
 			funcStr := declare . TCT . brcBlk												; rebuild func
 			for idx, reObj in L2F_Obj.RegExList {											; apply regexs as needed
-				funcStr := RegExReplace(funcStr, reObj.NeedleRegEx, reObj.Replacement)
+				funcStr := this._applyRegex(funcStr, L2f_Obj.RegExList)						; perform ALL occurences of ALL needles
 			}
 			code := RegExReplace(code,escRegexChars(origStr),funcStr,,1,pos)				; apply updates to orig code
 			;code := StrReplaceAt(code, orig, funcStr,, pos, 1)

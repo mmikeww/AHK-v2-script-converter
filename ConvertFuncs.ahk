@@ -267,7 +267,7 @@ FinalizeConvert(&code)
    if (InStr(maskedCode, 'OnClipboardChange:')) {
       code := 'OnClipboardChange(OnClipboardChange_v2)`r`n' . code      ; add this to top of script
       gmList_LblsToFunc['OnClipboardChange_v2'] := ConvLabel('OCC', 'OnClipboardChange_v2', 'dataType:=""', 'OnClipboardChange_v2'
-                                                , {NeedleRegEx: "im)^(.*)\b\QA_EventInfo\E\b(.*)$", Replacement: "$1dataType$2"})
+                                                , {NeedleRegEx: "im)^(.*?)\b\QA_EventInfo\E\b(.*+)$", Replacement: "$1dataType$2"})
    }
 
    code := Update_LBL_HK_HS(code)       ; 2025-10-05 AMB, UPDATED conversion for labels,HKs,HSs to v2 format

@@ -17,5 +17,5 @@ return
 ;###############  V1toV2 FUNCS  ###############
 Go_here_1_3() { ; V1toV2: Lbl->Func
 global
-Go_here_1_3() ; V1toV2:Gosub ; recursion error
+Go_here_1_3() ; V1toV2: Gosub ; recursion error
 }

@@ -1,5 +1,5 @@
 
-label() ; V1toV2:Gosub
+label() ; V1toV2: Gosub
 return
 
 +up::

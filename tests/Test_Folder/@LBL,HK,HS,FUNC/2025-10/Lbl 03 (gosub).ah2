@@ -22,8 +22,8 @@ LBL2() { ; V1toV2: Lbl->Func
 global
 MsgBox("hello2")
 
-LBL5() ; V1toV2:Gosub
-LBL3() ; V1toV2:Gosub
+LBL5() ; V1toV2: Gosub
+LBL3() ; V1toV2: Gosub
 LBL3()
 }
 ;##############################################

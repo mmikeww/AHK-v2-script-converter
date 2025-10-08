@@ -5,7 +5,7 @@ MouseClickHandler: ; label comes before HK triggers
 MouseClickHandler()
     return
 
-^LButton::MouseClickHandler() ; V1toV2:Gosub ; Single-line gosub
+^LButton::MouseClickHandler() ; V1toV2: Gosub ; Single-line gosub
 Return
 
 ^RButton::HK2_RButton()
@@ -19,6 +19,6 @@ global
 ;##############################################
 HK2_RButton() { ; V1toV2: HK->Func
 global
-MouseClickHandler() ; V1toV2:Gosub ; Multi-line gosub
+MouseClickHandler() ; V1toV2: Gosub ; Multi-line gosub
 Return
 }

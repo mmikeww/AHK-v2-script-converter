@@ -58,7 +58,7 @@ _3_14_2()
 _3_14_3()
 	return
 
-_3_14_3() ; V1toV2:Gosub
+_3_14_3() ; V1toV2: Gosub
 
 return
 

@@ -1,7 +1,7 @@
 
 
-LBL2() ; V1toV2:Gosub
-LBL1() ; V1toV2:Gosub
+LBL2() ; V1toV2: Gosub
+LBL1() ; V1toV2: Gosub
 return
 
 ^q::HK1_q()

@@ -460,11 +460,11 @@ class clsSection
 					if (gmList_GosubToFunc.Has(Lbl)) {										; if label was recorded in _Gosub()...
 						if (obj := clsSection.SectionObj[Lbl]) {							; ... if object is avail for label
 							funcName:= obj.sect.FuncName									; ...	get func name (may be different than labelname)
-							msg		:= ' `; V1toV2:Gosub'									; ...	[conv msg to user]
+							msg		:= ' `; V1toV2: Gosub'									; ...	[conv msg to user]
 							line	:= leftStr . funcName . '()' . msg . trail				; ...	replace Gosub call with func call
 						}
 						else {																; ... UNKNOWN label - probably not global (located in a func maybe?)
-							msg		:= ' `; V1toV2:Gosub (Manual edit required)'			; ... 	flag Gosub call as a manual edit
+							msg		:= ' `; V1toV2: Gosub (Manual edit required)'			; ... 	flag Gosub call as a manual edit
 							line	:= leftStr . GS . Lbl . msg . trail						; ...	add mssg to Gusub call
 						}
 					}
@@ -1300,7 +1300,7 @@ _Gosub(p) {
 	; check for Gosub %label% - not yet supported
 	p[1] := RegExReplace(p[1], '%\h*([^%]+?)\h*$', '%$1%')
 	If (InStr(p[1], '%')) {
-		EOLComment	:= ' `; V1toV2:Gosub (Manual edit required)'
+		EOLComment	:= ' `; V1toV2: Gosub (Manual edit required)'
 		return 'Gosub ' . Trim(p[1]) . EOLComment
 	}
 

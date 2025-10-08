@@ -2,7 +2,7 @@
 #Requires Autohotkey v2.0
 ; show foo bar
 
-_1__miro__r() ; V1toV2:Gosub
+_1__miro__r() ; V1toV2: Gosub
 
 MsgBox("bar")
 Return

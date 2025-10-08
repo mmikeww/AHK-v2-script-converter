@@ -1,6 +1,6 @@
-LBL2() ; V1toV2:Gosub
-LBL1() ; V1toV2:Gosub
-close() ; V1toV2:Gosub
+LBL2() ; V1toV2: Gosub
+LBL1() ; V1toV2: Gosub
+close() ; V1toV2: Gosub
 return
 
 close:

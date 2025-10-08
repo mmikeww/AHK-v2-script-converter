@@ -1,7 +1,7 @@
 
-LBL3() ; V1toV2:Gosub
+LBL3() ; V1toV2: Gosub
 Goto("LBL1")
-LBL5() ; V1toV2:Gosub	; never gets here due to goto above
+LBL5() ; V1toV2: Gosub	; never gets here due to goto above
 
 ; comment before 1
 LBL1:

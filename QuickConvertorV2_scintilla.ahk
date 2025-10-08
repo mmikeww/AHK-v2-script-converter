@@ -692,8 +692,8 @@ OutputMenu := Menu()
 OutputMenu.Add("Remove converter comments", MenuRemoveComments)
 OutputMenu.Add("Replace \n with \r\n", MenuFixLineEndings)
 TestMenu := Menu()
-TestMenu.Add("AddBracketToHotkeyTest", (*) => V2Edit.Text := AddBracket(V1Edit.Text))
-TestMenu.Add("GetAltLabelsMap", (*) => V2Edit.Text := GetAltLabelsMap(V1Edit.Text))
+;TestMenu.Add("AddBracketToHotkeyTest", (*) => V2Edit.Text := AddBracket(V1Edit.Text))
+;TestMenu.Add("GetAltLabelsMap", (*) => V2Edit.Text := GetAltLabelsMap(V1Edit.Text))
 TestMenu.Add("Performance Test", MenuPerformanceTest)
 ViewMenu := Menu()
 ViewMenu.Add("Zoom In`tCtrl+NumpadAdd", MenuZoomIn)
@@ -864,6 +864,8 @@ MenuRemoveComments(*)
     global
     V2Edit.Text := RegExReplace(V2Edit.Text, "m)^; V1toV2: [^;\n]*\n") ; for Removed X comments
     V2Edit.Text := RegExReplace(V2Edit.Text, "; V1toV2: [^;\n]*")
+    V2Edit.Text := RegExReplace(V2Edit.Text, ";#{15}  V1toV2 FUNCS  #{15}\n") ; Label conversion comments
+    V2Edit.Text := RegExReplace(V2Edit.Text, "m)^;#{46}$")
 }
 MenuFixLineEndings(*) {
     global

@@ -9,7 +9,7 @@ ogcButtonTest := myGui.Add("Button", , "Test")
 ogcButtonTest.OnEvent("Click", LBL5.Bind("Normal"))
 myGui.Show()
 
-LBL2() ; V1toV2:Gosub
+LBL2() ; V1toV2: Gosub
 
 Goto("LBL1")
 Return

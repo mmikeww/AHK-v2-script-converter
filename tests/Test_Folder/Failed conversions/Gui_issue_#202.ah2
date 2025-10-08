@@ -8,32 +8,42 @@ ogcButtonAAAA := guiName.Add("Button", "Default", "AAAA")
 ogcButtonAAAA.OnEvent("Click", guiNameButtonAAAA.Bind("Normal"))
 guiName.Show()
 
-
-myGui := Gui()
-myGui.OnEvent("Close", GuiClose)
-myGui.OnEvent("Escape", GuiClose)
-; not name
-myGui.Add("text", , "text2              text2                text2       text2")
-ogcButtonBBBB := myGui.Add("Button", "Default", "BBBB")
+guiName1 := Gui()
+guiName1.OnEvent("Close", GuiClose)
+guiName1.OnEvent("Escape", GuiClose)
+ ; not name
+guiName1.Add("text", , "text2              text2                text2       text2")
+ogcButtonBBBB := guiName1.Add("Button", "Default", "BBBB")
 ogcButtonBBBB.OnEvent("Click", ButtonBBBB.Bind("Normal"))
-myGui.Show()
+guiName1.Show()
 
 return
 
-guiNameButtonAAAA() {
+guiNameButtonAAAA(A_GuiEvent:="", A_GuiControl:="", Info:="", *) {
     ; Gui, Add, Button, Default, AAAA
     ; guiName + Button + AAAA
     ; guiNameButtonAAAA
     MsgBox("Button AAAA is call")
 }
 
-ButtonBBBB() {
+ButtonBBBB(A_GuiEvent:="", A_GuiControl:="", Info:="", *) {
     MsgBox("Button BBBB is call")
 }
 
-GuiClose(*)
-{ ; V1toV2: Added bracket
-    global ; V1toV2: Made function global
-    GuiEscape:
-    ExitApp()
-} ; Added bracket in the end
+GuiClose:
+GuiClose()
+return
+GuiEscape:
+GuiEscape()
+ExitApp()
+
+;###############  V1toV2 FUNCS  ###############
+GuiClose(*) { ; V1toV2: Lbl->Func
+global
+GuiEscape()
+}
+;##############################################
+GuiEscape() { ; V1toV2: Lbl->Func
+global
+ExitApp()
+}

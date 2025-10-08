@@ -147,21 +147,26 @@
 ; Purpose: Remove/Disable incompatible commands (that are no longer allowed)
 
 	; V1 and V2, but with different commands for each version
+	; 2025-10-08 AMB, Updated to fix #375
 	fDisableLine := false
-	if (!fCmdConverted) {									; if a targetted command was found earlier...
-		Loop Parse, gAhkCmdsToRemoveV1, '`n', '`r' {		; [check for v1 deprecated]
-			if (InStr(gEarlyLine, A_LoopField)) {			; ... is that command invalid after v1.0?
-				fDisableLine := true						; flag it as invalid
-			}
+	if (!fCmdConverted) {											; if a targetted command was found earlier...
+		Loop Parse, gAhkCmdsToRemoveV1, '`n', '`r' {				; [check for v1 deprecated]
+			targStr	:= escRegexChars(A_LoopField)					; prep for regex check
+			lead	:= (A_LoopField ~= '^#') ? '' : '\b'			; add word boundary to beginning of needle, but only when hask char not present
+			nTarg	:= '(?i)' lead targStr '\b'						; needle to cover all scenerios in gAhkCmdsToRemoveV1
+			if (gEarlyLine ~= nTarg)								; ... is that command invalid after v1.0?
+				fDisableLine := true								; flag it as invalid
 		}
 		if (gV2Conv) { ; v2
-			Loop Parse, gAhkCmdsToRemoveV2, '`n', '`r' {	; [check for v2 deprecated]
-				if (InStr(gEarlyLine, A_LoopField)) {		; ... is that command invalid in v2?
-					fDisableLine := true					; flag it as invalid
-				}
+			Loop Parse, gAhkCmdsToRemoveV2, '`n', '`r' {			; [check for v2 deprecated]
+				targStr	:= escRegexChars(A_LoopField)				; prep for regex check
+				lead	:= (A_LoopField ~= '^#') ? '' : '\b'		; add word boundary to beginning of needle, but only when hask char not present
+				nTarg	:= '(?i)' lead targStr '\b'					; needle to cover all scenerios in gAhkCmdsToRemoveV2
+				if (gEarlyLine ~= nTarg)							; ... is that command invalid after v2?
+					fDisableLine := true							; flag it as invalid
 			}
-			if (lineStr ~= '^\h*(local)\h*$')	{			; V2 Only - only force-local
-				fDisableLine := true						; flag it as invalid
+			if (lineStr ~= '^\h*(\blocal\b)\h*$')	{				; V2 Only - only force-local
+				fDisableLine := true								; flag it as invalid
 			}
 		}
 	}

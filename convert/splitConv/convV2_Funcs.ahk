@@ -462,17 +462,29 @@
 {
 ; 2025-06-12 AMB, Moved to dedicated routine for cleaner convert loop
 ; 2025-10-05 AMB, UPDATED - changed gfNoSideEffect to gfLockGlbVars
+; 2025-10-09 AMB, UPDATED - to fix #348
 ; Purpose: Convert AHK v1 built-in functions to v2 format
 ;	see gmAhkFuncsToConvert() within 2Functions.ahk
 ; TODO - MOVE THIS AND RELATED FUNCTIONS TO 2Functions.ahk ??
 
 	global gfLockGlbVars
 
-	gfLockGlbVars := False
-	V1toV2_Functions(scriptString, lineStr, &lineFuncV2, &gotFunc:=False)
-	if (gotFunc) {
-		lineStr := lineFuncV2
+	nFC := '(?i)' uniqueTag('FC\w++')												; needle for funcCall TAGS
+	Mask_T(&lineStr, 'FC')															; mask all func calls in source str
+	gfLockGlbVars := False															; turn off global var lock
+	While(pos := RegexMatch(lineStr,nFC, &m, pos??1)) {								; locate each FC tag, ONE AT A TIME
+		tag		:= m[]																; found an FC tag
+		oStr	:= HasTag(,tag)														; get orig str for tag
+		Mask_R(&oStr, 'STR')														; restore any masked strings within FC orig str
+		lineStr	:= StrReplace(lineStr, tag, oStr)									; replace tag with orig str, so it is exposed for processing
+		V1toV2_Functions(scriptString, lineStr, &lineFuncV2, &gotFunc:=False)		; process the ONE AND ONLY FC that is exposed in string
+		if (gotFunc) {																; if a v2 change was made...
+			lineStr := lineFuncV2													; update linestr with that v2 change
+			Mask_T(&lineStr, 'STR'), Mask_T(&lineStr, 'HFC', gPtn_FuncCall)			; hide the FC that was just changed (next pass can break it)
+		}
 	}
+	Mask_R(&lineStr, 'FC'), Mask_R(&lineStr, 'HFC')									; restore any remaining FC tags, and all hidden-FC tags
+
 	return		; lineStr by reference
 }
 ;################################################################################

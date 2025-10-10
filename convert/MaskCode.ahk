@@ -473,7 +473,7 @@ global	  gTagChar		:= chr(0x2605) ; '★'															; unique char to ensure 
  convert param - whether to convert code as part of masking restore
 	has no relevance with clsMask.RestoreAll() since this code is not converted
 	but sub-class (custom) RestoreAll()'s use it (clsMLLineCont.RestoreAll at the moment)
-2025-10-05 AMB, UPDATED
+2025-10-10 AMB, UPDATED to fix conflict between LC and STR restoration (chicken and egg delima)
 
  CODE param	- source-code/haystack that will be searched (for target TAGS), and ultimately converted (see CONVERT below)
 					2025-07-06 - CANNOT BE A TRULY GLOABAL VAR - will result in errors during recursion calls (see notes)
@@ -519,10 +519,17 @@ global	  gTagChar		:= chr(0x2605) ; '★'															; unique char to ensure 
 		;################################################################################
 		case	'C&S','S&C':								; COMMENTS AND STRINGS...
 				; ORDER MATTERS - reverse order of Mask_T
-				Mask_R(&code, 'MLQS',delTag, sessID?)		; 	recursion call - restore quoted-strings (ML)
-				Mask_R(&code, 'QS',	 delTag, sessID?)		; 	recursion call - restore quoted-strings (1line)
-				Mask_R(&code, 'LC',	 delTag, sessID?)		; 	recursion call - restore line  comments
-				Mask_R(&code, 'BC',	 delTag, sessID?)		; 	recursion call - restore block comments
+				ntMLQS	:= gTagPfx . 'MLQS_', 	ntQS := gTagPfx . 'QS_'
+				ntLC	:= gTagPfx . 'LC_', 	ntBC := gTagPfx . 'BC_'
+				hasTags := ((code ~= ntMLQS) || (code ~= ntQS) || (code ~= ntLC) || (code ~= ntBC))
+				pass := 0
+				While(hasTags) {
+					Mask_R(&code, 'MLQS',delTag, sessID?)	; 	recursion call - restore quoted-strings (ML)
+					Mask_R(&code, 'QS',	 delTag, sessID?)	; 	recursion call - restore quoted-strings (1line)
+					Mask_R(&code, 'LC',	 delTag, sessID?)	; 	recursion call - restore line  comments
+					Mask_R(&code, 'BC',	 delTag, sessID?)	; 	recursion call - restore block comments
+					hasTags := (((code ~= ntMLQS) || (code ~= ntQS) || (code ~= ntLC) || (code ~= ntBC)) && !IsSet(sessID))
+				}
 		;################################################################################
 		case	'BC':										; BLOCK COMMENTS
 				clsMask.RestoreAll(&code, 'BC'

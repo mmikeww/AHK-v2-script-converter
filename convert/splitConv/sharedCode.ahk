@@ -415,16 +415,13 @@ Class ScriptCode
  * Fix turning off OnMessage when OnMessage is turned off
  * before it is assigned a callback (by eg using functions)
  * 2025-10-05 AMB, MOVED/UPDATED - gCBPH - see MaskCode.ahk
+ * 2025-10-10 AMB, UPDATED handling of trailing CRLFs
  */
 FixOnMessage(ScriptString) {
 
 	if (!InStr(ScriptString, gCBPH))
 		Return ScriptString
 
-	tCRLF := ''
-	if (RegExMatch(ScriptString, '.*(\R+)$', &m)) {
-		tCRLF := m[1]	; preserve any trailing CRLFs that code came with
-	}
 	retScript := ""
 	loop parse ScriptString, "`n", "`r" {
 		Line := A_LoopField
@@ -435,8 +432,9 @@ FixOnMessage(ScriptString) {
 		}
 		retScript .= Line "`r`n"
 	}
+	retScript := RegExReplace(retScript,'\r\n$',,,1)
 	retScript := RegExReplace(retScript, gCBPH '(.*)', '$1 `; V1toV2: Put callback to turn off in param 2')
-	return RTrim(retScript, "`r`n") . tCRLF	; preserve any trailing CRLFs that code came with
+	return retScript
 }
 ;################################################################################
 /**
@@ -445,12 +443,10 @@ FixOnMessage(ScriptString) {
  * &VarSetStrCapacityObj -> StrPtr(VarSetStrCapacityObj)
  */
 ; 2025-10-05 AMB, MOVED from ConvertFuncs.ahk, ADDED masking for comments/strings
+; 2025-10-10 AMB, UPDATED handling of trailing CRLFs, moved masking to FinalizeConvert()
 FixVarSetCapacity(ScriptString) {
-	tCRLF := ''
-	if (RegExMatch(ScriptString, '.*(\R+)$', &m)) {
-		tCRLF := m[1]	; preserve any trailing CRLFs that code came with
-	}
-	Mask_T(&ScriptString, 'C&S')	; 2025-10-05 - fix issue with incorrectly adding .Ptr to V1ToV2 VarSetCapacity comments
+	; 2025-10-10 - masking now handled in FinalizeConvert()
+	;Mask_T(&ScriptString, 'C&S')	; 2025-10-05 - fix issue with incorrectly adding .Ptr to V1ToV2 VarSetCapacity comments
 	retScript := ""
 	loop parse ScriptString, "`n", "`r" {
 		Line := A_LoopField
@@ -470,8 +466,7 @@ FixVarSetCapacity(ScriptString) {
 		}
 		retScript .= Line "`r`n"
 	}
-	Mask_R(&retScript, 'C&S')
-	retScript := RTrim(retScript, "`r`n") . tCRLF		; preserve any trailing CRLFs that code came with
+	retScript := RegExReplace(retScript,'\r\n$',,,1)
 	return retScript
 }
 ;################################################################################
@@ -480,7 +475,8 @@ FixVarSetCapacity(ScriptString) {
  * and appends an &
  */
 /*
-2025-10-05 AMB - MOVED/UPDATED to fix errors and missing line comments
+2025-10-05 AMB, MOVED/UPDATED to fix errors and missing line comments
+2025-10-10 AMB, UPDATED handling of trailing CRLFs
 	* param-detection issues/errors when params contain funcCalls (due to extra commas)
 		ADDED funcCall masking - TODO - test to verify full resolution...
  Known issues that still remain
@@ -497,10 +493,6 @@ FixVarSetCapacity(ScriptString) {
 */
 FixByRefParams(ScriptString) {
 
-	tCRLF := ''
-	if (RegExMatch(ScriptString, '.*(\R+)$', &m)) {
-		tCRLF := m[1]																	; preserve any trailing CRLFs that code came with
-	}
 	retScript	:= ''																	; ini return string
 	maskSessID	:= clsMask.NewSession()													; 2025-10-05 - establish an isolated mask session
 	loop parse ScriptString, '`n', '`r' {												; for each line...
@@ -538,8 +530,9 @@ FixByRefParams(ScriptString) {
 		}
 		retScript .= ((fReplaced) ? newLine : Line) . EOLComment . '`r`n'				; update return string with updated line
 	}
+	retScript := RegExReplace(retScript,'\r\n$',,,1)
 	Mask_R(&retScript, 'FC',,maskSessID)												; 2025-10-05 restore any func calls found in param lists
-	return RTrim(retScript, '`r`n') . tCRLF												; preserve any trailing CRLFs that code came with
+	return retScript
 }
 ;################################################################################
 ; check if a param is empty

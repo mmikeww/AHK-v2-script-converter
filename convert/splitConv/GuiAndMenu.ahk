@@ -574,7 +574,9 @@ addMenuCBArgs(&code) {
 ; 2024-06-26 AMB, ADDED to fix issue #131
 ; 2025-06-12 AMB, UPDATED to fix interference with IF/LOOP/WHILE
 ; 2025-10-05 AMB, MOVED to GuiAndMenu.ahk
+; 2025-10-10 AMB, UPDATED to fix missing params
 
+	;Mask_T(&code, 'C&S')	; 2025-10-10 - now handled in FinalizeConvert()
 	; add menu args to callback functions
 	nCommon	:= '^\h*(?<fName>[_a-z]\w*+)(?<fArgG>\((?<Args>(?>[^()]|\((?&Args)\))*+)'
 	nFUNC	:= RegExReplace(gPtn_Blk_FUNC, 'i)\Q(?:\b(?:IF|WHILE|LOOP)\b)(?=\()\K|\E')		; 2025-06-12, remove exclusion
@@ -605,7 +607,7 @@ addOnMessageCBArgs(&code) {
 ; 2025-10-05 AMB, MOVED to GuiAndMenu.ahk
 ; 2025-10-10 AMB, UPDATED to fix missing params, improve WS handling
 
-	Mask_T(&code, 'C&S')	; 2025-10-10 - to fix missing params
+	;Mask_T(&code, 'C&S')	; 2025-10-10 - now handled in FinalizeConvert()
 	; add menu args to callback functions
 	nCommon	:= '^\h*(?<fName>[_a-z]\w*+)(?<fArgG>\((?<Args>(?>[^()]|\((?&Args)\))*+)'
 	nFUNC	:= RegExReplace(gPtn_Blk_FUNC, 'i)\Q(?:\b(?:IF|WHILE|LOOP)\b)(?=\()\K|\E')					; 2025-06-12, remove exclusion

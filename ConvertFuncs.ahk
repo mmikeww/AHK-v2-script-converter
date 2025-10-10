@@ -273,6 +273,7 @@ FinalizeConvert(&code)
    }
 
    code := Update_LBL_HK_HS(code)       ; 2025-10-05 AMB, UPDATED conversion for labels,HKs,HSs to v2 format
+   Mask_T(&code, 'C&S')                 ; 2025-10-10 AMB, first attempt to improve efficiency of conversion (WORK IN PROGRESS)
    code := FixOnMessage(code)           ; Fix turning off OnMessage when defined after turn off
    code := FixVarSetCapacity(code)      ; &buf -> buf.Ptr   &vssc -> StrPtr(vssc)
    code := FixByRefParams(code)         ; Replace ByRef with & in func declarations and calls - see related fixFuncParams()
@@ -1616,11 +1617,12 @@ FormatParam(ParName, ParValue) {
  * Removes ComObjMissing and references to it from functions
  * Eg ComValue(0x10, ComObjMissing()) => ComValue(0x10)
  *    ComValue(0x20, VarForComObjMissing) => ComValue(0x20)
+ * 2025-10-10 AMB, UPDATED- moved STR masking to FinalizeConvert()
  */
 RemoveComObjMissing(ScriptString) {
    if !InStr(ScriptString, 'ComObjMissing()')
       return ScriptString
-   Mask_T(&ScriptString, 'STR')
+;   Mask_T(&ScriptString, 'STR')    ; 2025-10-10 - now handled in FinalizeConvert()
    VarsToRemove := []
    EOLComments := Map()
    Lines := StrSplit(ScriptString, "`n", "`r")

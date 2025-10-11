@@ -574,7 +574,9 @@ addMenuCBArgs(&code) {
 ; 2024-06-26 AMB, ADDED to fix issue #131
 ; 2025-06-12 AMB, UPDATED to fix interference with IF/LOOP/WHILE
 ; 2025-10-05 AMB, MOVED to GuiAndMenu.ahk
+; 2025-10-10 AMB, UPDATED to fix missing params
 
+	;Mask_T(&code, 'C&S')	; 2025-10-10 - now handled in FinalizeConvert()
 	; add menu args to callback functions
 	nCommon	:= '^\h*(?<fName>[_a-z]\w*+)(?<fArgG>\((?<Args>(?>[^()]|\((?&Args)\))*+)'
 	nFUNC	:= RegExReplace(gPtn_Blk_FUNC, 'i)\Q(?:\b(?:IF|WHILE|LOOP)\b)(?=\()\K|\E')		; 2025-06-12, remove exclusion
@@ -603,24 +605,34 @@ addOnMessageCBArgs(&code) {
 ; 2024-06-28 AMB, ADDED to fix issue #136
 ; 2025-06-12 AMB, UPDATED to fix interference with IF/LOOP/WHILE
 ; 2025-10-05 AMB, MOVED to GuiAndMenu.ahk
+; 2025-10-10 AMB, UPDATED to fix missing params, improve WS handling
 
+	;Mask_T(&code, 'C&S')	; 2025-10-10 - now handled in FinalizeConvert()
 	; add menu args to callback functions
 	nCommon	:= '^\h*(?<fName>[_a-z]\w*+)(?<fArgG>\((?<Args>(?>[^()]|\((?&Args)\))*+)'
-	nFUNC	:= RegExReplace(gPtn_Blk_FUNC, 'i)\Q(?:\b(?:IF|WHILE|LOOP)\b)(?=\()\K|\E')				; 2025-06-12, remove exclusion
+	nFUNC	:= RegExReplace(gPtn_Blk_FUNC, 'i)\Q(?:\b(?:IF|WHILE|LOOP)\b)(?=\()\K|\E')					; 2025-06-12, remove exclusion
+	nParams := '(?i)(?:\b(?:wParam|lParam|msg|hwnd)\b(\h*,\h*)?)+'
 	m := [], declare := []
 	for key, funcName in gmOnMessageMap
 	{
-		nTargFunc := RegExReplace(nFUNC, 'i)\Q?<fName>[_a-z]\w*+\E', funcName)						; target specific function name
+		nTargFunc := RegExReplace(nFUNC, 'i)\Q?<fName>[_a-z]\w*+\E', funcName)							; target specific function name
 		If (pos := RegExMatch(code, nTargFunc, &m)) {
 			; target function found
 			nDeclare	:= '(?im)' nCommon '\))(?<trail>.*)'
 			nArgs		:= '(?im)' nCommon '\K\)).*'
-			if (RegExMatch(m[], nDeclare, &declare)) {												; get just declaration line
+			if (RegExMatch(m[], nDeclare, &declare)) {													; get just declaration line
 				argList		:= declare.fArgG, trail := declare.trail
-				cleanArgs	:= RegExReplace(argList, '(?i)(?:\b(?:wParam|lParam|msg|hwnd)\b(\h*,\h*)?)+')
-				newArgs		:= '(wParam, lParam, msg, hwnd' . ((cleanArgs='()') ? ')' : ', ' SubStr(cleanArgs,2))
-				addArgs		:= RegExReplace(m[],  '\Q' argList '\E', newArgs,,1)					; replace function args
-				code		:= RegExReplace(code, '\Q' m[] '\E', addArgs,,, pos)					; replace function within the code
+				LWS			:= TWS := ''
+				if (RegExMatch(argList, '\((\h*)(.+?)(\h*)\)', &mWS)) {									; separate lead/trail ws in params
+					LWS := mWS[1], params := mWS[2], TWS := mWS[3]										; to preserve lead/trail whitespace
+				}
+				cleanArgs	:= RegExReplace(argList, nParams)											; remove wParam,lParam,msg,hwnd from orig list
+				newArgs		:= '(' LWS 'wParam, lParam, msg, hwnd'										; place wParam,lParam,msg,hwnd at front of list
+				newArgs		.= ((cleanArgs ~= '^\(\h*\)$')												; if no extra params were present originally...
+							? TWS ')'																	; ... just close param list
+							: ', ' LTrim(SubStr(cleanArgs,2)))											; params were already present, add them to end of list
+							addArgs		:= RegExReplace(m[],  '\Q' argList '\E', newArgs,,1)			; replace function args
+				code		:= RegExReplace(code, '\Q' m[] '\E', addArgs,,, pos)						; replace function within the code
 			}
 		}
 	}

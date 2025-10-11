@@ -272,7 +272,7 @@ global gmAhkCmdsToConvertV2 := OrderedMap(
     "GroupClose({1}, {2})"
   , "GroupDeactivate,GroupNameT2E,ModeT2E" ,
     "GroupDeactivate({1}, {2})"
-  , "Hotkey,Var1,Var2CBE2E,Var3" ,
+  , "Hotkey,Var1,Var2,Var3" ,              ; 2025-10-11 AMB - changed var2 to "as is" to fix #328
     "*_Hotkey"
   , "KeyWait,KeyNameT2E,OptionsT2E" ,
     "*_KeyWait"

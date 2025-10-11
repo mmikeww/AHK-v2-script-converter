@@ -1255,6 +1255,52 @@ class ConvLabel
 	return outCode
 }
 ;################################################################################
+addHKCmdFunc(varName) {
+; 2025-10-11 AMB, ADDED to fix #328
+; see addHKCmdCBArgs() for adding param to func declaration
+	nFunc	 := '(?i)' varName '\h*:=\h*FUNC\(([^)]+)\)'									; needle to find... var := Func("funcName")
+	funcName := '', oStr := gOScriptStr._origStr
+	if (RegExMatch(oStr, nFunc, &m)) {														; if a func is associated with varName
+		funcName := Trim(m[1], '"')															; capture that funcName
+		gmList_HKCmdToFunc[funcName] := ConvLabel('HKY', varName, 'ThisHotkey', funcName)	; add funcName and func param to obj/array
+	}
+	return funcName																			; return funcName, in case caller can use it
+}
+;################################################################################
+addHKCmdCBArgs(&code) {
+; 2025-10-11 AMB, Added to support #328
+
+	;Mask_T(&code, 'C&S')	; 2025-10-11 - handled in FinalizeConvert()
+	; add menu args to callback functions
+	nCommon	:= '^\h*(?<fName>[_a-z]\w*+)(?<fArgG>\((?<Args>(?>[^()]|\((?&Args)\))*+)'
+	nFUNC	:= RegExReplace(gPtn_Blk_FUNC, 'i)\Q(?:\b(?:IF|WHILE|LOOP)\b)(?=\()\K|\E')		; 2025-06-12, remove exclusion
+	m := [], declare := []
+	for key, obj in gmList_HKCmdToFunc {
+		paramsToAdd	:= obj.params
+		funcName	:= obj.FuncName
+		nTargFunc	:= RegExReplace(nFUNC, 'i)\Q?<fName>[_a-z]\w*+\E', funcName)			; target specific function name
+		If (pos := RegExMatch(code, nTargFunc, &m)) {
+			; target function found
+			nDeclare	:= '(?im)' nCommon '\))(?<trail>.*)'
+			nArgs		:= '(?im)' nCommon '\K\)).*'
+			if (RegExMatch(m[], nDeclare, &declare)) {										; get just declaration line
+				argList		:= declare.fArgG, trail := declare.trail
+				LWS			:= TWS := '', params := ''
+				if (RegExMatch(argList, '\((\h*)(.+?)(\h*)\)', &mWS)) {						; separate lead/trail ws in params
+					LWS := mWS[1], params := mWS[2], TWS := mWS[3]							; to preserve lead/trail whitespace
+				}
+				newArgs		:= '(' LWS paramsToAdd											; place new param at front
+				newArgs		.= (!Trim(params))												; if no extra params were present originally...
+							? TWS ')'														; ... just close param list
+							: ', ' params TWS ')'											; params were already present, add them to end of list
+				addArgs		:= RegExReplace(m[],  '\Q' argList '\E', newArgs,,1)			; replace function args
+				code		:= RegExReplace(code, '\Q' m[] '\E', addArgs,,, pos)			; replace function within the code
+			}
+		}
+	}
+	return ; code by reference
+}
+;################################################################################
 /**
 * Creates a Map of labels who can be replaced by other labels...
 *	(if labels are defined above each other)

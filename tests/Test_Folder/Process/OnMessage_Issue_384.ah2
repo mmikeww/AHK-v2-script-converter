@@ -2,7 +2,8 @@
 
 OnMessage(MsgNum, ShellMessage)
 ShellMessage( wParam, lParam, msg, hwnd ) {
-MsgBox("add missing params and preserve whitespace")
+	if !(wParam ~= "^(?i:" RegExReplace(RegExReplace(Filters,"[\\\.\*\?\+\[\{\|\(\)\^\$]","\$0"),"\h*,\h*","|") ")$"){
+	}
 }
 
 OnMessage(WM_NOTIFY := 0x4E, LV_NOTIFY)

@@ -161,6 +161,8 @@ setGlobals()
    global gTVNameDefault         := "TV"
    global gSBNameDefault         := "SB"
 
+   global gaFileOpenVars         := []          ; 2025-10-11 AMB - callection of FileOpen object names
+
    global gAhkCmdsToRemoveV1, gAhkCmdsToRemoveV2, gmAhkCmdsToConvertV1, gmAhkCmdsToConvertV2, gmAhkFuncsToConvert, gmAhkMethsToConvert
          , gmAhkArrMethsToConvert, gmAhkKeywdsToRename, gmAhkLoopRegKeywds
 }
@@ -283,6 +285,8 @@ FinalizeConvert(&code)
    addGuiCBArgs(&code)
    addMenuCBArgs(&code)                 ; 2024-06-26, AMB - Fix #131
    addOnMessageCBArgs(&code)            ; 2024-06-28, AMB - Fix #136
+
+   updateFileOpenProps(&code)           ; 2025-10-11, AMB - support for #358
 
    return   ; code by reference
 }

@@ -593,7 +593,7 @@ _VarSetCapacity(p) {
 ;################################################################################
 V1toV2_Functions(ScriptString, Line, &retV2, &gotFunc) {
 
-    global gFuncParams, gfrePostFuncMatch
+    global gFuncParams, gfrePostFuncMatch, gFileOpenVars
     FuncsRemoved := 0   ; Number of funcs that have been removed during conversion (e.g Arr.Length() -> Arr.Length)
     loop {
         if (!InStr(Line, "("))
@@ -611,6 +611,11 @@ V1toV2_Functions(ScriptString, Line, &retV2, &gotFunc) {
         }
         if (oResult.Func = "") {
             continue  ; Not a function, only parenthesis
+        }
+        ; 2025-10-11 AMB - VERY BASIC (temp) support for #358
+        ;MsgBox line "`n`n[" oResult.pre "]`n[" oResult.func "]`n[" oResult.parameters "]`n[" oResult.post "]`n[" oResult.separator "]"
+        if (oResult.func = 'FileOpen' && RegExMatch(oResult.pre, '\h*(\w+)\h*:=', &mFOv)) { ; look for obj assignments for FileOpen
+          gaFileOpenVars.Push(mFOv[1])                                                      ; add var/obj name to list of FileOpen objects
         }
 
         oPar := V1ParamSplit(oResult.Parameters)

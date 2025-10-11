@@ -564,6 +564,21 @@ FixIncDec(ScriptString) {
 	return retStr																		; return output
 }
 ;################################################################################
+updateFileOpenProps(&code) {
+; 2025-10-11 AMB, ADDED - to address issue #358
+; https://github.com/mmikeww/AHK-v2-script-converter/issues/358
+; see V1toV2_Functions() for filling gaFileOpenVars[] with obj/var names
+; currently does not consider scope, and is more of a temp band-aid for now
+; a better solution can be designed later, to support other obj types/props as well
+
+	for idx, obj in gaFileOpenVars {
+		code := RegExReplace(code, '(?i)' obj '.__handle',			obj '.Handle')
+		code := RegExReplace(code, '(?i)' obj '.tell\(\)',			obj '.Pos')
+		code := RegExReplace(code, '(?i)' obj '.position\((\d+)\)',	obj '.Pos := $1')
+		code := RegExReplace(code, '(?i)' obj '.position(?!\()',	obj '.Pos')
+	}
+}
+;################################################################################
 ; check if a param is empty
 ; 2025-10-05 AMB, MOVED from ConvertFuncs.ahk
 IsEmpty(param) {

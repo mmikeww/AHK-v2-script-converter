@@ -1289,10 +1289,9 @@ addHKCmdCBArgs(&code) {
 				if (RegExMatch(argList, '\((\h*)(.+?)(\h*)\)', &mWS)) {						; separate lead/trail ws in params
 					LWS := mWS[1], params := mWS[2], TWS := mWS[3]							; to preserve lead/trail whitespace
 				}
-				newArgs		:= '(' LWS paramsToAdd											; place new param at front
-				newArgs		.= (!Trim(params))												; if no extra params were present originally...
-							? TWS ')'														; ... just close param list
-							: ', ' params TWS ')'											; params were already present, add them to end of list
+				newArgs		:= '(' LWS														; preserve lead whitespace
+				newArgs		.= (Trim(params)) ? params ', ' : ''							; preserve any existing params
+				newArgs		.= paramsToAdd TWS ')'											; add new param to end, preserve trail ws
 				addArgs		:= RegExReplace(m[],  '\Q' argList '\E', newArgs,,1)			; replace function args
 				code		:= RegExReplace(code, '\Q' m[] '\E', addArgs,,, pos)			; replace function within the code
 			}

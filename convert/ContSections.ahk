@@ -120,8 +120,10 @@ class CSect
 			return 	CSect._conv_LegExp(code)										; [,? %? "?]
 		}
 		else {
-			msg := '`n`nPATTERN NOT FOUND`n' gFilePath "`n" mCS.head
-			head .= msg
+			if (IsSet(gFilePath)) {
+				msg := '`n`nPATTERN NOT FOUND`n' gFilePath '`n' mCS.head
+				head .= msg
+			}
 			return code
 		}
 	}

@@ -277,6 +277,7 @@ FinalizeConvert(&code)
    code := FixOnMessage(code)           ; Fix turning off OnMessage when defined after turn off
    code := FixVarSetCapacity(code)      ; &buf -> buf.Ptr   &vssc -> StrPtr(vssc)
    code := FixByRefParams(code)         ; Replace ByRef with & in func declarations and calls - see related fixFuncParams()
+   code := FixIncDec(code)              ; 2025-10-10 AMB, ADDED to cover issue #350
    code := RemoveComObjMissing(code)    ; Removes ComObjMissing() and variables
 
    addGuiCBArgs(&code)

@@ -535,6 +535,35 @@ FixByRefParams(ScriptString) {
 	return retScript
 }
 ;################################################################################
+FixIncDec(ScriptString) {
+; 2025-10-10 AMB, ADDED to cover issue #350 - invalid spaces with ++, --
+; https://github.com/mmikeww/AHK-v2-script-converter/issues/350
+
+	Mask_T(&ScriptString, 'C&S')														; mask comments/strings to avoid interference
+	nVar	:= '(?<!\+|-)(\b[a-z](?:[\w.]+\w)?\b)'										; variables
+	nIncDec	:= '(\+\+|--)'																; ++ or --
+	;nDet	:= '(?<=^|\W)(?<![+-])(?:\+\+|--)(?![+-])(?=\W|$)'							; detect only (can be used for msgs)
+	nInc1	:= '(?i)' nVar '\h+'	nIncDec '(?!\w)',	repl1 := '$1$2'					; example 1 - remove ws between var and ++/--
+	;nInc2	:= '(?i)(.*?)' nVar '(\h+)' nInc '((?2))(.*)', repl2 := '$1$5$4$3. $2$6'	; example 2 - reorder, not same output as v1
+	nInc2	:= '(?i)' nVar '(\h+)'	nIncDec '([a-z])',	repl2 := '$1$3$2. $4'			; example 2 - remove space, add concat, same output as v1
+	retStr	:= ''																		; will be output
+	for idx, line in StrSplit(ScriptString, '`n', '`r') {								; for each line in script...
+		pos		  := 1
+		While(pos := RegexMatch(line,nInc2, &m, pos)) {									; look for each occurence of example 2 on cur line
+			line  := RegExReplace(line, nInc2, repl2,,1,pos)							; handle example 2 of issue #350
+			pos   += StrLen(repl2)														; prep for next search on same line
+		}
+		pos		  := 1
+		While(pos := RegexMatch(line,nInc1, &m, pos)) {									; look for each occurence of example 1 on cur line
+			line  := RegExReplace(line, nInc1, repl1,,1,pos)							; handle example 1 of issue #350
+			pos   += StrLen(repl1)														; prep for next search on same line
+		}
+		retStr	  .= line . '`r`n'														; update output str with current line
+	}
+	retStr		  := RegExReplace(retStr,'\r\n$',,,1)									; remove last CRLF from output
+	return retStr																		; return output
+}
+;################################################################################
 ; check if a param is empty
 ; 2025-10-05 AMB, MOVED from ConvertFuncs.ahk
 IsEmpty(param) {

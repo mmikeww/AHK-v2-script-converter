@@ -572,10 +572,10 @@ updateFileOpenProps(&code) {
 ; a better solution can be designed later, to support other obj types/props as well
 
 	for idx, obj in gaFileOpenVars {
-		code := RegExReplace(code, '(?i)' obj '.__handle',			obj '.Handle')
-		code := RegExReplace(code, '(?i)' obj '.tell\(\)',			obj '.Pos')
-		code := RegExReplace(code, '(?i)' obj '.position\((\d+)\)',	obj '.Pos := $1')
-		code := RegExReplace(code, '(?i)' obj '.position(?!\()',	obj '.Pos')
+		code := RegExReplace(code, '(?i)' obj '\.__handle',			obj '.Handle')
+		code := RegExReplace(code, '(?i)' obj '\.tell\(\)',			obj '.Pos')
+		code := RegExReplace(code, '(?i)' obj '\.pos(?:ition)?\((\d+)\)',	obj '.Pos := $1')
+		code := RegExReplace(code, '(?i)' obj '\.position(?!\()',	obj '.Pos')
 	}
 }
 ;################################################################################

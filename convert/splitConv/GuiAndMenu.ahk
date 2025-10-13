@@ -1,7 +1,22 @@
+class clsGui
+{
+; 2025-10-13 AMB, ADDED to fix #202
+
+	guiName := ''				; gui name - used as key for smGuiList (may not match orgName)
+	orgName := ''				; used to track original gui name - may not match guiName property (this provides fix for #202)
+	created := ''				; how gui was created
+
+	__new(name, created:='') {
+		this.guiName := name
+		this.created := created
+	}
+}
+
 ;################################################################################
 _Gui(p) {
 ; 2025-06-12 AMB, UPDATED - changed some var and func names, gOScriptStr is now an object
 ; 2025-10-05 AMB, UPDATED - moved to GuiAndMenu.ahk, changed gaList_LblsToFuncO to gmList_LblsToFunc
+; 2025-10-13 AMB, UPDATED - to fix #202, also changed some var names and functionality
 
 	global gEarlyLine
 	global gGuiNameDefault
@@ -20,7 +35,7 @@ _Gui(p) {
 	global gGuiActiveFont
 	global gmGuiCtrlObj
 
-	static HowGuiCreated := Map()
+	static smGuiList := Map()	; 2025-10-13 AMB - changed var name and now holds gui object
 	;preliminary version
 
 	SubCommand	:= RegExMatch(p[1], "i)^\s*[^:]*?\s*:\s*(.*)$", &newGuiName) = 0 ? Trim(p[1]) : newGuiName[1]
@@ -36,109 +51,122 @@ _Gui(p) {
 		ControlObject	:= ""
 		GuiOpt			:= ""
 
-		if (p[1] = "New" && gGuiList != "") {
-			if (!InStr(gGuiList, gGuiNameDefault)) {
-				GuiNameLine := gGuiNameDefault
+		if (p[1] = "New" && gGuiList != "") {																	; Gui established (NEW), has NO custom name
+			if (!InStr(gGuiList, gGuiNameDefault)) {															; if default gui name not in gui list
+				curGuiName := gGuiNameDefault																	; ... cur gui name := default name
 			} else {
 				loop {
 					if (!InStr(gGuiList, gGuiNameDefault A_Index)) {
-						GuiNameLine := gGuiNameDefault := gGuiNameDefault A_Index
+						curGuiName := gGuiNameDefault := gGuiNameDefault A_Index
 						break
 					}
 				}
 			}
-			HowGuiCreated[GuiNameLine] := "New"
-		} else if (RegExMatch(GuiLine, "i)^\s*Gui\s*[\s,]\s*[^,\s]*:.*$")) {
-			GuiNameLine	:= RegExReplace(GuiLine, "i)^\s*Gui\s*[\s,]\s*([^,\s]*):.*$", "$1", &RegExCount1)
+			smGuiList[curGuiName] := clsGui(curGuiName, "New")													; 2025-10-13 create a gui object
+		} else if (RegExMatch(GuiLine, "i)^\s*Gui\s*[\s,]\s*[^,\s]*:.*$")) {									; Gui established (NEW), HAS CUSTOM NAME !!
+			curGuiName	:= RegExReplace(GuiLine, "i)^\s*Gui\s*[\s,]\s*([^,\s]*):.*$", "$1", &RegExCount1)
 			GuiLine		:= RegExReplace(GuiLine, "i)^(\s*Gui\s*[\s,]\s*)([^,\s]*):(.*)$", "$1$3", &RegExCount1)
-			if (GuiNameLine = "1") {
-				GuiNameLine := "myGui"
+			if (curGuiName = "1") {																				; if custom name is 1...
+				curGuiName := "myGui"																			; ... rename it to DEFAULT myGui
 			}
-			gGuiNameDefault := GuiNameLine
-			HowGuiCreated[GuiNameLine] := "Set"
-		} else {
-			GuiNameLine := gGuiNameDefault
-			HowGuiCreated[GuiNameLine] := "Default"
+			gGuiNameDefault := curGuiName
+			smGuiList[curGuiName] := clsGui(curGuiName, "Set")													; 2025-10-13, create a gui object
+			smGuiList[curGuiName].orgName := curGuiName															; 2025-10-13, track orig Gui name, this fixes #202
+		} else {																								; triggered for anything other than NEW cmds
+			curGuiName := gGuiNameDefault
+			if (!smGuiList.has(curGuiName)) {
+				smGuiList[curGuiName] := clsGui(curGuiName, "Default")											; no GUI() was established, do it now
+			}
 		}
-		if (RegExMatch(GuiNameLine, "^\d+$")) {
-			GuiNameLine := "oGui" GuiNameLine
+		if (RegExMatch(curGuiName, "^\d+$")) {
+			curGuiName := "oGui" curGuiName
+			if (!smGuiList.has(curGuiName)) {
+				smGuiList[curGuiName] := clsGui(curGuiName, "Default") ; created prop not really needed here	; no GUI() was established, do it now
+			}
 		}
-		GuiOldName := GuiNameLine = "myGui" ? "" : GuiNameLine
-		if (RegExMatch(GuiOldName, "^oGui\d+$"))
-			GuiOldName := StrReplace(GuiOldName, "oGui")
-		if (GuiOldName != "" and HowGuiCreated[GuiOldName] ~= "New|Default")
-			GuiOldName := ""
-
-		Var1 := RegExReplace(p[1], "i)^([^:]*):\s*(.*)$", "$2")
-		Var2 := p[2]
-		Var3 := p[3]
-		Var4 := p[4]
+		prevGuiName := (curGuiName = "myGui") ? "" : curGuiName													; prevGuiName and curGuiName will match most of the time
+		if (RegExMatch(prevGuiName, "^oGui\d+$")) {
+			prevGuiName := StrReplace(prevGuiName, "oGui")
+		}
+		if (prevGuiName != ""
+		&& smGuiList[prevGuiName].created ~= "New|Default") {													; checking for 'Default' is unnecessary
+			prevGuiName := ""
+		}
+		guiCmd	:= RegExReplace(p[1], "i)^([^:]*):\s*(.*)$", "$2")
+		OptCtrl	:= p[2], OptList := p[3], TxtList := p[4]														; use vars for better clarity (somewhat)
 
 		; 2024-07-09 AMB, UPDATED - needles to support all valid v1 label chars
-		; 2024-09-05 f2g: UPDATED - Don't test Var3 for g-label if Var1 = "Show"
+		; 2024-09-05 f2g: UPDATED - Don't test OptList for g-label if guiCmd = "Show"
 		; 2025-10-05 AMB, UPDATED - needles to prevent "+Grid" from being mistaken for gLabel
-		if (RegExMatch(Var3, "i)^.*?(?<=^|\h)g([^,\h``]+).*$") && !RegExMatch(Var1, "i)show|margin|font|new")) {
+		if (RegExMatch(OptList, "i)^.*?(?<=^|\h)g([^,\h``]+).*$") && !RegExMatch(guiCmd, "i)show|margin|font|new")) {
 			; Record and remove gLabel
-			ControlLabel := RegExReplace(Var3, "i)^.*?(?<=^|\h)g([^,\h``]+).*$", "$1")		; get glabel name
-			Var3 := RegExReplace(Var3, "i)^(.*?)(?<=^|\h)g([^,\h``]+)(.*)$", "$1$3")		; remove glabel
-		} else if (Var2 = "Button") {
-			ControlLabel := GuiOldName var2 RegExReplace(Var4, "[\s&]", "")
-			if (!InStr(gAllV1LabelNames, ControlLabel) && !InStr(gAllFuncNames, ControlLabel))
-			ControlLabel := ""
+			ControlLabel	:= RegExReplace(OptList, "i)^.*?(?<=^|\h)g([^,\h``]+).*$", "$1")					; get glabel name
+			OptList			:= RegExReplace(OptList, "i)^(.*?)(?<=^|\h)g([^,\h``]+)(.*)$", "$1$3")				; remove glabel
+
+		} else if (OptCtrl = "Button") {
+			ControlLabel := smGuiList[curGuiName].orgName OptCtrl RegExReplace(TxtList, "[\s&]", "")	; 2025-10-13 - this fixes #202 (tracking of orig gui name)
+			; 2025-10-13 AMB, corrected this to prevent false positives
+			if (!(gAllV1LabelNames	~= '(?i)\b' ControlLabel ',')
+			&&	!(gAllFuncNames		~= '(?i)\b' ControlLabel ',')) {
+				ControlLabel := ""
+			}
 		}
-		if (ControlLabel != "" && !InStr(gAllV1LabelNames, ControlLabel) && InStr(gAllFuncNames, ControlLabel))
+		if (ControlLabel != ""
+			; 2025-10-13 AMB, corrected this to prevent false positives
+			&& !(gAllV1LabelNames	~= '(?i)\b' ControlLabel ',')
+			&&	(gAllFuncNames		~= '(?i)\b' ControlLabel ',')) {
 			gmGuiFuncCBChecks[ControlLabel] := true
+		}
+		if (RegExMatch(OptList, "i)\bv[\w]+\b") && !(guiCmd ~= "i)show|margin|font|new")) {
+			ControlName := RegExReplace(OptList, "i)^.*\bv([\w]+)\b.*$", "$1")
 
-		if (RegExMatch(Var3, "i)\bv[\w]+\b") && !(Var1 ~= "i)show|margin|font|new")) {
-			ControlName := RegExReplace(Var3, "i)^.*\bv([\w]+)\b.*$", "$1")
-
-			ControlObject := InStr(ControlName, SubStr(Var2, 1, 4)) ? "ogc" ControlName : "ogc" Var2 ControlName
+			ControlObject := InStr(ControlName, SubStr(OptCtrl, 1, 4)) ? "ogc" ControlName : "ogc" OptCtrl ControlName
 			gmGuiCtrlObj[ControlName] := ControlObject
-			if (Var2 != "Pic" && Var2 != "Picture" && Var2 != "Text" && Var2 != "Button" && Var2 != "Link" && Var2 != "Progress"
-				&& Var2 != "GroupBox" && Var2 != "Statusbar" && Var2 != "ActiveX") {		; Exclude Controls from the submit (this generates an error)
-				if (gmGuiVList.Has(GuiNameLine)) {
-					gmGuiVList[GuiNameLine] .= "`r`n" ControlName
+			if (OptCtrl != "Pic" && OptCtrl != "Picture" && OptCtrl != "Text" && OptCtrl != "Button" && OptCtrl != "Link" && OptCtrl != "Progress"
+				&& OptCtrl != "GroupBox" && OptCtrl != "Statusbar" && OptCtrl != "ActiveX") {		; Exclude Controls from the submit (this generates an error)
+				if (gmGuiVList.Has(curGuiName)) {
+					gmGuiVList[curGuiName] .= "`r`n" ControlName
 				} else {
-					gmGuiVList[GuiNameLine] := ControlName
+					gmGuiVList[curGuiName] := ControlName
 				}
 			}
 		}
-		if (RegExMatch(Var3, "i)(?<=[^\w\n]|^)\+?HWND(\w*?)(?=`"|\s|$)", &match)) {
+		if (RegExMatch(OptList, "i)(?<=[^\w\n]|^)\+?HWND(\w*?)(?=`"|\s|$)", &match)) {
 			ControlHwnd := match[1]
-			Var3 := StrReplace(Var3, match[])
-			if (ControlObject = "" && Var4 != "") {
-				ControlObject := InStr(ControlHwnd, SubStr(Var4, 1, 4)) ? "ogc" StrReplace(ControlHwnd, "hwnd") : "ogc" Var4 StrReplace(ControlHwnd, "hwnd")
+			OptList := StrReplace(OptList, match[])
+			if (ControlObject = "" && TxtList != "") {
+				ControlObject := InStr(ControlHwnd, SubStr(TxtList, 1, 4)) ? "ogc" StrReplace(ControlHwnd, "hwnd") : "ogc" TxtList StrReplace(ControlHwnd, "hwnd")
 				ControlObject := RegExReplace(ControlObject, "\W")
 			} else if (ControlObject = "") {
 				gGuiControlCount++
-				ControlObject := Var2 gGuiControlCount
+				ControlObject := OptCtrl gGuiControlCount
 			}
 			gmGuiCtrlObj["%" ControlHwnd "%"] := ControlObject
 			gmGuiCtrlObj["% " ControlHwnd] := ControlObject
-		} else if (RegExMatch(Var2, "i)(?<=[^\w\n]|^)\+?HWND(.*?)(?:\h|$)", &match))
-				&& (RegExMatch(Var1, "i)(?<!\w)New")) {
-			GuiOpt := Var2
+		} else if (RegExMatch(OptCtrl, "i)(?<=[^\w\n]|^)\+?HWND(.*?)(?:\h|$)", &match))
+				&& (RegExMatch(guiCmd, "i)(?<!\w)New")) {
+			GuiOpt := OptCtrl
 			GuiOpt := StrReplace(GuiOpt, match[])
-			LineSuffix .= ", " match[1] " := " GuiNameLine ".Hwnd"
-		} else if (RegExMatch(Var1, "i)(?<!\w)New")) {
-			GuiOpt := Var2
+			LineSuffix .= ", " match[1] " := " curGuiName ".Hwnd"
+		} else if (RegExMatch(guiCmd, "i)(?<!\w)New")) {
+			GuiOpt := OptCtrl
 		}
 
-		if (!InStr(gGuiList, "|" GuiNameLine "|")) {
-			gGuiList .= GuiNameLine "|"
-			LineResult := GuiNameLine " := Gui(" RegExReplace(ToExp(GuiOpt,1,1), '^""$') ")`r`n" gIndent
+		if (!InStr(gGuiList, "|" curGuiName "|")) {
+			gGuiList .= curGuiName "|"
+			LineResult := curGuiName " := Gui(" RegExReplace(ToExp(GuiOpt,1,1), '^""$') ")`r`n" gIndent
 
 			; Add the events if they are used.
 			aEventRename := []
-			aEventRename.Push({oldlabel: GuiOldName "GuiClose", event: "Close", parameters: "*", NewFunctionName: GuiOldName "GuiClose"})
-			aEventRename.Push({oldlabel: GuiOldName "GuiEscape", event: "Escape", parameters: "*", NewFunctionName: GuiOldName "GuiEscape"})
-			aEventRename.Push({oldlabel: GuiOldName "GuiSize"
-							, event: "Size", parameters: "thisGui, MinMax, A_GuiWidth, A_GuiHeight", NewFunctionName: GuiOldName "GuiSize"})
-			aEventRename.Push({oldlabel: GuiOldName "GuiConTextMenu", event: "ConTextMenu", parameters: "*", NewFunctionName: GuiOldName "GuiConTextMenu"})
-			aEventRename.Push({oldlabel: GuiOldName "GuiDropFiles"
-							, event: "DropFiles", parameters: "thisGui, Ctrl, FileArray, *", NewFunctionName: GuiOldName "GuiDropFiles"})
+			aEventRename.Push({oldlabel: prevGuiName "GuiClose", event: "Close", parameters: "*", NewFunctionName: prevGuiName "GuiClose"})
+			aEventRename.Push({oldlabel: prevGuiName "GuiEscape", event: "Escape", parameters: "*", NewFunctionName: prevGuiName "GuiEscape"})
+			aEventRename.Push({oldlabel: prevGuiName "GuiSize"
+							, event: "Size", parameters: "thisGui, MinMax, A_GuiWidth, A_GuiHeight", NewFunctionName: prevGuiName "GuiSize"})
+			aEventRename.Push({oldlabel: prevGuiName "GuiConTextMenu", event: "ConTextMenu", parameters: "*", NewFunctionName: prevGuiName "GuiConTextMenu"})
+			aEventRename.Push({oldlabel: prevGuiName "GuiDropFiles"
+							, event: "DropFiles", parameters: "thisGui, Ctrl, FileArray, *", NewFunctionName: prevGuiName "GuiDropFiles"})
 			Loop aEventRename.Length {
-				if (RegexMatch(gOrig_ScriptStr, "\n(\s*)" aEventRename[A_Index].oldlabel ":\s")) {
+				if (RegexMatch(gOrig_ScriptStr, "\r\n(\s*)" aEventRename[A_Index].oldlabel ":\s")) {
 					if (gmAltLabel.Has(aEventRename[A_Index].oldlabel)) {
 						aEventRename[A_Index].NewFunctionName := gmAltLabel[aEventRename[A_Index].oldlabel]
 						; Alternative label is available
@@ -148,120 +176,120 @@ _Gui(p) {
 						funName	:= getV2Name(aEventRename[A_Index].NewFunctionName)
 						gmList_LblsToFunc[getV2Name(lbl)] := ConvLabel('GUI', lbl, params, funName)
 					}
-					LineResult .= GuiNameLine ".OnEvent(`"" aEventRename[A_Index].event "`", " getV2Name(aEventRename[A_Index].NewFunctionName) ")`r`n"
+					LineResult .= curGuiName ".OnEvent(`"" aEventRename[A_Index].event "`", " getV2Name(aEventRename[A_Index].NewFunctionName) ")`r`n"
 				}
 			}
 		}
 
-		if (RegExMatch(Var1, "i)^tab[23]?$")) {
-			Return LineResult "Tab.UseTab(" Var2 ")"
+		if (RegExMatch(guiCmd, "i)^tab[23]?$")) {
+			Return LineResult "Tab.UseTab(" OptCtrl ")"
 		}
-		if (Var1 = "Show") {
-			if (Var3 != "") {
-				LineResult .= GuiNameLine ".Title := " ToExp(Var3,1,1) "`r`n" gIndent
-				Var3 := ""
+		if (guiCmd = "Show") {
+			if (OptList != "") {
+				LineResult .= curGuiName ".Title := " ToExp(OptList,1,1) "`r`n" gIndent
+				OptList := ""
 			}
 		}
 
-		if (RegExMatch(Var2, "i)^tab[23]?$")) {
+		if (RegExMatch(OptCtrl, "i)^tab[23]?$")) {
 			LineResult .= "Tab := "
 		}
-		if (var1 = "Submit") {
+		if (guiCmd = "Submit") {
 			LineResult .= "oSaved := "
-			if (InStr(var2, "NoHide")) {
-				var2 := "0"
+			if (InStr(OptCtrl, "NoHide")) {
+				OptCtrl := "0"
 			}
 		}
 
-		if (var1 = "Add") {
-			if (var2 = "TreeView" && ControlObject != "") {
+		if (guiCmd = "Add") {
+			if (OptCtrl = "TreeView" && ControlObject != "") {
 				gTVNameDefault := ControlObject
 			}
-			if (var2 = "StatusBar") {
+			if (OptCtrl = "StatusBar") {
 				if (ControlObject = "") {
 					ControlObject := gSBNameDefault
 				}
 				gSBNameDefault := ControlObject
 			}
-			if (var2 ~= "i)(Button|ListView|TreeView)" || ControlLabel != "" || ControlObject != "") {
+			if (OptCtrl ~= "i)(Button|ListView|TreeView)" || ControlLabel != "" || ControlObject != "") {
 				if (ControlObject = "") {
-					ControlObject := "ogc" var2 RegExReplace(Var4, "[^\w_]", "")
+					ControlObject := "ogc" OptCtrl RegExReplace(TxtList, "[^\w_]", "")
 				}
 				LineResult .= ControlObject " := "
-				if (var2 = "ListView") {
+				if (OptCtrl = "ListView") {
 					gLVNameDefault := ControlObject
 				}
-				if (var2 = "TreeView") {
+				if (OptCtrl = "TreeView") {
 					gTVNameDefault := ControlObject
 				}
 			}
 			if (ControlObject != "") {
-				gmGuiCtrlType[ControlObject] := var2	; Create a map containing the type of control
+				gmGuiCtrlType[ControlObject] := OptCtrl	; Create a map containing the type of control
 			}
-		} else if (var1 = "Color") {
-			Return LineResult GuiNameLine ".BackColor := " ToExp(Var2,,1)
-		} else if (var1 = "Margin") {
-			Return LineResult GuiNameLine ".MarginX := " ToExp(Var2,,1) ", " GuiNameLine ".MarginY := " ToExp(Var3,,1)
-		} else if (var1 = "Font") {
-			var1 := "SetFont"
-			gGuiActiveFont := ToExp(Var2,,1) ", " ToExp(Var3,,1)
-		} else if (Var1 = "Cancel") {
-			Var1 := "Hide"
-		} else if (var1 = "New") {
-			LineResult	:= Trim(LineResult LineSuffix,"`n")
-			GuiName		:=	", " ToExp(Var3,,1)
+		} else if (guiCmd = "Color") {
+			Return LineResult curGuiName ".BackColor := " ToExp(OptCtrl,,1)
+		} else if (guiCmd = "Margin") {
+			Return LineResult curGuiName ".MarginX := " ToExp(OptCtrl,,1) ", " curGuiName ".MarginY := " ToExp(OptList,,1)
+		} else if (guiCmd = "Font") {
+			guiCmd := "SetFont"
+			gGuiActiveFont := ToExp(OptCtrl,,1) ", " ToExp(OptList,,1)
+		} else if (guiCmd = "Cancel") {
+			guiCmd := "Hide"
+		} else if (guiCmd = "New") {
+			LineResult	:= Trim(LineResult LineSuffix,"`r`n")	; 2025-10-13 AMB - added CR to fix extra CR being left behind sometimes
+			GuiName		:=	", " ToExp(OptList,,1)
 			LineResult	:= RegExReplace(LineResult, "(.*)\)(.*)", "$1" (GuiName != ', ""' ? GuiName ')' : ')') "$2")
 			return		RegExReplace(LineResult, '\r\n,', ',')
 		}
 
-		LineResult .= GuiNameLine "."
+		LineResult .= curGuiName "."
 
-		if (Var1 = "Menu") {
+		if (guiCmd = "Menu") {
 			; TODO: rename the output of the convert function to a global variable ( cOutput)
 			; Why? output is a to general name to use as a global variable. To fragile for errors.
-			; Output := StrReplace(Output, trim(Var3) ":= Menu()", trim(Var3) ":= MenuBar()")
+			; Output := StrReplace(Output, trim(OptList) ":= Menu()", trim(OptList) ":= MenuBar()")
 
-			LineResult .= "MenuBar := " Var2
+			LineResult .= "MenuBar := " OptCtrl
 		} else {
-			if (Var1 != "") {
-				if (RegExMatch(Var1, "^\s*[-\+]\w*")) {
-					While (RegExMatch(Var1, 'i)(?<=[^\w\n]|^)\+HWND(.*?)(?:\s|$)', &match)) {
-						LineSuffix .= ", " match[1] " := " GuiNameLine ".Hwnd"
-						Var1 := StrReplace(Var1, match[])
+			if (guiCmd != "") {
+				if (RegExMatch(guiCmd, "^\s*[-\+]\w*")) {
+					While (RegExMatch(guiCmd, 'i)(?<=[^\w\n]|^)\+HWND(.*?)(?:\s|$)', &match)) {
+						LineSuffix .= ", " match[1] " := " curGuiName ".Hwnd"
+						guiCmd := StrReplace(guiCmd, match[])
 					}
-					LineResult .= "Opt(" ToExp(Var1,,1)
+					LineResult .= "Opt(" ToExp(guiCmd,,1)
 				} Else {
-					LineResult .= Var1 "("
+					LineResult .= guiCmd "("
 				}
 			}
-			if (Var2 != "") {
-				LineResult .= ToExp(Var2,,1)
+			if (OptCtrl != "") {
+				LineResult .= ToExp(OptCtrl,,1)
 			}
-			if (Var3 != "") {
-				LineResult .= ", " ToExp(Var3,,1)
-			} else if (Var4 != "") {
+			if (OptList != "") {
+				LineResult .= ", " ToExp(OptList,,1)
+			} else if (TxtList != "") {
 				LineResult .= ", "
 			}
-			if (Var4 != "") {
-				if (RegExMatch(Var2, "i)^tab[23]?$") || Var2 = "ListView" || Var2 = "DropDownList" || Var2 = "DDL" || Var2 = "ListBox" || Var2 = "ComboBox") {
+			if (TxtList != "") {
+				if (RegExMatch(OptCtrl, "i)^tab[23]?$") || OptCtrl = "ListView" || OptCtrl = "DropDownList" || OptCtrl = "DDL" || OptCtrl = "ListBox" || OptCtrl = "ComboBox") {
 					searchIdx := 1
 					while (gOScriptStr.Has(gO_Index + searchIdx) && SubStr(gOScriptStr.GetLine(gO_Index + searchIdx), 1, 1) ~= "^(\||)$") {
-						;Var4 .= contStr := gOScriptStr[gO_Index + searchIdx]
-						Var4 .= contStr := gOScriptStr.GetLine(gO_Index + searchIdx)
+						;TxtList .= contStr := gOScriptStr[gO_Index + searchIdx]
+						TxtList .= contStr := gOScriptStr.GetLine(gO_Index + searchIdx)
 						nlCount := (SubStr(contStr, 1, 1) = "|" ? 0 : (IsSet(nlCount) ? nlCount : 0) + 1)
 						searchIdx++
 					}
 					if (searchIdx != 1)
 						gO_Index += (searchIdx - 1 - nlCount)
 						gOScriptStr.SetIndex(gO_Index)
-					if (RegExMatch(Var4, "%(.*)%", &match)) {
+					if (RegExMatch(TxtList, "%(.*)%", &match)) {
 						LineResult .= ', StrSplit(' match[1] ', "|")'
-						LineSuffix .= " `; V1toV2: Check that this " Var2 " has the correct choose value"
+						LineSuffix .= " `; V1toV2: Check that this " OptCtrl " has the correct choose value"
 					} else {
 						ObjectValue := "["
 						ChooseString := ""
-						if (!InStr(Var3, "Choose") && InStr(Var4, "||")) {		; ChooseN takes priority over ||
-							dPipes		:= StrSplit(var4, "||")
+						if (!InStr(OptList, "Choose") && InStr(TxtList, "||")) {		; ChooseN takes priority over ||
+							dPipes		:= StrSplit(TxtList, "||")
 							selIndex 	:= 0
 							for idx, str in dPipes {
 								if (idx=dPipes.length)
@@ -270,15 +298,15 @@ _Gui(p) {
 								selIndex += curCount+1
 							}
 							LineResult := RegexReplace(LineResult, "`"$", " Choose" selIndex "`"")
-							if (Var3 = "")
+							if (OptList = "")
 								LineResult .= "`"Choose" selIndex "`""
-							Var4 := RTrim(StrReplace(Var4, "||", "|"), "|")
-						} else if (InStr(Var3, "Choose")) {
-							Var4 := RegexReplace(Var4, "\|+", "|")				; Replace all pipe groups, this breaks empty choices
+							TxtList := RTrim(StrReplace(TxtList, "||", "|"), "|")
+						} else if (InStr(OptList, "Choose")) {
+							TxtList := RegexReplace(TxtList, "\|+", "|")				; Replace all pipe groups, this breaks empty choices
 						}
-						Loop Parse Var4, "|", " "
+						Loop Parse TxtList, "|", " "
 						{
-							if (RegExMatch(Var2, "i)^tab[23]?$") && A_LoopField = "") {
+							if (RegExMatch(OptCtrl, "i)^tab[23]?$") && A_LoopField = "") {
 							ChooseString := "`" Choose" A_Index - 1 "`""
 							continue
 							}
@@ -288,28 +316,28 @@ _Gui(p) {
 						LineResult .= ChooseString ", " ObjectValue
 					}
 				} else {
-					LineResult .= ", " ToExp(Var4,1,1)
+					LineResult .= ", " ToExp(TxtList,1,1)
 				}
 			}
-			if (Var1 != "") {
+			if (guiCmd != "") {
 				LineResult .= ")"
-			} else if (Var1 = "" && LineSuffix != "") {
+			} else if (guiCmd = "" && LineSuffix != "") {
 				LineResult := RegExReplace(LineResult, 'm)^.*\.Opt\(""')
 				LineSuffix := LTrim(LineSuffix, ", ")
 			}
 
-			if (var1 = "Submit") {
+			if (guiCmd = "Submit") {
 				; This should be replaced by keeping a list of the v variables of a Gui and declare for each "vName := oSaved.vName"
-				if (gmGuiVList.Has(GuiNameLine)) {
-					Loop Parse, gmGuiVList[GuiNameLine], "`n", "`r"
+				if (gmGuiVList.Has(curGuiName)) {
+					Loop Parse, gmGuiVList[curGuiName], "`n", "`r"
 					{
-						if (gmGuiVList[GuiNameLine])
+						if (gmGuiVList[curGuiName])
 							LineResult .= "`r`n" gIndent A_LoopField " := oSaved." A_LoopField
 					}
 				}
 			}
 		}
-		if (var1 = "Add" && var2 = "ActiveX" && ControlName != "") {
+		if (guiCmd = "Add" && OptCtrl = "ActiveX" && ControlName != "") {
 			; Fix for ActiveX control, so functions of the ActiveX can be used
 			LineResult .= "`r`n" gIndent ControlName " := " ControlObject ".Value"
 		}
@@ -817,7 +845,7 @@ _Menu(p) {
 			FunctionName := RegExReplace(Var4, "&", "")				; Removes & from labels
 			if (gmAltLabel.Has(FunctionName)) {
 				FunctionName := gmAltLabel[FunctionName]
-			} else if (RegexMatch(gOrig_ScriptStr, "\n(\s*)" Var4 ":\s")) {
+			} else if (RegexMatch(gOrig_ScriptStr, "\r\n(\s*)" Var4 ":\s")) {
 				gmList_LblsToFunc[Var4] := ConvLabel('MN', Var4, 'A_ThisMenuItem:="", A_ThisMenuItemPos:="", MyMenu:="", *', FunctionName)
 			}
 			if (Var4 != "") {

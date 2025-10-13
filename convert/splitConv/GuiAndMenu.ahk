@@ -606,6 +606,7 @@ addOnMessageCBArgs(&code) {
 ; 2025-06-12 AMB, UPDATED to fix interference with IF/LOOP/WHILE
 ; 2025-10-05 AMB, MOVED to GuiAndMenu.ahk
 ; 2025-10-10 AMB, UPDATED to fix missing params, improve WS handling
+; 2025-10-12 AMB, UPDATED to better support existng params and binding
 
 	;Mask_T(&code, 'C&S')	; 2025-10-10 - now handled in FinalizeConvert()
 	; add menu args to callback functions
@@ -613,25 +614,35 @@ addOnMessageCBArgs(&code) {
 	nFUNC	:= RegExReplace(gPtn_Blk_FUNC, 'i)\Q(?:\b(?:IF|WHILE|LOOP)\b)(?=\()\K|\E')					; 2025-06-12, remove exclusion
 	nParams := '(?i)(?:\b(?:wParam|lParam|msg|hwnd)\b(\h*,\h*)?)+'
 	m := [], declare := []
-	for key, funcName in gmOnMessageMap
+	for key, obj in gmOnMessageMap																		; 2025-10-12 - gmOnMessageMap now holds clsOnMsg objects
 	{
+		funcName := obj.cbFunc																			; grab callback func
 		nTargFunc := RegExReplace(nFUNC, 'i)\Q?<fName>[_a-z]\w*+\E', funcName)							; target specific function name
-		If (pos := RegExMatch(code, nTargFunc, &m)) {
+		If (pos := RegExMatch(code, nTargFunc, &m)) {													; look for the func declaration...
 			; target function found
-			nDeclare	:= '(?im)' nCommon '\))(?<trail>.*)'
-			nArgs		:= '(?im)' nCommon '\K\)).*'
+			nDeclare	:= '(?im)' nCommon '\))(?<trail>.*)'											; make needle for func declaration
+			nArgs		:= '(?im)' nCommon '\K\)).*'													; make needle for func params/args
 			if (RegExMatch(m[], nDeclare, &declare)) {													; get just declaration line
-				argList		:= declare.fArgG, trail := declare.trail
-				LWS			:= TWS := ''
+				argList		:= declare.fArgG, trail := declare.trail									; extract params and trailing portion of line
+				LWS			:= TWS := '', params := ''													; ini existing params details, inc lead/trail ws
 				if (RegExMatch(argList, '\((\h*)(.+?)(\h*)\)', &mWS)) {									; separate lead/trail ws in params
-					LWS := mWS[1], params := mWS[2], TWS := mWS[3]										; to preserve lead/trail whitespace
+					LWS := mWS[1], params := mWS[2], TWS := mWS[3]										; extract existing params and preserve lead/trail ws
 				}
-				cleanArgs	:= RegExReplace(argList, nParams)											; remove wParam,lParam,msg,hwnd from orig list
-				newArgs		:= '(' LWS 'wParam, lParam, msg, hwnd'										; place wParam,lParam,msg,hwnd at front of list
-				newArgs		.= ((cleanArgs ~= '^\(\h*\)$')												; if no extra params were present originally...
-							? TWS ')'																	; ... just close param list
-							: ', ' LTrim(SubStr(cleanArgs,2)))											; params were already present, add them to end of list
-							addArgs		:= RegExReplace(m[],  '\Q' argList '\E', newArgs,,1)			; replace function args
+				; 2025-10-12 AMB, better support for existing params and binding
+				paramsToAdd := 'wParam, lParam, msg, hwnd'												; default params required by OnMessage (will add as needed)
+				if (!obj.bindStr) {																		; if OnMesssage call DOES NOT include Binding...
+					checkParams := Trim(params)															; ... check exiting params (they are substitutes)
+					While(checkParams) {																; remove params-to-add, if they have exiting substitutes
+						checkParams := Trim(RegExReplace(checkParams, '^[^,\s]+[,\h]*'))				; [to track when all params have been processed]
+						paramsToAdd := Trim(RegExReplace(paramsToAdd, '^[^,\s]+[,\h]*'))				; remove any params-to-add when they have existing substitue
+					}
+				}
+				else {																					; OnMessage call HAS binding, so...
+					params	:= Trim(RegExReplace(params, nParams), ', `t`r`n')							; remove any params-to-add from the existing list
+				}
+				params		.= (params && paramsToAdd) ? ', ' : ''										; add trailing comma only when needed
+				newArgs		:= '(' LWS . params . paramsToAdd . TWS ')'									; preserve lead/trail ws while rebuilding params list
+				addArgs		:= RegExReplace(m[],  '\Q' argList '\E', newArgs,,1)						; replace function params/args
 				code		:= RegExReplace(code, '\Q' m[] '\E', addArgs,,, pos)						; replace function within the code
 			}
 		}

@@ -539,7 +539,7 @@ FixIncDec(ScriptString) {
 ; 2025-10-10 AMB, ADDED to cover issue #350 - invalid spaces with ++, --
 ; https://github.com/mmikeww/AHK-v2-script-converter/issues/350
 
-	Mask_T(&ScriptString, 'C&S')														; mask comments/strings to avoid interference
+	;Mask_T(&ScriptString, 'C&S')	; 2025-10-10 - now handled in FinalizeConvert()		; mask comments/strings to avoid interference
 	nVar	:= '(?<!\+|-)(\b[a-z](?:[\w.]+\w)?\b)'										; variables
 	nIncDec	:= '(\+\+|--)'																; ++ or --
 	;nDet	:= '(?<=^|\W)(?<![+-])(?:\+\+|--)(?![+-])(?=\W|$)'							; detect only (can be used for msgs)
@@ -562,6 +562,21 @@ FixIncDec(ScriptString) {
 	}
 	retStr		  := RegExReplace(retStr,'\r\n$',,,1)									; remove last CRLF from output
 	return retStr																		; return output
+}
+;################################################################################
+updateFileOpenProps(&code) {
+; 2025-10-12 AMB, ADDED - to address issue #358
+; https://github.com/mmikeww/AHK-v2-script-converter/issues/358
+; see V1toV2_Functions() for filling gaFileOpenVars[] with obj/var names
+; currently does not consider scope, and is more of a temp band-aid for now
+; a better solution can be designed later, to support other obj types/props as well
+
+	for idx, obj in gaFileOpenVars {
+		code := RegExReplace(code, '(?i)' obj '\.__handle',					obj '.Handle')
+		code := RegExReplace(code, '(?i)' obj '\.tell\(\)',					obj '.Pos')
+		code := RegExReplace(code, '(?i)' obj '\.pos(?:ition)?\((\d+)\)',	obj '.Pos := $1')
+		code := RegExReplace(code, '(?i)' obj '\.position(?!\()',			obj '.Pos')
+	}
 }
 ;################################################################################
 ; check if a param is empty

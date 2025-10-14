@@ -120,6 +120,7 @@ setGlobals()
    global gmAllV2LablNames       := map()       ; 2024-07-07 - map holding v1 labelNames (key) and their new v2 label/FuncName (value)
    global gmList_LblsToFunc      := map()       ; 2025-10-05 - replaces gaList_LblsToFuncO and gaList_LblsToFuncC
    global gmList_GosubToFunc     := map()       ; 2025-10-05 - AMB, ADDED - tracks gosubs that need to be converted to func calls
+   global gmList_HKCmdToFunc     := map()       ; 2025-10-12 - AMB, ADDED - tracks funcs that should be called using 'hotkey' cmd
    global gFuncParams            := ""
    global gmByRefParamMap        := map()       ; Map of FuncNames and ByRef params
    ; gui and menu
@@ -160,6 +161,7 @@ setGlobals()
    global gLVNameDefault         := "LV"
    global gTVNameDefault         := "TV"
    global gSBNameDefault         := "SB"
+   global gaFileOpenVars         := []          ; 2025-10-12 AMB - callection of FileOpen object names
 
    global gAhkCmdsToRemoveV1, gAhkCmdsToRemoveV2, gmAhkCmdsToConvertV1, gmAhkCmdsToConvertV2, gmAhkFuncsToConvert, gmAhkMethsToConvert
          , gmAhkArrMethsToConvert, gmAhkKeywdsToRename, gmAhkLoopRegKeywds
@@ -283,6 +285,8 @@ FinalizeConvert(&code)
    addGuiCBArgs(&code)
    addMenuCBArgs(&code)                 ; 2024-06-26, AMB - Fix #131
    addOnMessageCBArgs(&code)            ; 2024-06-28, AMB - Fix #136
+   addHKCmdCBArgs(&code)                ; 2025-10-12, AMB - Fix #328
+   updateFileOpenProps(&code)           ; 2025-10-12, AMB - support for #358
 
    return   ; code by reference
 }
@@ -570,7 +574,9 @@ _FileSetTime(p) {
 ;################################################################################
 _Hotkey(p) {
 ; 2025-10-05 AMB, UPDATED - changed gaList_LblsToFuncO to gmList_LblsToFunc
+; 2025-10-12 AMB, UPDATED - to fix issue #328
    LineSuffix := ""
+   global gmList_LblsToFunc
 
    ;Convert label to function
 
@@ -599,6 +605,10 @@ _Hotkey(p) {
       p[1] := p[1] = "" ? "" : ToExp(p[1])
       if (P[2] = "on" || P[2] = "off" || P[2] = "Toggle" || P[2] ~= "^AltTab" || P[2] ~= "^ShiftAltTab") {
          p[2] := p[2] = "" ? "" : ToExp(p[2])
+      }
+      if (SubStr(Trim(P[2]),1,1) = '%') {       ; 2025-10-12 AMB - fix for #328
+         p[2]       := ToExp(p[2])              ; remove %, (but we needed to know this was a var and not a str)
+         funcName   := addHKCmdFunc(p[2])       ; link var name and func it points to
       }
       if InStr(p[3], "UseErrorLevel") {
          p[3] := Trim(StrReplace(p[3], "UseErrorLevel"))

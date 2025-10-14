@@ -1255,6 +1255,50 @@ class ConvLabel
 	return outCode
 }
 ;################################################################################
+addHKCmdFunc(varName) {
+; 2025-10-12 AMB, ADDED to fix #328
+; see addHKCmdCBArgs() for adding param to func declaration
+	nFunc	 := '(?i)' varName '\h*:=\h*FUNC\(([^)]+)\)'									; needle to locate... var := Func("funcName")
+	funcName := '', oStr := gOScriptStr._origStr
+	if (RegExMatch(oStr, nFunc, &m)) {														; if a func is associated with varName
+		funcName := Trim(m[1], '"')															; capture that funcName
+		gmList_HKCmdToFunc[funcName] := ConvLabel('HKY', varName, 'ThisHotkey', funcName)	; add funcName and func param to obj/array
+	}
+	return funcName																			; return funcName, in case caller can use it
+}
+;################################################################################
+addHKCmdCBArgs(&code) {
+; 2025-10-12 AMB, Added to support #328
+
+	;Mask_T(&code, 'C&S')	; 2025-10-12 - handled in FinalizeConvert()
+	; add menu args to callback functions
+	nCommon	:= '^\h*(?<fName>[_a-z]\w*+)(?<fArgG>\((?<Args>(?>[^()]|\((?&Args)\))*+)'
+	nFUNC	:= RegExReplace(gPtn_Blk_FUNC, 'i)\Q(?:\b(?:IF|WHILE|LOOP)\b)(?=\()\K|\E')		; 2025-06-12, remove exclusion
+	nDeclare:= '(?im)' nCommon '\))(?<trail>.*)'											; make needle for func declaration
+	nArgs	:= '(?im)' nCommon '\K\)).*'													; make needle for func params/args
+	m := [], declare := []
+	for key, obj in gmList_HKCmdToFunc {													; for each entry in list...
+		paramsToAdd	:= obj.params															; get params that will need added
+		funcName	:= obj.FuncName															; get func (name) to add params to
+		nTargFunc	:= RegExReplace(nFUNC, 'i)\Q?<fName>[_a-z]\w*+\E', funcName)			; target specific function name
+		If (pos := RegExMatch(code, nTargFunc, &m)) {										; look for the func declaration...
+			; target function found
+			if (RegExMatch(m[], nDeclare, &declare)) {										; get just declaration line
+				argList		:= declare.fArgG, trail := declare.trail						; extract params and trailing portion of line
+				LWS			:= TWS := '', params := ''										; ini exisiting params details, inc lead/trail ws
+				if (RegExMatch(argList, '\((\h*)(.+?)(\h*)\)', &mWS)) {						; separate lead/trail ws in params
+					LWS := mWS[1], params := mWS[2], TWS := mWS[3]							; extract existing params and preserve lead/trail ws
+				}
+				params		.= (params && paramsToAdd) ? ', ' : ''							; add trailing comma only when needed
+				newArgs		:= '(' LWS . params . paramsToAdd . TWS ')'						; preserve lead/trail ws while rebuilding params list
+				addArgs		:= RegExReplace(m[],  '\Q' argList '\E', newArgs,,1)			; replace function params/args
+				code		:= RegExReplace(code, '\Q' m[] '\E', addArgs,,, pos)			; replace function within the code
+			}
+		}
+	}
+	return ; code by reference
+}
+;################################################################################
 /**
 * Creates a Map of labels who can be replaced by other labels...
 *	(if labels are defined above each other)

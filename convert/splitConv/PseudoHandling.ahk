@@ -20,8 +20,9 @@ Class PseudoArray
 ;//	Special cases in StringSplit	=> {OutVar: "",				OutVar0: OutVar.Length	}
 ;//	Special cases in WinGet(List) => {OutVar: OutVar.Length,	OutVar0: ""				}
 ;// Converts PseudoArray to Array
-ConvertPseudoArray(ScriptStringInput, PseudoArrayName)
-{
+ConvertPseudoArray(ScriptStringInput, PseudoArrayName) {
+; 2025-10-12 AMB, UPDATED to fix issue #118-1
+
 	; The caller does a fast InStr before calling.
 	; Summary of suffix variations depending on sources:
 	;	- StringSplit		=> OutVar:Blank		; OutVar0:Length; OutVarN:Items;
@@ -29,6 +30,12 @@ ConvertPseudoArray(ScriptStringInput, PseudoArrayName)
 	;	- RegExMatch-Mode1	=> OutVar:Text		; OutVar0:Blank;	OutVarN:Items;
 	;	- RegExMatch-Mode2	=> OutVar:Length	; OutVar0:Blank;	OutVarN:Blank; OutVarPosN:Item-pos; OutVarLenN:Item-len;
 	;	- RegExMatch-Mode3	=> OutVar:Object	; OutVar0:Blank;	OutVarN:Blank;
+
+	; 2025-10-12 AMB - add custom masking to avoid updating var within RegexMatch()
+	sessID := clsMask.NewSession()						; create isolated masking session (might not be necessary, but doesn't hurt)
+	Mask_T(&ScriptStringInput, 'C&S',,sessID)			; hide comments/strings within isolated session
+	nRM := '(?i)REGEXMATCH' . gPtn_PrnthBlk				; create custom needle for RegexMatch() calls
+	Mask_T(&ScriptStringInput, 'RXM', nRM)				; hide RegexMatch calls (custom masking)
 
 	ArrayName := PseudoArrayName.name
 	NewName := PseudoArrayName.HasOwnProp("newname") ? PseudoArrayName.newname : ArrayName
@@ -62,7 +69,8 @@ ConvertPseudoArray(ScriptStringInput, PseudoArrayName)
 		ScriptStringInput := RegExReplace(ScriptStringInput, "is)(?<!\w|&|\.)" ArrayName "([1-9]\d*)(?!\w|\.|\[)", NewName "[$1]")
 		ScriptStringInput := RegExReplace(ScriptStringInput, "is)(?<!\w|&|\.)" ArrayName "%(\w+)%(?!\w|\.|\[)", NewName "[$1]")
 	}
-
+	Mask_R(&ScriptStringInput, 'RXM')					; restore all RegexMatch() calls
+	Mask_R(&ScriptStringInput, 'C&S',,sessID)			; restore comments/strings from isolated session only
 	Return ScriptStringInput
 }
 ;################################################################################

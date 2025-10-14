@@ -176,7 +176,7 @@ _DllCall(p) {
 _Hotstring(p) {
 ; 2025-10-05 AMB, UPDATED - changed gaList_LblsToFuncO to gmList_LblsToFunc
   global gmList_LblsToFunc
-  if RegExMatch(p[1], '":') and p.Has(2) {
+  if (RegExMatch(p[1], '":') and p.Has(2)) {
     p[2] := Trim(p[2], '"')
     gmList_LblsToFunc[p[2]] := ConvLabel('HS', p[2], '*', getV2Name(p[2]))
   }
@@ -374,40 +374,56 @@ _Object(p) {
 }
 
 ;################################################################################
+class clsOnMsg
+{
+; 2025-10-12 AMB - ADDED for better support of OnMessage params and binding
+; used with gmOnMessageMap
+  msg       := ''                       ; OnMessage message ID
+  cbFunc    := ''                       ; callback func - from OnMessage-call perspective
+  bindStr   := ''                       ; bind string (can be used for sensing or appending)
+
+  __new(msg,cbf:='',bs:='') {                 ; must be instantiated using msg id
+    this.msg        := msg
+    this.cbFunc     := cbf
+    this.bindStr    := bs
+  }
+  funcName => Trim(this.cbFunc, '% ')   ; callback func NAME ONLY (in case it's needed)
+}
+;################################################################################
 _OnMessage(p) {
 ; 2025-10-05 AMB, UPDATED - changed masking src to gCBPH - see MaskCode.ahk
+; 2025-10-12 AMB, UPDATED - to provide better support for params and binding
+;   gmOnMessageMap now holds custom clsOnMsg objects
   ; OnMessage(MsgNumber, FunctionQ2T, MaxThreads)
   ; OnMessage({1}, {2}, {3})
   global gmOnMessageMap
-  if (p.Has(1) && p.Has(2) && p[1] != "" && p[2] != "") {
-    if InStr(p[2], 'Func(') {
-      RegExMatch(p[2], '\.Bind\(.*\)', &bindContent)
-      if RegExMatch(p[2], '%Func\("(\w+)"\)', &match) { ; Func("name")
-        p[2] := match[1]
-      } else if RegExMatch(p[2], '%Func\((\w+)\)', &match) { ; Func(var)
-        p[2] := '%' match[1] '%'
+
+  if (p.Has(1) && p.Has(2) && p[1] != '' && p[2] != '') {
+    msg := string(p[1]), cbFunc := p[2], bindStr := ''                          ; use vars for better clarity
+    if (InStr(cbFunc, 'Func(')) {                                                 ; when cbFunc param is using v1 Func()...
+      if (RegExMatch(cbFunc, '\.Bind\(.*\)', &bindContent)) {                   ; if OnMsg call includes .Bind()...
+        bindStr := bindContent[]                                                ; ... save .Bind() string
       }
-      if bindContent != ''
-        p[2] .= bindContent[]
+      if (RegExMatch(cbFunc, '%Func\("(\w+)"\)', &m)) {                           ; when cbFunc param is using Func("name")...
+        cbFunc := m[1]                                                          ; ... record just the CB func name
+      }
+      else if RegExMatch(cbFunc, '%Func\((\w+)\)', &m) {                        ; when cbFunc param is using Func(var)...
+        cbFunc := '%' m[1] '%'                                                  ; ... add deref to cb func name
+      }
     }
-    ;gmOnMessageMap.%p[1]% := p[2]
-    ; 2024-06-28 change to key/val format for fix of Issue 136
-    ; see addOnMessageCBArgs() in ConvertFuncs.ahk
-    gmOnMessageMap[string(p[1])] := p[2]
-    if (p.Has(3) && p[3] != "") {
-      Return "OnMessage(" p[1] ", " p[2] ", " p[3] ")"
-    }
-    Return "OnMessage(" p[1] ", " p[2] ")"
+    ; 2025-10-12 AMB - changed to using clsOnMsg object for issue #384-2
+    ; see addOnMessageCBArgs() in GuiAndMenu.ahk
+    gmOnMessageMap[msg] := clsOnMsg(msg,cbFunc,bindStr)                         ; create a new clsOnMsg object
+    maxThds := (p.Has(3) && p[3] != '') ? ', ' p[3] : ''                        ; include maxThreads param if present
+    return  'OnMessage(' msg ', ' cbFunc bindStr maxThds ')'                    ; create/return OnMessage Call str
   }
-  if (p.Has(2) && p[2] = "") {
+  if (p.Has(2) && p[2] = '') {                                                  ; if cbFunc is empty...
     Try {
-      callback := gmOnMessageMap[string(p[1])] ;gmOnMessageMap.%p[1]%
-    } Catch {
-      ; Didnt find lister to turn off
-      Return "OnMessage(" p[1] ", " gCBPH ", 0)"
+      callback := gmOnMessageMap[string(p[1])].cbFunc                           ; try to get cb func...
+    } Catch {                                                                   ; ... (no object has been created for this msg)
+      Return 'OnMessage(' p[1] ', ' gCBPH ', 0)'                                ; Didnt find lister to turn off
     }
-    ; Found the listener to turn off
-    Return "OnMessage(" p[1] ", " callback ", 0)"
+    Return 'OnMessage(' p[1] ', ' callback ', 0)'                               ; Found the listener to turn off
   }
 }
 
@@ -593,7 +609,7 @@ _VarSetCapacity(p) {
 ;################################################################################
 V1toV2_Functions(ScriptString, Line, &retV2, &gotFunc) {
 
-    global gFuncParams, gfrePostFuncMatch
+    global gFuncParams, gfrePostFuncMatch, gFileOpenVars
     FuncsRemoved := 0   ; Number of funcs that have been removed during conversion (e.g Arr.Length() -> Arr.Length)
     loop {
         if (!InStr(Line, "("))
@@ -611,6 +627,11 @@ V1toV2_Functions(ScriptString, Line, &retV2, &gotFunc) {
         }
         if (oResult.Func = "") {
             continue  ; Not a function, only parenthesis
+        }
+        ; 2025-10-12 AMB - VERY BASIC (temp) support for #358
+        ;MsgBox line "`n`n[" oResult.pre "]`n[" oResult.func "]`n[" oResult.parameters "]`n[" oResult.post "]`n[" oResult.separator "]"
+        if (oResult.func = 'FileOpen' && RegExMatch(oResult.pre, '\h*(\w+)\h*:=', &mFOv)) { ; look for obj assignments for FileOpen
+          gaFileOpenVars.Push(mFOv[1])                                                      ; add var/obj name to list of FileOpen objects
         }
 
         oPar := V1ParamSplit(oResult.Parameters)

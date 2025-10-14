@@ -176,7 +176,7 @@ _DllCall(p) {
 _Hotstring(p) {
 ; 2025-10-05 AMB, UPDATED - changed gaList_LblsToFuncO to gmList_LblsToFunc
   global gmList_LblsToFunc
-  if RegExMatch(p[1], '":') and p.Has(2) {
+  if (RegExMatch(p[1], '":') and p.Has(2)) {
     p[2] := Trim(p[2], '"')
     gmList_LblsToFunc[p[2]] := ConvLabel('HS', p[2], '*', getV2Name(p[2]))
   }
@@ -400,11 +400,11 @@ _OnMessage(p) {
 
   if (p.Has(1) && p.Has(2) && p[1] != '' && p[2] != '') {
     msg := string(p[1]), cbFunc := p[2], bindStr := ''                          ; use vars for better clarity
-    if InStr(cbFunc, 'Func(') {                                                 ; when cbFunc param is using v1 Func()...
+    if (InStr(cbFunc, 'Func(')) {                                                 ; when cbFunc param is using v1 Func()...
       if (RegExMatch(cbFunc, '\.Bind\(.*\)', &bindContent)) {                   ; if OnMsg call includes .Bind()...
         bindStr := bindContent[]                                                ; ... save .Bind() string
       }
-      if RegExMatch(cbFunc, '%Func\("(\w+)"\)', &m) {                           ; when cbFunc param is using Func("name")...
+      if (RegExMatch(cbFunc, '%Func\("(\w+)"\)', &m)) {                           ; when cbFunc param is using Func("name")...
         cbFunc := m[1]                                                          ; ... record just the CB func name
       }
       else if RegExMatch(cbFunc, '%Func\((\w+)\)', &m) {                        ; when cbFunc param is using Func(var)...

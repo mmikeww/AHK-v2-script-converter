@@ -1274,6 +1274,8 @@ addHKCmdCBArgs(&code) {
 	; add menu args to callback functions
 	nCommon	:= '^\h*(?<fName>[_a-z]\w*+)(?<fArgG>\((?<Args>(?>[^()]|\((?&Args)\))*+)'
 	nFUNC	:= RegExReplace(gPtn_Blk_FUNC, 'i)\Q(?:\b(?:IF|WHILE|LOOP)\b)(?=\()\K|\E')		; 2025-06-12, remove exclusion
+	nDeclare:= '(?im)' nCommon '\))(?<trail>.*)'											; make needle for func declaration
+	nArgs	:= '(?im)' nCommon '\K\)).*'													; make needle for func params/args
 	m := [], declare := []
 	for key, obj in gmList_HKCmdToFunc {													; for each entry in list...
 		paramsToAdd	:= obj.params															; get params that will need added
@@ -1281,8 +1283,6 @@ addHKCmdCBArgs(&code) {
 		nTargFunc	:= RegExReplace(nFUNC, 'i)\Q?<fName>[_a-z]\w*+\E', funcName)			; target specific function name
 		If (pos := RegExMatch(code, nTargFunc, &m)) {										; look for the func declaration...
 			; target function found
-			nDeclare	:= '(?im)' nCommon '\))(?<trail>.*)'								; make needle for func declaration
-			nArgs		:= '(?im)' nCommon '\K\)).*'										; make needle for func params/args
 			if (RegExMatch(m[], nDeclare, &declare)) {										; get just declaration line
 				argList		:= declare.fArgG, trail := declare.trail						; extract params and trailing portion of line
 				LWS			:= TWS := '', params := ''										; ini exisiting params details, inc lead/trail ws

@@ -607,22 +607,22 @@ addMenuCBArgs(&code) {
 	;Mask_T(&code, 'C&S')	; 2025-10-10 - now handled in FinalizeConvert()
 	; add menu args to callback functions
 	nCommon	:= '^\h*(?<fName>[_a-z]\w*+)(?<fArgG>\((?<Args>(?>[^()]|\((?&Args)\))*+)'
-	nFUNC	:= RegExReplace(gPtn_Blk_FUNC, 'i)\Q(?:\b(?:IF|WHILE|LOOP)\b)(?=\()\K|\E')		; 2025-06-12, remove exclusion
+	nFUNC	:= RegExReplace(gPtn_Blk_FUNC, 'i)\Q(?:\b(?:IF|WHILE|LOOP)\b)(?=\()\K|\E')					; 2025-06-12, remove exclusion
+	nDeclare:= '(?im)' nCommon '\))(?<trail>.*)'														; make needle for func declaration
+	nArgs	:= '(?im)' nCommon '\K\)).*'																; make needle for func params/args
 	m := [], declare := []
 	for key, val in gmMenuCBChecks
 	{
-		nTargFunc := RegExReplace(nFUNC, 'i)\Q?<fName>[_a-z]\w*+\E', key)					; target specific function name
+		nTargFunc := RegExReplace(nFUNC, 'i)\Q?<fName>[_a-z]\w*+\E', key)								; target specific function name
 		if (pos := RegExMatch(code, nTargFunc, &m)) {
 			; target function found
-			nDeclare	:= '(?im)' nCommon '\))(?<trail>.*)'
-			nArgs		:= '(?im)' nCommon '\K\)).*'
-			if (RegExMatch(m[], nDeclare, &declare)) {										; get just declaration line
+			if (RegExMatch(m[], nDeclare, &declare)) {													; get just declaration line
 				argList		:= declare.fArgG, trail := declare.trail
 				if (instr(argList, 'A_ThisMenuItem') && instr(argList, 'A_ThisMenuItemPos') && instr(argList, 'MyMenu'))
-					continue																; skip converted labels
+					continue																			; skip converted labels
 				newArgs		:= '(A_ThisMenuItem:="", A_ThisMenuItemPos:="", A_ThisMenu:=""' . ((m.Args='') ? ')' : ', ' SubStr(argList,2))
-				addArgs		:= RegExReplace(m[],		'\Q' argList '\E', newArgs,,1)		; replace function args
-				code		:= RegExReplace(code, '\Q' m[] '\E', addArgs,,, pos)			; replace function within the code
+				addArgs		:= RegExReplace(m[],		'\Q' argList '\E', newArgs,,1)					; replace function args
+				code		:= RegExReplace(code, '\Q' m[] '\E', addArgs,,, pos)						; replace function within the code
 			}
 		}
 	}
@@ -641,6 +641,8 @@ addOnMessageCBArgs(&code) {
 	nCommon	:= '^\h*(?<fName>[_a-z]\w*+)(?<fArgG>\((?<Args>(?>[^()]|\((?&Args)\))*+)'
 	nFUNC	:= RegExReplace(gPtn_Blk_FUNC, 'i)\Q(?:\b(?:IF|WHILE|LOOP)\b)(?=\()\K|\E')					; 2025-06-12, remove exclusion
 	nParams := '(?i)(?:\b(?:wParam|lParam|msg|hwnd)\b(\h*,\h*)?)+'
+	nDeclare:= '(?im)' nCommon '\))(?<trail>.*)'														; make needle for func declaration
+	nArgs	:= '(?im)' nCommon '\K\)).*'																; make needle for func params/args
 	m := [], declare := []
 	for key, obj in gmOnMessageMap																		; 2025-10-12 - gmOnMessageMap now holds clsOnMsg objects
 	{
@@ -648,8 +650,6 @@ addOnMessageCBArgs(&code) {
 		nTargFunc := RegExReplace(nFUNC, 'i)\Q?<fName>[_a-z]\w*+\E', funcName)							; target specific function name
 		If (pos := RegExMatch(code, nTargFunc, &m)) {													; look for the func declaration...
 			; target function found
-			nDeclare	:= '(?im)' nCommon '\))(?<trail>.*)'											; make needle for func declaration
-			nArgs		:= '(?im)' nCommon '\K\)).*'													; make needle for func params/args
 			if (RegExMatch(m[], nDeclare, &declare)) {													; get just declaration line
 				argList		:= declare.fArgG, trail := declare.trail									; extract params and trailing portion of line
 				LWS			:= TWS := '', params := ''													; ini existing params details, inc lead/trail ws

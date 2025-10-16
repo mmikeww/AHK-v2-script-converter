@@ -272,26 +272,28 @@
 ;################################################################################
 {
 ; 2025-06-12 AMB, Moved to dedicated routine for cleaner convert loop
-; 2025-10-05 AMB, UPDATED
+; 2025-10-05,10-16 AMB, UPDATED
 ; handles v1 to v2 conversion of 'return' commands
 
 	; return % var -> return var
-	nReturn1 := 'i)^(.*)(return)\h+%\h*\h+(.*)$'
-	lineStr	 := RegExReplace(lineStr, nReturn1, '$1$2 $3')
+	nReturn1 := '(?i)^(\h*return\h+)%\h*\h+(.*)$'
+	lineStr	 := RegExReplace(lineStr, nReturn1, '$1$2')
 
 	; return %var% -> return var
-	nReturn2 := 'i)^(.*)(return)\h+%(\w+)%(.*)$'
-	lineStr	 := RegExReplace(lineStr, nReturn2, '$1$2 $3$4')
+	nReturn2 := '(?i)^(\h*return\h+)%(\w+)%(.*)$'
+	lineStr	 := RegExReplace(lineStr, nReturn2, '$1$2$3')
 
 	; Fix return that has multiple return values (not common)
-	If (RegExMatch(lineStr, 'i)^(\h*return\h+)(.*)', &m) && InStr(m[2], ',')) {
+	If (RegExMatch(lineStr, '(?i)^(\h*return\h+)(.*)', &m) && InStr(m[2], ',')) {
 		sess := clsMask.NewSession()		; create temp masking session
 		Mask_T(&lineStr, 'FC',,sess)		; mask func CALLS (also masks strings)
+		Mask_T(&lineStr, 'ARRSQ',,sess)		; don't wrap array literal list [sq brkts] (2025-10-16 see Return_ex4)
 		Mask_T(&lineStr, 'KV',,sess)		; don't wrap key/val pair objects
 		if InStr(lineStr, ',') {			; line appears to have multiple return values...
 			lineStr := m[1] '(AHKv1v2_Temp := ' m[2] ', AHKv1v2_Temp) `; V1toV2: Wrapped Multi-statement return with parentheses'
 		}
 		Mask_R(&lineStr, 'KV',,sess)		; restore key/val pairs
+		Mask_R(&lineStr, 'ARRSQ',,sess)		; restore array literal list [sq brkts] (2025-10-16 see Return_ex4)
 		Mask_R(&lineStr, 'FC',,sess)		; restore function calls
 	}
 	return

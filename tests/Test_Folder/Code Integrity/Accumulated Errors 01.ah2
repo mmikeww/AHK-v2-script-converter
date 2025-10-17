@@ -201,7 +201,7 @@ MsgBox(retstr)
          , ColB := (ColColors.B != "") ? ColColors.B : UseAltCol ? This.ACB : This.RowB
          , ColT := (ColColors.T != "") ? ColColors.T : UseAltCol ? This.ACT : This.RowT
          , NumPut("UInt", ColT, L + OffCT), NumPut("UInt", ColB, L + OffCB)
-         Return (AHKv1v2_Temp := (!This.AltCols && !This.Has(Row) && (Col > This["Cells", Row].MaxIndex())) ? 0x00 : 0x20, AHKv1v2_Temp) ; V1toV2: Wrapped Multi-statement return with parentheses
+         Return (!This.AltCols && !This.Has(Row) && (Col > This["Cells", Row].MaxIndex())) ? 0x00 : 0x20
       }
 
 ;################################################################################

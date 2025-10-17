@@ -58,6 +58,7 @@ global	  gTagChar		:= chr(0x2605) ; '★'															; unique char to ensure 
 		, gPtn_BC		:= '(?m)^\h*(/\*((?>[^*/]+|\*[^/]|/[^*])*)(?>(?-2)(?-1))*(?:\*/|\Z))'			; block comments
 		, gPtn_KVO		:= '\{([^:,}\v]++:[^:,}]++)(,(?1))*+\}'											; UPDATED - {key1:val1,key2:val2} obects
 		, gPtn_PrnthBlk	:= '(?<FcParth>\((?<FcParams>(?>[^()]++|(?-2))*)\))'		; very general		; nested parentheses block, single or multi-line
+		, gPtn_SqrBkts	:= '(?<SqrBkts>\[(?<SqrParams>(?>[^][]++|(?-2))*)\])'		; very general		; nested parentheses block, single or multi-line
 		, gPtn_PrnthML	:= '\(\R(?>[^\v\))]+|(?<!\n)\)|\R)*?\R\h*\)'				; very general		; nested parentheses block, MULTI-LINE ONLY
 		. gPtn_CSectM1	:= buildPtn_CSM1()																; ADDED - line, plus cont sect 'method 1'
 		, gPtn_CSectM2	:= buildPtn_CSM2()											; general			; ADDED - line, plus cont sect 'method 2', plus trailer
@@ -299,6 +300,18 @@ global	  gTagChar		:= chr(0x2605) ; '★'															; unique char to ensure 
 				}
 				clsMask.MaskAll(&code, 'KVO'				; mask key/val pairs/objects
 					, gPtn_KVO, sessID?)
+				if (IsSet(option) && (option & 2)) {		; restore only when bit 2 is set
+					Mask_R(&code,	'C&S',	,sessID?)		; 	restore comments/strings
+				}
+		;################################################################################
+		case	'ARRSQ':									; Array literal with square brackets
+				; premask/restore - OFF BY DEFAULT
+				; set option to (3) to do both of these
+				if (IsSet(option) && (option & 1)) {		; premask only when bit 1 is set
+					Mask_T(&code,	'C&S',	1,sessID?)		; 	recursion call - mask comments/strings				(INCLUDE MLQS)
+				}
+				clsMask.MaskAll(&code, 'ARRSQ'				; mask array literal list
+					, gPtn_SqrBkts, sessID?)
 				if (IsSet(option) && (option & 2)) {		; restore only when bit 2 is set
 					Mask_R(&code,	'C&S',	,sessID?)		; 	restore comments/strings
 				}
@@ -559,6 +572,10 @@ global	  gTagChar		:= chr(0x2605) ; '★'															; unique char to ensure 
 		;################################################################################
 		case	'KV','KVO','KVP','KEYVAL':					; KEY/VAL pair/objects
 				clsMask.RestoreAll(&code, 'KVO'
+					, delTag, sessID?)
+		;################################################################################
+		case	'ARRSQ':									; Array literal with sqaure brackets
+				clsMask.RestoreAll(&code, 'ARRSQ'
 					, delTag, sessID?)
 		;################################################################################
 		case	'V1MLS','V1LEGMLS':							; V1 LEGACY (non-expression) MULTI-LINE STRING

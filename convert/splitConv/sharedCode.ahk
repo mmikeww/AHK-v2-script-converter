@@ -236,6 +236,7 @@
 ;	* made needle adjs to fix false positives
 ;	* added pre-masking to mimimize potential char conflicts
 ;	* trim fix for #351
+; 2025-10-16 AMB, UPDATED to add msg for trailing comma if present
 
 	; use (?s) since these assignments can span multi-line
 	nLSG		:= '(?is)^(\h*+(?:global|local|static)\h)(.+)'			; declaration for global,local,static
@@ -250,6 +251,9 @@
 	Mask_T(&lineStr, 'FC' ,,sess)										; hide commas within func calls		 (masks STR, but does not auto-restore STR)
 	Mask_T(&lineStr, 'KV' ,,sess)										; hide commas within key/val objects (0 = do not restore C&S)
 
+	msg := (Trim(tempStr) ~= ',$')										; if line has trailing comma...
+		? ' `; V1toV2: Assuming this is v1.0 code'						; ... plan to add msg to line
+		: ''															; ... otherwise no msg required
 	if (RegExMatch(tempStr, nLSG, &mLSG)) {								; separate declaration from assignemnts
 		declare		:= mLSG[1], outStr := declare						; declaration portion, [outStr will become output]
 		assignList	:= mLSG[2]											; var assignment list (can be multi-line)
@@ -265,7 +269,7 @@
 		Mask_R(&outStr, 'KV' ,,sess)									; restore key/val objects
 		Mask_R(&outStr, 'FC' ,,sess)									; restore func calls (converts as part of restore)
 		Mask_R(&outStr, 'STR',,sess)									; restore strings
-		lineStr := outStr												; update final output
+		lineStr := outStr . msg											; update final output, 2025-10-16 - add msg as needed
 	}
 	return	(lineStr != origStr)										; and return lineStr by reference
 }

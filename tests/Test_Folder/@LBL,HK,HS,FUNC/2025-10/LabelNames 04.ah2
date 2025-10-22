@@ -15,6 +15,7 @@ Init_Vars()
 Return
 
 ^i::HK1_i()
+Return
 
 Init_Vars_3:
 Init_Vars_3()

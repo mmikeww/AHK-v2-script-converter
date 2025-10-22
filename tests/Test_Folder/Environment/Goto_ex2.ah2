@@ -9,6 +9,7 @@ InitVars()
 Return
 
 ^l::HK1_l()
+Return
 
 ;###############  V1toV2 FUNCS  ###############
 InitVars(A_GuiEvent:="", A_GuiControl:="", Info:="", *) { ; V1toV2: Lbl->Func

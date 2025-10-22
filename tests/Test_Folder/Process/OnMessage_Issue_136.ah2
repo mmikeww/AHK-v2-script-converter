@@ -12,6 +12,7 @@ WM_LBUTTONDOWN(wParam, lParam, msg, hwnd)
 }
 
 F5::HK1_F5()
+Return
 
 GuiClose:
 GuiClose()

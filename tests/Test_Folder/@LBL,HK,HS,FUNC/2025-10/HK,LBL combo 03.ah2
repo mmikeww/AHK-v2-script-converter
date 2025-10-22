@@ -7,6 +7,7 @@ guiclose:
 guiclose()
 return
 ~esc::HK1_esc()
+ExitApp()
 
 ;###############  V1toV2 FUNCS  ###############
 guiclose() { ; V1toV2: Lbl->Func

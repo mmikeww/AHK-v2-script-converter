@@ -689,6 +689,7 @@ class clsSection
 		funcName	:= obj.FuncName
 		func_DnC	:= funcName . '()'														; create func declaration/call, with no params
 		obj.Line1	:= obj.L1.LWS . obj.L1.decl func_DnC obj.L1.TC							; add any ws and trailing comments to func call for HK line
+		obj.tBlk	:= (obj.hasExit) ? '`r`n' obj._xCmd : obj.tBlk							; 2025-10-22 - make sure exit cmd is still present after HK 1-line
 		outFunc		:= func_DnC ' {' convMsg '`r`n' . blk . '`r`n}'							; create entire func
 		this.ToFunc[funcName] := outFunc													; add func to funclist, using funcname as key
 		obj.FuncStr	:= outFunc																; add func to HK obj so it can be added to code later

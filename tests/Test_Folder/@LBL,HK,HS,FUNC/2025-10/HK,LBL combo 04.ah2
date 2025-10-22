@@ -7,6 +7,7 @@ close:
 close()
 return
 ~esc::HK1_esc()
+ExitApp()
 
 ^q::HK2_q()
 LBL1:

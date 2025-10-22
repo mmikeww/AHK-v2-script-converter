@@ -3,6 +3,7 @@ return
 
 +lbutton::	; comment 1
 !lbutton::HK2_lbutton()	; comment 2
+return
 
 ; label with braces
 label_with_braces:

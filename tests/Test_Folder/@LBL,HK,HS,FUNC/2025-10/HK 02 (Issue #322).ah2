@@ -1,10 +1,12 @@
 ; https://github.com/mmikeww/AHK-v2-script-converter/issues/322
 
 f::HK1_f()
+Return
 
 g::HK2_g()
 
 h::HK3_h()
+Return
 
 ;###############  V1toV2 FUNCS  ###############
 HK1_f() { ; V1toV2: HK->Func

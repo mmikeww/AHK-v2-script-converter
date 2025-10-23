@@ -45,7 +45,7 @@ class clsSection
 
 	; PUBLIC section properties
 	GetSectStr	=> this.PCWS . this.Line1 . this.Blk . this.tBlk . this.TCWS				; assemble final (converted) section code
-	HasExit		=> !!((this._xCmd && this._xPos)|| this.L1.cmd)								; does section have an exit command?
+	HasExit		=> !!((this._xCmd && this._xPos) || this.L1.cmd)							; does section have an exit command?
 	LabelName	=> this._name																; name of LBL/FUNC/CLS, or HK/HS trigger (public shortcut)
 	L1			=> this._line1Details														; line 1 details and its parts (public shortcut)
 	HasCaller	=> (gmList_LblsToFunc.Has(this.LabelName)									; to assist prevention of empty labelToFunc conversions
@@ -92,6 +92,23 @@ class clsSection
 		blkStr		:= oBrc . glbl . blkStr													; assemble output
 		;this.Blk	:= blkStr																; this is updated by caller (avoid extra save)
 		return		blkStr																	; return updated (brace) block
+	}
+	;################################################################################
+	AddGotoReturn()																			; 2025-10-23 AMB, ADDED to fix #395
+	{
+		if (this._tType != 'HK') {															; only applies to HKs (for now)
+			return false
+		}
+		nGoto := '(?is)^(.+?)(?<gt>GOTO' gPtn_PrnthBlk ')([^\v]*.*+)'						; [separate Goto(label) from rest of block]
+		if (RegExMatch(this.Blk, nGoto, &m)) {												; if HK block has Goto(label)
+			retMsg		:= '`r`nReturn `; V1toV2: Add Return for Goto'						; [Return and convert msg]
+			ret			:= (m[5] ~= '(?i)^\s*RETURN') ? '' : retMsg							; add Return if one is not already present in block
+			this.Blk	:= m[1] . m[2] . ret . m[5]											; reassemble blk with Return added (if applicable)
+			this._exitCmdDetails()															; update exitCmd details
+			this.Blk	.= this.tBlk, this.tBlk	:= ''										; update trailing code
+			return true																		; notify caller that goto was present in blk
+		}
+		return false																		; no Goto found
 	}
 	;################################################################################
 	_exitCmdDetails()																		; gets first legit exit command within section code-block
@@ -220,6 +237,7 @@ class clsSection
 	Static LogicFlowStr		:= ''															; string that holds logic-links between sections
 	Static GblLblCnt		:= 0															; counter for creating unique label/funcs, from stray global code
 	Static HKFuncCnt		:= 0															; counter for creating unique func names, from HKs
+	Static HasGotoCall		:= false														; 2025-10-23 AMB, ADDED to fix #395
 	Static NextGblLbl		=> ++this.GblLblCnt												; returns next value for GblLblCnt
 	Static NextHKCnt		=> ++this.HKFuncCnt												; returns next value for HKFuncCnt
 	Static HasSects			=> (this.Sects.Length > 0)										; does code have any sections at all? (convenience)
@@ -236,6 +254,7 @@ class clsSection
 		this.LogicFlowStr	:= ''
 		this.GblLblCnt		:= 0
 		this.HKFuncCnt		:= 0
+		this.HasGotoCall	:= false
 	}
 	;################################################################################
 	Static SectionObj[lblName]																; returns sect obj associated wth lblName param
@@ -287,6 +306,7 @@ class clsSection
 		rawSects	:= this._shiftTCWS(rawSects)											; rearrage comments/CRLFs between sections
 		dummy		:= this._rawToFinal(rawSects)											; organize global code between sects, create final Sects array
 		if (this.HasSects) {																; if sections were established...
+			this._checkHKGotos()															; 2025-10-23 AMB, ADDED to fix issue 395
 			flowStr		:= this._logicFlow													; determine logic flow between sections
 			dummy		:= this._hkhsToFunc()												; convert HK/HS to funcs (will be added in next step)
 			newFuncList	:= this._buildFuncsList()											; string with all new funcs, to be added to lower portion of script
@@ -349,6 +369,15 @@ class clsSection
 		}
 	}
 	;################################################################################
+	Static _checkHKGotos()																	; 2025-10-23 AMB, ADDED to fix #395
+	{
+		for idx, sect in this.Sects {														; for each section...
+			if (sect.AddGotoReturn()) {														; if Goto(label) was found in section block (for HK only)...
+				this.HasGotoCall := true													; set flag so labels can be converted to funcs
+			}
+		}
+	}
+	;################################################################################
 	Static _cleanCode(code, inclExit:=false)												; removes comments, ws, etc, so executable code is easier to decect
 	{
 		if (inclExit) {																		; if exit cmds should be removed...
@@ -378,7 +407,7 @@ class clsSection
 	Static _getRawSects(code)																; separates script code into raw sections (LBL,HK,HS,FUNC,CLS)
 	{
 		this.codeOrig	:= code																; save original script code
-		incLBL			:= this._hasL2F														; include labels if any will be converted to func
+		incLBL			:= true ;this._hasL2F												; 2025-10-23 AMB, UPDATED as part of fix for #395
 		sectObj			:= codeChop.MarkSects(code, incLBL)									; add chop/section markers to code
 		rawSects		:= []																; output array
 		for idx, sect in sectObj.chops {													; for each script section...
@@ -486,7 +515,9 @@ class clsSection
 			if (lblName) {
 				return (gmList_LblsToFunc.Has(lblname) || gmList_GosubToFunc.Has(lblname))	; true if LBLName requires conversion
 			}
-			return !!(gmList_LblsToFunc.Count || gmList_GosubToFunc.Count)					; true when ANY label requires conversion
+			return	!!(gmList_LblsToFunc.Count												; true when ANY label requires conversion
+					|| gmList_GosubToFunc.Count
+					|| this.HasGotoCall	)													; 2025-10-23 AMB, ADDED as part of fix for #395
 		}
 	}
 	;################################################################################
@@ -689,7 +720,7 @@ class clsSection
 		funcName	:= obj.FuncName
 		func_DnC	:= funcName . '()'														; create func declaration/call, with no params
 		obj.Line1	:= obj.L1.LWS . obj.L1.decl func_DnC obj.L1.TC							; add any ws and trailing comments to func call for HK line
-		obj.tBlk	:= (obj.hasExit) ? '`r`n' obj._xCmd : obj.tBlk							; 2025-10-22 - make sure exit cmd is still present after HK 1-line
+		obj.tBlk	:= (obj.hasExit) ? '`r`n' obj._xCmd . obj.tBlk : obj.tBlk				; 2025-10-23 UPDATED to fix missing trailing code
 		outFunc		:= func_DnC ' {' convMsg '`r`n' . blk . '`r`n}'							; create entire func
 		this.ToFunc[funcName] := outFunc													; add func to funclist, using funcname as key
 		obj.FuncStr	:= outFunc																; add func to HK obj so it can be added to code later

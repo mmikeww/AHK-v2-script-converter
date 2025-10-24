@@ -495,8 +495,8 @@ _StringGetPos(p) {
 		else {
 			; else then a variable was passed (containing the "L#|R#" string),
 			;	or literal text converted to expr, something like: "L" . A_Index
-			; output something anyway even though it won't work, so that they can see something to fix
-			return format("{2} := InStr({3}, {4},{1}, ({6})+1, {5}) - 1", CaseSense, p*)
+			; very ugly fix, but works, maybe should prompt user to update how this is handled?
+			return format("{2} := InStr({3}, {4},{1}, (SubStr({5}, 1, 1) = `"L`" ? 1 : -1)*(({6})+1), (SubStr({5}, 1, 1) = `"L`" ? Trim({5}, `"L`") : -Trim({5}, `"R`"))) - 1", CaseSense, p*)
 		}
 	}
 }

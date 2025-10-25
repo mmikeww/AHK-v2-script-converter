@@ -149,7 +149,7 @@ global	  gTagChar		:= chr(0x2605) ; '★'															; unique char to ensure 
 	return gTagPfx . uniqueStr . gTagTrl
 }
 ;################################################################################
-								Mask_T(&code, targ, option:=unset, sessID:=unset, convert:=true)
+				 Mask_T(&code, targ, option:=unset, sessID:=unset, convert:=true)
 ;################################################################################
 {
 /*
@@ -1902,7 +1902,7 @@ TODO - MAKE SURE FUNC CALLS ARE COVERED
 	return	cbn.lead . pattern
 }
 ;################################################################################
-																 buildPtn_Loop()
+																  buildPtn_Loop()
 ;################################################################################
 {
 ; 2025-10-05 AMB, ADDED - LOOP-BLOCK

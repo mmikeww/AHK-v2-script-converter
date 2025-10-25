@@ -853,17 +853,19 @@ class clsSection
 			if ((sect._tType ~= '(?i)(?:LBL|HK|HS)')) {										; if section is label,HK,HS...
 				if (brcBlk := isBraceBlock(sect.blk)) {										; if section already has braces...
 					sec := sect._exitCmdSplit(brcBlk.bbc)									; get exit cmd details for brace-block
-					if (!sec.xCmd) {														; if brace-block has NO exit cmd...
+					if (sec.xCmd															; if brace-block has exit cmd...
+					&& this._cleanCode(sect.tBlk)) {										; ... and trailing global code (after brace-block) is executable
+						sect._xCmd := sec.xCmd, sect._xPos := sec.xPos						; ... update exit cmd info for section
+						newLblSect	:= this._newLblSect(sect.tBlk)							; ... convert trailing global code to new section (label)
+						sect.tBlk	:= ''													; ... remove global code from current section
+						fConvGblOK	:= false												; ... don't allow global code to be called ? (TODO - MAKE SURE THIS IS CORRECT)
+					}
+					else if (!sec.xCmd) {													; if brace-block has NO exit cmd...
 						if (cTrail := this._cleanCode(brcBlk.trail)) {						; if trailing global code (after brace-block) is executable...
 							newLblSect	:= this._newLblSect(brcBlk.trail)					; ... convert trailing global code to new section (label)
 							sect.tBlk	:= ''												; ... remove global code from current section
 							fConvGblOK	:= true												; ... allow executable global code to be called (see below)
 						}
-					}
-					else if (sect.HasExit && sect.tBlk) {									; if brace-block HAS exit cmd, AND trailing global code...
-						newLblSect	:= this._newLblSect(sect.tBlk)							; ... convert trailing global code to new section (label)
-						sect.tBlk	:= ''													; ... remove global code from current section
-						fConvGblOK	:= false												; ... don't allow global code to be called ? (TODO - MAKE SURE THIS IS CORRECT)
 					}
 				}
 				else {																		; section code does not have braces
@@ -903,7 +905,7 @@ class clsSection
 	{
 		L1 := blk := ''																		; ini
 		sect := separateTrailCWS(sect, &TCWS:='')											; separate trailing comments/CRLFs from section
-		if (RegExMatch(sect, '(?s)^([^\v]+)(.*)', &m)) {									; separate line 1 from rest of section
+		if (RegExMatch(sect, '(?s)^([^\v]*)(.*)', &m)) {									; separate line 1 from rest of section
 			L1 := m[1], blk := m[2]															; Line1 and block
 		}
 		return {Line1:L1,Blk:blk,TCWS:TCWS}													; return separated parts

@@ -2,7 +2,7 @@
 ; V1 allows all character except whitespace, comma, and escape char.
 ; V2 allows ascii alphanumeric and underscore. But cannot start with a number. Does allow non-ascii characters.
 
-renaming label below will cause name conflict with this exisitng function
+; renaming label below will cause name conflict with this exisitng function
 _3_14()
 {
 	msgbox existing func that will cause name conflict

@@ -524,9 +524,48 @@ $*s::
 		Send("{LShift up}{s up}{c up}")
 	}
 }
+V1toV2_GblCode_001:
+V1toV2_GblCode_001()
 return
 
 
+V1toV2_GblCode_002:
+V1toV2_GblCode_002()
+	Return
+	
+	V1toV2_GblCode_003:
+V1toV2_GblCode_003()
+Return
+
+
+
+V1toV2_GblCode_004:
+V1toV2_GblCode_004()
+return
+;################################################################################
+F11::	; lock to horz axis movement only
+F12::	; lock to vert axis movement only
+{
+	lock :=! lock
+	MouseGetPos(&mX, &mY)
+	((A_ThisHotkey="F11") ? LockAxis(lock, 0, mY, A_ScreenWidth, mY) : LockAxis(lock, mX, 0, mX, A_ScreenHeight))
+	return
+}
+;esc::ExitApp
+;################################################################################
+LockAxis(lock:=false, x1:=0 , y1:=0, x2:=1, y2:=1) {
+	R := Buffer(16, 0),NumPut("UPtr", x1, R.Ptr+0),NumPut("UPtr", y1, R.Ptr+4),NumPut("UPtr", x2, R.Ptr+8),NumPut("UPtr", y2, R.Ptr+12) ; V1toV2: if 'R' is a UTF-16 string, use 'VarSetStrCapacity(&R, 16)' and replace all instances of 'R.Ptr' with 'StrPtr(R)'
+	return (lock) ? DllCall("ClipCursor", "UInt", R.Ptr) : DllCall("ClipCursor")
+}
+
+;###############  V1toV2 FUNCS  ###############
+V1toV2_GblCode_001() { ; V1toV2: Lbl->Func
+global
+return
+}
+;##############################################
+V1toV2_GblCode_002() { ; V1toV2: Lbl->Func
+global
 ; formatComments.ahk - SEEMS TO CONVERT CORRECTLY WITH MY CHANGES
 
 linesObj.push({code:code,comment:comment})	; should become linesObj.push({code:code,comment:comment})
@@ -535,11 +574,15 @@ linesObj.push({code:code,comment:comment})	; should become linesObj.push({code:c
 ; GetDisplaySettings.ahk - SEEMS TO CONVERT CORRECTLY WITH MY CHANGES
 
 	Return {Width:w,Height:h,Qual:q,Freq:f} ;Out_1 "/" Out_2 "/" Out_3 "/" Out_4
-	
-	Return {W: (ErrorLevel & 0xFFFF), H: (ErrorLevel >> 16) & 0xFFFF}
-
-
-
+}
+;##############################################
+V1toV2_GblCode_003() { ; V1toV2: Lbl->Func
+global
+Return {W: (ErrorLevel & 0xFFFF), H: (ErrorLevel >> 16) & 0xFFFF}
+}
+;##############################################
+V1toV2_GblCode_004() { ; V1toV2: Lbl->Func
+global
 ; imagesearch 101814.ahk
 
 			Click(FoundX ", " FoundY)
@@ -567,18 +610,4 @@ CoordMode("pixel", "screen")
 CoordMode("mouse", "screen")
 lock := false
 return
-;################################################################################
-F11::	; lock to horz axis movement only
-F12::	; lock to vert axis movement only
-{
-	lock :=! lock
-	MouseGetPos(&mX, &mY)
-	((A_ThisHotkey="F11") ? LockAxis(lock, 0, mY, A_ScreenWidth, mY) : LockAxis(lock, mX, 0, mX, A_ScreenHeight))
-	return
-}
-;esc::ExitApp
-;################################################################################
-LockAxis(lock:=false, x1:=0 , y1:=0, x2:=1, y2:=1) {
-	R := Buffer(16, 0),NumPut("UPtr", x1, R.Ptr+0),NumPut("UPtr", y1, R.Ptr+4),NumPut("UPtr", x2, R.Ptr+8),NumPut("UPtr", y2, R.Ptr+12) ; V1toV2: if 'R' is a UTF-16 string, use 'VarSetStrCapacity(&R, 16)' and replace all instances of 'R.Ptr' with 'StrPtr(R)'
-	return (lock) ? DllCall("ClipCursor", "UInt", R.Ptr) : DllCall("ClipCursor")
 }

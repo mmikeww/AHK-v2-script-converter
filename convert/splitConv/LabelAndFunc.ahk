@@ -38,7 +38,13 @@ class clsSection
 		this.Blk			:= obj.sb.Blk													; full block initially [prior to ._exitCmdDetails()]
 		this.TCWS			:= obj.sb.TCWS													; trailing comments/CRLFs after meaningful block code (cmds)
 		this._tag			:= obj.tag														; actual masked-tag on Line 1
-		this._tType			:= getTagType(this._tag)										; section type (LBL,HK,HS,FUNC,CLS)
+		this._tType			:= (this._tag)													; section type - if tag is present...
+							? getTagType(this._tag)											; ...  section type is one of the following [LBL,HK,HS,FUNC,CLS]
+							: 'GBL'															; ... otherwise is a global section (may not be necessary)
+		if (this._tType = 'GBL') {															; if section is NOT Lbl,HK.HS,FUNC,CLS...
+			this.Blk := separatePreCWS(this.Blk, &pre:='')									; ... separate preceding comments/CRLFs from significant blk code
+			this.PCWS := pre																; ... [preceding comments/CRLFs before blk code]
+		}
 		this._extractName()																	; extract the name of LBL/FUNC/CLS, or trigger of HK/HS
 		this._exitCmdDetails()																; get details about exit command, its position, and any trailing code
 	}
@@ -111,6 +117,7 @@ class clsSection
 		return false																		; no Goto found
 	}
 	;################################################################################
+	; 2025-10-27 AMB, UPDATED
 	_exitCmdDetails()																		; gets first legit exit command within section code-block
 	{
 		if (this._tType ~= '(?i)(?:FUNC|CLS)') {											; if func or class...
@@ -118,7 +125,7 @@ class clsSection
 			this._xPos := 'end'																; [end of func]			value doesn't matter for func/cls
 			return
 		}
-		if (!(this._tType ~= '(?i)(?:HK|HS|LBL)')) {										; if not HK,HS,LBL...
+		if (!(this._tType ~= '(?i)(?:HK|HS|LBL|GBL)')) {									; if not HK,HS,LBL [or GBL, if specified]...
 			return																			; ... exit
 		}
 		sec := this._exitCmdSplit(this.Blk)													; sub-divide code block, extract exit cmd if present
@@ -378,11 +385,12 @@ class clsSection
 		}
 	}
 	;################################################################################
+	; 2025-10-27 AMB, UPDATED
 	Static _cleanCode(code, inclExit:=false)												; removes comments, ws, etc, so executable code is easier to decect
 	{
 		if (inclExit) {																		; if exit cmds should be removed...
-			code := RegExReplace(code, '(?i)return')										; ... remove return
-	;		code := RegExReplace(code, '(?i)exitapp')										; ... remove exitapp
+			code := RegExReplace(code, '(?i)\bRETURN\b')									; ... remove return
+			code := RegExReplace(code, '(?i)\bEXITAPP\b(?:\(\))?')							; ... remove exitapp
 		}
 		code := RegExReplace(code, uniqueTag('BC\w+'))										; remove block-comment tags
 		code := RegExReplace(code, uniqueTag('LC\w+'))										; remove line-comment tags
@@ -728,6 +736,7 @@ class clsSection
 		return		outFunc																	; return the new func (if needed by caller and to flag success)
 	}
 	;################################################################################
+	; 2025-10-26 AMB, UPDATED
 	Static _makeFuncLBL(&obj)																; creates BrcBlk/func (and funcCall) from LBL code, as needed
 	{
 		if (obj._tType != 'LBL') {															; process for labels only
@@ -760,7 +769,8 @@ class clsSection
 			this.ToFunc[funcName] := outFunc												; add func to funclist, using funcname as key
 			obj.FuncStr	:= outFunc															; add func to Lbl obj so it can be added to code later
 			obj.Blk		:= '`r`n' func_DnC													; replace orig blk/body with a func call
-			obj.Blk		.= (obj._xCmd) ? ('`r`n' . obj._xCmd) : '`r`nreturn'				; add any orig-lbl exit-command after func call, otherwise add simple return
+			exitCmd		:= RegExReplace(obj._xCmd, '(?i)^(\h*RETURN).*', '$1')				; 2025-10-27 - remove anything following Return cmd
+			obj.Blk		.= (exitCmd) ? ('`r`n' . exitCmd) : '`r`nreturn'					; add any orig-lbl exit-command after func call, otherwise add simple return
 			return		outFunc																; return the new func
 		}
 
@@ -778,7 +788,8 @@ class clsSection
 		this.ToFunc[funcName] := outFunc													; add func to funclist, using funcname as key
 		obj.FuncStr	:= outFunc																; add func to Lbl obj so it can be added to code later
 		obj.Blk		:= '`r`n' func_DnC														; replace orig blk/body with a func call
-		obj.Blk		.=  (obj._xCmd)	? ('`r`n' . obj._xCmd) : '`r`nreturn'					; add any orig-lbl exit-command after func call, otherwise add simple return
+		exitCmd		:= RegExReplace(obj._xCmd, '(?i)^(\h*RETURN).*', '$1')					; 2025-10-27 - remove anything following Return cmd
+		obj.Blk		.= (exitCmd) ? ('`r`n' . exitCmd) : '`r`nreturn'						; add any orig-lbl exit-command after func call, otherwise add simple return
 		return		outFunc																	; return the new func
 	}
 	;################################################################################
@@ -806,7 +817,26 @@ class clsSection
 		return outStr																		; return all new funcs within single string
 	}
 	;################################################################################
-	Static _newLblSect(code)																; converts stray global code to label/func
+	Static _makeGblSections(code)															; 2025-10-27 - creates new global sections from passed code
+	{																						;	creates as many sections as code contains
+		sectList:= []																		; output array - to return multiple new sections
+		done	:= false																	; flag to determine when all sections have been created
+		while (!done) {																		; loop until all sections have been created
+			cs := this._newGblSect(code)													; create new section from curCode
+			if (cs._tType																	; if new section was created...
+			&&  cs.tBlk) {																	; ... and more sections need to be created...
+				code	:= cs.tBlk . cs.TCWS												; ... 	grab code for next section to be created
+				cs.tBlk	:= '', cs.TCWS := ''												; ... 	remove next-section-code from current section
+			} else {
+				done := true																; no more sections will be created
+			}
+			sectList.Push(cs)																; add current section to list
+		}
+		return sectList																		; return list of newly created sections
+	}
+	;################################################################################
+	; 2025-10-27 AMB, UPDATED
+	Static _newGblSect(code)																; converts stray global code to label/func
 	{
 		if (RegExMatch(code, '(?s)^(\s*)(.*)', &m)) {										; separate lead ws from code
 			LWS := m[1], code := m[2]
@@ -844,31 +874,61 @@ class clsSection
 		return ''																			; next-link not found
 	}
 	;################################################################################
+	; 2025-10-27 AMB, UPDATED
 	Static _rawToFinal(rawSects)															; handles global code between sections, creates final Sects array
 	{
 		; relocate executable global code between sections
 		fConvGblOK := false																	; controls whether global code should be conv to lbl/func
 		for idx, sect in rawSects {															; for each raw section...
-			newLblSect := ''																; ini
+			newGblSectList := []															; ini
 			if ((sect._tType ~= '(?i)(?:LBL|HK|HS)')) {										; if section is label,HK,HS...
 				if (brcBlk := isBraceBlock(sect.blk)) {										; if section already has braces...
-					sec := sect._exitCmdSplit(brcBlk.bbc)									; get exit cmd details for brace-block
+					sec := sect._exitCmdSplit(brcBlk.bbc)									; ... get exit cmd details for brace-block
 					if (sec.xCmd															; if brace-block has exit cmd...
-					&& this._cleanCode(sect.tBlk)) {										; ... and trailing global code (after brace-block) is executable
-						sect._xCmd := sec.xCmd, sect._xPos := sec.xPos						; ... update exit cmd info for section
-						newLblSect	:= this._newLblSect(sect.tBlk)							; ... convert trailing global code to new section (label)
-						sect.tBlk	:= ''													; ... remove global code from current section
+					&& this._cleanCode(sect.tBlk)) {										; ... and, section has executable code following brcBlk
+						sect._xCmd := sec.xCmd, sect._xPos := sec.xPos						; ... update exit cmd info for current section
+						gblBlk := sect.tBlk . sect.TCWS										; ... gather remaining code for current section
+						if (this._cleanCode(gblBlk, true)) {								; ... if executable code is something other than just exitCmds...
+							newGblSectList	:= this._makeGblSections(gblBlk)				; ... convert trailing executable code to new section
+							sect.tBlk		:= '', sect.TCWS := ''							; ... update current section
+						}
 						fConvGblOK	:= false												; ... don't allow global code to be called ? (TODO - MAKE SURE THIS IS CORRECT)
 					}
 					else if (!sec.xCmd) {													; if brace-block has NO exit cmd...
-						if (cTrail := this._cleanCode(brcBlk.trail)) {						; if trailing global code (after brace-block) is executable...
-							newLblSect	:= this._newLblSect(brcBlk.trail)					; ... convert trailing global code to new section (label)
-							sect.tBlk	:= ''												; ... remove global code from current section
-							fConvGblOK	:= true												; ... allow executable global code to be called (see below)
+						if (this._cleanCode(brcBlk.trail)) {								; if section has executable code following brcBlk
+							sect.Blk := brcBlk.TCT . brcBlk.bb								; ... blk code for cur sect should just be brace-blk
+							gblBlk	 := brcBlk.trail . sect.TCWS							; ... gather remaining code for current section
+							if (this._cleanCode(gblBlk, true)) {							; ... if executable code is something other than just exitCmds...
+								newGblSectList	:= this._makeGblSections(gblBlk)			; ... convert trailing executable code to new section
+								sect.tBlk		:= '', sect.TCWS := ''						; ... update current section
+								fConvGblOK		:= true										; ... allow executable global code to be called (see below)
+							}
+						}
+						else if (this._cleanCode(sect.tblk)) {								; if section has executable code following brcBlk
+							gblBlk := sect.tBlk . sect.TCWS									; ... gather remaining code for current section
+							if (this._cleanCode(gblBlk, true)) {							; ... if executable code is something other than just exitCmds...
+								newGblSectList	:= this._makeGblSections(gblBlk)			; ... convert trailing executable code to new section
+								sect.tBlk		:= '', sect.TCWS := ''						; ... update current section
+								fConvGblOK		:= true										; ... allow executable global code to be called (see below)
+							}
 						}
 					}
 				}
-				else {																		; section code does not have braces
+				else {																		; section code DOES NOT have braces
+					if (sect.tBlk) {														; if section has code following exitCmd...
+						if (sect.HasExit && this._cleanCode(sect.tBlk)) {					; if section has executable code following exitCmd...
+							gblBlk := sect.tBlk . sect.TCWS									; ... gather remaining code for current section
+							if (this._cleanCode(gblBlk, true)) {							; ... if executable code is something other than just exitCmds...
+								newGblSectList	:= this._makeGblSections(gblBlk)			; ... convert that executable code to new section
+								sect.tBlk		:= '', sect.TCWS := ''						; ... update current section
+							}
+						}
+						else if (idx < rawSects.Length) { ; non-executBLE code				; if current section is not the last section...
+							nextPCWS := sect.tBlk . sect.TCWS . rawSects[idx+1].PCWS		; ... gather remaining code for current sect, and beginning of next sect
+							rawSects[idx+1].PCWS := nextPCWS								; ... move non-executable code to beginning of next section
+							sect.tBlk := '', sect.TCWS := ''								; ... update current section
+						}
+					}
 					fConvGblOK := (this._hasL2F && !sect.HasExit)							; allow gbl code calls when sect has no exit, and lbls will be conv to func
 				}
 			}
@@ -876,15 +936,21 @@ class clsSection
 			&& fConvGblOK																	; ... and gbl code will have a caller...
 			&& this._cleanCode(sect.Blk)													; ... and the CLS/FUNC section has trailing executable code...
 			&& rawSects.Length > 1) {														; ... and this is not the only section...
-				newLblSect	:= this._newLblSect(sect.Blk)									; ... 	convert global code to new lbl/func
-				sect.Blk	:= ''															; ... 	remove trailing code from ClS/FUNC section
-				fConvGblOK	:= false														; ... 	reset flag
+				gblBlk			:= sect.Blk . sect.TCWS										; ... 	gather remaining code for current section
+				newGblSectList	:= this._makeGblSections(gblBlk)							; ... 	convert global code to new lbl/func
+				sect.Blk		:= '', sect.TCWS := ''										; ...	update current section
+				fConvGblOK		:= false													; ... 	reset flag
+			}
+			; TODO - WATCH FOR #IF lines
+			else {	; not a LBL,HK,HS,FUNC,CLS - global code?								; may need to add code here in future
 			}
 
 			; update permanent Sects array
 			this.Sects.Push(sect)															; add orig section... whatever it is
-			if (newLblSect) {																; if new LBL section was created...
-				this.Sects.Push(newLblSect)													; ... add that new LBL section to Sect list
+			if (newGblSectList.Length) {													; if new global section(s) were created (can be more than one)...
+				for idx, sect in newGblSectList {											; for each new section created...
+					this.Sects.Push(sect)													; ... add them to Sect list
+				}
 			}
 		}
 	}

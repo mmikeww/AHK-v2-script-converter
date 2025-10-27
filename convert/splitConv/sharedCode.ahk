@@ -46,6 +46,25 @@
 	return srcStr													; return resulting srcStr, trimmed or not
 }
 ;################################################################################
+									   separatePreCWS(srcStr, &pre, incHIF:=true)
+;################################################################################
+{
+; 2025-10-27 AMB, ADDED
+;	separates preceding comments and whitespace from srcStr
+
+	tags	:= 'LC|BC|QS'
+	tags	.= (incHIF) ? '|HIF' : ''
+	nTag	:= '(?<=^)\h*' uniqueTag('(?:' tags ')\w++') '.*'		; [tag for comments or quoted string]
+	nLC		:= '(?:(?<=^)|(?<=^)\h+)(?<!``);[^\v]*+'				; [line comment]
+	nSep	:= '^((?:\v+|' nTag '|' nLC ')++)'						; will separate relevant portion from preceding comments/tags/ws
+	trail	:= ''													; ini, in case nothing to separate
+	if (RegExMatch(srcStr, nSep, &m)) {								; separate preceding comments/tags/ws from srcStr
+		pre	:= m[1]													; returns preceding comments/tags/ws (via reference)
+		srcStr	:= RegExReplace(srcStr, '^' escRegexChars(pre))		; removes preceding comments/tags/ws from srcStr
+	}
+	return srcStr													; return resulting srcStr, trimmed or not
+}
+;################################################################################
 														 fixAssignments(&lineStr)
 ;################################################################################
 {

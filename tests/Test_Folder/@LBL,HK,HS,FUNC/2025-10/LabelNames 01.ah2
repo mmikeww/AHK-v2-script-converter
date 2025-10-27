@@ -58,8 +58,8 @@ _3_14_2()
 _3_14_3()
 	return
 
-_3_14_3() ; V1toV2: Gosub
-
+V1toV2_GblCode_001:
+V1toV2_GblCode_001()
 return
 
 ; Tricky
@@ -138,6 +138,13 @@ _3_14_3() { ; V1toV2: Lbl->Func
 global
 	MsgBox("3-14")
 	return
+}
+;##############################################
+V1toV2_GblCode_001() { ; V1toV2: Lbl->Func
+global
+_3_14_3() ; V1toV2: Gosub
+
+return
 }
 ;##############################################
 ★a★b★c() { ; V1toV2: Lbl->Func

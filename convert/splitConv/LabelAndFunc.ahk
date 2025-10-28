@@ -125,7 +125,7 @@ class clsSection
 			this._xPos := 'end'																; [end of func]			value doesn't matter for func/cls
 			return
 		}
-		if (!(this._tType ~= '(?i)(?:HK|HS|LBL|GBL)')) {									; if not HK,HS,LBL [or GBL, if specified]...
+		if (!(this._tType ~= '(?i)(?:HK|HS|LBL|GBL)')) {									; if not HK,HS,LBL,GBL...
 			return																			; ... exit
 		}
 		sec := this._exitCmdSplit(this.Blk)													; sub-divide code block, extract exit cmd if present

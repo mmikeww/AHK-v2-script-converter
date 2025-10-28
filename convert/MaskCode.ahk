@@ -626,20 +626,28 @@ global	  gTagChar		:= chr(0x2605) ; '★'															; unique char to ensure 
 		case	'FUNC':										; FUNCTION BLOCKS
 				clsMask.RestoreAll(&code, 'FUNC'
 					, delTag, sessID?)
+				clsNodeMap.RestoreAll(&code, 'BLKFUNC'		; 2025-10-27 AMB
+					, delTag, sessID?, convert)
 		;################################################################################
 		case	'CLS':										; CLASS BLOCKS
 				clsMask.RestoreAll(&code, 'CLS'
 					, delTag, sessID?)
+				clsNodeMap.RestoreAll(&code, 'BLKCLS'		; 2025-10-27 AMB
+					, delTag, sessID?, convert)
 		;################################################################################
 		case	'BLOCKS', 'CLS&FUNC', 'FUNC&CLS':			; CLASS and FUNCTION BLOCKS
-				clsNodeMap.Restore_Blocks(&code,convert)
+				clsNodeMap.RestoreAll(&code, 'BLKCLS'		; 2025-10-27 AMB
+					, delTag, sessID?, convert)
+				clsNodeMap.RestoreAll(&code, 'BLKFUNC'		; 2025-10-27 AMB
+					, delTag, sessID?, convert)
+				;clsNodeMap.Restore_Blocks(&code,convert)
 		;################################################################################
 		case	'IWTLFS':									; IWTLFS BLOCKS
 				nFILSTW := '(?im)' UniqueTag('(?:FOR|IF|LOOP|SWITCH|TRY|WHILE)\w++')
 				while(code ~= nFILSTW) {
 					blkTypes:=['FOR','IF','LP','SW','TRY','WH']
 					Loop blkTypes.Length {
-						Mask_R(&code, blkTypes[-A_Index]		; reverse order
+						Mask_R(&code, blkTypes[-A_Index]	; reverse order
 							, delTag, sessID?)
 					}
 				}
@@ -1168,7 +1176,8 @@ class clsNodeMap	; 'block map' might be better term
 	BlockCode				:= ''		; orig block code - used to determine whether code was converted
 	ConvCode				:= ''		; converted code
 	cType					:= ''		; CLS, FUNC, etc
-	tagId					:= ''		; unique tag Id
+	uid						:= ''		; unique ID for tag (2025-10-27)
+	tagId					:= ''		; unique tag
 	parentPos				:= -1		; -1 is root
 	pos						:= -1		; block start position within code, ALSO use as unique key for MapList
 	len						:= 0		; char length of entire block
@@ -1176,11 +1185,12 @@ class clsNodeMap	; 'block map' might be better term
 	ChildList				:= map()	; list of child nodes
 
 	; acts as constructor for a node object
-	__new(name, cType, blkCode, pos, len)
+	__new(name, cType, blkCode, uid, pos, len)
 	{
 		this.name			:= name
 		this.cType			:= cType
 		this.blockCode		:= blkCode
+		this.uid			:= uid		; 2025-10-27
 		this.pos			:= pos
 		this.len			:= len
 	}
@@ -1215,23 +1225,24 @@ class clsNodeMap	; 'block map' might be better term
 	AddChild(id)			=> this.ChildList[id]	:= clsNodeMap.mapList[id]	; add node object
 	hasChildren				=> this.ChildList.Count
 	hasChanged				=> (this.ConvCode && (this.ConvCode = this.BlockCode))
-	;################################################################################
+	;############################################################################
 	static mapList			:= map()
-	static idIndex			:= 0
-	static nextIdx			=> ++clsNodeMap.IdIndex
-	static getNode(id)		=> clsNodeMap.mapList(id)
-	static getName(id)		=> clsNodeMap.mapList(id).name
+	static maskList			:= map()						; 2025-10-27 AMB, ADDED
+;	static idIndex			:= 0
+;	static nextIdx			=> ++clsNodeMap.IdIndex
+;	static getNode(id)		=> clsNodeMap.mapList(id)
+;	static getName(id)		=> clsNodeMap.mapList(id).name
 	;############################################################################
 	; PRIVATE - adds a node to maplist
 	static _add(node) {
-		clsNodeMap.mapList[node.pos] := node
+		this.mapList[node.pos] := node
 	}
 	;############################################################################
 	; PUBLIC - provides details of all nodes in maplist
 	; used for debugging, etc.
 	static Report() {
 		reportStr := ''
-		for key, nm in clsNodeMap.MapList {
+		for key, nm in this.MapList {
 			reportStr	.= '`nname:`t[' nm.cType '] ' nm.name '`nstart:`t' nm.pos '`nend:`t' nm.EndPos '`nlen:`t' nm.len
 						. '`nparent:`t' nm.parentName ' [' nm.parentPos ']`npath:`t' nm.path '`npathV:`t' nm.pathVal '`nDepth:`t' nm._depth()
 						. '`nPList:`t' nm.parentList '`nChilds:`t' nm.GetChildren() '`n'
@@ -1243,14 +1254,15 @@ class clsNodeMap	; 'block map' might be better term
 	;	also identifies relationship between nodes
 	static BuildNodeMap(code)
 	{
-		clsNodeMap.Reset()	; each build requires a fresh MapList
+		this.Reset()							; each build requires a fresh MapList
 		Mask_T(&code, 'C&S',1)					; mask comments/strings - might be redundant
 		Mask_T(&code, 'V1MLS')					; mask v1 ML strings
+		uid := clsMask.GenUniqueID()
 		; map all classes - including nested ones, from top to bottom
 		pos := 1
 		while(pos := RegExMatch(code, gPtn_Blk_CLS, &m, pos)) {
 			chunk := SubStr(code, 1, pos)
-			clsNodeMap._add(clsNodeMap(m.cname, 'BLKCLS', m[], pos, m.len))
+			this._add(this(m.cname, 'BLKCLS', m[], uid, pos, m.len))
 			pos += m.len
 		}
 		; map all functions - including nested ones, from top to bottom
@@ -1260,11 +1272,11 @@ class clsNodeMap	; 'block map' might be better term
 				pos++, curPos := pos
 				continue	; bypass IF/WHILE/LOOP
 			}
-			clsNodeMap._add(clsNodeMap(m.fname, 'BLKFUNC', m[], pos, m.len))
+			this._add(this(m.fname, 'BLKFUNC', m[], uid, pos, m.len))
 			curPos := pos, pos += m.len
 		}
 		; identify parents and children for each node in maplist
-		clsNodeMap._setKin()
+		this._setKin()
 	}
 	;############################################################################
 	; PUBLIC - mask and convert classes and functions
@@ -1272,7 +1284,7 @@ class clsNodeMap	; 'block map' might be better term
 	{
 		; prep for tagging - get list of node positions
 		nodeDepthStr := ''
-		for key, node in clsNodeMap.mapList
+		for key, node in this.mapList
 			nodeDepthStr .= ((nodeDepthStr='') ? '' : '`n') . (key ':' node._depth() ':' node.name)
 
 		; mask/tag each class and function, FROM BOTTOM TO TOP - REVERSE ORDER!
@@ -1283,7 +1295,7 @@ class clsNodeMap	; 'block map' might be better term
 			;	1. starting char position of node [class,func,etc] within code body
 			;	2. used as unique key for mapList[] (ensures map sort order is same as order found in code)
 			pos		:= RegExReplace(A_LoopField, '^(\d+).+', '$1')	; extract pos/Key of current node
-			node	:= clsNodeMap.mapList[number(pos)]
+			node	:= this.mapList[number(pos)]
 
 			; if node is a class
 			if (node.cType='BLKCLS')
@@ -1292,11 +1304,12 @@ class clsNodeMap	; 'block map' might be better term
 				{
 					mCopy := m[]												; is premasked code - copy to prep for v2 conversion
 					Mask_R(&mCopy, 'V1MLS',0), Mask_R(&mCopy, 'C&S',0)			; restore comments/strings, v1 ML strings (should now be orig)
-					node.ConvCode := (convert)	? _convertLines(mCopy)
+					node.ConvCode := (convert)	? _convertLines(mCopy)			; convert or not?
 												: mCopy
 					mLen		:= StrLen(node.ConvCode)
-					mTag		:= uniqueTag('BLKCLS_P' pos '_L' mLen)
-					node.tagId	:= mTag
+					uid			:= node.uid										; 2025-10-27 AMB, ensure tag has unique ID
+					mTag		:= uniqueTag('BLKCLS_' uid '_P' pos '_L' mLen)	; tag, also used as key for maskList
+					this.maskList[mTag] := node									; 2025-10-27 AMB, so FUNC/CLS masking is more flexible
 					code := RegExReplace(code, escRegexChars(m[]), mTag,,1,pos)	; replace block of premasked-code with tag
 				}
 			}
@@ -1308,11 +1321,12 @@ class clsNodeMap	; 'block map' might be better term
 				{
 					mCopy := m[]												; is premasked code - copy to prep for v2 conversion
 					Mask_R(&mCopy, 'V1MLS',0), Mask_R(&mCopy, 'C&S',0)			; restore comments/strings, v1 ML strings (should now be orig)
-					node.ConvCode := (convert)	? _convertLines(mCopy)
+					node.ConvCode := (convert)	? _convertLines(mCopy)			; convert or not?
 												: mCopy
 					mLen		:= StrLen(node.ConvCode)
-					mTag		:= uniqueTag('BLKFUNC_P' pos '_L' mLen)
-					node.tagId	:= mTag
+					uid			:= node.uid										; 2025-10-27 AMB, ensure tag has unique ID
+					mTag		:= uniqueTag('BLKFUNC_' uid '_P' pos '_L' mLen)	; tag, also used as key for maskList
+					this.maskList[mTag] := node									; 2025-10-27 AMB, so FUNC/CLS masking is more flexible
 					code := RegExReplace(code, escRegexChars(m[]), mTag,,1,pos)	; replace block of premasked-code with tag
 				}
 			}
@@ -1329,9 +1343,8 @@ class clsNodeMap	; 'block map' might be better term
 		Mask_T(&code, 'C&S',1,sessID)							; mask comments/strings - might be redundant
 		Mask_T(&code, 'V1MLS',,sessID)							; mask v1 ML strings
 			; mask classes and functions
-			saveCode := code
-			clsNodeMap.BuildNodeMap(code)						; prep for masking/conversion
-			clsNodeMap.maskAndConvertNodes(&code,convert)
+			this.BuildNodeMap(code)								; prep for masking/conversion
+			this.maskAndConvertNodes(&code,convert)				; FUNC/CLS will be added to masklist here
 		Mask_R(&code, 'V1MLS',0,sessID)							; restore v1 ML strings
 		Mask_R(&code, 'C&S',0,sessID)							; restore comments/strings
 	}
@@ -1339,7 +1352,9 @@ class clsNodeMap	; 'block map' might be better term
 	; PUBLIC - replaces class/func code with v2 converted version (converted in MaskAndConvertNodes)
 	static Restore_Blocks(&code, convert:=true)
 	{
-		for key, node in clsNodeMap.mapList {
+	; 2025-10-27 AMB - begin using RestoreAll() instead
+
+		for key, node in this.mapList {
 			mTag		:= node.tagId
 			repl		:= (convert)
 						? node.convCode
@@ -1349,10 +1364,32 @@ class clsNodeMap	; 'block map' might be better term
 		}
 	}
 	;############################################################################
+	static RestoreAll(&code:='', maskType:='', deleteTag:=true, sessObj:=unset, convert:=true)
+	{
+	; 2025-10-27 AMB - Begin using this for restore, more flexible
+
+		; ensure required args have been provided by caller
+		if (!code || !maskType) {								; prevent issues with missing args
+			return
+		}
+		; setup unique tag id
+		maskType	:= RegExReplace(maskType, '_$',,,1) . '_'	; ensure its last  char is underscore
+		nMTag		:= uniqueTag(maskType '\w+')				; needle to find a tag that has maskType identifier
+		; search for targ-pattern, replace matching tags with orig substr
+		while (pos := RegExMatch(code, nMTag, &m)) {			; position is unnecessary
+			mTag		:= m[]									; [working var for tag]
+			node		:= this.maskList[mTag]
+			repl		:= (convert)							; convert or not?
+						? node.convCode							; ... when converting
+						: node.BlockCode						; ... when NOT converting
+			code		:= StrReplace(code, mTag, repl)			; would RegexReplace() have better performance?
+		}
+	}
+	;############################################################################
 	; PRIVATE - identifies all parents/children for each node in nodelist
 	static _setKin() {
-		for key, node in clsNodeMap.mapList {
-			node.ParentPos := clsNodeMap._findParents(node.name, node.pos, node.len)
+		for key, node in this.mapList {
+			node.ParentPos := this._findParents(node.name, node.pos, node.len)
 		}
 	}
 	;############################################################################
@@ -1361,7 +1398,7 @@ class clsNodeMap	; 'block map' might be better term
 	{
 		cp := -1, parentList := map()
 		; find parent via brute force (by comparing code positions)
-		for key, node in clsNodeMap.mapList {
+		for key, node in this.mapList {
 			if ((pos>node.pos) && ((pos+len)<node.EndPos)) {
 				offset				:= pos-node.pos				; looking for lowest offset (closest parent)
 				parentList[offset]	:= node.pos					; add current parent id to list
@@ -1371,7 +1408,7 @@ class clsNodeMap	; 'block map' might be better term
 		}
 		; if no parent found, root is the parent
 		if (cp<0) {
-			clsNodeMap.mapList[pos].parentList := 'r'			; add root as only parent
+			this.mapList[pos].parentList := 'r'					; add root as only parent
 			return -1											; -1 indicates root as only parent
 		}
 		; has at least 1 parent, save parent list, return immediate parent (pos)
@@ -1381,14 +1418,14 @@ class clsNodeMap	; 'block map' might be better term
 				pList .= ';' parent
 		}
 		pList .= ';r'				; add root
-		clsNodeMap.mapList[pos].parentList := pList
+		this.mapList[pos].parentList := pList
 		return parentList[cp]		; pos is used as mapList [key]
 	}
 	;############################################################################
 	; PUBLIC - clears maplist
 	static Reset()
 	{
-		clsNodeMap.mapList := Map()
+		this.mapList := Map()
 	}
 }
 ;################################################################################

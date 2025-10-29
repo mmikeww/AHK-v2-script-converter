@@ -197,6 +197,7 @@ _convertLines(ScriptString)
    gaScriptStrsUsed.ErrorLevel      := InStr(ScriptString, 'ErrorLevel')
    gaScriptStrsUsed.A_GuiControl    := InStr(ScriptString, "A_GuiControl")
    gaScriptStrsUsed.StringCaseSense := InStr(ScriptString, 'StringCaseSense') ; Both command and A_ variable
+   gaScriptStrsUsed.IfMsgBox := InStr(ScriptString, 'IfMsgBox')
 
    ; parse each line of the input script, convert line as required
    Loop {
@@ -875,7 +876,7 @@ _MsgBox_V2(p)
 
       ; format output
       Out := format('MsgBox({1}, {2}, {3})', text, (title = '""' ? '' : title), ToExp(options))
-      if (Check_IfMsgBox()) {
+      if (gaScriptStrsUsed.IfMsgBox) {
          Out := 'msgResult := ' Out
       }
 
@@ -899,7 +900,7 @@ _MsgBox_V2(p)
       ; does not have continuation section
       param := p.Extra.OrigStr
       Out   := format('MsgBox({1})', ((param='') ? '' : ToExp(param)))
-      if (Check_IfMsgBox()) {
+      if (gaScriptStrsUsed.IfMsgBox) {
          Out := 'msgResult := ' Out
       }
       return Out
@@ -1303,32 +1304,6 @@ _HashtagWarn(p) {
    if (p[2] != "")
       Out .= ", " p[2]
    Return Out
-}
-;################################################################################
-; Checks if IfMsgBox is used in the next lines
-Check_IfMsgBox() {
-   ; Go further in the lines to get the next continuation section
-   global gOScriptStr   ; array of all the lines
-   global gO_Index   ; current index of the lines
-   ; get Temporary index
-   T_Index := gO_Index
-   found := false
-
-   loop {
-      T_Index++
-      if (gOScriptStr.Length < T_Index || A_Index = 40) {   ; check the next 40 lines
-         break
-      }
-;      LineContSect := gOScriptStr[T_Index]
-      LineContSect := gOScriptStr.GetLine(T_Index)
-      if (RegExMatch(LineContSect, "i)^(.*?)\bifMsgBox\s*[,\s]\s*(\w*)(.*)")) {
-         found := true
-         break
-      } else if (RegExMatch(LineContSect, "i)^\s*MsgBox([,\s]|$)")) {
-         break
-      }
-   }
-   return found
 }
 ;################################################################################
 ; --------------------------------------------------------------------

@@ -1,3 +1,5 @@
+Var := 1
+
 Switch Var
 {
 Case 1: MsgBox Test1

@@ -14,6 +14,8 @@
 ;################################################################################
 class clsSection
 {
+; 2025-11-01 AMB, UPDATED key case-sensitivity for gmList_LblsToFunc, gmList_GosubToFunc
+
 	; PRIVATE - individual section properties
 	_oStr		:= ''																		; original section string
 	Line1		:= ''																		; line 1 [will be tagged/masked declaration]
@@ -54,9 +56,9 @@ class clsSection
 	HasExit		=> !!((this._xCmd && this._xPos) || this.L1.cmd)							; does section have an exit command?
 	LabelName	=> this._name																; name of LBL/FUNC/CLS, or HK/HS trigger (public shortcut)
 	L1			=> this._line1Details														; line 1 details and its parts (public shortcut)
-	HasCaller	=> (gmList_LblsToFunc.Has(this.LabelName)									; to assist prevention of empty labelToFunc conversions
-				||  gmList_LblsToFunc.Has(this.FuncName)
-				|| 	gmList_GosubToFunc.Has(this.LabelName))
+	HasCaller	=> (gmList_LblsToFunc.Has(StrLower(this.LabelName))							; to assist prevention of empty labelToFunc conversions
+				||  gmList_LblsToFunc.Has(StrLower(this.FuncName))
+				|| 	gmList_GosubToFunc.Has(StrLower(this.LabelName)))
 
 	;################################################################################
 	HKFunc {	; PUBLIC (mght add validations later)										; func (name) that is sometimes used as HK block code
@@ -486,6 +488,8 @@ class clsSection
 	;################################################################################
 	Static _gosubUpdate(code)																; handles v1 Gosub to v2 funcCall conversion
 	{
+	; 2025-11-01 AMB, UPDATED key case-sensitivity for gmList_GosubToFunc
+
 		Mask_T(&code, 'C&S')																; mask comments/strings (since src code has already been restored)
 		outStr := ''																		; ini output
 		nGosub := '(?i)(GOSUB\h+)([^\s]+)(.*)'												; gosub needle [only supports changes made in _Gosub()]
@@ -494,7 +498,7 @@ class clsSection
 				leftStr := SubStr(line, 1, pos-1)											; capture characters before Gosub
 				if (RegExMatch(line, nGosub, &m, pos)) {									; capture	Gosub call details
 					GS := m[1], Lbl := m[2], trail := m[3]									; save		Gosub call details
-					if (gmList_GosubToFunc.Has(Lbl)) {										; if label was recorded in _Gosub()...
+					if (gmList_GosubToFunc.Has(StrLower(Lbl))) {							; if label was recorded in _Gosub()...
 						if (obj := clsSection.SectionObj[Lbl]) {							; ... if object is avail for label
 							funcName:= obj.sect.FuncName									; ...	get func name (may be different than labelname)
 							msg		:= ' `; V1toV2: Gosub'									; ...	[conv msg to user]
@@ -519,9 +523,13 @@ class clsSection
 	;################################################################################
 	Static _hasL2F[lblName:='']																; to determine whether label(s) will be conv to func
 	{
+	; 2025-11-01 AMB, UPDATED key case-sensitivity for...
+	;	... gmList_LblsToFunc, gmList_GosubToFunc
+
 		get {
 			if (lblName) {
-				return (gmList_LblsToFunc.Has(lblname) || gmList_GosubToFunc.Has(lblname))	; true if LBLName requires conversion
+				return (gmList_LblsToFunc.Has(StrLower(lblname))							; true if LBLName requires conversion
+						|| gmList_GosubToFunc.Has(StrLower(lblname)))
 			}
 			return	!!(gmList_LblsToFunc.Count												; true when ANY label requires conversion
 					|| gmList_GosubToFunc.Count
@@ -979,18 +987,20 @@ class clsSection
 	;################################################################################
 	Static _updateLblToFuncs(code)															; applies A_GuiEvent/A_GuiControl params/vars, Regex replacements
 	{
+	; 2025-11-01 AMB, UPDATED key case-sensitivity for gmList_LblsToFunc
+
 		While(pos := RegexMatch(code,gPtn_Blk_FUNC, &mFunc, pos??1))						; for each func found in code...
 		{
 			origStr := mFunc[], funcName := mFunc.fName										; get details of func
 			; was current func the result of a LBL to FUNC conversion?
-			if (!gmList_LblsToFunc.Has(funcName)) {											; if func was NOT converted from a label...
+			if (!gmList_LblsToFunc.Has(StrLower(funcName))) {								; if func was NOT converted from a label...
 				pos += StrLen(origStr)														; ... prep for next func search
 				continue																	; ... skip current func (no update needed)
 			}
 			; func was converted from label - updated it as needed
 			brcBlk	:= mFunc.brcBlk															; get brace-block for function
 			TCT		:= mFunc.TCT															; get code found between func declaration and brace-blk
-			L2F_Obj	:= gmList_LblsToFunc[funcName]											; get L2F object
+			L2F_Obj	:= gmList_LblsToFunc[StrLower(funcName)]								; get L2F object
 			declare	:= L2F_Obj.funcName '(' L2F_Obj.params ')'								; add any associated params to func declaration
 			if (InStr(declare, 'A_GuiControl') && gaScriptStrsUsed.A_GuiControl) {			; add A_GuiControl vars to block (as needed)
 				guiContStr := 'A_GuiControl := HasProp(A_GuiControl, "Text") '
@@ -1110,6 +1120,7 @@ class codeChop	; responsible for marking script code with tags that separate sec
 			outStr .= (curLine . brc . TC . '`r`n')											; move brace to its own line, reapply line comment
 		}
 		outStr := RegExReplace(outStr, '`r`n$',,,1)											; remove final (extra) CRLF from output
+		Mask_T(&outStr, 'LC')																; 2025-11-01 - remask line comments
 		return outStr																		; return updated script
 	}
 }
@@ -1169,7 +1180,27 @@ class ConvLabel
 	retStr := RegExReplace(retStr, '`r`n$',,,1)
 	return retStr
 }
-
+;################################################################################
+														scriptHasLabel(labelName)
+;################################################################################
+{
+; 2025-11-01 AMB, ADDED - determines whether v1 script has specified label
+	return (gAllV1LabelNames ~= '(?i)\b' labelName ',')
+}
+;################################################################################
+														  scriptHasFunc(funcName)
+;################################################################################
+{
+; 2025-11-01 AMB, ADDED - determines whether v1 script has specified function
+	return (gAllFuncNames ~= '(?i)\b' funcName ',')
+}
+;################################################################################
+														scriptHasClass(className)
+;################################################################################
+{
+; 2025-11-01 AMB, ADDED - determines whether v1 script has specified class
+	return (gAllClassNames ~= '(?i)\b' className ',')
+}
 ;################################################################################
 														 hasValidV1Label(&srcStr)
 ;################################################################################
@@ -1244,23 +1275,24 @@ class ConvLabel
 ; 2024-07-07 AMB, ADDED - Ensures name is unique (support for v1 to v2 label naming)
 ; 2024-07-09 AMB, UPDATED to check existing label names also
 ; 2025-07-06 AMB, UPDATED to add label name to global func list
+; 2025-11-01 AMB, UPDATED as part of Scope support
 
 	global gAllFuncNames, gAllV1LabelNames
 
 	holdName := newName := v1LabelName
 	; if labelName is already being used by another label or function, change the name
 	; keep renaming until unique name is created
-	while (InStr(gAllFuncNames, newName . ',')
-		|| InStr(gAllV1LabelNames, newName . ',')) {
+	while (scriptHasFunc(newName)
+		|| scriptHasLabel(newName)) {
 		newName := holdName . '_' . A_Index+1
 	}
 	; add to labelName list if not already
-	if (!InStr(gAllV1LabelNames, newName . ',')) {
+	if (!scriptHasLabel(newName)) {
 		gAllV1LabelNames .= newName . ','
 	}
 	; TO DO - add support for v1 to v2 function naming
 	; add to function list if not already
-	if (!InStr(gAllFuncNames, newName . ',')) {
+	if (!scriptHasFunc(newName)) {
 		gAllFuncNames .= newName . ','
 	}
 	return newName
@@ -1439,6 +1471,7 @@ GetAltLabelsMap(ScriptString) {
 _Gosub(p) {
 ; 2024-07-07 AMB, UPDATED - as part of label-to-function naming
 ; 2025-10-05 AMB, UPDATED - to use new gmList_GosubToFunc, updated msg to user
+; 2025-11-01 AMB, UPDATED - key case-sensitivity for gmList_GosubToFunc
 ; TODO - try to add support for %label%
 
 	; check for Gosub %label% - not yet supported
@@ -1453,7 +1486,7 @@ _Gosub(p) {
 	; ... clsSection._gosubUpdate() will make the final changes ass part of Update_LBL_HK_HS()
 	; ... this also provides support for isssue #322, and similar
 	v1LabelName := Trim(p[1])
-	gmList_GosubToFunc[v1LabelName] := true
+	gmList_GosubToFunc[StrLower(v1LabelName)] := true
 	return 'Gosub ' .  v1LabelName	; no changes here
 }
 ;################################################################################

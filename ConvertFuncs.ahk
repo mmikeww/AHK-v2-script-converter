@@ -11,6 +11,7 @@ global   gFilePath   := ''              ; TEMP, for testing
 #Include lib/ClassOrderedMap.ahk
 #Include lib/dbg.ahk
 #Include Convert/MaskCode.ahk                   ; 2024-06-26 ADDED AMB (masking support)
+#Include Convert/Scope.ahk                      ; 2025-11-01 ADDED AMB (scope   support)
 #Include Convert/1Commands.ahk
 #Include Convert/2Functions.ahk
 #Include Convert/3Methods.ahk
@@ -36,28 +37,73 @@ global   gFilePath   := ''              ; TEMP, for testing
 
 
 ;################################################################################
-Convert(ScriptString)            ; MAIN ENTRY POINT for conversion process
+Convert(code)                    ; MAIN ENTRY POINT for conversion process
 ;################################################################################
 {
-   ; PLEASE DO NOT PLACE ANY OF YOUR CODE IN THIS FUNCTION
+; 2025-11-01 AMB, UPDATED as part of Scope support
+
+   ;####  PLEASE DO NOT PLACE ANY OF YOUR CODE IN THIS FUNCTION  #####
 
    ; Please place any code that must be performed BEFORE _convertLines()...
    ;  ... into the following function
-   Before_LineConverts(&ScriptString)
+   Before_LineConverts(&code)
 
    ; DO NOT PLACE YOUR CODE HERE
-   ; perform conversion of main/global portion of script only
-   convertedCode := _convertLines(ScriptString)
+   ; perform line conversions
+   ; [to test WITHOUT using Macro Scope, change fUseScope flag to 0 (below)]
+   code := (fUseScope:=1) ? convertLines_UseScope(code) : convertLines_NoScope(code)
 
    ; Please place any code that must be performed AFTER _convertLines()...
    ;  ... into the following function
-   After_LineConverts(&convertedCode)
+   After_LineConverts(&code)
 
-   return convertedCode ; . 'fail for debugging'
+   return code      ; . 'fail for debugging'
+}
+;################################################################################
+convertLines_NoScope(code)
+{
+; 2025-11-01 AMB, ADDED to provide option to NOT USE Macro Scope (for testing previous method)
+   Mask_T(&code,'CSECT2'), Mask_T(&code,'FUNC&CLS') ; mask M2 continuation sections, funcs/classes
+   return _convertLines(code)
+}
+;################################################################################
+convertLines_UseScope(code)
+{
+; 2025-11-01 AMB, ADDED to support Scope
+;   supports processing global-code first (by default)
+;    change fGblOrder flag to 0 to test orig-order processing
+
+   sects := GetScopeSections(code)                                  ; get Macro-Scope sections
+   if (fGblOrder:=1) {                                              ; if global code should be processed first...
+      origOrder := map()                                            ; [will keep track of orig section order]
+      gblOrder  := StrSplit(clsScopeSect.OrderGbl, ',')             ; get global-first index ordering
+      for idx, index in gblOrder {                                  ; for each order index...
+         curSect        := sects[index]                             ; ... grab section code for that index
+         Mask_T(&curSect,'CSECT2'), Mask_T(&curSect,'FUNC&CLS')     ; ... mask M2 continuation sections, funcs/classes
+         convSect       := _convertLines(curSect)                   ; ... convert lines within section
+         mKey           := format('{:04}', index)                   ; [ensures orig section order is maintained when reassembled]
+         origOrder[mKey]:= convSect                                 ; place converted section into map
+      }
+      outStr := ''                                                  ; [will become reassembled/output script string]
+      for idx, convSect in origOrder {                              ; for each converted section...
+         outStr .= convSect                                         ; ... add it to output, reassemble script string
+      }
+   }
+   else {   ; process sections in orig order (top to bottom)
+      outStr  := ''                                                 ; [will become reassembled/output script string]
+      for idx, curSect in sects {                                   ; for each section (original order)...
+         Mask_T(&curSect,'CSECT2'), Mask_T(&curSect,'FUNC&CLS')     ; ... mask M2 continuation sections, funcs/classes
+         convSect := _convertLines(curSect)                         ; ... convert lines within section
+         outStr  .= convSect                                        ; ... add converted sect to output, reassemble script string
+      }
+   }
+   return outStr                                                    ; return converted/output str
 }
 ;################################################################################
 Before_LineConverts(&code)
 {
+; 2025-11-01 AMB, UPDATED as part of Scope support
+
    ;####  Please place CALLS TO YOUR FUNCTIONS here - not boilerplate code  #####
 
    ; initialize all global vars here so ALL code has access to them
@@ -73,27 +119,22 @@ Before_LineConverts(&code)
    global gAllV1LabelNames  := getV1LabelNames(code)                ; comma-delim stringList of all orig v1 label names
    global gmAllV2LablNames  := getV2LabelNames(gAllV1LabelNames)    ; map of v1 label names converted to V2 label/funcNames
    global gMenuBarName      := getMenuBarName(code)                 ; name of GUI main menubar
+   global gmAltLabel        := GetAltLabelsMap(code)                ; Create a map of labels that point to same reference
+   global gOrigScript       := code                                 ; 2025-11-01 AMB, ADDED as part of Scope support
 
-   ; turn masking on/off at top of SetGlobals()
-   if (gUseMasking) {
-      ; this masking also performs masking for all strings and comments temporarily...
-      ; but they are restored prior to exiting this func (behind the scenes)
-      Mask_T(&code, 'CSECT2')                                       ; global masking of M2 continuation sections (2025-06-22)
-      Mask_T(&code, 'FUNC&CLS')                                     ; global masking of functions and classes
-   }
+   getScriptStringsUsed(code)                                       ; 2025-11-01 AMB, ADDED as part of Scope support
 
    return   ; code by reference
 }
 ;################################################################################
 After_LineConverts(&code)
 {
+; 2025-11-01 AMB, UPDATED as part of Scope support
+
    ;####  Please place CALLS TO YOUR FUNCTIONS here - not boilerplate code  #####
 
-   ; turn masking on/off at top of SetGlobals()
-   if (gUseMasking) {
-      ; remove masking from classes, functions (returned as v2 converted)
-      Mask_R(&code, 'FUNC&CLS')             ; remove masking from functions and classes
-   }
+   ; remove masking from classes, functions
+   Mask_R(&code, 'FUNC&CLS')                ; (returned as v2 converted)
 
    ; operations that must be performed last
    ; inspect to see whether your code is best placed here or in the following
@@ -111,8 +152,9 @@ setGlobals()
 ;  ... so that they can be initialized prior to any other code...
 ;  ... this is being done to fix a bug between global masking and onMessage handling
 ;  ... and so all code within script has access to these globals prior to _convertLines() call
+; 2025-11-01 AMB, UPDATED as part of Scope support
 
-   global gUseMasking            := 1           ; 2024-06-26 - set to 0 to test without masking applied
+   ;global gUseMasking            := 1           ; 2025-11-01 - removed option to disable, as part of Scope support
    ; func and label
    global gAllFuncNames          := ""          ; 2024-07-07 - comma-deliminated string holding the names of all functions
    global gAllClassNames         := ""          ; 2024-10-08 - comma-deliminated string holding the names of all classes
@@ -163,8 +205,39 @@ setGlobals()
    global gSBNameDefault         := "SB"
    global gaFileOpenVars         := []          ; 2025-10-12 AMB - callection of FileOpen object names
 
+   ; reset Static vars in multiple classes      ; required for Scope support and unit testing
+   clsMask.Reset()                              ; 2025-11-01 AMB, ADDED as part of Scope support, unit testing
+   clsNodeMap.Reset()                           ; 2025-11-01 AMB, ADDED as part of Scope support, unit testing
+   clsSection.Reset()                           ; 2025-11-01 AMB, ADDED as part of Scope support, unit testing
+   clsScopeSect.Reset()                         ; 2025-11-01 AMB, ADDED as part of Scope support, unit testing
+
    global gAhkCmdsToRemoveV1, gAhkCmdsToRemoveV2, gmAhkCmdsToConvertV1, gmAhkCmdsToConvertV2, gmAhkFuncsToConvert, gmAhkMethsToConvert
          , gmAhkArrMethsToConvert, gmAhkKeywdsToRename, gmAhkLoopRegKeywds
+}
+;################################################################################
+getScriptStringsUsed(scopeCode, term:='')
+{
+; 2025-11-01 AMB, ADDED as part of Scope support
+; scopeCode - can be entire script string, or a limited portion of code (to control scope)
+; when term is NOT specified, sets global flags as needed (scopeCode param should be entire script)
+; when term is specified... scopeCode param should be set to code of limited scope
+;   sets flag for term (output-option one), also returns whether term was found in scopeCode
+
+   global gaScriptStrsUsed
+
+   ; First, remove false positives hiding in commments and strings
+   maskStr := scopeCode                                                                 ; ini
+   Mask_T(&maskStr, 'C&S',1), Mask_T(&maskStr, 'V1MLS')                                 ; hide comments/strings
+
+   ; set flags as needed
+   if (!term) { ; target all these within entire script
+      gaScriptStrsUsed.ErrorLevel      := EL    := !!InStr(maskStr, 'ErrorLevel')       ; if Errorlevel   is found in script
+      gaScriptStrsUsed.A_GuiControl    := AGC   := !!InStr(maskStr, "A_GuiControl")     ; if A_GuiControl is found in script
+      gaScriptStrsUsed.StringCaseSense := SCS   := !!InStr(maskStr, 'StringCaseSense')  ; Both command and A_ variable
+      return (EL||AGC||SCS)
+   }
+   gaScriptStrsUsed.%term%             := found := !!InStr(maskStr, term)               ; set flag in case caller does not set it manually
+   return found                                                                         ; return true if 'term' is found in scopeCode
 }
 ;################################################################################
 ; MAIN CONVERSION LOOP - handles each line separately
@@ -177,11 +250,12 @@ _convertLines(ScriptString)
 ;   changed gOSriptStr from array to class object - prep for more functionaity later
 ;   added block-comment masking as a global condition for full ScriptString
 ;   changed many variable and function names
+; 2025-11-01 AMB, UPDATED as part of Scope support
 
    Mask_T(&ScriptString, 'BC')      ; 2025-06-12 AMB, mask all block-comments globally
 
-   global gmAltLabel                := GetAltLabelsMap(ScriptString)       ; Create a map of labels who are identical
    global gOrig_ScriptStr           := ScriptString
+   global gaList_PseudoArr          := []                                  ; 2025-11-01 AMB, ADDED here as part of Scope support
    global gEarlyLine                := ''
 ;   global gOScriptStr               := StrSplit(ScriptString, '`n', '`r') ; array for all the lines
    global gOScriptStr               := ScriptCode(ScriptString)            ; now a class object, for future use
@@ -194,10 +268,7 @@ _convertLines(ScriptString)
    global gaScriptStrsUsed
 
    ScriptOutput                     := ''
-   gaScriptStrsUsed.ErrorLevel      := InStr(ScriptString, 'ErrorLevel')
-   gaScriptStrsUsed.A_GuiControl    := InStr(ScriptString, "A_GuiControl")
-   gaScriptStrsUsed.StringCaseSense := InStr(ScriptString, 'StringCaseSense') ; Both command and A_ variable
-   gaScriptStrsUsed.IfMsgBox := InStr(ScriptString, 'IfMsgBox')
+   getScriptStringsUsed(ScriptString, 'IfMsgBox')                          ; 2025-10-28 Banaanae (limit scope boundary to current section only)
 
    ; parse each line of the input script, convert line as required
    Loop {
@@ -267,11 +338,11 @@ FinalizeConvert(&code)
    ; see validV2LabelName() in LabelAndFunc.ahk for the name change to 'OnClipboardChange_v2'
    ; add OnClipboardChange(OnClipboardChange_v2) to top of script, and provide a way to update A_EventInfo within the func, as needed
    ; Update_LBL_HK_HS() below will do the rest
-   ; 2025-10-05 AMB, UPDATED
+   ; 2025-11-01 AMB, UPDATED gmList_LblsToFunc key case-sensitivity)
    maskedCode := code, Mask_T(&maskedCode, 'C&S')   ; prevent false positives (for Instr) within strings and comments
    if (InStr(maskedCode, 'OnClipboardChange:')) {
       code := 'OnClipboardChange(OnClipboardChange_v2)`r`n' . code      ; add this to top of script
-      gmList_LblsToFunc['OnClipboardChange_v2'] := ConvLabel('OCC', 'OnClipboardChange_v2', 'dataType:=""', 'OnClipboardChange_v2'
+      gmList_LblsToFunc[StrLower('OnClipboardChange_v2')] := ConvLabel('OCC', 'OnClipboardChange_v2', 'dataType:=""', 'OnClipboardChange_v2'
                                                 , {NeedleRegEx: "im)^(.*?)\b\QA_EventInfo\E\b(.*+)$", Replacement: "$1dataType$2"})
    }
 
@@ -576,13 +647,14 @@ _FileSetTime(p) {
 _Hotkey(p) {
 ; 2025-10-05 AMB, UPDATED - changed gaList_LblsToFuncO to gmList_LblsToFunc
 ; 2025-10-12 AMB, UPDATED - to fix issue #328
+; 2025-11-01 AMB, UPDATED - as part of Scope support, and gmList_LblsToFunc key case-sensitivity
    LineSuffix := ""
    global gmList_LblsToFunc
 
    ;Convert label to function
 
-   if (RegexMatch(gOrig_ScriptStr, "\n(\s*)" p[2] ":(?!=)\s")) {
-      gmList_LblsToFunc[p[2]] := ConvLabel('HK', p[2], 'ThisHotkey:=""', p[2])
+   if (scriptHasLabel(p[2])) {  ; 2025-11-01 UPDATED as part of Scope support
+      gmList_LblsToFunc[StrLower(p[2])] := ConvLabel('HK', p[2], 'ThisHotkey:=""', p[2])
    }
    if (p[1] = "IfWinActive") {
       p[2] := p[2] = "" ? "" : ToExp(p[2])
@@ -1058,6 +1130,7 @@ _SendRaw(p) {
 ;################################################################################
 _SetTimer(p) {
 ; 2025-10-05 AMB, UPDATED - changed gaList_LblsToFuncO to gmList_LblsToFunc
+; 2025-11-01 AMB, UPDATED - gmList_LblsToFunc key case-sensitivity
    if (p[2] = "Off") {
       Out := format("SetTimer({1},0)", p*)
    } else if (p[2] = 0) {
@@ -1065,7 +1138,7 @@ _SetTimer(p) {
    } else {
       Out := format("SetTimer({1},{2},{3})", p*)
    }
-   gmList_LblsToFunc[p[1]] := ConvLabel('ST', p[1], '')
+   gmList_LblsToFunc[StrLower(p[1])] := ConvLabel('ST', p[1], '')
 
    Return RegExReplace(Out, "[\s\,]*\)$", ")")
 }
@@ -1419,6 +1492,9 @@ V1ParamSplit(String) {
 V1ParSplitFunctions(String, FunctionTarget := 1) {
    ; Will try to extract the function of the given line
    ; Created by Ahk_user
+   ; TODO - add support for "(steps[steps.maxindex()"
+   ;    use gPtn_FuncCall needle instead ?
+
    oResult          := Array()      ; Array to store result Pre func params post
    oIndex           := 1            ; index of array
    InArray          := 0

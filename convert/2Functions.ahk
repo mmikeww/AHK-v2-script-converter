@@ -175,10 +175,11 @@ _DllCall(p) {
 ;################################################################################
 _Hotstring(p) {
 ; 2025-10-05 AMB, UPDATED - changed gaList_LblsToFuncO to gmList_LblsToFunc
+; 2025-11-01 AMB, UPDATED - gmList_LblsToFunc key case-sensitivity
   global gmList_LblsToFunc
   if (RegExMatch(p[1], '":') and p.Has(2)) {
     p[2] := Trim(p[2], '"')
-    gmList_LblsToFunc[p[2]] := ConvLabel('HS', p[2], '*', getV2Name(p[2]))
+    gmList_LblsToFunc[StrLower(p[2])] := ConvLabel('HS', p[2], '*', getV2Name(p[2]))
   }
 
   Out := "Hotstring("
@@ -608,9 +609,12 @@ _VarSetCapacity(p) {
 ; 2025-10-05 AMB, MOVED from ConvertFuncs.ahk
 ;################################################################################
 V1toV2_Functions(ScriptString, Line, &retV2, &gotFunc) {
+; 2025-11-01 AMB, UPDATED as part of Scope support
+;   TODO - REMOVE ScriptString param
 
     global gFuncParams, gfrePostFuncMatch, gFileOpenVars
     FuncsRemoved := 0   ; Number of funcs that have been removed during conversion (e.g Arr.Length() -> Arr.Length)
+    ScriptString := gOrigScript ; 2025-11-01 AMB, ADDED as part of Scope support
     loop {
         if (!InStr(Line, "("))
             break

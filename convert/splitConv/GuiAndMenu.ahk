@@ -17,18 +17,18 @@ _Gui(p) {
 ; 2025-06-12 AMB, UPDATED - changed some var and func names, gOScriptStr is now an object
 ; 2025-10-05 AMB, UPDATED - moved to GuiAndMenu.ahk, changed gaList_LblsToFuncO to gmList_LblsToFunc
 ; 2025-10-13 AMB, UPDATED - to fix #202, also changed some var names and functionality
+; 2025-11-01 AMB, UPDATED - as part of Scope support, and gmList_LblsToFunc key case-sensitivity
 
 	global gEarlyLine
 	global gGuiNameDefault
 	global gGuiControlCount
+	global gmList_LblsToFunc
 	global gLVNameDefault
 	global gTVNameDefault
 	global gSBNameDefault
 	global gGuiList
 	global gOrig_ScriptStr		; array of all the lines
 	global gOScriptStr			; array of all the lines
-	global gAllV1LabelNames		; all label names (comma delim str)
-	global gAllFuncNames		; all func names (comma delim str)
 	global gmGuiFuncCBChecks
 	global gO_Index				; current index of the lines
 	global gmGuiVList
@@ -39,7 +39,7 @@ _Gui(p) {
 	;preliminary version
 
 	SubCommand	:= RegExMatch(p[1], "i)^\s*[^:]*?\s*:\s*(.*)$", &newGuiName) = 0 ? Trim(p[1]) : newGuiName[1]
-	GuiName		:= RegExMatch(p[1], "i)^\s*([^:]*?)\s*:\s*.*$", &newGuiName) = 0 ? "" : newGuiName[1]
+	GuiName		:= RegExMatch(p[1], "i)^\s*([^:]*?)\s*:\s*.*$", &newGuiName) = 0 ? ""		  : newGuiName[1]
 
 	GuiLine		:= gEarlyLine
 	LineResult	:= ""
@@ -105,16 +105,13 @@ _Gui(p) {
 
 		} else if (OptCtrl = "Button") {
 			ControlLabel := smGuiList[curGuiName].orgName OptCtrl RegExReplace(TxtList, "[\s&]", "")	; 2025-10-13 - this fixes #202 (tracking of orig gui name)
-			; 2025-10-13 AMB, corrected this to prevent false positives
-			if (!(gAllV1LabelNames	~= '(?i)\b' ControlLabel ',')
-			&&	!(gAllFuncNames		~= '(?i)\b' ControlLabel ',')) {
+			; 2025-11-01 AMB, UPDATED as part of Scope support
+			if (!scriptHasLabel(ControlLabel) && !scriptHasFunc(ControlLabel)) {
 				ControlLabel := ""
 			}
 		}
-		if (ControlLabel != ""
-			; 2025-10-13 AMB, corrected this to prevent false positives
-			&& !(gAllV1LabelNames	~= '(?i)\b' ControlLabel ',')
-			&&	(gAllFuncNames		~= '(?i)\b' ControlLabel ',')) {
+		; 2025-11-01 AMB, UPDATED as part of Scope support
+		if (scriptHasFunc(ControlLabel)) {
 			gmGuiFuncCBChecks[ControlLabel] := true
 		}
 		if (RegExMatch(OptList, "i)\bv[\w]+\b") && !(guiCmd ~= "i)show|margin|font|new")) {
@@ -162,11 +159,11 @@ _Gui(p) {
 			aEventRename.Push({oldlabel: prevGuiName "GuiEscape", event: "Escape", parameters: "*", NewFunctionName: prevGuiName "GuiEscape"})
 			aEventRename.Push({oldlabel: prevGuiName "GuiSize"
 							, event: "Size", parameters: "thisGui, MinMax, A_GuiWidth, A_GuiHeight", NewFunctionName: prevGuiName "GuiSize"})
-			aEventRename.Push({oldlabel: prevGuiName "GuiConTextMenu", event: "ConTextMenu", parameters: "*", NewFunctionName: prevGuiName "GuiConTextMenu"})
+			aEventRename.Push({oldlabel: prevGuiName "GuiContextMenu", event: "ContextMenu", parameters: "*", NewFunctionName: prevGuiName "GuiContextMenu"})
 			aEventRename.Push({oldlabel: prevGuiName "GuiDropFiles"
 							, event: "DropFiles", parameters: "thisGui, Ctrl, FileArray, *", NewFunctionName: prevGuiName "GuiDropFiles"})
 			Loop aEventRename.Length {
-				if (RegexMatch(gOrig_ScriptStr, "\r\n(\s*)" aEventRename[A_Index].oldlabel ":\s")) {
+				if (scriptHasLabel(aEventRename[A_Index].oldlabel)) {
 					if (gmAltLabel.Has(aEventRename[A_Index].oldlabel)) {
 						aEventRename[A_Index].NewFunctionName := gmAltLabel[aEventRename[A_Index].oldlabel]
 						; Alternative label is available
@@ -174,7 +171,7 @@ _Gui(p) {
 						lbl		:= aEventRename[A_Index].oldlabel
 						params	:= aEventRename[A_Index].parameters
 						funName	:= getV2Name(aEventRename[A_Index].NewFunctionName)
-						gmList_LblsToFunc[getV2Name(lbl)] := ConvLabel('GUI', lbl, params, funName)
+						gmList_LblsToFunc[StrLower(getV2Name(lbl))] := ConvLabel('GUI', lbl, params, funName)
 					}
 					LineResult .= curGuiName ".OnEvent(`"" aEventRename[A_Index].event "`", " getV2Name(aEventRename[A_Index].NewFunctionName) ")`r`n"
 				}
@@ -361,7 +358,7 @@ _Gui(p) {
 			params		:= 'A_GuiEvent:="", A_GuiControl:="", Info:="", *'
 			funcName	:= getV2Name(ControlLabel)
 			; 2025-10-07 AMB - Added regex for A_EventInfo -> Info conversion for new Gui funcs
-			gmList_LblsToFunc[funcName] := ConvLabel('AG', lbl, params, funcName, {NeedleRegEx: "im)^(.*?)\b\QA_EventInfo\E\b(.*+)$", Replacement: "$1Info$2"})
+			gmList_LblsToFunc[StrLower(funcName)] := ConvLabel('AG', lbl, params, funcName, {NeedleRegEx: "im)^(.*?)\b\QA_EventInfo\E\b(.*+)$", Replacement: "$1Info$2"})
 		}
 		if (ControlHwnd != "") {
 			LineResult .= ", " ControlHwnd " := " ControlObject ".hwnd"
@@ -692,10 +689,12 @@ getMenuBarName(srcStr) {
 ;################################################################################
 _Menu(p) {
 ; 2025-10-05 AMB, UPDATED - moved to GuiAndMenu.ahk, changed gaList_LblsToFuncO to gmList_LblsToFunc
+; 2025-11-01 AMB. UPDATED as part of Scope support, and gmList_LblsToFunc key case-sensitivity
 
 	global gEarlyLine
 	global gMenuList
 	global gIndent
+	global gmList_LblsToFunc
 	MenuLine := gEarlyLine
 	LineResult := ""
 	menuNameLine := RegExReplace(MenuLine, "i)^\s*Menu\s*[,\s]\s*([^,]*).*$", "$1", &RegExCount1)
@@ -845,8 +844,8 @@ _Menu(p) {
 			FunctionName := RegExReplace(Var4, "&", "")				; Removes & from labels
 			if (gmAltLabel.Has(FunctionName)) {
 				FunctionName := gmAltLabel[FunctionName]
-			} else if (RegexMatch(gOrig_ScriptStr, "\r\n(\s*)" Var4 ":\s")) {
-				gmList_LblsToFunc[Var4] := ConvLabel('MN', Var4, 'A_ThisMenuItem:="", A_ThisMenuItemPos:="", MyMenu:="", *', FunctionName)
+			} else if (scriptHasLabel(Var4)) {						; 2025-11-01 AMB, UPDATED
+				gmList_LblsToFunc[StrLower(Var4)] := ConvLabel('MN', Var4, 'A_ThisMenuItem:="", A_ThisMenuItemPos:="", MyMenu:="", *', FunctionName)
 			}
 			if (Var4 != "") {
 				; 2024-06-26 ADDED by AMB for fix #131

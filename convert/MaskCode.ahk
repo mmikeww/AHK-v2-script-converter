@@ -945,6 +945,13 @@ class clsMask
 	static maxMasks		:= 16**6			; 16.7 million (must be enough for heavy testing!!!)
 	static maskCountT	:= 0				; 2025-06-12 - to prevent endless-loop bug
 	;############################################################################
+	Static Reset()							; 2025-11-01 AMB, ADDED as part of Scope support
+	{
+		this.masklist		:= map()
+		this.uniqueIdList	:= map()
+		this.maskCountT		:= 0
+	}
+	;############################################################################
 	; PUBLIC - establishes new masking session using clsMask._session
 	; this can be used to control which tags are accessed/restored/deleted
 	Static NewSession() {
@@ -1233,6 +1240,12 @@ class clsNodeMap	; 'block map' might be better term
 ;	static getNode(id)		=> clsNodeMap.mapList(id)
 ;	static getName(id)		=> clsNodeMap.mapList(id).name
 	;############################################################################
+	static Reset()			; 2025-11-01 AMB, ADDED as part of Scope support
+	{
+		this.mapList		:= Map()
+		this.maskList		:= Map()
+	}
+	;############################################################################
 	; PRIVATE - adds a node to maplist
 	static _add(node) {
 		this.mapList[node.pos] := node
@@ -1252,9 +1265,10 @@ class clsNodeMap	; 'block map' might be better term
 	;############################################################################
 	; PUBLIC - builds a position map of all classes and functions found in script
 	;	also identifies relationship between nodes
+	; 2025-11-01 AMB, UPDATED as part of Scope support
 	static BuildNodeMap(code)
 	{
-		this.Reset()							; each build requires a fresh MapList
+		this.mapList := Map()					; each build requires a fresh MapList (2025-11-01 UPDATED)
 		Mask_T(&code, 'C&S',1)					; mask comments/strings - might be redundant
 		Mask_T(&code, 'V1MLS')					; mask v1 ML strings
 		uid := clsMask.GenUniqueID()
@@ -1420,12 +1434,6 @@ class clsNodeMap	; 'block map' might be better term
 		pList .= ';r'				; add root
 		this.mapList[pos].parentList := pList
 		return parentList[cp]		; pos is used as mapList [key]
-	}
-	;############################################################################
-	; PUBLIC - clears maplist
-	static Reset()
-	{
-		this.mapList := Map()
 	}
 }
 ;################################################################################

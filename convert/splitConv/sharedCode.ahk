@@ -439,6 +439,7 @@ Class ScriptCode
  * before it is assigned a callback (by eg using functions)
  * 2025-10-05 AMB, MOVED/UPDATED - gCBPH - see MaskCode.ahk
  * 2025-10-10 AMB, UPDATED handling of trailing CRLFs
+ * 2025-11-01 AMB, UPDATED to fix bug (after change made to gmOnMessageMap)
  */
 FixOnMessage(ScriptString) {
 
@@ -449,8 +450,9 @@ FixOnMessage(ScriptString) {
 	loop parse ScriptString, "`n", "`r" {
 		Line := A_LoopField
 		for i, v in gmOnMessageMap {
+			cbFunc := v.cbFunc			; 2025-11-01 - gmOnMessageMap now holds object
 			if (RegExMatch(Line, 'OnMessage\(\s*((?:0x)?\d+)\s*,\s*' gCBPH '\s*(?:,\s*\d+\s*)?\)', &match)) {
-				Line := StrReplace(Line, gCBPH, v,, &OutputVarCount)
+				Line := StrReplace(Line, gCBPH, cbFunc,, &OutputVarCount)
 			}
 		}
 		retScript .= Line "`r`n"

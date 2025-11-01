@@ -17,6 +17,7 @@ _Gui(p) {
 ; 2025-06-12 AMB, UPDATED - changed some var and func names, gOScriptStr is now an object
 ; 2025-10-05 AMB, UPDATED - moved to GuiAndMenu.ahk, changed gaList_LblsToFuncO to gmList_LblsToFunc
 ; 2025-10-13 AMB, UPDATED - to fix #202, also changed some var names and functionality
+; 2025-11-01 AMB, UPDATED - as part of Scope support, and gmList_LblsToFunc key case-sensitivity
 
 	global gEarlyLine
 	global gGuiNameDefault
@@ -27,19 +28,17 @@ _Gui(p) {
 	global gGuiList
 	global gOrig_ScriptStr		; array of all the lines
 	global gOScriptStr			; array of all the lines
-	global gAllV1LabelNames		; all label names (comma delim str)
-	global gAllFuncNames		; all func names (comma delim str)
-	global gmGuiFuncCBChecks
 	global gO_Index				; current index of the lines
-	global gmGuiVList
 	global gGuiActiveFont
+	global gmList_LblsToFunc
 	global gmGuiCtrlObj
-
+	global gmGuiVList
+	global gmGuiFuncCBChecks
 	static smGuiList := Map()	; 2025-10-13 AMB - changed var name and now holds gui object
 	;preliminary version
 
 	SubCommand	:= RegExMatch(p[1], "i)^\s*[^:]*?\s*:\s*(.*)$", &newGuiName) = 0 ? Trim(p[1]) : newGuiName[1]
-	GuiName		:= RegExMatch(p[1], "i)^\s*([^:]*?)\s*:\s*.*$", &newGuiName) = 0 ? "" : newGuiName[1]
+	GuiName		:= RegExMatch(p[1], "i)^\s*([^:]*?)\s*:\s*.*$", &newGuiName) = 0 ? ""		  : newGuiName[1]
 
 	GuiLine		:= gEarlyLine
 	LineResult	:= ""
@@ -62,26 +61,29 @@ _Gui(p) {
 					}
 				}
 			}
-			smGuiList[curGuiName] := clsGui(curGuiName, "New")													; 2025-10-13 create a gui object
+			smGuiList[StrLower(curGuiName)] := clsGui(curGuiName, "New")										; 2025-10-13 create a gui object
 		} else if (RegExMatch(GuiLine, "i)^\s*Gui\s*[\s,]\s*[^,\s]*:.*$")) {									; Gui established (NEW), HAS CUSTOM NAME !!
 			curGuiName	:= RegExReplace(GuiLine, "i)^\s*Gui\s*[\s,]\s*([^,\s]*):.*$", "$1", &RegExCount1)
 			GuiLine		:= RegExReplace(GuiLine, "i)^(\s*Gui\s*[\s,]\s*)([^,\s]*):(.*)$", "$1$3", &RegExCount1)
 			if (curGuiName = "1") {																				; if custom name is 1...
 				curGuiName := "myGui"																			; ... rename it to DEFAULT myGui
 			}
+			; 2025-11-01 AMB, UPDATED to fix Process_ex3 unit test
+			origName		:= ((curGuiName ~= '^\d+$') ? '_'	 : '') . curGuiName								; add leading underscore to gui that starts with number
+			curGuiName		:= ((curGuiName ~= '^\d+$') ? 'oGui' : '') . curGuiName
 			gGuiNameDefault := curGuiName
-			smGuiList[curGuiName] := clsGui(curGuiName, "Set")													; 2025-10-13, create a gui object
-			smGuiList[curGuiName].orgName := curGuiName															; 2025-10-13, track orig Gui name, this fixes #202
+			smGuiList[StrLower(curGuiName)] := clsGui(curGuiName, "Set")										; 2025-10-13, create a gui object
+			smGuiList[StrLower(curGuiName)].orgName := origName													; 2025-10-13, track orig Gui name, this fixes #202
 		} else {																								; triggered for anything other than NEW cmds
 			curGuiName := gGuiNameDefault
-			if (!smGuiList.has(curGuiName)) {
-				smGuiList[curGuiName] := clsGui(curGuiName, "Default")											; no GUI() was established, do it now
+			if (!smGuiList.has(StrLower(curGuiName))) {
+				smGuiList[StrLower(curGuiName)] := clsGui(curGuiName, "Default")								; no GUI() was established, do it now
 			}
 		}
 		if (RegExMatch(curGuiName, "^\d+$")) {
 			curGuiName := "oGui" curGuiName
-			if (!smGuiList.has(curGuiName)) {
-				smGuiList[curGuiName] := clsGui(curGuiName, "Default") ; created prop not really needed here	; no GUI() was established, do it now
+			if (!smGuiList.has(StrLower(curGuiName))) {
+				smGuiList[StrLower(curGuiName)] := clsGui(curGuiName, "Default") ; created prop not really needed here	; no GUI() was established, do it now
 			}
 		}
 		prevGuiName := (curGuiName = "myGui") ? "" : curGuiName													; prevGuiName and curGuiName will match most of the time
@@ -89,7 +91,8 @@ _Gui(p) {
 			prevGuiName := StrReplace(prevGuiName, "oGui")
 		}
 		if (prevGuiName != ""
-		&& smGuiList[prevGuiName].created ~= "New|Default") {													; checking for 'Default' is unnecessary
+		&& smGuiList.Has(StrLower(prevGuiName))
+		&& smGuiList[StrLower(prevGuiName)].created ~= "New|Default") {											; checking for 'Default' is unnecessary
 			prevGuiName := ""
 		}
 		guiCmd	:= RegExReplace(p[1], "i)^([^:]*):\s*(.*)$", "$2")
@@ -104,30 +107,27 @@ _Gui(p) {
 			OptList			:= RegExReplace(OptList, "i)^(.*?)(?<=^|\h)g([^,\h``]+)(.*)$", "$1$3")				; remove glabel
 
 		} else if (OptCtrl = "Button") {
-			ControlLabel := smGuiList[curGuiName].orgName OptCtrl RegExReplace(TxtList, "[\s&]", "")	; 2025-10-13 - this fixes #202 (tracking of orig gui name)
-			; 2025-10-13 AMB, corrected this to prevent false positives
-			if (!(gAllV1LabelNames	~= '(?i)\b' ControlLabel ',')
-			&&	!(gAllFuncNames		~= '(?i)\b' ControlLabel ',')) {
+			ControlLabel := smGuiList[StrLower(curGuiName)].orgName OptCtrl RegExReplace(TxtList, "[\s&]", "")	; 2025-10-13 - this fixes #202 (tracking of orig gui name)
+			; 2025-11-01 AMB, UPDATED as part of Scope support
+			if (!scriptHasLabel(ControlLabel) && !scriptHasFunc(ControlLabel)) {
 				ControlLabel := ""
 			}
 		}
-		if (ControlLabel != ""
-			; 2025-10-13 AMB, corrected this to prevent false positives
-			&& !(gAllV1LabelNames	~= '(?i)\b' ControlLabel ',')
-			&&	(gAllFuncNames		~= '(?i)\b' ControlLabel ',')) {
-			gmGuiFuncCBChecks[ControlLabel] := true
+		; 2025-11-01 AMB, UPDATED as part of Scope support
+		if (ControlLabel && !scriptHasLabel(ControlLabel) && scriptHasFunc(ControlLabel)) {
+			gmGuiFuncCBChecks[StrLower(ControlLabel)] := true
 		}
 		if (RegExMatch(OptList, "i)\bv[\w]+\b") && !(guiCmd ~= "i)show|margin|font|new")) {
 			ControlName := RegExReplace(OptList, "i)^.*\bv([\w]+)\b.*$", "$1")
 
 			ControlObject := InStr(ControlName, SubStr(OptCtrl, 1, 4)) ? "ogc" ControlName : "ogc" OptCtrl ControlName
-			gmGuiCtrlObj[ControlName] := ControlObject
+			gmGuiCtrlObj[StrLower(ControlName)] := ControlObject
 			if (OptCtrl != "Pic" && OptCtrl != "Picture" && OptCtrl != "Text" && OptCtrl != "Button" && OptCtrl != "Link" && OptCtrl != "Progress"
 				&& OptCtrl != "GroupBox" && OptCtrl != "Statusbar" && OptCtrl != "ActiveX") {		; Exclude Controls from the submit (this generates an error)
-				if (gmGuiVList.Has(curGuiName)) {
-					gmGuiVList[curGuiName] .= "`r`n" ControlName
+				if (gmGuiVList.Has(StrLower(curGuiName))) {
+					gmGuiVList[StrLower(curGuiName)] .= "`r`n" ControlName
 				} else {
-					gmGuiVList[curGuiName] := ControlName
+					gmGuiVList[StrLower(curGuiName)] := ControlName
 				}
 			}
 		}
@@ -141,8 +141,8 @@ _Gui(p) {
 				gGuiControlCount++
 				ControlObject := OptCtrl gGuiControlCount
 			}
-			gmGuiCtrlObj["%" ControlHwnd "%"] := ControlObject
-			gmGuiCtrlObj["% " ControlHwnd] := ControlObject
+			gmGuiCtrlObj[StrLower("%" ControlHwnd "%")] := ControlObject
+			gmGuiCtrlObj[StrLower("% " ControlHwnd)] := ControlObject
 		} else if (RegExMatch(OptCtrl, "i)(?<=[^\w\n]|^)\+?HWND(.*?)(?:\h|$)", &match))
 				&& (RegExMatch(guiCmd, "i)(?<!\w)New")) {
 			GuiOpt := OptCtrl
@@ -162,11 +162,11 @@ _Gui(p) {
 			aEventRename.Push({oldlabel: prevGuiName "GuiEscape", event: "Escape", parameters: "*", NewFunctionName: prevGuiName "GuiEscape"})
 			aEventRename.Push({oldlabel: prevGuiName "GuiSize"
 							, event: "Size", parameters: "thisGui, MinMax, A_GuiWidth, A_GuiHeight", NewFunctionName: prevGuiName "GuiSize"})
-			aEventRename.Push({oldlabel: prevGuiName "GuiConTextMenu", event: "ConTextMenu", parameters: "*", NewFunctionName: prevGuiName "GuiConTextMenu"})
+			aEventRename.Push({oldlabel: prevGuiName "GuiContextMenu", event: "ContextMenu", parameters: "*", NewFunctionName: prevGuiName "GuiContextMenu"})
 			aEventRename.Push({oldlabel: prevGuiName "GuiDropFiles"
 							, event: "DropFiles", parameters: "thisGui, Ctrl, FileArray, *", NewFunctionName: prevGuiName "GuiDropFiles"})
 			Loop aEventRename.Length {
-				if (RegexMatch(gOrig_ScriptStr, "\r\n(\s*)" aEventRename[A_Index].oldlabel ":\s")) {
+				if (scriptHasLabel(aEventRename[A_Index].oldlabel)) {
 					if (gmAltLabel.Has(aEventRename[A_Index].oldlabel)) {
 						aEventRename[A_Index].NewFunctionName := gmAltLabel[aEventRename[A_Index].oldlabel]
 						; Alternative label is available
@@ -174,7 +174,7 @@ _Gui(p) {
 						lbl		:= aEventRename[A_Index].oldlabel
 						params	:= aEventRename[A_Index].parameters
 						funName	:= getV2Name(aEventRename[A_Index].NewFunctionName)
-						gmList_LblsToFunc[getV2Name(lbl)] := ConvLabel('GUI', lbl, params, funName)
+						gmList_LblsToFunc[StrLower(getV2Name(lbl))] := ConvLabel('GUI', lbl, params, funName)
 					}
 					LineResult .= curGuiName ".OnEvent(`"" aEventRename[A_Index].event "`", " getV2Name(aEventRename[A_Index].NewFunctionName) ")`r`n"
 				}
@@ -328,10 +328,10 @@ _Gui(p) {
 
 			if (guiCmd = "Submit") {
 				; This should be replaced by keeping a list of the v variables of a Gui and declare for each "vName := oSaved.vName"
-				if (gmGuiVList.Has(curGuiName)) {
-					Loop Parse, gmGuiVList[curGuiName], "`n", "`r"
+				if (gmGuiVList.Has(StrLower(curGuiName))) {
+					Loop Parse, gmGuiVList[StrLower(curGuiName)], "`n", "`r"
 					{
-						if (gmGuiVList[curGuiName])
+						if (gmGuiVList[StrLower(curGuiName)])
 							LineResult .= "`r`n" gIndent A_LoopField " := oSaved." A_LoopField
 					}
 				}
@@ -361,7 +361,7 @@ _Gui(p) {
 			params		:= 'A_GuiEvent:="", A_GuiControl:="", Info:="", *'
 			funcName	:= getV2Name(ControlLabel)
 			; 2025-10-07 AMB - Added regex for A_EventInfo -> Info conversion for new Gui funcs
-			gmList_LblsToFunc[funcName] := ConvLabel('AG', lbl, params, funcName, {NeedleRegEx: "im)^(.*?)\b\QA_EventInfo\E\b(.*+)$", Replacement: "$1Info$2"})
+			gmList_LblsToFunc[StrLower(funcName)] := ConvLabel('AG', lbl, params, funcName, {NeedleRegEx: "im)^(.*?)\b\QA_EventInfo\E\b(.*+)$", Replacement: "$1Info$2"})
 		}
 		if (ControlHwnd != "") {
 			LineResult .= ", " ControlHwnd " := " ControlObject ".hwnd"
@@ -382,7 +382,7 @@ _GuiControl(p) {
 	ControlID		:= Trim(p[2])
 	Value			:= Trim(p[3])
 	Out				:= ""
-	ControlObject	:= gmGuiCtrlObj.Has(ControlID) ? gmGuiCtrlObj[ControlID] : "ogc" ControlID
+	ControlObject	:= gmGuiCtrlObj.Has(StrLower(ControlID)) ? gmGuiCtrlObj[StrLower(ControlID)] : "ogc" ControlID
 
 	Type := gmGuiCtrlType.Has(ControlObject) ? gmGuiCtrlType[ControlObject] : ""
 
@@ -558,7 +558,7 @@ _GuiControlGet(p) {
 	}
 
 	Out := ""
-	ControlObject := gmGuiCtrlObj.Has(ControlID) ? gmGuiCtrlObj[ControlID] : "ogc" ControlID
+	ControlObject := gmGuiCtrlObj.Has(StrLower(ControlID)) ? gmGuiCtrlObj[StrLower(ControlID)] : "ogc" ControlID
 	Type := gmGuiCtrlType.Has(ControlObject) ? gmGuiCtrlType[ControlObject] : ""
 
 	if (SubCommand = "") {
@@ -692,10 +692,12 @@ getMenuBarName(srcStr) {
 ;################################################################################
 _Menu(p) {
 ; 2025-10-05 AMB, UPDATED - moved to GuiAndMenu.ahk, changed gaList_LblsToFuncO to gmList_LblsToFunc
+; 2025-11-01 AMB. UPDATED as part of Scope support, and gmList_LblsToFunc key case-sensitivity
 
 	global gEarlyLine
 	global gMenuList
 	global gIndent
+	global gmList_LblsToFunc
 	MenuLine := gEarlyLine
 	LineResult := ""
 	menuNameLine := RegExReplace(MenuLine, "i)^\s*Menu\s*[,\s]\s*([^,]*).*$", "$1", &RegExCount1)
@@ -845,8 +847,8 @@ _Menu(p) {
 			FunctionName := RegExReplace(Var4, "&", "")				; Removes & from labels
 			if (gmAltLabel.Has(FunctionName)) {
 				FunctionName := gmAltLabel[FunctionName]
-			} else if (RegexMatch(gOrig_ScriptStr, "\r\n(\s*)" Var4 ":\s")) {
-				gmList_LblsToFunc[Var4] := ConvLabel('MN', Var4, 'A_ThisMenuItem:="", A_ThisMenuItemPos:="", MyMenu:="", *', FunctionName)
+			} else if (scriptHasLabel(Var4)) {						; 2025-11-01 AMB, UPDATED
+				gmList_LblsToFunc[StrLower(Var4)] := ConvLabel('MN', Var4, 'A_ThisMenuItem:="", A_ThisMenuItemPos:="", MyMenu:="", *', FunctionName)
 			}
 			if (Var4 != "") {
 				; 2024-06-26 ADDED by AMB for fix #131

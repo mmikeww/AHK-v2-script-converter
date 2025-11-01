@@ -304,9 +304,10 @@ _OnExit(p) {
 ; 2025-10-05 AMB, UPDATED - changed gaList_LblsToFuncO to gmList_LblsToFunc
 ; TODO - FIX MISSING 2ND PARAM AND "RETURN 1" BEING PLACE AFTER EXITAPP
 ;	SEE DRAWLINE 123548C5 FOR EXAMPLE
+; 2025-11-01 AMB, UPDATED as part of Scope support, and gmList_LblsToFunc key case-sensitivity
 
-	if (RegexMatch(gOrig_ScriptStr, "\n(\s*)" p[1] ":\s")) {
-		gmList_LblsToFunc[p[1]] := ConvLabel('OX', p[1], 'A_ExitReason, ExitCode', ''
+	if (scriptHasLabel(p[1])) {
+		gmList_LblsToFunc[StrLower(p[1])] := ConvLabel('OX', p[1], 'A_ExitReason, ExitCode', ''
 				, regex := {NeedleRegEx: "(?i)^(.*)(\bRETURN\b)([\s\t]*;.*|)$", Replacement: "$1$2 1$3"})
 	}
 	; return needs to be replaced by return 1 inside the exitcode

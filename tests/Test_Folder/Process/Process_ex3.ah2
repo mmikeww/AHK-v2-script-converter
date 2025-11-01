@@ -1,5 +1,6 @@
 #z::HK1_z() ; Win+Z hotkey
-oGui5 := Gui()
+return
+
 _5GuiEscape:
 _5GuiEscape()
 return

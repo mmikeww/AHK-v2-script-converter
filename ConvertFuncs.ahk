@@ -169,6 +169,8 @@ setGlobals()
    gmList_HKCmdToFunc.CaseSense  := 0           ; 2025-11-02 - disable case-sensitivity for map key
    global gmByRefParamMap        := map()       ; Map of FuncNames and ByRef params
    gmByRefParamMap.CaseSense     := 0           ; 2025-11-02 - disable case-sensitivity for map key
+   global gmAltLabel             := map()       ; map of labels that point to same reference
+   gmAltLabel.CaseSense          := 0           ; 2025-11-02 - disable case-sensitivity for map key
    global gFuncParams            := ""
    ; gui and menu
    global gMenuBarName           := ""          ; 2024-07-02 - holds the name of the main gui menubar

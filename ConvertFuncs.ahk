@@ -160,23 +160,33 @@ setGlobals()
    global gAllClassNames         := ""          ; 2024-10-08 - comma-deliminated string holding the names of all classes
    global gAllV1LabelNames       := ""          ; 2024-07-09 - comma-deliminated string holding the names of all v1 labels
    global gmAllV2LablNames       := map()       ; 2024-07-07 - map holding v1 labelNames (key) and their new v2 label/FuncName (value)
+   gmAllV2LablNames.CaseSense    := 0           ; 2025-11-02 - disable case-sensitivity for map key
    global gmList_LblsToFunc      := map()       ; 2025-10-05 - replaces gaList_LblsToFuncO and gaList_LblsToFuncC
+   gmList_LblsToFunc.CaseSense   := 0           ; 2025-11-02 - disable case-sensitivity for map key
    global gmList_GosubToFunc     := map()       ; 2025-10-05 - AMB, ADDED - tracks gosubs that need to be converted to func calls
+   gmList_GosubToFunc.CaseSense  := 0           ; 2025-11-02 - disable case-sensitivity for map key
    global gmList_HKCmdToFunc     := map()       ; 2025-10-12 - AMB, ADDED - tracks funcs that should be called using 'hotkey' cmd
-   global gFuncParams            := ""
+   gmList_HKCmdToFunc.CaseSense  := 0           ; 2025-11-02 - disable case-sensitivity for map key
    global gmByRefParamMap        := map()       ; Map of FuncNames and ByRef params
+   gmByRefParamMap.CaseSense     := 0           ; 2025-11-02 - disable case-sensitivity for map key
+   global gFuncParams            := ""
    ; gui and menu
    global gMenuBarName           := ""          ; 2024-07-02 - holds the name of the main gui menubar
    global gMenuList              := "|"
    global gmMenuCBChecks         := map()       ; 2024-06-26 AMB, for fix #131
+   gmMenuCBChecks.CaseSense      := 0           ; 2025-11-02 - disable case-sensitivity for map key
    global gGuiActiveFont         := ""
    global gGuiControlCount       := 0
    global gmGuiCtrlObj           := map()       ; Create a map to return the object of a control
+   gmGuiCtrlObj.CaseSense        := 0           ; 2025-11-02 - disable case-sensitivity for map key
    global gmGuiCtrlType          := map()       ; Create a map to return the type of control
+   gmGuiCtrlType.CaseSense       := 0           ; 2025-11-02 - disable case-sensitivity for map key
    global gmGuiFuncCBChecks      := map()       ; for gui funcs
+   gmGuiFuncCBChecks.CaseSense   := 0           ; 2025-11-02 - disable case-sensitivity for map key
    global gGuiList               := "|"
    global gGuiNameDefault        := "myGui"
    global gmGuiVList             := Map()       ; Used to list all variable names defined in a Gui
+   gmGuiVList.CaseSense          := 0           ; 2025-11-02 - disable case-sensitivity for map key
    global gUseLastName           := False       ; Keep track of if we use the last set name in gGuiList
 
    global gaScriptStrsUsed       := Array()     ; Keeps an array of interesting strings used in the script
@@ -197,7 +207,9 @@ setGlobals()
    global gaList_MatchObj        := Array()     ; list of strings that should be converted from v1 Match Object to v2 Match Object
 
    global gmOnMessageMap         := map()       ; list of OnMessage listeners
+   gmOnMessageMap.CaseSense      := 0           ; 2025-11-02 - disable case-sensitivity for map key
    global gmVarSetCapacityMap    := map()       ; list of VarSetCapacity variables, with definition type
+   gmVarSetCapacityMap.CaseSense := 0           ; 2025-11-02 - disable case-sensitivity for map key
    global gfLockGlbVars          := False       ; flag used to prevent global vars from being changed
 
    global gLVNameDefault         := "LV"
@@ -487,7 +499,7 @@ _FileCopy(p) {
    global gaScriptStrsUsed
    ; We could check if Errorlevel is used in the next 20 lines
    if (gaScriptStrsUsed.ErrorLevel) {
-      Out := format("Try{`r`n"
+      Out := format("Try {`r`n"
       . gIndent "   FileCopy({1}, {2}, {3})`r`n"
       . gIndent "   ErrorLevel := 0`r`n"
       . gIndent "} Catch as Err {`r`n"
@@ -502,7 +514,7 @@ _FileCopy(p) {
 _FileCopyDir(p) {
    global gaScriptStrsUsed
    if (gaScriptStrsUsed.ErrorLevel) {
-      Out := format("Try{`r`n"
+      Out := format("Try {`r`n"
       . gIndent "   DirCopy({1}, {2}, {3})`r`n"
       . gIndent "   ErrorLevel := 0`r`n"
       . gIndent "} Catch {`r`n"
@@ -517,7 +529,7 @@ _FileCopyDir(p) {
 _FileMove(p) {
    global gaScriptStrsUsed
    if (gaScriptStrsUsed.ErrorLevel) {
-      Out := format("Try{`r`n"
+      Out := format("Try {`r`n"
       . gIndent "   FileMove({1}, {2}, {3})`r`n"
       . gIndent "   ErrorLevel := 0`r`n"
       . gIndent "} Catch as Err {`r`n"
@@ -556,7 +568,7 @@ _FileReadLine(p) {
 
    cmd := ; Very bulky solution, only way for errorlevel
    (
-   gIndent 'try {`r`n'
+   gIndent 'Try {`r`n'
    gIndent indent 'Global ErrorLevel := 0, ' p[1] ' := StrSplit(FileRead(' p[2] '),`"``n`",`"``r`")[' p[3] ']`r`n'
    gIndent '} Catch {`r`n'
    gIndent indent p[1] ' := "", ErrorLevel := 1`r`n'

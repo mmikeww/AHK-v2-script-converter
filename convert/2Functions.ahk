@@ -9,7 +9,10 @@
 */
 
 ;################################################################################
-global gmAhkFuncsToConvert := OrderedMap(
+; 2025-11-02 AMB, UPDATED - disabled case-sensitivity for map key
+global gmAhkFuncsToConvert := map()
+gmAhkFuncsToConvert.CaseSense := 0
+gmAhkFuncsToConvert := OrderedMap(
     "Catch(OutputVar)" ,
     "*_Catch"
   , "ComObject(vt, value, Flags)" ,

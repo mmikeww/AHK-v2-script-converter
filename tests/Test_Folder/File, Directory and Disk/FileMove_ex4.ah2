@@ -10,7 +10,7 @@ MoveFilesAndFolders(SourcePattern, DestinationFolder, DoOverwrite := false)
     if (DoOverwrite = 1)
         DoOverwrite := 2  ; See FileMoveDir for description of mode 2 vs. 1.
     ; First move all the files (but not the folders):
-    Try{
+    Try {
        FileMove(SourcePattern, DestinationFolder, DoOverwrite)
        ErrorLevel := 0
     } Catch as Err {

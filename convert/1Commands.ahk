@@ -71,7 +71,10 @@ global gAhkCmdsToRemoveV2 := "
    )"
 
 ; 2025-06-12 AMB, ADDED - for separation of v1.1 and v2 conversions
-global gmAhkCmdsToConvertV1 := OrderedMap(
+; 2025-11-02 AMB, UPDATED - disabled case-sensitivity for map key
+global gmAhkCmdsToConvertV1 := Map()
+gmAhkCmdsToConvertV1.CaseSense := 0
+gmAhkCmdsToConvertV1 := OrderedMap(
    "EnvDiv,var,valueCBE2E" ,
     "{1} /= {2}"
   , "EnvMult,var,valueCBE2E" ,
@@ -142,8 +145,11 @@ global gmAhkCmdsToConvertV1 := OrderedMap(
 
 ; 2025-06-12 AMB, UPDATED - altered for separation of v1.1 and v2 conversions
 ; 2025-10-05 AMB, UPDATED - changed Goto to custom handling
+; 2025-11-02 AMB, UPDATED - disabled case-sensitivity for map key
 ;global gmAhkCmdsToConvert := OrderedMap(
-global gmAhkCmdsToConvertV2 := OrderedMap(
+global gmAhkCmdsToConvertV2 := Map()
+gmAhkCmdsToConvertV2.CaseSense := 0
+gmAhkCmdsToConvertV2 := OrderedMap(
     "BlockInput,OptionT2E" ,
     "BlockInput({1})"
   , "DriveSpaceFree,OutputVar,PathT2E" ,

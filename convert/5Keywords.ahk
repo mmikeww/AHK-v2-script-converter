@@ -7,10 +7,13 @@
   important: the order matters. the first 2 in the list could cause a mistake if not ordered properly
 */
 
-; 2024-04-08, andymbody
+; 2024-04-08 AMB
 ;   Moved LoopReg keywords to a dedicated map
 ;   ... so they can be treated differently
-global gmAhkKeywdsToRename := OrderedMap(
+; 2025-11-02 AMB, UPDATED - disabled case-sensitivity for map key
+global gmAhkKeywdsToRename := Map()
+gmAhkKeywdsToRename.CaseSense := 0
+gmAhkKeywdsToRename := OrderedMap(
     "A_LoopFileFullPath" ,
     "A_LoopFilePath"
   , "A_LoopFileLongPath" ,
@@ -39,10 +42,13 @@ global gmAhkKeywdsToRename := OrderedMap(
     "SysGetIPAddresses()[4]"
   )
 
-; 2024-04-08, andymbody
+; 2024-04-08 AMB
 ;   Separated these from gmAhkKeywdsToRename
 ;   ... so they can be treated differently
-global gmAhkLoopRegKeywds := OrderedMap(
+; 2025-11-02 AMB, UPDATED - disabled case-sensitivity for map key
+global gmAhkLoopRegKeywds := Map()
+gmAhkLoopRegKeywds.CaseSense := 0
+gmAhkLoopRegKeywds := OrderedMap(
     "A_LoopRegKey `"\`" A_LoopRegSubKey" ,
     "A_LoopRegKey"
   , "A_LoopRegKey . `"\`" . A_LoopRegSubKey" ,

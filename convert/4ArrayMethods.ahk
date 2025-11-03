@@ -9,7 +9,10 @@
 */
 
 ; 2025-10-05 AMB, UPDATED - changed source of mask chars
-global gmAhkArrMethsToConvert := OrderedMap(
+; 2025-11-02 AMB, UPDATED - disabled case-sensitivity for map key
+global gmAhkArrMethsToConvert := Map()
+gmAhkArrMethsToConvert.CaseSense := 0
+gmAhkArrMethsToConvert := OrderedMap(
     "length()" ,
     "Length"
   , "HasKey(Key)" ,

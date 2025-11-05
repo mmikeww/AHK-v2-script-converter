@@ -86,7 +86,11 @@
     TreeViewWidth       := IniRead(IniFile, Section, "TreeViewWidth", 280)
     ViewExpectedCode    := IniRead(IniFile, Section, "ViewExpectedCode", 0)
     UIDarkMode          := IniRead(IniFile, Section, "UIDarkMode", 0)
- ;   OnExit(ExitFunc)
+    ConvHotkey          := IniRead(IniFile, Section, "ConvHotkey", "F5")
+    ConvHotkeyEnabled   := IniRead(IniFile, Section, "ConvHotkeyEnabled", 0)
+
+    Hotkey(ConvHotkey, CopyAndConvert, (ConvHotkeyEnabled ? "On" : "Off"))
+    OnExit(ExitFunc)
     ;WRITE BACK VARIABLES SO THAT DEFAULTS ARE SAVED TO INI (Seems like this should be moved to exit routine SEE Esc::)
 
 }
@@ -801,6 +805,9 @@ GuiTest(strV1Script:="")
     SettingsMenu := Menu()
     SettingsMenu.Add("Testmode", MenuTestMode)
     SettingsMenu.Add("Include Failing", MenuTestFailing)
+    SettingsMenu.Add()
+    SettingsMenu.Add("Enable Convert Hotkey", MenuEnableConvKey)
+    SettingsMenu.Add("Set Convert Hotkey" MenuSetConvKey)
     OutputMenu := Menu()
     OutputMenu.Add("Remove converter comments", MenuRemoveComments)
     OutputMenu.Add("Replace \n with \r\n", MenuFixLineEndings)
@@ -952,6 +959,26 @@ MenuTestFailing(*)
     SettingsMenu.ToggleCheck("Include Failing")
     TestFailing := !TestFailing
     IniWrite(TestFailing, IniFile, Section, "TestFailing")
+}
+MenuEnableConvKey(*) {
+    global
+    ConvHotkeyEnabled := !ConvHotkeyEnabled
+    Hotkey(ConvHotkey, (ConvHotkeyEnabled ? "On" : "Off"))
+    IniWrite(ConvHotkeyEnabled, IniFile, Section, "ConvHotkeyEnabled")
+}
+MenuSetConvKey(*) {
+    global
+    NewConvHotkey := InputBox("Enter new key (ahk format)", "Set conversion hotkey")
+    if (NewConvHotkey.Result != "OK")
+        return
+    Hotkey(ConvHotkey, "Off")
+    try {
+        Hotkey(NewConvHotkey.Value, CopyAndConvert, (ConvHotkeyEnabled ? "On" : "Off"))
+        IniWrite(NewConvHotkey.Value, IniFile, Section, "ConvHotkey")
+    } catch {
+        MsgBox("Invalid hotkey", "Set conversion hotkey", "Icon!")
+        Hotkey(ConvHotkey, (ConvHotkeyEnabled ? "On" : "Off"))
+    }
 }
 MenuRemoveComments(*)
 {
@@ -1199,23 +1226,9 @@ ViewDrk(*)
 ;*** HOTKEYS ***
 ;***************
 #HotIf ((IsSet(MyGui)) && WinActive(MyGui.title))
-$Esc::     ;Exit application - Using either <Esc> Hotkey or Goto("MyExit")
-{
-MyExit:
-    CloseSrc(myGui) ; Close active scripts
-    CloseCnv(myGui)
-    CloseExp(myGui)
-    ;WRITE BACK VARIABLES SO THAT DEFAULTS ARE SAVED TO INI
-    IniWrite(FontSize,           IniFile, Section, "FontSize")
-    IniWrite(TestMode,           IniFile, Section, "TestMode")
-    IniWrite(TestFailing,        IniFile, Section, "TestFailing")
-    IniWrite(TreeViewWidth,      IniFile, Section, "TreeViewWidth")
-    IniWrite(ViewExpectedCode,   IniFile, Section, "ViewExpectedCode")
-    IniWrite(UIDarkMode,         IniFile, Section, "UIDarkMode")
-;    ExitApp
-    Return
-}
-XButton1::
+$Esc:: OnExit(0, 0)     ;Exit application - Using either <Esc> Hotkey
+
+CopyAndConvert(*)
 {
     ClipSaved := ClipboardAll()   ; Save the entire clipboard to a variable of your choice.
     A_Clipboard := ""
@@ -1293,7 +1306,10 @@ ExitFunc(ExitReason, ExitCode){
     IniWrite(TreeViewWidth,      IniFile, Section, "TreeViewWidth")
     IniWrite(ViewExpectedCode,   IniFile, Section, "ViewExpectedCode")
     IniWrite(UIDarkMode,         IniFile, Section, "UIDarkMode")
-;    ExitApp
+    if ConvHotkeyEnabled
+        ExitApp
+    else
+        return
 }
 
 On_WM_MOVE(wParam, lParam, msg, hwnd){

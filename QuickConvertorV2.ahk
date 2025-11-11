@@ -842,6 +842,9 @@ GuiTest(strV1Script:="")
     Menus.Add( "Help", HelpMenu)
     MyGui.MenuBar := Menus
 
+    if ConvHotkeyEnabled{
+        SettingsMenu.Check("Enable Convert Hotkey")
+    }
     if ViewExpectedCode{
         ViewMenu.Check("View Expected Code")
     }
@@ -963,6 +966,10 @@ MenuTestFailing(*)
 MenuEnableConvKey(*) {
     global
     ConvHotkeyEnabled := !ConvHotkeyEnabled
+    if ConvHotkeyEnabled
+        SettingsMenu.Check("Enable Convert Hotkey")
+    else
+        SettingsMenu.Uncheck("Enable Convert Hotkey")
     Hotkey(ConvHotkey, (ConvHotkeyEnabled ? "On" : "Off"))
     IniWrite(ConvHotkeyEnabled, IniFile, Section, "ConvHotkeyEnabled")
 }

@@ -854,6 +854,10 @@ GuiTest(strV1Script:="")
 
     MyGui.Opt("+MinSize450x200")
     MyGui.OnEvent("DropFiles",Gui_DropFiles)
+
+    A_TrayMenu.Add()
+    A_TrayMenu.Add("Open GUI", (*) => MyGui.Show("h" GuiHeight " w" GuiWidth GuiXOpt GuiYOpt GuiMaximise))
+
     setUIMode(MyGui, UIDarkMode)
 
     ; Correct coordinates to a visible position inside the screens

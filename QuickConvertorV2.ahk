@@ -815,6 +815,7 @@ GuiTest(strV1Script:="")
     ;TestMenu.Add("AddBracketToHotkeyTest", (*) => editCnv.Text := AddBracket(editSrc.Text))
     ;TestMenu.Add("GetAltLabelsMap", (*) => editCnv.Text := GetAltLabelsMap(editSrc.Text))
     TestMenu.Add("Performance Test", MenuPerformanceTest)
+    TestMenu.Add("Time Test Suite", MenuTestSuitePerformance)
     ViewMenu := Menu()
     ViewMenu.Add("Zoom In`tCtrl+NumpadAdd", MenuZoomIn)
     ViewMenu.Add("Zoom Out`tCtrl+NumpadSub", MenuZoomOut)
@@ -1048,6 +1049,19 @@ MenuPerformanceTest(*)
     }
     MsgBox("Test Complete!`nDid 250 conversions in " Round(timeMean, 3) "ms`nAverage conversion was "
     Round(timeMean /= 250, 3) "ms", "Test complete!")
+}
+MenuTestSuitePerformance(*) 
+{
+    global TestFailing
+    temp := TestFailing
+    TestFailing := false ; Don't include failing tests to avoid warnings
+    DllCall("QueryPerformanceFrequency", "Int64*", &freq := 0)
+    DllCall("QueryPerformanceCounter", "Int64*", &CounterBefore := 0)
+    AddSubFoldersToTree(gTreeRoot, Map())
+    DllCall("QueryPerformanceCounter", "Int64*", &CounterAfter := 0)
+    time := Float(Format("{:.4f}", (CounterAfter - CounterBefore) / freq))
+    MsgBox("Test Complete!`nConverted test suite in " Floor(time / 60) "m " Mod(time, 60) "s")
+    TestFailing := temp    
 }
 MenuZoomIn(*)
 {

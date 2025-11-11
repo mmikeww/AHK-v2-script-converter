@@ -807,7 +807,7 @@ GuiTest(strV1Script:="")
     SettingsMenu.Add("Include Failing", MenuTestFailing)
     SettingsMenu.Add()
     SettingsMenu.Add("Enable Convert Hotkey", MenuEnableConvKey)
-    SettingsMenu.Add("Set Convert Hotkey" MenuSetConvKey)
+    SettingsMenu.Add("Set Convert Hotkey", MenuSetConvKey)
     OutputMenu := Menu()
     OutputMenu.Add("Remove converter comments", MenuRemoveComments)
     OutputMenu.Add("Replace \n with \r\n", MenuFixLineEndings)
@@ -900,11 +900,11 @@ MenuCommandHelp(*)
         PostString := RegExReplace(SubStr(text,count), "(^[^,，\s,\.\t`"\(\)`']*).*", "$1")
         word := PreString PostString
 
-        if InStr(ogcFocused.Name,"V1"){
+        if InStr(ogcFocused.Name,"Src"){
             Version := "v1"
             URLSearch := "https://www.autohotkey.com/docs/v1/search.htm?q="
         }
-        else{
+        else{ ; Conv
             Version := "v2"
             URLSearch := "https://www.autohotkey.com/docs/v2/search.htm?q="
         }

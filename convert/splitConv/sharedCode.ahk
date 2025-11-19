@@ -396,6 +396,23 @@ Class ScriptCode
 	}
 	;############################################################################
 	; Public
+	GetLines(startIdx:=1, lineCount:='') {
+	; 2025-11-18 AMB, ADDED as part of fix for #409
+	; returns all lines from start index
+
+		lineCount	:= (lineCount = '')										; if lineCount not set...
+					? (this._lineArr.Length - startIdx) +1					; ... return all after/including start idx
+					: lineCount
+		curIdx := startIdx, offset := 0, outStr := ''						; ini
+		while (this._lineArr.Length >= curIdx && offset < lineCount) {		; while lines still available, and lineCount not satisfied yet...
+			curLine	:= this._lineArr[curIdx]								; ... get current/next line
+			outStr	.= curLine '`r`n'										; ... add line to output str
+			offset++, curIdx++
+		}
+		return RegExReplace(outStr, '\r\n$',,,1)							; remove last/extra CRLF
+	}
+	;############################################################################
+	; Public
 	GetNext {
 		get {
 			this._curIdx++

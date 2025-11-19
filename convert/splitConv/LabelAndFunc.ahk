@@ -56,9 +56,10 @@ class clsSection
 	HasExit		=> !!((this._xCmd && this._xPos) || this.L1.cmd)							; does section have an exit command?
 	LabelName	=> this._name																; name of LBL/FUNC/CLS, or HK/HS trigger (public shortcut)
 	L1			=> this._line1Details														; line 1 details and its parts (public shortcut)
-	HasCaller	=> (gmList_LblsToFunc.Has(StrLower(this.LabelName))							; to assist prevention of empty labelToFunc conversions
-				||  gmList_LblsToFunc.Has(StrLower(this.FuncName))
-				|| 	gmList_GosubToFunc.Has(StrLower(this.LabelName)))
+	HasCaller	=> (gmList_LblsToFunc.Has(this.LabelName)									; to assist prevention of empty labelToFunc conversions
+				||  gmList_LblsToFunc.Has(this.FuncName)
+				|| 	gmList_GosubToFunc.Has(this.LabelName)
+				|| 	gmList_GotoLabel.Has(this.LabelName))
 
 	;################################################################################
 	HKFunc {	; PUBLIC (mght add validations later)										; func (name) that is sometimes used as HK block code
@@ -104,6 +105,8 @@ class clsSection
 	;################################################################################
 	AddGotoReturn()																			; 2025-10-23 AMB, ADDED to fix #395
 	{
+	; 2025-11-18 AMB, UPDATED as part of fix for #409 - now applies to all sections
+
 		if (this._tType != 'HK') {															; only applies to HKs (for now)
 			return false
 		}
@@ -315,7 +318,7 @@ class clsSection
 		rawSects	:= this._shiftTCWS(rawSects)											; rearrage comments/CRLFs between sections
 		dummy		:= this._rawToFinal(rawSects)											; organize global code between sects, create final Sects array
 		if (this.HasSects) {																; if sections were established...
-			this._checkHKGotos()															; 2025-10-23 AMB, ADDED to fix issue 395
+			this._checkGotoCalls()															; 2025-11-18 AMB, UPDATED to fix issue #409
 			flowStr		:= this._logicFlow													; determine logic flow between sections
 			dummy		:= this._hkhsToFunc()												; convert HK/HS to funcs (will be added in next step)
 			newFuncList	:= this._buildFuncsList()											; string with all new funcs, to be added to lower portion of script
@@ -378,11 +381,14 @@ class clsSection
 		}
 	}
 	;################################################################################
-	Static _checkHKGotos()																	; 2025-10-23 AMB, ADDED to fix #395
+	Static _checkGotoCalls()																; 2025-10-23 AMB, ADDED to fix #395
 	{
+	; 2025-11-18 AMB, RENAMED and UPDATED as part of fix for #409
+
 		for idx, sect in this.Sects {														; for each section...
-			if (sect.AddGotoReturn()) {														; if Goto(label) was found in section block (for HK only)...
+			if (sect.AddGotoReturn()) {														; if Goto(label) was found in section block...
 				this.HasGotoCall := true													; set flag so labels can be converted to funcs
+				break																		; no need to continue
 			}
 		}
 	}
@@ -416,8 +422,10 @@ class clsSection
 	;################################################################################
 	Static _getRawSects(code)																; separates script code into raw sections (LBL,HK,HS,FUNC,CLS)
 	{
+	; 2025-11-18 AMB, UPDATED as part of fix for #409
+
 		this.codeOrig	:= code																; save original script code
-		incLBL			:= true ;this._hasL2F												; 2025-10-23 AMB, UPDATED as part of fix for #395
+		incLBL			:= this._hasL2F														; 2025-11-18 AMB, UPDATED as part of fix for #409
 		sectObj			:= codeChop.MarkSects(code, incLBL)									; add chop/section markers to code
 		rawSects		:= []																; output array
 		for idx, sect in sectObj.chops {													; for each script section...
@@ -498,7 +506,7 @@ class clsSection
 				leftStr := SubStr(line, 1, pos-1)											; capture characters before Gosub
 				if (RegExMatch(line, nGosub, &m, pos)) {									; capture	Gosub call details
 					GS := m[1], Lbl := m[2], trail := m[3]									; save		Gosub call details
-					if (gmList_GosubToFunc.Has(StrLower(Lbl))) {							; if label was recorded in _Gosub()...
+					if (gmList_GosubToFunc.Has(Lbl)) {										; if label was recorded in _Gosub()...
 						if (obj := clsSection.SectionObj[Lbl]) {							; ... if object is avail for label
 							funcName:= obj.sect.FuncName									; ...	get func name (may be different than labelname)
 							msg		:= ' `; V1toV2: Gosub'									; ...	[conv msg to user]
@@ -525,14 +533,17 @@ class clsSection
 	{
 	; 2025-11-01 AMB, UPDATED key case-sensitivity for...
 	;	... gmList_LblsToFunc, gmList_GosubToFunc
+	; 2025-11-18 AMB, UPDATED as part of fix for #409
 
 		get {
 			if (lblName) {
-				return (gmList_LblsToFunc.Has(StrLower(lblname))							; true if LBLName requires conversion
-						|| gmList_GosubToFunc.Has(StrLower(lblname)))
+				return (gmList_LblsToFunc.Has(lblname)										; true if LBLName requires conversion
+						|| gmList_GosubToFunc.Has(lblname)
+						|| gmList_GotoLabel.Has(lblname))									; 2025-11-18 ADDED as part of fix for #409
 			}
 			return	!!(gmList_LblsToFunc.Count												; true when ANY label requires conversion
 					|| gmList_GosubToFunc.Count
+					|| gmList_GotoLabel.Count												; 2025-11-18 ADDED as part of fix for #409
 					|| this.HasGotoCall	)													; 2025-10-23 AMB, ADDED as part of fix for #395
 		}
 	}
@@ -993,14 +1004,14 @@ class clsSection
 		{
 			origStr := mFunc[], funcName := mFunc.fName										; get details of func
 			; was current func the result of a LBL to FUNC conversion?
-			if (!gmList_LblsToFunc.Has(StrLower(funcName))) {								; if func was NOT converted from a label...
+			if (!gmList_LblsToFunc.Has(funcName)) {											; if func was NOT converted from a label...
 				pos += StrLen(origStr)														; ... prep for next func search
 				continue																	; ... skip current func (no update needed)
 			}
 			; func was converted from label - updated it as needed
 			brcBlk	:= mFunc.brcBlk															; get brace-block for function
 			TCT		:= mFunc.TCT															; get code found between func declaration and brace-blk
-			L2F_Obj	:= gmList_LblsToFunc[StrLower(funcName)]								; get L2F object
+			L2F_Obj	:= gmList_LblsToFunc[funcName]											; get L2F object
 			declare	:= L2F_Obj.funcName '(' L2F_Obj.params ')'								; add any associated params to func declaration
 			if (InStr(declare, 'A_GuiControl') && gaScriptStrsUsed.A_GuiControl) {			; add A_GuiControl vars to block (as needed)
 				guiContStr := 'A_GuiControl := HasProp(A_GuiControl, "Text") '
@@ -1486,14 +1497,33 @@ _Gosub(p) {
 	; ... clsSection._gosubUpdate() will make the final changes ass part of Update_LBL_HK_HS()
 	; ... this also provides support for isssue #322, and similar
 	v1LabelName := Trim(p[1])
-	gmList_GosubToFunc[StrLower(v1LabelName)] := true
+	gmList_GosubToFunc[v1LabelName] := true
 	return 'Gosub ' .  v1LabelName	; no changes here
 }
 ;################################################################################
 _Goto(p) {
 ; 2025-10-05 AMB, ADDED - to support (possible) upcoming changes for Goto
+; 2025-11-18 AMB, UPDATED as part of fix for #409
 
 	v1LabelName	:= Trim(p[1])
 	v2FuncName	:= Trim(getV2Name(v1LabelName))
-	return 'Goto("' v2FuncName '")'
+	gmList_GotoLabel[v1LabelName] := true													; 2025-11-18 ADDED as part of fix for #409
+	; if no exit cmd is found following goto, add return
+	returnStr := '`r`n' gIndent 'Return `; V1toV2: post-return for Goto'
+	returnStr := (nextIsExitCmd()) ? ''	: returnStr											; 2025-11-18 ADDED - add 'return' as needed
+	return 'Goto("' v2FuncName '")'		. returnStr
+}
+;################################################################################
+																  nextIsExitCmd()
+;################################################################################
+{
+; 2025-11-18 AMB, ADDED - determines whether next cmd-line has an exit cmd
+;	removes comments and empty lines to determine what the next legit command is
+
+	lines	:= gOScriptStr.GetLines(gO_Index + 1)											; get all lines including/after current
+	lines	:= RegExReplace(lines, gPtn_LC)													; remove any raw line comments
+	lines	:= RegExReplace(lines, '(?im)' UniqueTag('LC\w+'))								; remove line comment tags
+	lines	:= RegExReplace(lines, '(?im)' UniqueTag('BC\w+'))								; remove block-comment tags
+	lines	:= RegExReplace(lines, '(?m)^\R+')												; remove empty lines
+	return	!! (Trim(lines) ~= '(?i)^\b(RETURN|EXITAPP)\b')									; return true if next cmd is exit cmd, false otherwise
 }

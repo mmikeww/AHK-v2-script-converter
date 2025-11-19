@@ -1,5 +1,8 @@
 ^h::HK1_h()
-Return ; V1toV2: Add Return for Goto
+Return ; V1toV2: post-return for Goto
+V1toV2_GblCode_001:
+V1toV2_GblCode_001()
+return
 
 Start:
 Start()
@@ -9,8 +12,13 @@ Return
 HK1_h() { ; V1toV2: HK->Func
 global
 Start() ; V1toV2: Goto->FuncCall
-Return ; V1toV2: Add Return for Goto
+Return ; V1toV2: post-return for Goto
+}
+;##############################################
+V1toV2_GblCode_001() { ; V1toV2: Lbl->Func
+global
 MsgBox("Skipped")
+Start()
 }
 ;##############################################
 Start() { ; V1toV2: Lbl->Func

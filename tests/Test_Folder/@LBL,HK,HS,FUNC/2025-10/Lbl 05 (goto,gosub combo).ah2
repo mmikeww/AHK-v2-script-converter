@@ -1,10 +1,13 @@
 
 LBL3() ; V1toV2: Gosub
 Goto("LBL1")
+Return ; V1toV2: post-return for Goto
 LBL5() ; V1toV2: Gosub	; never gets here due to goto above
 
 ; comment before 1
 LBL1:
+LBL1()
+return
 ; comment after 1, before 2
 LBL2:
 LBL2()
@@ -32,6 +35,11 @@ LBL7()
 return
 
 ;###############  V1toV2 FUNCS  ###############
+LBL1() { ; V1toV2: Lbl->Func
+global
+LBL2()
+}
+;##############################################
 LBL2() { ; V1toV2: Lbl->Func
 global
 ; comment in 2

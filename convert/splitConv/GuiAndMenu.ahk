@@ -177,7 +177,7 @@ _Gui(p) {
 						lbl		:= aEventRename[A_Index].oldlabel
 						params	:= aEventRename[A_Index].parameters
 						funName	:= getV2Name(aEventRename[A_Index].NewFunctionName)
-						gmList_LblsToFunc[StrLower(getV2Name(lbl))] := ConvLabel('GUI', lbl, params, funName)
+						gmList_LblsToFunc[getV2Name(lbl)] := ConvLabel('GUI', lbl, params, funName)
 					}
 					LineResult .= curGuiName ".OnEvent(`"" aEventRename[A_Index].event "`", " getV2Name(aEventRename[A_Index].NewFunctionName) ")`r`n"
 				}

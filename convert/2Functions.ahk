@@ -182,7 +182,7 @@ _Hotstring(p) {
   global gmList_LblsToFunc
   if (RegExMatch(p[1], '":') and p.Has(2)) {
     p[2] := Trim(p[2], '"')
-    gmList_LblsToFunc[StrLower(p[2])] := ConvLabel('HS', p[2], '*', getV2Name(p[2]))
+    gmList_LblsToFunc[p[2]] := ConvLabel('HS', p[2], '*', getV2Name(p[2]))
   }
 
   Out := "Hotstring("

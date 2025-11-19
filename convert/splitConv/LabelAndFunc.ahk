@@ -105,8 +105,6 @@ class clsSection
 	;################################################################################
 	AddGotoReturn()																			; 2025-10-23 AMB, ADDED to fix #395
 	{
-	; 2025-11-18 AMB, UPDATED as part of fix for #409 - now applies to all sections
-
 		if (this._tType != 'HK') {															; only applies to HKs (for now)
 			return false
 		}

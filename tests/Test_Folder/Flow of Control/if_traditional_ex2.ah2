@@ -6,6 +6,10 @@ var := "val"
 if (var != "value")
     MsgBox(var)
 
+var := "helloooo"
+if (var != "")
+   MsgBox(var)
+
 var := "value"
 if (StrCompare(var, "value") >= 0)
     MsgBox(var)

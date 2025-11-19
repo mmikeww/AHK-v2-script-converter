@@ -1,3 +1,3 @@
 title := WinGetTitle("A")
 WinGetPos(&x, &y, &w, &h, "A")
-FileAppend(title "-" w "-" h "-" x "-" y, "*")
+MsgBox(title "-" w "-" h "-" x "-" y)

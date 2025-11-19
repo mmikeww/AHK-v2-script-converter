@@ -1,4 +1,4 @@
 IfWinExist, ahk_class Notepad
-   FileAppend, notepad is open, *
+   MsgBox, notepad is open
 else
-   FileAppend, notepad is not open, *
+   MsgBox, notepad is not open

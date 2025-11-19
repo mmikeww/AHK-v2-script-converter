@@ -1,2 +1,2 @@
 WinGetActiveTitle, OutputVar
-FileAppend, %OutputVar%, *
+MsgBox, %OutputVar%

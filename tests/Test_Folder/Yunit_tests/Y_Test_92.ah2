@@ -1,2 +1,2 @@
 ToolTip("helloworld")
-FileAppend("hi", "*")
+MsgBox("hi")

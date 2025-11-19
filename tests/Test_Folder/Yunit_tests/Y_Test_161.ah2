@@ -1,2 +1,2 @@
 OutputVar := WinGetTitle("A")
-FileAppend(OutputVar, "*")
+MsgBox(OutputVar)

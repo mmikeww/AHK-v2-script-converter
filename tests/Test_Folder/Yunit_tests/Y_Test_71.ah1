@@ -1,3 +1,3 @@
 var = hhh
 IfLessOrEqual, var, value
-   FileAppend, %var%, *
+   MsgBox, %var%

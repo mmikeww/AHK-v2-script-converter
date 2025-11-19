@@ -1,2 +1,2 @@
 #NoEnv
-FileAppend, hi, *
+MsgBox, hi

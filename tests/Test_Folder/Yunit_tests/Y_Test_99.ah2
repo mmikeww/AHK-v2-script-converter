@@ -1,4 +1,4 @@
-FileAppend(MyFunc(), "*")
+MsgBox(MyFunc())
 
 MyFunc() {
    var := "hi"

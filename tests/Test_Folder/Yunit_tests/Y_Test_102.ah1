@@ -1,2 +1,2 @@
 SetFormat, integerfast, H
-FileAppend, hi, *
+MsgBox, hi

@@ -1,1 +1,1 @@
-FileAppend, % Asc("t"), *
+MsgBox, % Asc("t")

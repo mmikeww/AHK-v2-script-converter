@@ -1,5 +1,5 @@
 Loop, Files, Yunit\*.*
 {
-   FileAppend, %A_LoopFileFullPath%`n%A_LoopFileLongPath%, *
+   MsgBox, %A_LoopFileFullPath%`n%A_LoopFileLongPath%
    break
 }

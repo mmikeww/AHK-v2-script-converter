@@ -1,1 +1,1 @@
-FileAppend(Ord("t"), "*")
+MsgBox(Ord("t"))

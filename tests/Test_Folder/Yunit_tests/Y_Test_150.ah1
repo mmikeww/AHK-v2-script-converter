@@ -1,3 +1,3 @@
 var := "helloooo"
 IfNotEqual, var
-   FileAppend, %var%, *
+   MsgBox, %var%

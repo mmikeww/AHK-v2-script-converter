@@ -1,3 +1,3 @@
 var := "helloooo"
 if (var != "")
-   FileAppend(var, "*")
+   MsgBox(var)

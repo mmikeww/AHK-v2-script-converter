@@ -1,2 +1,2 @@
 SetEnv, var, hello
-FileAppend, %var%, *
+MsgBox, %var%

@@ -1,5 +1,5 @@
 if MyFunc()
-   FileAppend, %var%, *
+   MsgBox, %var%
 
 MyFunc() {
    global var := 777

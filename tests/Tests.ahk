@@ -5480,7 +5480,7 @@ Menu, Tray, Add, Item1, MenuHandler  ; Creates a new menu item.
 
       expected := "
          (Join`r`n
-Tray:= A_TrayMenu
+Tray := A_TrayMenu
 Tray.Add()  ; Creates a separator line.
 Tray.Add("Item1", MenuHandler)  ; Creates a new menu item.
          )"

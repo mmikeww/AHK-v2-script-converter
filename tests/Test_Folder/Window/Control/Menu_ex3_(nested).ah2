@@ -1,4 +1,4 @@
-Tray:= A_TrayMenu
+Tray := A_TrayMenu
 Tray.Add(arg3, % arg3)
 Tray.Add(func_arg3(nestedArg1, nestedArg2), % func_arg3(nestedArg1, nestedArg2))
 

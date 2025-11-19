@@ -103,23 +103,6 @@ class clsSection
 		return		blkStr																	; return updated (brace) block
 	}
 	;################################################################################
-	AddGotoReturn()																			; 2025-10-23 AMB, ADDED to fix #395
-	{
-		if (this._tType != 'HK') {															; only applies to HKs (for now)
-			return false
-		}
-		nGoto := '(?is)^(.+?)(?<gt>GOTO' gPtn_PrnthBlk ')([^\v]*.*+)'						; [separate Goto(label) from rest of block]
-		if (RegExMatch(this.Blk, nGoto, &m)) {												; if HK block has Goto(label)
-			retMsg		:= '`r`nReturn `; V1toV2: Add Return for Goto'						; [Return and convert msg]
-			ret			:= (m[5] ~= '(?i)^\s*RETURN') ? '' : retMsg							; add Return if one is not already present in block
-			this.Blk	:= m[1] . m[2] . ret . m[5]											; reassemble blk with Return added (if applicable)
-			this._exitCmdDetails()															; update exitCmd details
-			this.Blk	.= this.tBlk, this.tBlk	:= ''										; update trailing code
-			return true																		; notify caller that goto was present in blk
-		}
-		return false																		; no Goto found
-	}
-	;################################################################################
 	; 2025-10-27 AMB, UPDATED
 	_exitCmdDetails()																		; gets first legit exit command within section code-block
 	{
@@ -247,7 +230,6 @@ class clsSection
 	Static LogicFlowStr		:= ''															; string that holds logic-links between sections
 	Static GblLblCnt		:= 0															; counter for creating unique label/funcs, from stray global code
 	Static HKFuncCnt		:= 0															; counter for creating unique func names, from HKs
-	Static HasGotoCall		:= false														; 2025-10-23 AMB, ADDED to fix #395
 	Static NextGblLbl		=> ++this.GblLblCnt												; returns next value for GblLblCnt
 	Static NextHKCnt		=> ++this.HKFuncCnt												; returns next value for HKFuncCnt
 	Static HasSects			=> (this.Sects.Length > 0)										; does code have any sections at all? (convenience)
@@ -264,7 +246,6 @@ class clsSection
 		this.LogicFlowStr	:= ''
 		this.GblLblCnt		:= 0
 		this.HKFuncCnt		:= 0
-		this.HasGotoCall	:= false
 	}
 	;################################################################################
 	Static SectionObj[lblName]																; returns sect obj associated wth lblName param
@@ -316,7 +297,6 @@ class clsSection
 		rawSects	:= this._shiftTCWS(rawSects)											; rearrage comments/CRLFs between sections
 		dummy		:= this._rawToFinal(rawSects)											; organize global code between sects, create final Sects array
 		if (this.HasSects) {																; if sections were established...
-			this._checkGotoCalls()															; 2025-11-18 AMB, UPDATED to fix issue #409
 			flowStr		:= this._logicFlow													; determine logic flow between sections
 			dummy		:= this._hkhsToFunc()												; convert HK/HS to funcs (will be added in next step)
 			newFuncList	:= this._buildFuncsList()											; string with all new funcs, to be added to lower portion of script
@@ -376,18 +356,6 @@ class clsSection
 			for idx, sect in this.Sects
 				outStr .= sect.GetSectStr													; add each section string to output
 			return outStr
-		}
-	}
-	;################################################################################
-	Static _checkGotoCalls()																; 2025-10-23 AMB, ADDED to fix #395
-	{
-	; 2025-11-18 AMB, RENAMED and UPDATED as part of fix for #409
-
-		for idx, sect in this.Sects {														; for each section...
-			if (sect.AddGotoReturn()) {														; if Goto(label) was found in section block...
-				this.HasGotoCall := true													; set flag so labels can be converted to funcs
-				break																		; no need to continue
-			}
 		}
 	}
 	;################################################################################
@@ -541,8 +509,7 @@ class clsSection
 			}
 			return	!!(gmList_LblsToFunc.Count												; true when ANY label requires conversion
 					|| gmList_GosubToFunc.Count
-					|| gmList_GotoLabel.Count												; 2025-11-18 ADDED as part of fix for #409
-					|| this.HasGotoCall	)													; 2025-10-23 AMB, ADDED as part of fix for #395
+					|| gmList_GotoLabel.Count )												; 2025-11-18 ADDED as part of fix for #409
 		}
 	}
 	;################################################################################

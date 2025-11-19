@@ -185,7 +185,7 @@ _EnvAdd(p) {
 ; 2025-10-05 AMB, MOVED from ConvertFuncs.ahk
 
 	if (!IsEmpty(p[3]))
-		return format("{1} := DateAdd({1}, {2}, {3})", p*)
+		return format("{1} := DateAdd(({1} != `"`" ? {1} : A_Now), {2}, {3})", p*)
 	else
 		return format("{1} += {2}", p*)
 }
@@ -202,7 +202,7 @@ _EnvSub(p) {
 ; 2025-10-05 AMB, MOVED from ConvertFuncs.ahk
 
 	if (!IsEmpty(p[3]))
-		return format("{1} := DateDiff({1}, {2}, {3})", p*)
+		return format("{1} := DateDiff(({1} != `"`" ? {1} : A_Now), ({2} != `"`" ? {2} : A_Now), {3})", p*)
 	else
 		return format("{1} -= {2}", p*)
 }

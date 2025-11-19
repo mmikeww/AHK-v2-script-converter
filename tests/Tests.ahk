@@ -4061,7 +4061,7 @@ class ConvertTests
          )"
       expected := "
          (Join`r`n
-                           SendMessage, % WM_SETTINGCHANGE := 0x001A, 0, Environment,, % "ahk_id " . HWND_BROADCAST := "0xFFFF"
+                           SendMessage(0x1A, 0, StrPtr("Environment"), 0xFFFF)
          )"
       ; first test that our expected code actually produces the same results in v2
       ; if (this.test_exec = true) {

@@ -172,6 +172,8 @@ setGlobals()
    global gmAltLabel             := map()       ; map of labels that point to same reference
    gmAltLabel.CaseSense          := 0           ; 2025-11-02 - disable case-sensitivity for map key
    global gFuncParams            := ""
+   global gmList_GotoLabel       := map()
+   gmList_GotoLabel.CaseSense    := 0
    ; gui and menu
    global gMenuBarName           := ""          ; 2024-07-02 - holds the name of the main gui menubar
    global gMenuList              := "|"
@@ -356,7 +358,7 @@ FinalizeConvert(&code)
    maskedCode := code, Mask_T(&maskedCode, 'C&S')   ; prevent false positives (for Instr) within strings and comments
    if (InStr(maskedCode, 'OnClipboardChange:')) {
       code := 'OnClipboardChange(OnClipboardChange_v2)`r`n' . code      ; add this to top of script
-      gmList_LblsToFunc[StrLower('OnClipboardChange_v2')] := ConvLabel('OCC', 'OnClipboardChange_v2', 'dataType:=""', 'OnClipboardChange_v2'
+      gmList_LblsToFunc['OnClipboardChange_v2'] := ConvLabel('OCC', 'OnClipboardChange_v2', 'dataType:=""', 'OnClipboardChange_v2'
                                                 , {NeedleRegEx: "im)^(.*?)\b\QA_EventInfo\E\b(.*+)$", Replacement: "$1dataType$2"})
    }
 
@@ -668,7 +670,7 @@ _Hotkey(p) {
    ;Convert label to function
 
    if (scriptHasLabel(p[2])) {  ; 2025-11-01 UPDATED as part of Scope support
-      gmList_LblsToFunc[StrLower(p[2])] := ConvLabel('HK', p[2], 'ThisHotkey:=""', p[2])
+      gmList_LblsToFunc[p[2]] := ConvLabel('HK', p[2], 'ThisHotkey:=""', p[2])
    }
    if (p[1] = "IfWinActive") {
       p[2] := p[2] = "" ? "" : ToExp(p[2])
@@ -1152,7 +1154,7 @@ _SetTimer(p) {
    } else {
       Out := format("SetTimer({1},{2},{3})", p*)
    }
-   gmList_LblsToFunc[StrLower(p[1])] := ConvLabel('ST', p[1], '')
+   gmList_LblsToFunc[p[1]] := ConvLabel('ST', p[1], '')
 
    Return RegExReplace(Out, "[\s\,]*\)$", ")")
 }

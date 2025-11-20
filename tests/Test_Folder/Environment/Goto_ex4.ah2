@@ -4,6 +4,7 @@ ogcButtonbtn.OnEvent("Click", Lbl.Bind("Normal"))
 myGui.Show()
 
 Goto("Lbl")
+Return ; V1toV2: post-return for Goto
 ;Goto, Lbl
 
 Lbl:

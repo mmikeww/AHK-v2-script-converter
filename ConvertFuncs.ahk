@@ -1403,7 +1403,7 @@ _HashtagWarn(p) {
 ;   RETURN - array of the parsed commands.
 ; --------------------------------------------------------------------
 ; Returns an Array of the parameters, taking into account brackets and quotes
-V1ParamSplit(String) {
+V1ParamSplit(String, IsFromFunc := 0) {
    ; Created by Ahk_user
    ; Tries to split the parameters better because sometimes the , is part of a quote, function or object
    ; spinn-off from DeathByNukes from https://autohotkey.com/board/topic/35663-functions-to-get-the-original-command-line-and-parse-it/
@@ -1416,6 +1416,8 @@ V1ParamSplit(String) {
    InFunction := 0
    InObject := 0
    InQuote := false
+   CanBeExpr := true
+   IsExpr := IsFromFunc
 
    ; Checks if an even number was found, not bulletproof, fixes 50%
    ;StrReplace(String, '"', , , &NumberQuotes)
@@ -1431,6 +1433,13 @@ V1ParamSplit(String) {
    Loop oString.Length
    {
       Char := oString[A_Index]
+
+      if (oString.has(A_Index + 1) && Char = "%" && oString[A_Index + 1] = " " && CanBeExpr) {
+         IsExpr := true
+      } else if (CanBeExpr && Char != " ") {
+         CanBeExpr := false
+      }
+
       if (!InQuote && !InObject && !InArray && !InApostrophe && !InFunction) {
          if (Char = "," && (A_Index = 1 || oString[A_Index - 1] != "``")) {
             oIndex++
@@ -1440,7 +1449,7 @@ V1ParamSplit(String) {
       }
 
       if (Char = "`"" && !InApostrophe && CheckQuotes) {
-         if (!InQuote) {
+         if (IsExpr && !InQuote) {
             ;  2024-06-24 andymbody - added double quote to Instr search just in case causing hidden issues
             if (A_Index = 1 || (oString.has(A_Index - 1) && Instr('(" ,', oString[A_Index - 1]))) {
                InQuote := 1
@@ -1488,7 +1497,7 @@ V1ParamSplit(String) {
       oResult[oIndex] := oResult[oIndex] Char
    }
    ;for i, v in oResult
-   ;   MsgBox v
+   ;   MsgBox "[" v "]"
    return oResult
 }
 ;################################################################################

@@ -641,7 +641,7 @@ V1toV2_Functions(ScriptString, Line, &retV2, &gotFunc) {
           gaFileOpenVars.Push(mFOv[1])                                                      ; add var/obj name to list of FileOpen objects
         }
 
-        oPar := V1ParamSplit(oResult.Parameters)
+        oPar := V1ParamSplit(oResult.Parameters, true)
         gFuncParams := oResult.Parameters
 
         ConvertList := gmAhkFuncsToConvert

@@ -1,2 +1,0 @@
-#NoEnv
-FileAppend, hi, *

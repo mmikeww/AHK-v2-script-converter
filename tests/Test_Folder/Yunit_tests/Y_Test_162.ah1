@@ -1,1 +1,0 @@
-InputBox, password, Enter Password, (your input will be hidden), hide

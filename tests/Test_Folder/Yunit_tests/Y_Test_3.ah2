@@ -1,2 +1,2 @@
 msg :=    "hello world"
-FileAppend(msg, "*")
+MsgBox(msg)

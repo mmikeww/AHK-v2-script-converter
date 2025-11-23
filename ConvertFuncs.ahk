@@ -120,6 +120,7 @@ Before_LineConverts(&code)
    global gmAllV2LablNames  := getV2LabelNames(gAllV1LabelNames)    ; map of v1 label names converted to V2 label/funcNames
    global gMenuBarName      := getMenuBarName(code)                 ; name of GUI main menubar
    global gmAltLabel        := GetAltLabelsMap(code)                ; Create a map of labels that point to same reference
+   PreProcessLines(&code)   ; changes orig code                     ; 2025-11-23 AMB, ADDED as part of fix for #413
    global gOrigScript       := code                                 ; 2025-11-01 AMB, ADDED as part of Scope support
 
    getScriptStringsUsed(code)                                       ; 2025-11-01 AMB, ADDED as part of Scope support
@@ -229,6 +230,33 @@ setGlobals()
 
    global gAhkCmdsToRemoveV1, gAhkCmdsToRemoveV2, gmAhkCmdsToConvertV1, gmAhkCmdsToConvertV2, gmAhkFuncsToConvert, gmAhkMethsToConvert
          , gmAhkArrMethsToConvert, gmAhkKeywdsToRename, gmAhkLoopRegKeywds
+}
+;################################################################################
+PreProcessLines(&code)
+;################################################################################
+{
+; 2025-11-23 AMB, ADDED - part of fix for #413
+; pre-processing of certain commands via single-iteration of script lines
+
+    nGoto       := '(?im)^(\h*)(GOTO)(.+)'                                              ; needle for 'Goto, Label'
+    nHK         := '(?im)^(\h*)' gPtn_HOTKEY . '(?<cmd>.*)'                             ; needle for full HK line
+    lines       := StrSplit(code, '`n', '`r')                                           ; separate all lines within Code
+    outStr      := ''                                                                   ; ini output
+    for idx, line in lines {                                                            ; for each line in script...
+        ; GOTO
+        if (line ~= nGoto) {                                                            ; if line has a Goto command...
+            line := convertGoto(line, idx, &lines)                                      ; ... convert Goto
+        }
+        ; HOTKEY
+        else if (RegExMatch(line, nHK, &m) && m.cmd) {                                  ; if line is HK with possible cmd on same line...
+            line := HK1LToML(line, idx, &lines)                                         ; ... see if cmd needs multi-line instead
+        }
+        outStr  .= line '`r`n'                                                          ; add line to output str
+    }
+    code := RegExReplace(outStr, '\r\n$',,,1)                                           ; update code (also remove very last CRLF)
+
+    restoreGotoReturn(&code)                                                            ; handle GotoReturn - add braces to IF/ELSEIF/ELSE as needed
+    return                                                                              ; return Code by reference
 }
 ;################################################################################
 getScriptStringsUsed(scopeCode, term:='')

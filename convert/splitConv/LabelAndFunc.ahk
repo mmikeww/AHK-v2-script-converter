@@ -1363,6 +1363,200 @@ class ConvLabel
 	return outCode
 }
 ;################################################################################
+												   convertGoto(line, idx, &lines)
+;################################################################################
+{
+; 2025-11-23 AMB, ADDED - replaces previous Goto handling (part of fix for #413)
+; converts  Goto, label  -->>  Goto("label")
+;	also adds trailing Return as needed
+;	places Goto/Return into a single-line tag
+; tags will be restored in restoreGotoReturn(), which is called from PreProcessLines()
+; this func is called from PreProcessLines() and HK1LToML()
+
+	global gmList_GotoLabel
+
+	nExitCmd	:= '(?i)^\b(RETURN|EXITAPP)\b'												; needle for exit commands
+	nGoto		:= '(?im)^(\h*)(GOTO)(.+)'													; needle for 'Goto, Label'
+	returnStr	:= 'Return `; V1toV2: post-return for Goto'									; user msg to add as needed
+	if (!RegexMatch(line, nGoto, &m))														; if line does NOT have Goto command...
+		return line																			; ... exit early
+
+	; convert Goto
+	LWS := m[1], gotoStr := m[2], param := m[3]												; extract line/goto parts
+	Mask_R(&param, 'LC')																	; expose any trailing line comment
+	param		:= separateComment(param, &TC:='')											; separate trailing line comment (first occurence)
+	param		:= Trim(LTrim(param, ','))													; remove teading comma if present
+	v1LabelName	:= param																	; should be left with v1 label name
+	v2FuncName	:= Trim(getV2Name(v1LabelName))												; get v2 funcname associated with v1 label name
+	gmList_GotoLabel[v1LabelName] := true													; 2025-11-18 ADDED as part of fix for #409
+	gotoStr		:= gotoStr . '("' . param . '")'											; updated v2 Goto command
+	retStr		:= '', nextCmd := '', offset := 1											; ini
+
+	; add Return line as needed
+	While(idx+offset <= lines.Length && !nextCmd) {											; find the next line that has ahk code (ignore comments/empty)
+		nextLn	:= lines[idx + offset++]													; ... get next line
+		nextCmd	:= cleanCmd(nextLn)															; ... remove comments, and whitespace
+		retStr	:= (nextCmd ~= nExitCmd)													; ... if next line already has an exit cmd...
+				? ''																		; ...	do NOT add a Return
+				: '`r`n' . LWS . returnStr													; ...	otherwise, add a Return Line (preserving leading indent)
+	}
+
+	; finalize output
+	line		:= LWS . gotoStr . TC . retStr												; update line with changes (if any)
+	if (retStr)																				; if Return was added...
+		tagGotoReturn(&line)																; ... squash the Goto/Return into a single-line tag
+	return line
+}
+;################################################################################
+													  HK1LToML(line, idx, &lines)
+;################################################################################
+{
+; 2025-11-23 AMB, ADDED - part of fix for #413
+; moves same-line HK commands below HK declaration, in certain cases
+
+	nHK := '(?im)^(?<LWS>\h*)(?<HKDecl>' gPtn_HOTKEY . ')(?<cmd>.*)'						; needle for HK full line
+	Mask_R(&line, 'LC')																		; expose any trailing line comment
+	if (RegExMatch(line, nHK, &m)) {														; if line is a HK...
+		hk	:= m.HK, cmd := m.cmd															; get parts of line
+		cmd	:= separateComment(cmd, &TC:='')												; separate trailing line comment from line command
+
+		; Goto cmd
+		if (cmd ~= '(?i)(GOTO)') {															; if line cmd is Goto...
+			line2	:= m.LWS . cmd . TC														; ... cmd will be a separate line
+			line2	:= convertGoto(line2, idx, &lines)										; ... convert the Goto command
+			line	:= m.LWS . m.HKDecl . '`r`n' . line2									; ... move cmdline below HK line
+		}
+
+		; Gui
+		else if (cmd ~= '(?i)(GUI)') {														; if line cmd is Gui...
+			line2	:= '`r`n' . m.LWS . cmd . TC											; ... cmd will be a separate line
+			line3	:= '`r`n' . m.LWS . 'Return'											; ... must add return
+			line	:= m.LWS . m.HKDecl . line2 . line3										; ... move cmd and return below HK line
+		}
+
+		; Gosub cmd
+		else if (cmd ~= '(?i)(GOSUB)') {													; if line cmd in GoSub...
+			;line	:= m.LWS . m.HKDecl . '`r`n' . cmd . TC									; ... move cmd below HK line
+		}
+
+		; Other
+		else if (cmd && !(cmd ~= '(?i)(EXITAPP|MSGBOX|RELOAD|SEND|SUSPEND)')) {
+			;MsgBox line "`n`nHK :=`t[" HK "]`nCMD :=`t[" cmd "]`nLC :=`t[" TC "]"			; DEBUG/Testing
+		}
+	}
+	return line
+}
+;################################################################################
+													tagGotoReturn(&gotoReturnStr)
+;################################################################################
+{
+; 2025-11-23 AMB, ADDED as part of fix for #413
+; bundles Goto/Return (gotoReturnStr - 2 lines) into a single-line tag...
+; this ensures that single-line (non-brace) if/elseif/else detection still...
+; ... works after converter adds trailing Return to Goto commands in those blocks
+
+	Mask_T(&gotoReturnStr, 'GOTORET', '(?s).+')		; custom masking/tagging				; mask entire gotoReturnStr using GOTORET tag
+}
+;################################################################################
+														 restoreGotoReturn(&code)
+;################################################################################
+{
+; 2025-11-23 AMB, ADDED as part of fix for #413
+; restores original Goto/Return from tag created in tagGotoReturn()
+; adds braces to (non-brace) if/elseif/else blocks if they have GotoReturn tags
+; ... then, restores all GotoReturn tags found in code
+
+	addBlkBraces(&code, 'GOTORET')															; adds braces to (non-brace) if/elseif/else, as needed
+	Mask_R(&code, 'GOTORET\w+')																; restore orig code for GotoReturn tags
+}
+;################################################################################
+													 addBlkBraces(&code, tagType)
+;################################################################################
+{
+; 2025-11-23 AMB, ADDED as part of fix for #413
+; adds braces to (non-brace) IF sections, if those sections have target tags
+; also supports IfMsgBox blocks
+; TODO - can be adapted to support WHILE/TRY/LOOP/FOR/SWITCH, as needed
+
+	nIfFull	:= buildPtn_IF().fullIF															; needle for full if/elseif/else blocks
+	nIF		:= buildPtn_IF().IFSect															; needle for full IF	 section only
+	nEF		:= buildPtn_IF().EFSect															; needle for full ELSEIF section only
+	nEL		:= buildPtn_IF().ELSect															; needle for full ELSE	 section only
+	nTarg	:= '(?i)' uniqueTag(tagType '\w+')												; needle for target tags tags
+
+	revPos	:= IWTLFS.GetRevPositions(&code)												; get pos for IF/WHILE/TRY/LOOP/FOR/SWITCH nodes, in reverse order
+	Loop parse, revPos, '`n', '`r' {														; for each node in list...
+		ss	:= StrSplit(A_LoopField, ':'), nPos := ss[1], nType := ss[2]					; separate/extract node-position and node-type
+
+		; ignore anything that is not a target node
+		if (!(nType ~= '(IF|IFMSGBOX)'))													; only targetting IF/IfMsgBox nodes (for now)...
+			continue																		; ... skip if not a targ node
+		if (RegExMatch(code, nIfFull, &ifFull, nPos) != nPos)								; if current position does not have an IF block...
+			continue																		; ... not a target node... skip it
+		if (!(ifFull[] ~= nTarg))															; if IF-node does not have a target tag...
+			continue																		; ... skip it
+
+		; node is a legit target
+		mFull	:= origFull :=  ifFull[]													; FULL if/elseif/else (or IfMsgBox) block
+		LWS		:= RegExReplace(ifFull[2], '[}{]', ' ')										; extract leading whitespace (indent), replace any braces with space
+
+		;########################################################################
+		; add braces to single-line IF section, if target present
+		ifBlk	:= '', ifGuts := '', ifPos := 1												; ini IF vars
+		newGuts	:= orig := tag := ''														; ini working vars
+		if (ifPos	:= RegExMatch(mFull, nIf, &mIf, ifPos)) {								; if IF-section found at position 1... (should always be true)
+			ifBlk	:= mIf[]																; ... If block str
+			ifGuts	:= LTrim(mIf.TCT) . mIf.ifBlk											; ... IF-section block/guts string (including leading comments/WS)
+			if (mIf.noBB && ifGuts ~= nTarg) {												; ... if IF-section has no braces, but has targ tag
+				newGuts	:= '`r`n' LWS . '{' ifGuts '`r`n' LWS '}'							; ...	add braces to block/guts string
+				mFull	:= RegExReplace(mFull, escRegexChars(ifGuts), newGuts,,1,ifPos)		; ...	replace block/guts string with brace version
+			}
+		}
+		;########################################################################
+		; add braces to single-line ELSEIF sections, if target present
+		efGuts := ''																		; ini ELSEIF vars
+		efPos := (StrLen(ifBlk) + ((tag) ? StrLen(newGuts)-StrLen(tag) : 0))				; set approx position for initial elseIf search
+		newGuts	:= orig := tag := ''														; ini working vars
+		While(efPos := RegexMatch(mFull, nEF, &mEF, efPos)) {								; while there are elseIf sections...
+			efGuts := LTrim(mEF.TCT) . mEF.efBlk											; ... ELSEIF-section block/guts string (including leading comments/WS)
+			if (mEF.noBB && efGuts ~= nTarg) {												; ... if ELSEIF-section has no braces, but has targ tag
+				newGuts	:= '`r`n' LWS . '{' efGuts '`r`n' LWS '}'							; ...	add braces to block/guts string
+				mFull	:= RegExReplace(mFull, escRegexChars(efGuts), newGuts,,1,efPos)		; ...	replace block/guts string with brace version
+			}
+			efPos += (StrLen(efGuts) + ((tag) ? StrLen(newGuts)-StrLen(tag) : 0))			; set new starting pos for next elseif search
+		}
+		;########################################################################
+		; add braces to single-line ELSE section, if target present
+		elGuts := ''																		; ini ELSE vars
+		newGuts	:= orig := tag := ''														; ini working vars
+		if (elPos := RegExMatch(mFull, nEL, &mEL)) {										; if ELSE-section found...
+			elGuts := LTrim(mEL.TCT) . mEL.elBlk											; ... ELSE-section block/guts string (including leading comments/WS)
+			if (mEL.noBB && elGuts ~= nTarg) {												; ... if ELSE-section has no braces, but has targ tag
+				newGuts	:= '`r`n' LWS . '{' elGuts '`r`n' LWS '}'							; ...	add braces to block/guts string
+				mFull	:= RegExReplace(mFull, escRegexChars(elGuts), newGuts,,1,elPos)		; ...	replace block/guts string with brace version
+			}
+		}
+		;########################################################################
+		if (mFull != origFull) {															; if replacements were made...
+			code := RegExReplace(code, escRegexChars(origFull), mFull,,1,ifPos)				; ... replace original node string with updated version
+		}
+	}
+}
+;################################################################################
+																 cleanCmd(srcStr)
+;################################################################################
+{
+; 2025-11-23 AMB, ADDED as part of ix for #413
+; removes comments and empty lines from srcStr, executable code remains
+
+	srcStr	:= RegExReplace(srcStr, gPtn_LC)												; remove any raw line comments
+	srcStr	:= RegExReplace(srcStr, '(?im)' UniqueTag('LC\w+'))								; remove line comment tags
+	srcStr	:= RegExReplace(srcStr, '(?im)' UniqueTag('BC\w+'))								; remove block-comment tags
+	srcStr	:= RegExReplace(srcStr, '(?m)^\R+')												; remove empty lines
+	return	Trim(srcStr)	; should be left with ahk-code, or empty						; trim/return cleaned string
+}
+
+;################################################################################
 addHKCmdFunc(varName) {
 ; 2025-10-12 AMB, ADDED to fix #328
 ; see addHKCmdCBArgs() for adding param to func declaration
@@ -1464,31 +1658,4 @@ _Gosub(p) {
 	v1LabelName := Trim(p[1])
 	gmList_GosubToFunc[v1LabelName] := true
 	return 'Gosub ' .  v1LabelName	; no changes here
-}
-;################################################################################
-_Goto(p) {
-; 2025-10-05 AMB, ADDED - to support (possible) upcoming changes for Goto
-; 2025-11-18 AMB, UPDATED as part of fix for #409
-
-	v1LabelName	:= Trim(p[1])
-	v2FuncName	:= Trim(getV2Name(v1LabelName))
-	gmList_GotoLabel[v1LabelName] := true													; 2025-11-18 ADDED as part of fix for #409
-	; if no exit cmd is found following goto, add return
-	returnStr := '`r`n' gIndent 'Return `; V1toV2: post-return for Goto'
-	returnStr := (nextIsExitCmd()) ? ''	: returnStr											; 2025-11-18 ADDED - add 'return' as needed
-	return 'Goto("' v2FuncName '")'		. returnStr
-}
-;################################################################################
-																  nextIsExitCmd()
-;################################################################################
-{
-; 2025-11-18 AMB, ADDED - determines whether next cmd-line has an exit cmd
-;	removes comments and empty lines to determine what the next legit command is
-
-	lines	:= gOScriptStr.GetLines(gO_Index + 1)											; get all lines including/after current
-	lines	:= RegExReplace(lines, gPtn_LC)													; remove any raw line comments
-	lines	:= RegExReplace(lines, '(?im)' UniqueTag('LC\w+'))								; remove line comment tags
-	lines	:= RegExReplace(lines, '(?im)' UniqueTag('BC\w+'))								; remove block-comment tags
-	lines	:= RegExReplace(lines, '(?m)^\R+')												; remove empty lines
-	return	!! (Trim(lines) ~= '(?i)^\b(RETURN|EXITAPP)\b')									; return true if next cmd is exit cmd, false otherwise
 }

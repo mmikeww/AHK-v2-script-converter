@@ -146,6 +146,7 @@ gmAhkCmdsToConvertV1 := OrderedMap(
 ; 2025-06-12 AMB, UPDATED - altered for separation of v1.1 and v2 conversions
 ; 2025-10-05 AMB, UPDATED - changed Goto to custom handling
 ; 2025-11-02 AMB, UPDATED - disabled case-sensitivity for map key
+; 2025-11-23 AMB, UPDATED - removed Goto ( see convertGoto() now )
 ;global gmAhkCmdsToConvert := OrderedMap(
 global gmAhkCmdsToConvertV2 := Map()
 gmAhkCmdsToConvertV2.CaseSense := 0
@@ -268,8 +269,8 @@ gmAhkCmdsToConvertV2 := OrderedMap(
     "*_GuiControlGet"
   , "Gosub,Label" ,
     "*_Gosub"
-  , "Goto,Label" ,
-    "*_Goto"
+;  , "Goto,Label" ,                        ; 2025-11-23 AMB, REMOVED as part of fix for #413 - see convertGoto()
+;    "*_Goto"
   , "GroupActivate,GroupNameT2E,ModeT2E" ,
     "GroupActivate({1}, {2})"
   , "GroupAdd,GroupNameT2E,WinTitleT2E,WinTextT2E,LabelT2E,ExcludeTitleT2E,ExcludeTextT2E" ,

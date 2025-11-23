@@ -658,7 +658,7 @@ global	  gTagChar		:= chr(0x2605) ; '★'															; unique char to ensure 
 					, delTag, sessID?)
 		;################################################################################
 		case	'IF':										; IF BLOCKS - v1 and v2
-				IFs := ['IF','IFEXIST','IFNOTEXIST']
+				IFs := ['IF','IFEXIST','IFNOTEXIST','IFMSGBOX']								; 2025-11-23 AMB, UPDATED
 				Loop IFs.Length {
 				clsMask.RestoreAll(&code, IFs[-A_Index]
 					, delTag, sessID?)
@@ -746,12 +746,25 @@ Class IWTLFS
 						,	'IF'			,gPtn_Blk_IF
 						,	'IFEXIST'		,gPtn_Blk_IF									; may add more legacy IF types later
 						,	'IFNOTEXIST'	,gPtn_Blk_IF									; have tested these If's briefly
+						,	'IFMSGBOX'		,gPtn_Blk_IF									; 2025-11-23 AMB, ADDED
 						,	'LOOP'			,gPtn_Blk_LP
 						,	'SWITCH'		,gPtn_Blk_SW
 						,	'TRY'			,gPtn_Blk_TRY
 						,	'WHILE'			,gPtn_BLK_WH )
 
 	Static _sessID	:= ''
+	;############################################################################
+	; 2025-11-23 AMB, ADDED as part of fix for $413
+	; PUBLIC - returns position-string for all supported blocks, in reverse order
+	;	also returns code byRef - after premask and Trys isolation takes place
+	;	this returned code must be used by caller so that positions remain intact
+	; TODO - this may need to be changed to an obj rather than static to avoid conflicts
+	Static GetRevPositions(&code)
+	{
+		this._preMask_T(&code)																; premask comments, strings, v1 ML strings
+		this._isolateTry(&code)																; place Trys on their own line
+		return this._getPositions(code)														; return node positions in reverse order
+	}
 	;############################################################################
 	; PUBLIC - call this method with each masking type, individually. But...
 	;	each pass will mask all supported types by default, from bottom to top...
@@ -809,6 +822,7 @@ Class IWTLFS
 					,'IF'
 					,'IFEXIST'
 					,'IFNOTEXIST'
+					,'IFMSGBOX'																; 2025-11-23 AMB, ADDED
 					,'LOOP','SWITCH','TRY','WHILE']
 		posMap := Map()
 		for idx, nType in nodeTypes {														; for each node type...
@@ -819,7 +833,8 @@ Class IWTLFS
 				nTrail := '\b.*+'
 			}
 			if (nType='TRY') {
-				notOth	:= '(?!\h+(?:FOR|IF(?:(?:NOT)?EXIST)?|LOOP|SWITCH|WHILE))'
+				nIf		:= 'IF(?:(?:(?:NOT)?EXIST)|MSGBOX)?'								; 2025-11-23 AMB, UPDATED
+				notOth	:= '(?!\h+(?:FOR|' nIf '|LOOP|SWITCH|WHILE))'
 				nLead	:= '(?im)^[\h{}]*+\bTRY\b' . notOth
 			}
 			needle	:= nLead . nTrail														; [detect declaration lines]
@@ -1766,6 +1781,7 @@ class clsNodeMap	; 'block map' might be better term
 {
 ; 2024-08-06 AMB, ADDED - Hotkey declaration
 ; 2025-06-22 AMB, UPDATED
+; 2025-11-23 AMB, UPDATED - added named capture group to hotkeys needle
 
 	opt 	:= '(?i)'														; pattern options
 	k01		:= '(?:[$~*]*)'													; special commands
@@ -1782,8 +1798,8 @@ class clsNodeMap	; 'block map' might be better term
 			   . 'up|dn|down|left|right|(?:caps|scroll)lock)(?:\h+up)?)'
 	k11		:= '(?:sc[a-f0-9]{3})'											; 2025-06-22 ADDED - scancodes
 	repeat	:= '(?:\h++(?:&\h++)?(?-1))*'									; allow repeated keys
-	hotKeys := k01 '(' k02 '(?:' k03 '|' k04 '|' k05 '|' k06
-			. '|' k07 '|' k08 '|' k09 '|' k10 '|' k11 '))' . repeat . '::'
+	hotKeys := '(?<HK>' k01 '(' k02 '(?:' k03 '|' k04 '|' k05 '|' k06
+			. '|' k07 '|' k08 '|' k09 '|' k10 '|' k11 '))' . repeat . ')::'
 	HKLWS	:= opt . '^(\s*+' . hotKeys . ')'								; supports leading blank lines
 	NOLWS	:= opt . '^(\h*+' . hotKeys . ')'								; DOES NOT support leading blank lines
 	return	{noLWS:NOLWS,LWS:HKLWS}
@@ -1868,45 +1884,48 @@ class clsNodeMap	; 'block map' might be better term
 {
 ; 2024-08-06 AMB, ADDED - IF block
 ; 2025-10-05 AMB, UPDATED
+; 2025-11-23 AMB, UPDATED as part of fix for #413
 
-	cbn		:= commonBlockNeedles()											; get common needles
-	bb2		:= '(?&bb)'														; [avoid repeating chars within needle]
-	mc2		:= '(?&MC)'														; [avoid repeating chars within needle]
-	noBB2	:= '(?&noBB)'													; [avoid repeating chars within needle]
-	TCT		:= cbn.TCT														; optional trailing line comments or LC tags
-	TCT2	:= '(?&TCT)'													; [avoid repeating chars within needle]
+	cbn		:= commonBlockNeedles()												; get common needles
+	bb2		:= '(?&bb)'															; [avoid repeating chars within needle]
+	mc2		:= '(?&MC)'															; [avoid repeating chars within needle]
+	noBB2	:= '(?&noBB)'														; [avoid repeating chars within needle]
+	TCT		:= cbn.TCT															; optional trailing line comments or LC tags
+	TCT2	:= '(?&TCT)'														; [avoid repeating chars within needle]
 
-	prefix	:= '(?im)^[\h{}]*+'
+	prefix	:= '(?im)^([\h{}]*+)'
 	ifDecl	:= prefix . '\bIF(?:(?:NOT)?EXIST)?\b.+'
 	efDecl	:= prefix . '\bELSE\h+IF\b.+'
 	elDecl	:= prefix . '\bELSE\b(?!\h+IF).*'
 	; IF portion
-	ifStr	:= '[\h{}]*+\K(?<ifStr>\bIF(?:(?:NOT)?EXIST)?\b)'				; ifStr	- IF delaration
-	ifArg	:= '(?<ifArg>(?:\h*+' . cbn.mc						. '))'		; ifArg	- all arguments (conditions and opt trail comments/tags)
-	ifBlk	:= '(?<ifBlk>\s*+(?:' . cbn.bb . '|' . cbn.noBB 	. '))'		; ifBlk	- block (either brace block or single line)
+	;ifStr	:= '[\h{}]*+\K(?<!ELSE\h)(?<ifStr>\bIF(?:(?:NOT)?EXIST)?\b)'		; ifStr	- IF delaration
+	legIf	:= '(?:(?:(?:NOT)?EXIST)|MSGBOX)?'									; legIf - legacy IF (add more as needed)
+	ifStr	:= '([\h{}]*+)(?<!ELSE\h)(?<ifStr>\bIF' legIf '\b(\h*,\h*)?)'		; ifStr	- IF delaration
+	ifArg	:= '(?<ifArg>(?:\h*+' . cbn.mc						. '))'			; ifArg	- all arguments (conditions and opt trail comments/tags)
+	ifBlk	:= '(?<ifBlk>\s*+(?:' . cbn.bb . '|' . cbn.noBB 	. '))'			; ifBlk	- block (either brace block or single line)
 	IFSect	:= ifStr . ifArg  . TCT  . ifBlk
 	; ELSEIF portion
-	efStr	:= '(?<efStr>\h*+\bELSE\h+IF\b)'								; efStr	- ELSEIF declaration
-	efArg1	:= '(?<efArg>(?:\h*+' . cbn.mc						. '))'		; efArg	- all arguments (conditions and opt trail comments/tags)
-	efBlk1	:= '(?<efBlk>\s*+(?:' . cbn.bb . '|' . cbn.noBB		. '))'		; efBlk	- block (either brace block or single line)
-	efArg2	:= '(?<efArg>(?:\h*+' . mc2							. '))'		; efArg	- all arguments (conditions and opt trail comments/tags)
-	efBlk2	:= '(?<efBlk>\s*+(?:' . bb2 .    '|' . noBB2		. '))'		; efBlk	- block (either brace block or single line)
+	efStr	:= '(?<efStr>\h*+\bELSE\h+IF\b)'									; efStr	- ELSEIF declaration
+	efArg1	:= '(?<efArg>(?:\h*+' . cbn.mc						. '))'			; efArg	- all arguments (conditions and opt trail comments/tags)
+	efBlk1	:= '(?<efBlk>\s*+(?:' . cbn.bb . '|' . cbn.noBB		. '))'			; efBlk	- block (either brace block or single line)
+	efArg2	:= '(?<efArg>(?:\h*+' . mc2							. '))'			; efArg	- all arguments (conditions and opt trail comments/tags)
+	efBlk2	:= '(?<efBlk>\s*+(?:' . bb2 .    '|' . noBB2		. '))'			; efBlk	- block (either brace block or single line)
 	EFSect1	:= efStr . efArg1 . TCT  . efBlk1
 	EFSect2	:= efStr . efArg2 . TCT2 . efBlk2
 	; ELSE portion
-	elStr	:= '(?<elStr>\h*+\bELSE\b(?!\h+IF))'							; elStr	- ELSE declaration
-	elBlk1	:= '(?<elBlk>\s*+(?:' . cbn.bb . '|' . cbn.noBB		. '))'		; elBlk	- block (either brace block or single line)
-	elBlk2	:= '(?<elBlk>\s*+(?:' . bb2    . '|' . noBB2		. '))'		; elBlk	- block (either brace block or single line)
+	elStr	:= '(?<elStr>\h*+\bELSE\b(?!\h+IF))'								; elStr	- ELSE declaration
+	elBlk1	:= '(?<elBlk>\s*+(?:' . cbn.bb . '|' . cbn.noBB		. '))'			; elBlk	- block (either brace block or single line)
+	elBlk2	:= '(?<elBlk>\s*+(?:' . bb2    . '|' . noBB2		. '))'			; elBlk	- block (either brace block or single line)
 	ELSect1	:= elStr .		    TCT  . elBlk1
 	ELSect2	:= elStr .		    TCT2 . elBlk2
 
-	fullIF	:= 	'(?im)^(?<fullIF>'	ifSect									; IF
-			. 	'(?:'	TCT2 .		efSect2  . ')*+'						; ELSE IF	(optional/multiple)
-			. 	'(?:'	TCT2 .		elSect2  . ')?)'						; ELSE		(optional)
+	fullIF	:= 	'(?im)^(?<fullIF>'	ifSect										; IF
+			. 	'(?:'	TCT2 .		efSect2  . ')*+'							; ELSE IF	(optional/multiple)
+			. 	'(?:'	TCT2 .		elSect2  . ')?)'							; ELSE		(optional)
 	retObj	:=	{ fullIF	:fullIF
-				, IFSect	:IFSect
-				, EFSect	:EFSect1
-				, ELSect	:ELSect1
+				, IFSect	:'(?im)' . IFSect
+				, EFSect	:'(?im)' . EFSect1
+				, ELSect	:'(?im)' . ELSect1
 				, IFDecl	:IFDecl
 				, EFDecl	:EFDecl
 				, ELDecl	:ELDecl }

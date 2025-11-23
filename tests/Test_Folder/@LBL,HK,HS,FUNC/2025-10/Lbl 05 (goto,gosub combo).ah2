@@ -1,6 +1,6 @@
 
 LBL3() ; V1toV2: Gosub
-Goto("LBL1")
+goto("LBL1")
 Return ; V1toV2: post-return for Goto
 LBL5() ; V1toV2: Gosub	; never gets here due to goto above
 

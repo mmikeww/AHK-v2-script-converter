@@ -1482,7 +1482,7 @@ class ConvLabel
 	nIF		:= buildPtn_IF().IFSect															; needle for full IF	 section only
 	nEF		:= buildPtn_IF().EFSect															; needle for full ELSEIF section only
 	nEL		:= buildPtn_IF().ELSect															; needle for full ELSE	 section only
-	nTarg	:= '(?i)' uniqueTag(tagType '\w+')												; needle for target tags tags
+	nTarg	:= '(?i)' uniqueTag(tagType '\w+')												; needle for target tags
 
 	revPos	:= IWTLFS.GetRevPositions(&code)												; get pos for IF/WHILE/TRY/LOOP/FOR/SWITCH nodes, in reverse order
 	Loop parse, revPos, '`n', '`r' {														; for each node in list...

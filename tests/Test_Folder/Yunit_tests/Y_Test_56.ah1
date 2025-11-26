@@ -1,3 +1,3 @@
 var = value
 IfEqual, var, value
-   FileAppend, %var%, *
+   MsgBox, %var%

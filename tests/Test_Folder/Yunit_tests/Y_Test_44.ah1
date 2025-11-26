@@ -1,5 +1,5 @@
 five := MyFunc()
-FileAppend, %five%, *
+MsgBox, %five%
 MyFunc(var=5) {
    return var
 }

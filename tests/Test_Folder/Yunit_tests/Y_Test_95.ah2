@@ -1,1 +1,0 @@
-RunWait(A_ComSpec " /c dir c:\")

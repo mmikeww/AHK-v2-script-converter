@@ -16,3 +16,8 @@ SplitPath, FullFileName, name, dir, ext, name_no_ext, drive
 ; name_no_ext = Address List
 ; drive = C:
 MsgBox,  name:`t%Name%`ndir:`t%Dir%`next:`t%Ext%`nname_no_ext:`t%name_no_ext%`ndrive:`t%Drive%
+
+name := dir := ""
+SplitPath, % "C:\My Documents\Address List.txt", name
+SplitPath, % "C:\My Documents\Address List.txt", , dir
+MsgBox, %name%`n%dir%

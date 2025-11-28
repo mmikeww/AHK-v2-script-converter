@@ -9,9 +9,8 @@
 */
 
 ;################################################################################
-; 2025-11-02 AMB, UPDATED - disabled case-sensitivity for map key
-global gmAhkFuncsToConvert := map()
-gmAhkFuncsToConvert.CaseSense := 0
+; 2025-11-28 AMB, UPDATED - changed to Case-Insensitive Map
+global gmAhkFuncsToConvert := Map_I()
 gmAhkFuncsToConvert := OrderedMap(
     "Catch(OutputVar)" ,
     "*_Catch"

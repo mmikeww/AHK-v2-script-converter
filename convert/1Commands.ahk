@@ -71,9 +71,8 @@ global gAhkCmdsToRemoveV2 := "
    )"
 
 ; 2025-06-12 AMB, ADDED - for separation of v1.1 and v2 conversions
-; 2025-11-02 AMB, UPDATED - disabled case-sensitivity for map key
-global gmAhkCmdsToConvertV1 := Map()
-gmAhkCmdsToConvertV1.CaseSense := 0
+; 2025-11-28 AMB, UPDATED - changed to Case-Insensitive Map
+global gmAhkCmdsToConvertV1 := Map_I()
 gmAhkCmdsToConvertV1 := OrderedMap(
    "EnvDiv,var,valueCBE2E" ,
     "{1} /= {2}"
@@ -145,11 +144,10 @@ gmAhkCmdsToConvertV1 := OrderedMap(
 
 ; 2025-06-12 AMB, UPDATED - altered for separation of v1.1 and v2 conversions
 ; 2025-10-05 AMB, UPDATED - changed Goto to custom handling
-; 2025-11-02 AMB, UPDATED - disabled case-sensitivity for map key
 ; 2025-11-23 AMB, UPDATED - removed Goto ( see convertGoto() now )
+; 2025-11-28 AMB, UPDATED - changed to Case-Insensitive Map
 ;global gmAhkCmdsToConvert := OrderedMap(
-global gmAhkCmdsToConvertV2 := Map()
-gmAhkCmdsToConvertV2.CaseSense := 0
+global gmAhkCmdsToConvertV2 := Map_I()
 gmAhkCmdsToConvertV2 := OrderedMap(
     "BlockInput,OptionT2E" ,
     "BlockInput({1})"

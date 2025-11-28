@@ -37,6 +37,10 @@ global   gFilePath   := ''              ; TEMP, for testing
 
 
 ;################################################################################
+Class Map_I extends Map {        ; 2025-11-28 AMB, ADDED - provides custom Map that has case-sensitivity disabled by default
+   caseSense := 0
+}
+;################################################################################
 Convert(code)                    ; MAIN ENTRY POINT for conversion process
 ;################################################################################
 {
@@ -75,7 +79,7 @@ convertLines_UseScope(code)
 
    sects := GetScopeSections(code)                                  ; get Macro-Scope sections
    if (fGblOrder:=1) {                                              ; if global code should be processed first...
-      origOrder := map()                                            ; [will keep track of orig section order]
+      origOrder := Map_I()                                          ; [will keep track of orig section order]
       gblOrder  := StrSplit(clsScopeSect.OrderGbl, ',')             ; get global-first index ordering
       for idx, index in gblOrder {                                  ; for each order index...
          curSect        := sects[index]                             ; ... grab section code for that index
@@ -119,7 +123,7 @@ Before_LineConverts(&code)
    global gAllV1LabelNames  := getV1LabelNames(code)                ; comma-delim stringList of all orig v1 label names
    global gmAllV2LablNames  := getV2LabelNames(gAllV1LabelNames)    ; map of v1 label names converted to V2 label/funcNames
    global gMenuBarName      := getMenuBarName(code)                 ; name of GUI main menubar
-   global gmAltLabel        := GetAltLabelsMap(code)                ; Create a map of labels that point to same reference
+   ;global gmAltLabel        := GetAltLabelsMap(code)               ; 2025-11-28 AMB - no longer needed, causes gLabel routing issues
    PreProcessLines(&code)   ; changes orig code                     ; 2025-11-23 AMB, ADDED as part of fix for #413
    global gOrigScript       := code                                 ; 2025-11-01 AMB, ADDED as part of Scope support
 
@@ -160,38 +164,26 @@ setGlobals()
    global gAllFuncNames          := ""          ; 2024-07-07 - comma-deliminated string holding the names of all functions
    global gAllClassNames         := ""          ; 2024-10-08 - comma-deliminated string holding the names of all classes
    global gAllV1LabelNames       := ""          ; 2024-07-09 - comma-deliminated string holding the names of all v1 labels
-   global gmAllV2LablNames       := map()       ; 2024-07-07 - map holding v1 labelNames (key) and their new v2 label/FuncName (value)
-   gmAllV2LablNames.CaseSense    := 0           ; 2025-11-02 - disable case-sensitivity for map key
-   global gmList_LblsToFunc      := map()       ; 2025-10-05 - replaces gaList_LblsToFuncO and gaList_LblsToFuncC
-   gmList_LblsToFunc.CaseSense   := 0           ; 2025-11-02 - disable case-sensitivity for map key
-   global gmList_GosubToFunc     := map()       ; 2025-10-05 - AMB, ADDED - tracks gosubs that need to be converted to func calls
-   gmList_GosubToFunc.CaseSense  := 0           ; 2025-11-02 - disable case-sensitivity for map key
-   global gmList_HKCmdToFunc     := map()       ; 2025-10-12 - AMB, ADDED - tracks funcs that should be called using 'hotkey' cmd
-   gmList_HKCmdToFunc.CaseSense  := 0           ; 2025-11-02 - disable case-sensitivity for map key
-   global gmByRefParamMap        := map()       ; Map of FuncNames and ByRef params
-   gmByRefParamMap.CaseSense     := 0           ; 2025-11-02 - disable case-sensitivity for map key
-   global gmAltLabel             := map()       ; map of labels that point to same reference
-   gmAltLabel.CaseSense          := 0           ; 2025-11-02 - disable case-sensitivity for map key
+   global gmAllV2LablNames       := Map_I()     ; 2024-07-07 - map holding v1 labelNames (key) and their new v2 label/FuncName (value)
+   global gmList_LblsToFunc      := Map_I()     ; 2025-10-05 - replaces gaList_LblsToFuncO and gaList_LblsToFuncC
+   global gmList_GosubToFunc     := Map_I()     ; 2025-10-05 - AMB, ADDED - tracks gosubs that need to be converted to func calls
+   global gmList_HKCmdToFunc     := Map_I()     ; 2025-10-12 - AMB, ADDED - tracks funcs that should be called using 'hotkey' cmd
+   global gmByRefParamMap        := Map_I()     ; Map of FuncNames and ByRef params
+   global gmAltLabel             := Map_I()     ; map of labels that point to same reference
    global gFuncParams            := ""
-   global gmList_GotoLabel       := map()
-   gmList_GotoLabel.CaseSense    := 0
+   global gmList_GotoLabel       := Map_I()
    ; gui and menu
    global gMenuBarName           := ""          ; 2024-07-02 - holds the name of the main gui menubar
    global gMenuList              := "|"
-   global gmMenuCBChecks         := map()       ; 2024-06-26 AMB, for fix #131
-   gmMenuCBChecks.CaseSense      := 0           ; 2025-11-02 - disable case-sensitivity for map key
+   global gmMenuCBChecks         := Map_I()     ; 2024-06-26 AMB, for fix #131
    global gGuiActiveFont         := ""
    global gGuiControlCount       := 0
-   global gmGuiCtrlObj           := map()       ; Create a map to return the object of a control
-   gmGuiCtrlObj.CaseSense        := 0           ; 2025-11-02 - disable case-sensitivity for map key
-   global gmGuiCtrlType          := map()       ; Create a map to return the type of control
-   gmGuiCtrlType.CaseSense       := 0           ; 2025-11-02 - disable case-sensitivity for map key
-   global gmGuiFuncCBChecks      := map()       ; for gui funcs
-   gmGuiFuncCBChecks.CaseSense   := 0           ; 2025-11-02 - disable case-sensitivity for map key
+   global gmGuiCtrlObj           := Map_I()     ; Create a map to return the object of a control
+   global gmGuiCtrlType          := Map_I()     ; Create a map to return the type of control
+   global gmGuiFuncCBChecks      := Map_I()     ; for gui funcs
    global gGuiList               := "|"
    global gGuiNameDefault        := "myGui"
-   global gmGuiVList             := Map()       ; Used to list all variable names defined in a Gui
-   gmGuiVList.CaseSense          := 0           ; 2025-11-02 - disable case-sensitivity for map key
+   global gmGuiVList             := Map_I()     ; Used to list all variable names defined in a Gui
    global gUseLastName           := False       ; Keep track of if we use the last set name in gGuiList
 
    global gaScriptStrsUsed       := Array()     ; Keeps an array of interesting strings used in the script
@@ -211,10 +203,8 @@ setGlobals()
    global gaList_PseudoArr       := Array()     ; list of strings that should be converted from pseudoArray to Array
    global gaList_MatchObj        := Array()     ; list of strings that should be converted from v1 Match Object to v2 Match Object
 
-   global gmOnMessageMap         := map()       ; list of OnMessage listeners
-   gmOnMessageMap.CaseSense      := 0           ; 2025-11-02 - disable case-sensitivity for map key
-   global gmVarSetCapacityMap    := map()       ; list of VarSetCapacity variables, with definition type
-   gmVarSetCapacityMap.CaseSense := 0           ; 2025-11-02 - disable case-sensitivity for map key
+   global gmOnMessageMap         := Map_I()     ; list of OnMessage listeners
+   global gmVarSetCapacityMap    := Map_I()     ; list of VarSetCapacity variables, with definition type
    global gfLockGlbVars          := False       ; flag used to prevent global vars from being changed
 
    global gLVNameDefault         := "LV"
@@ -1739,7 +1729,7 @@ RemoveComObjMissing(ScriptString) {
       return ScriptString
 ;   Mask_T(&ScriptString, 'STR')    ; 2025-10-10 - now handled in FinalizeConvert()
    VarsToRemove := []
-   EOLComments := Map()
+   EOLComments := Map_I()
    Lines := StrSplit(ScriptString, "`n", "`r")
 
    for i, Line in Lines {

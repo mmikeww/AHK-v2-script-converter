@@ -10,9 +10,8 @@
 ; 2024-04-08 AMB
 ;   Moved LoopReg keywords to a dedicated map
 ;   ... so they can be treated differently
-; 2025-11-02 AMB, UPDATED - disabled case-sensitivity for map key
-global gmAhkKeywdsToRename := Map()
-gmAhkKeywdsToRename.CaseSense := 0
+; 2025-11-28 AMB, UPDATED - changed to Case-Insensitive Map
+global gmAhkKeywdsToRename := Map_I()
 gmAhkKeywdsToRename := OrderedMap(
     "A_LoopFileFullPath" ,
     "A_LoopFilePath"
@@ -45,9 +44,8 @@ gmAhkKeywdsToRename := OrderedMap(
 ; 2024-04-08 AMB
 ;   Separated these from gmAhkKeywdsToRename
 ;   ... so they can be treated differently
-; 2025-11-02 AMB, UPDATED - disabled case-sensitivity for map key
-global gmAhkLoopRegKeywds := Map()
-gmAhkLoopRegKeywds.CaseSense := 0
+; 2025-11-28 AMB, UPDATED - changed to Case-Insensitive Map
+global gmAhkLoopRegKeywds := Map_I()
 gmAhkLoopRegKeywds := OrderedMap(
     "A_LoopRegKey `"\`" A_LoopRegSubKey" ,
     "A_LoopRegKey"

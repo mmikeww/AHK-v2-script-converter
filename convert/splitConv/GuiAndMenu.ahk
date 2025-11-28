@@ -34,11 +34,7 @@ _Gui(p) {
 	global gmGuiCtrlObj
 	global gmGuiVList
 	global gmGuiFuncCBChecks
-	static smGuiList := Map()		; 2025-10-13 AMB - changed var name and now holds gui object
-	if (!smGuiList.Count) {
-		smGuiList.CaseSense := 0    ; 2025-11-02 - disable case-sensitivity for map key
-	}
-	;preliminary version
+	static smGuiList := Map_I()		; 2025-10-13 AMB - changed var name and now holds gui object
 
 	SubCommand	:= RegExMatch(p[1], "i)^\s*[^:]*?\s*:\s*(.*)$", &newGuiName) = 0 ? Trim(p[1]) : newGuiName[1]
 	GuiName		:= RegExMatch(p[1], "i)^\s*([^:]*?)\s*:\s*.*$", &newGuiName) = 0 ? ""		  : newGuiName[1]

@@ -20,21 +20,21 @@
 				 UPDATED needles for line-comment, classes/funcs
 	2024-08-06 - ADDED (partial) support for If-blocks, v1 label blocks, hotkeys, hotstrings
 	2025-06-12 - UPDATED, Major edit to fix #333 [improper masking], bug fixes, needle updates, enhancement, and general code refactor
+	2025-06-22				- UPDATED, Multiple enhancements/improvements - see comments in code
+	2025-07-01,03,06		- UPDATED, Multiple enhancements/improvements - see comments in code
+	2025-10-05,10,27		- UPDATED, Multiple enhancements/improvements - see comments in code
+	2025-11-01,23,28		- UPDATED, Multiple enhancements/improvements - see comments in code
 
 	TODO
-		Better support for comment/string masking to avoid conflicts between them
 		Finish support for Continuation sections
-		Add support of other types of blocks/commands, etc.
 		Add interctive component to prompt user for decisions?
 		Refactor for separate support for v1.0 -> v1.1, and v1.1 -> v2
-		Better support for labels - False positive - 'Default:' within switch block (need to mask switch blocks first)
 
 		GENERAL TODO -
 		2025-10-05 TODO - FIX OnExit - MISSING 2ND PARAM AND "RETURN 1" BEING PLACE AFTER EXITAPP
 			SEE "DRAWLINE 123548C5" AHK FILE FOR EXAMPLE
 		Fix	- gosub when it references hotkey-label rather than normal label. SEE "DRAWLINE 123548C5" (F1)
 		Fix	- Labels named RELOAD - See TextEditor.ahk for example
-		Fix	- Issue 377 - Var1 := % var2, Global var1 := % var2 (remove percent)
 */
 
 ;################################################################################
@@ -824,7 +824,7 @@ Class IWTLFS
 					,'IFNOTEXIST'
 					,'IFMSGBOX'																; 2025-11-23 AMB, ADDED
 					,'LOOP','SWITCH','TRY','WHILE']
-		posMap := Map()
+		posMap := Map_I()
 		for idx, nType in nodeTypes {														; for each node type...
 			pos		:= 1																	; must be reset with each iteraion
 			nTrail	:= '\b.++'
@@ -954,16 +954,16 @@ class clsMask
 		this.codePtn	:= pattern
 	}
 	;############################################################################
-	static masklist		:= map()			; holds all premask objects, origCode/tags
-	static uniqueIdList	:= map()			; ensures tags have unique ID
+	static masklist		:= Map_I()			; holds all premask objects, origCode/tags
+	static uniqueIdList	:= Map_I()			; ensures tags have unique ID
 	;static maxMasks	:= 16**4			; 65K - CAUSED BUG!! NOT ENOUGH FOR HEAVY TESTING
 	static maxMasks		:= 16**6			; 16.7 million (must be enough for heavy testing!!!)
 	static maskCountT	:= 0				; 2025-06-12 - to prevent endless-loop bug
 	;############################################################################
 	Static Reset()							; 2025-11-01 AMB, ADDED as part of Scope support
 	{
-		this.masklist		:= map()
-		this.uniqueIdList	:= map()
+		this.masklist		:= Map_I()
+		this.uniqueIdList	:= Map_I()
 		this.maskCountT		:= 0
 	}
 	;############################################################################
@@ -1114,7 +1114,7 @@ class clsMask
 	; ... each session keeps its own list of tags that belong to that session only
 	; these session tags are also listed in the static/shared clsMask.Masklist map
 
-		_sessList	:= map()						; holds session tag ids
+		_sessList	:= Map_I()						; holds session tag ids
 		_sessID		:= ''							; unique session id
 
 		__new(sessID) {
@@ -1204,7 +1204,7 @@ class clsNodeMap	; 'block map' might be better term
 	pos						:= -1		; block start position within code, ALSO use as unique key for MapList
 	len						:= 0		; char length of entire block
 	ParentList				:= ''		; list of parent ids (immediate parent will be listed first)
-	ChildList				:= map()	; list of child nodes
+	ChildList				:= Map_I()	; list of child nodes
 
 	; acts as constructor for a node object
 	__new(name, cType, blkCode, uid, pos, len)
@@ -1231,7 +1231,7 @@ class clsNodeMap	; 'block map' might be better term
 ;		return ((m2[2] > m1[2]) ? 1 : ((m2[2] < m1[2]) ? -1 : ((m2[1] > m1[1]) ? 1 : ((m2[1] < m1[1]) ? -1 : 0))))
 ;	}
 	;############################################################################
-	; PUBLIC - convenience - returns string list of ChildList map()
+	; PUBLIC - convenience - returns string list of ChildList Map_I()
 	GetChildren() {
 		cList := ''
 		for key, childNode in this.ChildList {
@@ -1248,8 +1248,8 @@ class clsNodeMap	; 'block map' might be better term
 	hasChildren				=> this.ChildList.Count
 	hasChanged				=> (this.ConvCode && (this.ConvCode = this.BlockCode))
 	;############################################################################
-	static mapList			:= map()
-	static maskList			:= map()						; 2025-10-27 AMB, ADDED
+	static mapList			:= Map_I()
+	static maskList			:= Map_I()						; 2025-10-27 AMB, ADDED
 ;	static idIndex			:= 0
 ;	static nextIdx			=> ++clsNodeMap.IdIndex
 ;	static getNode(id)		=> clsNodeMap.mapList(id)
@@ -1257,8 +1257,8 @@ class clsNodeMap	; 'block map' might be better term
 	;############################################################################
 	static Reset()			; 2025-11-01 AMB, ADDED as part of Scope support
 	{
-		this.mapList		:= Map()
-		this.maskList		:= Map()
+		this.mapList		:= Map_I()
+		this.maskList		:= Map_I()
 	}
 	;############################################################################
 	; PRIVATE - adds a node to maplist
@@ -1283,7 +1283,7 @@ class clsNodeMap	; 'block map' might be better term
 	; 2025-11-01 AMB, UPDATED as part of Scope support
 	static BuildNodeMap(code)
 	{
-		this.mapList := Map()					; each build requires a fresh MapList (2025-11-01 UPDATED)
+		this.mapList := Map_I()					; each build requires a fresh MapList (2025-11-01 UPDATED)
 		Mask_T(&code, 'C&S',1)					; mask comments/strings - might be redundant
 		Mask_T(&code, 'V1MLS')					; mask v1 ML strings
 		uid := clsMask.GenUniqueID()
@@ -1425,7 +1425,7 @@ class clsNodeMap	; 'block map' might be better term
 	; PRIVATE - find all parents/children for passed block, return immediate parent
 	static _findParents(name, pos, len)
 	{
-		cp := -1, parentList := map()
+		cp := -1, parentList := Map_I()
 		; find parent via brute force (by comparing code positions)
 		for key, node in this.mapList {
 			if ((pos>node.pos) && ((pos+len)<node.EndPos)) {

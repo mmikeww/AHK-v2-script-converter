@@ -1,6 +1,6 @@
 myGui := Gui()
 myGui.OnEvent("Close", GuiClose)
-myGui.OnEvent("Escape", GuiClose)
+myGui.OnEvent("Escape", GuiEscape)
 myGui.Add("Text", , "Type a key name and click Convert.")
 ogcEditKeyName := myGui.Add("Edit", "vKeyName w50", "vk4C")
 ogcButtonConvert := myGui.Add("Button", "Default", "Convert")
@@ -45,7 +45,7 @@ global
 GuiEscape()
 }
 ;##############################################
-GuiEscape() { ; V1toV2: Lbl->Func
+GuiEscape(*) { ; V1toV2: Lbl->Func
 global
 ExitApp()
 }

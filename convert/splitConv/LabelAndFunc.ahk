@@ -226,7 +226,7 @@ class clsSection
 	Static codeTop			:= ''															; code that occurs before any LBL/HK/HS/FUNC/CLS
 	Static codeBot			:= ''															; code that occurs after  all LBL/HK/HS/FUNC/CLS sections
 	Static Sects			:= []															; array to hold section objects
-	Static ToFunc			:= map()														; map to hold all newly created funcs (strings)
+	Static ToFunc			:= Map_I()														; map to hold all newly created funcs (strings)
 	Static LogicFlowStr		:= ''															; string that holds logic-links between sections
 	Static GblLblCnt		:= 0															; counter for creating unique label/funcs, from stray global code
 	Static HKFuncCnt		:= 0															; counter for creating unique func names, from HKs
@@ -242,7 +242,7 @@ class clsSection
 		this.codeTop		:= ''
 		this.codeBot		:= ''
 		this.Sects			:= []
-		this.ToFunc			:= map()
+		this.ToFunc			:= Map_I()
 		this.LogicFlowStr	:= ''
 		this.GblLblCnt		:= 0
 		this.HKFuncCnt		:= 0
@@ -515,7 +515,7 @@ class clsSection
 	;################################################################################
 	static _hkhsToFunc()																	; deals with HK,HS 'labels'
 	{
-		wcFuncsToUpdate := map()															; used to track named-blocks for HKs (for adding wildcard param)
+		wcFuncsToUpdate := Map_I()															; used to track named-blocks for HKs (for adding wildcard param)
 
 		; convert HK/HS to func as needed
 		for idx, sect in this.Sects {
@@ -1306,7 +1306,11 @@ class ConvLabel
 															getV1LabelNames(code)
 ;################################################################################
 {
+; 2025-11-28 AMB, UPDATED to prevent Default: within Switch from being mistaken for label
+
 	v1LabelNames := ''
+	Mask_T(&code, 'SW')		; hide Default: within Switch blocks
+	Mask_R(&code, 'STR')	; restore strings
 	for idx, line in StrSplit(code, '`n', '`r') {
 		if (v1Label := getV1Label(line, returnColon:=false)) {
 			v1LabelNames .= v1Label . ','
@@ -1324,7 +1328,7 @@ class ConvLabel
 ; 2025-07-06 AMB, UPDATED - changed func name and refactor...
 ;	... now uses v1 labelNamelist created with getV1LabelNames(), as source
 
-	labelMap := map(), corrections := ''
+	labelMap := Map_I(), corrections := ''
 	for idx, v1Name in StrSplit(v1LabelNameList,',') {										; for each v1 label name...
 		labelMap[v1Name] := validV2LabelName(v1Name ':',0)									; ... ensure a valid v2 label/funcName
 	}
@@ -1616,7 +1620,7 @@ GetAltLabelsMap(ScriptString) {
 ;	ScriptStr := StrSplit(ScriptString, "`n", "`r")
 	ScriptStr := ScriptCode(ScriptString)
 	LabelPrev := ""
-	mAltLabels := Map()
+	mAltLabels := Map_I()
 	loop ScriptStr.Length {
 ;		Line := ScriptStr[A_Index]
 		Line := ScriptStr.GetLine(A_Index)

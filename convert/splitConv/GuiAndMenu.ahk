@@ -36,6 +36,11 @@ _Gui(p) {
 	global gmGuiFuncCBChecks
 	static smGuiList := Map_I()		; 2025-10-13 AMB - changed var name and now holds gui object
 
+	; 2025-11-28 AMB - need to reset smGuiList any time gGuiList is reset
+	if (Trim(gGuiList, ' |') = '') {		; if gGuiList has been reset.. [in ConvertFuncs->setGlobals()]
+		smGuiList := Map_I()				; ... also reset smGuiList !
+	}
+
 	SubCommand	:= RegExMatch(p[1], "i)^\s*[^:]*?\s*:\s*(.*)$", &newGuiName) = 0 ? Trim(p[1]) : newGuiName[1]
 	GuiName		:= RegExMatch(p[1], "i)^\s*([^:]*?)\s*:\s*.*$", &newGuiName) = 0 ? ""		  : newGuiName[1]
 
@@ -636,7 +641,7 @@ addOnMessageCBArgs(&code) {
 ; 2025-10-12 AMB, UPDATED to better support existng params and binding
 
 	;Mask_T(&code, 'C&S')	; 2025-10-10 - now handled in FinalizeConvert()
-	; add menu args to callback functions
+	; add onMessage args to callback functions
 	nCommon	:= '^\h*(?<fName>[_a-z]\w*+)(?<fArgG>\((?<Args>(?>[^()]|\((?&Args)\))*+)'
 	nFUNC	:= RegExReplace(gPtn_Blk_FUNC, 'i)\Q(?:\b(?:IF|WHILE|LOOP)\b)(?=\()\K|\E')					; 2025-06-12, remove exclusion
 	nParams := '(?i)(?:\b(?:wParam|lParam|msg|hwnd)\b(\h*,\h*)?)+'

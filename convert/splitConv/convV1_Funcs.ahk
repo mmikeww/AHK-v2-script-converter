@@ -6,7 +6,7 @@
 ; Returns a Map of options like x100 y200 ...
 ; 2025-10-05 AMB, MOVED from ConvertFuncs.ahk
 
-	mOptions := Map()
+	mOptions := Map_I()
 	Loop parse, Options, " "
 	{
 		if (StrLen(A_LoopField) > 0) {

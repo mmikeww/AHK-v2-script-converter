@@ -22,7 +22,7 @@ global
 active_pid := WinGetPID("A")
 active_title := WinGetTitle("A")
 oGui5 := Gui()
-oGui5.OnEvent("Close", _5GuiEscape)
+oGui5.OnEvent("Close", _5GuiClose)
 oGui5.OnEvent("Escape", _5GuiEscape)
 oGui5.Add("Text", , "Press ESCAPE to cancel, or double-click a new`npriority level for the following window:`n" . active_title)
 ogcMyListBox1 := oGui5.Add("ListBox", "vMyListBox1  r5", ["Normal", "High", "Low", "BelowNormal", "AboveNormal"])
@@ -39,7 +39,7 @@ global
 _5GuiClose()
 }
 ;##############################################
-_5GuiClose() { ; V1toV2: Lbl->Func
+_5GuiClose(*) { ; V1toV2: Lbl->Func
 global
 oGui5.Destroy()
 return

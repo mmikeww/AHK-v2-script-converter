@@ -519,13 +519,14 @@ FixVarSetCapacity(ScriptString) {
 /*
 2025-10-05 AMB, MOVED/UPDATED to fix errors and missing line comments
 2025-10-10 AMB, UPDATED handling of trailing CRLFs
+2025-11-28 AMB, UPDATED to prevent ampersand from being added to numbers and THIS.X
 	* param-detection issues/errors when params contain funcCalls (due to extra commas)
 		ADDED funcCall masking - TODO - test to verify full resolution...
  Known issues that still remain
 	* can conflict with converter-manufactured function/methods (or AHK funcCalls)
 		... such as _Input/InputHook added methods [ .Start(), .Wait() ]
 	* conflicts can arise between same-name funcs/methods (different scope)
-	* adds & to &this.func(param)
+	* adds & to &this.func(param) - 2025-11-28 temp/partial solution
  TODO
 	* mask strings? (test to see if this is necessary)
 	* mask all functions/classes and func calls first...
@@ -560,8 +561,10 @@ FixByRefParams(ScriptString) {
 						fParamCountError := true										; will prevent any replacement in current line
 						break
 					}
-					if (v[A_Index]) {													; if current param is BYREF...
-						curParam := '&' . RegExReplace(LTrim(curParam),'i)^ByRef ')		; update current param by adding &, remove ByRef
+					if (v[A_Index]														; if current param is BYREF...
+						&& !IsNumber(curParam)											; ... 2025-11-28 ADDED - and not a number...
+						&& !InStr(curParam, 'THIS.')) {									; ... 2025-11-28 ADDED - and not this.X... (still need to provide a solution)
+						curParam := '&' . RegExReplace(LTrim(curParam),'i)^ByRef ')		; ...	update current param by adding &, remove ByRef
 					}
 					newLine .= pLWS . curParam . pTWS . ','								; add updated param to updated line
 					params	:= StrReplace(params, mParams[],,,,1)						; remove current param from param list (prep for next search)

@@ -9,9 +9,8 @@
   !!! we split the lists of Arrays and objects, as Count needs only to be replaced for maps
 */
 
-; 2025-11-02 AMB, UPDATED - disabled case-sensitivity for map key
-global gmAhkMethsToConvert := Map()
-gmAhkMethsToConvert.CaseSense := 0
+; 2025-11-28 AMB, UPDATED - changed to Case-Insensitive Map
+global gmAhkMethsToConvert := Map_I()
 gmAhkMethsToConvert := OrderedMap(
     "Count()" ,
     "Count"

@@ -9,9 +9,8 @@
 */
 
 ;################################################################################
-; 2025-11-02 AMB, UPDATED - disabled case-sensitivity for map key
-global gmAhkFuncsToConvert := map()
-gmAhkFuncsToConvert.CaseSense := 0
+; 2025-11-28 AMB, UPDATED - changed to Case-Insensitive Map
+global gmAhkFuncsToConvert := Map_I()
 gmAhkFuncsToConvert := OrderedMap(
     "Catch(OutputVar)" ,
     "*_Catch"
@@ -125,6 +124,7 @@ gmAhkFuncsToConvert := OrderedMap(
 ;################################################################################
 ; See ConvertFuncs.ahk for _Catch() (also used for command conversion)
 ; 2025-10-05 AMB, UPDATED - changed var name gfNoSideEffect to gfLockGlbVars
+; 2025-11-28 AMB, UPDATED - prevent ampersand from being added to numbers
 
 _DllCall(p) {
   ParBuffer := ""
@@ -164,7 +164,10 @@ _DllCall(p) {
     }
     if (((A_Index !=1) && (mod(A_Index, 2) = 1)) && (InStr(p[A_Index - 1], "*`"")
        || InStr(p[A_Index - 1], "*`'") || InStr(p[A_Index - 1], "P`"") || InStr(p[A_Index - 1], "P`'"))) {
-      p[A_Index] := "&" p[A_Index]
+         ; 2025-11-28 AMB, UPDATED - prevent ampersand from being added to numbers
+         if (!IsNumber(p[A_index])) {
+            p[A_Index] := "&" p[A_Index]
+          }
       if (!InStr(p[A_Index], ":=")) {
         ; Disabled for now because of issue #54, but this can result in undefined variables...
         ; p[A_Index] .= " := 0"

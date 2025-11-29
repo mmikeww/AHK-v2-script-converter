@@ -23,7 +23,7 @@
 	2025-06-22				- UPDATED, Multiple enhancements/improvements - see comments in code
 	2025-07-01,03,06		- UPDATED, Multiple enhancements/improvements - see comments in code
 	2025-10-05,10,27		- UPDATED, Multiple enhancements/improvements - see comments in code
-	2025-11-01,23,28		- UPDATED, Multiple enhancements/improvements - see comments in code
+	2025-11-01,23,28,29		- UPDATED, Multiple enhancements/improvements - see comments in code
 
 	TODO
 		Finish support for Continuation sections
@@ -51,6 +51,9 @@ global	  gTagChar		:= chr(0x2605) ; '★'															; unique char to ensure 
 		, gPauseChar	:= chr(0x27FC)	; ⟼															; 2025-10-05 - char for flowStr - Pause, then continue (has code)
 		, gJumpChar		:= chr(0x27F9)	; ⟹															; 2025-10-05 - char for flowStr - Pass thru (has no code)
 		, gExitChar		:= chr(0x2716)	; ✖															; 2025-10-05 - char for flowStr - exit cmd
+		, gGuiSep1		:= ':'			; [GuiName:GuiNum]												; 2025-11-29 - char for new GuiName MapKey formatting
+		, gGuiSep2		:= '\'			; [GuiName\CtrlName] (has a  CtrlID)							; 2025-11-29 - char for new GuiName MapKey formatting
+		, gGuiSep3		:= '/'			; [GuiName/CtrlName] (has NO CtrlID)							; 2025-11-29 - char for new GuiName MapKey formatting
 
 		, gnLineComment	:= '(?<=^|\s)(?<!``);[^\v]*+'													; UPDATED - line comment (allows lead ws to be consumed already)
 		, gnCmd_Comment	:= '^(?<ln>(?:[^;\s]++|(?<=``);|\h(?!\h+;))+)?(?<lc>(?:^|\h+);.*)$'				; 2025-10-05 - separates command side from first comment occurence
@@ -1829,6 +1832,7 @@ class clsNodeMap	; 'block map' might be better term
 {
 ; FUNCTION-BLOCK pattern - supports class methods also
 ; 2024-07-07 AMB, UPDATED comment needle to bypass escaped semicolon
+; 2025-11-29 AMB, UPDATED - added support for static methods
 
 	opt 		:= '(?im)'													; pattern options
 	LC			:= '(?:' gnLineComment ')'									; line comment (allows lead ws to be consumed already)
@@ -1840,7 +1844,8 @@ class clsNodeMap	; 'block map' might be better term
 	fArgG		:= '(?<fArgG>\((?<Args>(?>[^()]++|(?-2))*+)\))'				; fArgG		- func params/args
 	declare		:= fName . fArgG . '(?<TCT>' . TCT . '\s*+)'				; declare	- function declaration
 	brcBlk		:= '(?<brcBlk>\{(?<BBC>(?>[^{}]++|(?-2))*+)}))'				; brcBlk	- braces block, BBC - block contents (allows multi-line span)
-	pattern		:= opt . '^\h*+(?:' . exclude . declare . brcBlk
+	nStatic		:= '(?:STATIC\h+)?'											; nStatic	- support for static methods (2025-11-29)
+	pattern		:= opt '^\h*+' nStatic '(?:' exclude declare brcBlk
 	return		pattern
 }
 ;################################################################################
@@ -2072,7 +2077,7 @@ TODO - MAKE SURE FUNC CALLS ARE COVERED
 		pos		+= StrLen(qTag)												; prep for next loop iteration
 	}
 	uGuts		:= RegExReplace(uGuts, '^""\h*')							; cleanup any leading  "" (un-needed)
-	uGuts		:= RegExReplace(uGuts, '\h*""$')							; cleanup any trailing "" (un-needed)
+	uGuts		:= RegExReplace(uGuts, '\h*(?<!``)""$',,,1)					; cleanup any trailing "" (un-needed) (2025-11-29 AMB, only if not escaped)
 	body		:= StrReplace(body, oGuts, uGuts)							; replace orig guts with new guts
 
 	; restore original %VAR%s, then replace each with VAR (remove %)

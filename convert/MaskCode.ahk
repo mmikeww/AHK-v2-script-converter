@@ -23,7 +23,7 @@
 	2025-06-22				- UPDATED, Multiple enhancements/improvements - see comments in code
 	2025-07-01,03,06		- UPDATED, Multiple enhancements/improvements - see comments in code
 	2025-10-05,10,27		- UPDATED, Multiple enhancements/improvements - see comments in code
-	2025-11-01,23,28,29		- UPDATED, Multiple enhancements/improvements - see comments in code
+	2025-11-01,23,28,29,30	- UPDATED, Multiple enhancements/improvements - see comments in code
 
 	TODO
 		Finish support for Continuation sections
@@ -150,6 +150,49 @@ global	  gTagChar		:= chr(0x2605) ; '★'															; unique char to ensure 
 ;			, gTagTrl	:= gTagChar '#'
 
 	return gTagPfx . uniqueStr . gTagTrl
+}
+;################################################################################
+												 Zip(srcStr, TagID, Force:=false)
+;################################################################################
+{
+; 2025-11-30 AMB, ADDED - compression of entire string into single tag
+; adds support for multi-line compression...
+; ... this is necessary to add braces to non-brace (single-line) IF/ELSEIF/ELSE blocks
+
+	global gaZippedLines															; multi-lines added by converter
+	if (!srcStr || !TagID) {														; if params are invalid...
+		return 'ERROR in ' A_ThisFunc '() - missing required params'				; ... output an error statement
+	}
+	if (!Force && !InStr(srcStr, '`n')) {											; if not multi-line, and force not requested...
+		return srcStr																; ... return orig str
+	}
+	gaZippedLines.Push(TagID)														; flag the TagID so the lines can be unzipped later
+	Mask_T(&srcStr, TagID, '(?s).+')												; mask the entire srcStr, replace with a tag
+	return srcStr			; is now a custom masked-tag							; return the tag
+}
+;################################################################################
+														 UnZip(srcStr, TagID:='')
+;################################################################################
+{
+; 2025-11-30 AMB, ADDED - restores custom tags created with Zip()
+; But with added feature...
+;	if expanded code is multi-line and is placed within a single-line IF/ELSEIF/ELSE block...
+;	... surrounding braces will be added so the blocks support the multi-line code
+; addBlkBraces() - see labelAndFunc.ahk
+
+	if (!TagID && !gaZippedLines.Length) {											; if there are no tags to unzip/restore...
+		return srcStr																; ... return orig str
+	}
+	if (TagID) {																	; if a single tagID has been specified by caller...
+		addBlkBraces(&srcStr, TagID)												; ... add braces to (non-brace) if/elseif/else, as needed
+		Mask_R(&srcStr, TagID '\w+')												; ... restore all target tags (unzip/expand the lines)
+		return srcStr																; ... return the unzipped/expanded code
+	}
+	addBlkBraces(&srcStr, gaZippedLines)		; array list of all tags			; No tag was specified, add braces for all tags as needed
+	for idx, id in gaZippedLines {													; for each tag in list...
+		Mask_R(&srcStr, id '\w+')													; ... unzip/expand their associated lines
+	}
+	return srcStr																	; return code with braces added and lines expanded
 }
 ;################################################################################
 				 Mask_T(&code, targ, option:=unset, sessID:=unset, convert:=true)

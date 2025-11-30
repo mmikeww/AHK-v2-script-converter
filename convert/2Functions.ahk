@@ -294,6 +294,7 @@ _NumPut(p) {
   ;V1 NumPut(Number,VarOrAddress,Offset,Type)
   ;V2 NumPut Type, Number, Type2, Number2, ... Target , Offset
   ; This should work to unwind the NumPut labyrinth
+  ; 2025-11-30 AMB, UPDATED output to compress multi-line output into single-line tag
   p[1] := StrReplace(StrReplace(p[1], "`r"), "`n")
   p[2] := StrReplace(StrReplace(p[2], "`r"), "`n")
   p[3] := StrReplace(StrReplace(p[3], "`r"), "`n")
@@ -365,7 +366,9 @@ _NumPut(p) {
     }
     Out := "NumPut(" Type ", " Number ", " VarOrAddress ", " OffSet ")"
   }
-  Return RegExReplace(Out, "[\s\,]*\)$", ")")
+  Out := RegExReplace(Out, "[\s\,]*\)$", ")")
+  Out := Zip(Out, 'NUMPUT')    ; 2025-11-30 AMB, compress multi-lines into single-line tag (as needed)
+  Return Out
 }
 
 ;################################################################################

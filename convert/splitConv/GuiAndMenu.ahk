@@ -18,6 +18,7 @@ _Gui(p) {
 ; 2025-10-05 AMB, UPDATED - moved to GuiAndMenu.ahk, changed gaList_LblsToFuncO to gmList_LblsToFunc
 ; 2025-10-13 AMB, UPDATED - to fix #202, also changed some var names and functionality
 ; 2025-11-01 AMB, UPDATED - as part of Scope support, and gmList_LblsToFunc key case-sensitivity
+; 2025-11-30 AMB, UPDATED output to compress multi-line output into single-line tag
 
 	global gEarlyLine
 	global gGuiNameDefault
@@ -373,11 +374,13 @@ _Gui(p) {
 	}
 	DebugWindow("LineResult:" LineResult "`r`n")
 	Out := format("{1}", LineResult LineSuffix)
+	Out := Zip(Out, 'GUIML')   ; 2025-11-30 AMB - compress multi-line additions into single-line tag, as needed
 	return Out
 }
 ;################################################################################
 _GuiControl(p) {
 ; 2025-10-05 AMB, MOVED to GuiAndMenu.ahk
+; 2025-11-30 AMB, UPDATED output to compress multi-line output into single-line tag
 
 	global gGuiNameDefault
 	global gGuiActiveFont
@@ -421,7 +424,7 @@ _GuiControl(p) {
 			if (PreSelected != "") {
 				Out .= "`r`n" gIndent ControlID ".ChooseString(" ToExp(PreSelected,1,1) ")"
 			}
-			Return Out
+			Return Zip(Out, 'GUICTRL')   ; 2025-11-30 AMB - compress multi-line additions into single-line tag, as needed
 		}
 		if (InStr(Value, "|")) {
 
@@ -445,7 +448,7 @@ _GuiControl(p) {
 			if (PreSelected != "") {
 				Out .= "`r`n" gIndent ControlID ".ChooseString(" ToExp(PreSelected,1,1) ")"
 			}
-			Return Out
+			Return Zip(Out, 'GUICTRL')   ; 2025-11-30 AMB - compress multi-line additions into single-line tag, as needed
 		}
 		if (Type = "UpDown" || Type = "Slider" || Type = "Progress") {
 			if (SubStr(Value, 1, 1) = "-") {
@@ -478,7 +481,7 @@ _GuiControl(p) {
 			if (PreSelected != "") {
 				Out		.= "`r`n" gIndent ControlID ".ChooseString(" ToExp(PreSelected,1,1) ")"
 			}
-			Return Out
+			Return Zip(Out, 'GUICTRL')   ; 2025-11-30 AMB - compress multi-line additions into single-line tag, as needed
 		}
 		Return ControlObject ".Text := " ToExp(Value)
 	} else if (SubCommand = "Move" || SubCommand = "MoveDraw") {

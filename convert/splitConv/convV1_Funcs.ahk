@@ -516,6 +516,7 @@ _StringLen() {
 ;################################################################################
 _StringMid(p) {
 ; 2025-07-01 AMB, UPDATED to fix (missing) indent issue
+; 2025-11-30 AMB, UPDATED output to compress multi-line output into single-line tag
 
 	if (IsEmpty(p[4]) && IsEmpty(p[5]))
 		return format("{1} := SubStr({2}, {3})", p*)
@@ -538,6 +539,7 @@ _StringMid(p) {
 			out .= format(gIndent "`t{1} := SubStr(SubStr({2}, 1, {3}), -{4})", p*) . "`r`n"
 			out .= format(gIndent "else", p) . "`r`n"
 			out .= format(gIndent "`t{1} := SubStr({2}, {3}, {4})", p*)
+			Out := Zip(Out, 'STRMID')   ; 2025-11-30 AMB - compress multi-line additions into single-line tag, as needed
 			return out
 		}
 	}
@@ -548,6 +550,7 @@ _StringReplace(p) {
 ; StringReplace, OutputVar, InputVar, SearchText [, ReplaceText, ReplaceAll?]
 ; v2
 ; ReplacedStr := StrReplace(Haystack, Needle [, ReplaceText, CaseSense, OutputVarCount, Limit])
+; 2025-11-30 AMB, UPDATED output to compress multi-line output into single-line tag
 
 	global gIndent, gSingleIndent
 	if gaScriptStrsUsed.StringCaseSense
@@ -576,7 +579,9 @@ _StringReplace(p) {
 			Out .= "`r`n" . gIndent . gSingleIndent . format("{2} := StrReplace({3}, {4}, {5},{1}, &ErrorLevel)", CaseSense, p*)
 		}
 	}
-	return RegExReplace(Out, "[\s\,]*\)$", ")")
+	Out := RegExReplace(Out, "[\s\,]*\)$", ")")
+	Out := Zip(Out, 'STRREPL')   ; 2025-11-30 AMB - compress multi-line additions into single-line tag, as needed
+	return Out
 }
 ;################################################################################
 _StringTrimLeft() {

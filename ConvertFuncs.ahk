@@ -211,6 +211,7 @@ setGlobals()
    global gTVNameDefault         := "TV"
    global gSBNameDefault         := "SB"
    global gaFileOpenVars         := []          ; 2025-10-12 AMB - callection of FileOpen object names
+   global gaZippedLines          := []          ; 2025-11-30 AMB, TagID list for line compression (Zip,Unzip)
 
    ; reset Static vars in multiple classes      ; required for Scope support and unit testing
    clsMask.Reset()                              ; 2025-11-01 AMB, ADDED as part of Scope support, unit testing
@@ -244,8 +245,7 @@ PreProcessLines(&code)
         outStr  .= line '`r`n'                                                          ; add line to output str
     }
     code := RegExReplace(outStr, '\r\n$',,,1)                                           ; update code (also remove very last CRLF)
-
-    restoreGotoReturn(&code)                                                            ; handle GotoReturn - add braces to IF/ELSEIF/ELSE as needed
+    code := UnZip(code, 'GOTORET')                                                    ; handle GotoReturn - add braces to IF/ELSEIF/ELSE as needed
     return                                                                              ; return Code by reference
 }
 ;################################################################################
@@ -357,6 +357,11 @@ FinalizeConvert(&code)
 {
 ; 2024-06-27 ADDED, 2025-06-12 UPDATED, 2025-10-05 UPDATED
 ; Performs tasks that finalize overall conversion
+
+   ; 2025-11-30 AMB, ADDED
+   ; Expand/Restore all remaining tagged multi-line code that was added by converter
+   ; This also adds braces to (non-brace) IF/ELSEIF/ELSE blocks to support any new multi-line code
+   code := UnZip(code)
 
    ; Add global warnings
    If goWarnings.HasProp("AddedV2VRPlaceholder") && goWarnings.AddedV2VRPlaceholder = 1 {
@@ -483,6 +488,7 @@ _ControlGet(p) {
       }
    }
    out := RegExReplace(Out, "[\s\,]*\)$", ")")
+   out := Zip(out, 'CTRLGET')   ; 2025-11-30 AMB - compress multi-line additions into single-line tag, as needed
 
    Return out
 }
@@ -530,7 +536,9 @@ _FileCopy(p) {
    } Else {
       out := format("FileCopy({1}, {2}, {3})", p*)
    }
-   Return RegExReplace(Out, "[\s\,]*\)", ")")
+   out := RegExReplace(Out, "[\s\,]*\)", ")")
+   out := Zip(out, 'FILECOPY')   ; 2025-11-30 AMB - compress multi-line additions into single-line tag, as needed
+   Return out
 }
 ;################################################################################
 _FileCopyDir(p) {
@@ -545,7 +553,9 @@ _FileCopyDir(p) {
    } Else {
       out := format("DirCopy({1}, {2}, {3})", p*)
    }
-   Return RegExReplace(Out, "[\s\,]*\)", ")")
+   out := RegExReplace(Out, "[\s\,]*\)", ")")
+   out := Zip(out, 'FILECOPYDIR')   ; 2025-11-30 AMB - compress multi-line additions into single-line tag, as needed
+   Return out
 }
 ;################################################################################
 _FileMove(p) {
@@ -560,7 +570,9 @@ _FileMove(p) {
    } Else {
       out := format("FileMove({1}, {2}, {3})", p*)
    }
-   Return RegExReplace(Out, "[\s\,]*\)", ")")
+   out := RegExReplace(Out, "[\s\,]*\)", ")")
+   out := Zip(out, 'FILEMOVE')   ; 2025-11-30 AMB - compress multi-line additions into single-line tag, as needed
+   Return out
 }
 ;################################################################################
 _FileRead(p) {
@@ -586,20 +598,21 @@ _FileReadLine(p) {
    ; Not really a good alternative, inefficient but the result is the same
 
    if (gaScriptStrsUsed.ErrorLevel) {
-   indent := gIndent = "" ? gSingleIndent : gIndent
+      indent := gIndent = "" ? gSingleIndent : gIndent
 
-   cmd := ; Very bulky solution, only way for errorlevel
-   (
-   gIndent 'Try {`r`n'
-   gIndent indent 'Global ErrorLevel := 0, ' p[1] ' := StrSplit(FileRead(' p[2] '),`"``n`",`"``r`")[' p[3] ']`r`n'
-   gIndent '} Catch {`r`n'
-   gIndent indent p[1] ' := "", ErrorLevel := 1`r`n'
-   gIndent '}'
-   )
+      cmd := ; Very bulky solution, only way for errorlevel
+      (
+      gIndent 'Try {`r`n'
+      gIndent indent 'Global ErrorLevel := 0, ' p[1] ' := StrSplit(FileRead(' p[2] '),`"``n`",`"``r`")[' p[3] ']`r`n'
+      gIndent '} Catch {`r`n'
+      gIndent indent p[1] ' := "", ErrorLevel := 1`r`n'
+      gIndent '}'
+      )
 
-   Return cmd
+      Return Zip(cmd, 'FILEREADLN')   ; 2025-11-30 AMB - compress multi-line additions into single-line tag, as needed
    } else {
-      Return p[1] " := StrSplit(FileRead(" p[2] "),`"``n`",`"``r`")[" P[3] "]"
+      out := p[1] " := StrSplit(FileRead(" p[2] "),`"``n`",`"``r`")[" P[3] "]"
+      Return Zip(out, 'FILEREADLN')   ; 2025-11-30 AMB - compress multi-line additions into single-line tag, as needed
    }
 }
 ;################################################################################
@@ -651,7 +664,7 @@ _FileSelect(p) {
       Line .= gIndent "ErrorLevel := 0`r`n"
       Line .= gIndent "}"
    }
-   return Line
+   return Zip(Line, 'FILESELECT')   ; 2025-11-30 AMB - compress multi-line additions into single-line tag, as needed
 }
 ;################################################################################
 _FileSetAttrib(p) {
@@ -1133,8 +1146,9 @@ _Run(p) {
    } else {
       Out := format("Run({1}, {2}, {3}, {4})", p*)
    }
-
-   Return RegExReplace(Out, "[\s\,]*\)$", ")")
+   Out := RegExReplace(Out, "[\s\,]*\)$", ")")
+   Out := Zip(out, 'RUN')   ; 2025-11-30 AMB - compress multi-line additions into single-line tag, as needed
+   Return Out
 }
 ;################################################################################
 _SendMessage(p) {
@@ -1281,6 +1295,7 @@ _SysGet(p) {
 _WinGetActiveStats(p) {
    Out := format("{1} := WinGetTitle(`"A`")", p*) . "`r`n"
    Out .= format("WinGetPos(&{4}, &{5}, &{2}, &{3}, `"A`")", p*)
+   Out := Zip(Out, 'WINGAS')   ; 2025-11-30 AMB - compress multi-line additions into single-line tag, as needed
    return Out
 }
 ;################################################################################

@@ -37,8 +37,18 @@ global   gFilePath   := ''              ; TEMP, for testing
 
 
 ;################################################################################
-Class Map_I extends Map {        ; 2025-11-28 AMB, ADDED - provides custom Map that has case-sensitivity disabled by default
-   caseSense := 0
+Class Map_I extends Map {
+; 2025-11-28 AMB, ADDED - custom Map with case-sensitivity disabled by default
+   caseSense    := 0                                ; disable case-sensitivity by default
+   KeysToString => Map_I._Join(this       )         ; return list of object keys
+   KeyValPairs  => Map_I._Join(this,1     )         ; return list of {key:val}  pairs
+   LabelMap     => Map_I._Join(this,1,'=>')         ; return list of {key=>val} pairs
+   ;#############################################################################
+   Static _Join(obj,kv:=0,d:=':',s:='') {           ; @rommmcek 2025-11-30
+   for k,v in obj
+      s .= ((kv) ? k d v : k) ', '
+   return (s:=Trim(s,', '))?((kv)?'{' s '}':s):''
+   }
 }
 ;################################################################################
 Convert(code)                    ; MAIN ENTRY POINT for conversion process

@@ -27,15 +27,15 @@ _Gui(p) {
 	global gTVNameDefault
 	global gSBNameDefault
 	global gGuiList
-	global gOrig_ScriptStr			; array of all the lines
-	global gOScriptStr				; array of all the lines
-	global gO_Index					; current index of the lines
+	global gOrig_ScriptStr					; array of all the lines
+	global gOScriptStr						; array of all the lines
+	global gO_Index							; current index of the lines
 	global gGuiActiveFont
 	global gmList_LblsToFunc
 	global gmGuiCtrlObj
 	global gmGuiVList
 	global gmGuiFuncCBChecks
-	static smGuiList := Map_I()		; 2025-10-13 AMB - changed var name and now holds gui object
+	static smGuiList := Map_I()				; 2025-10-13 AMB - changed var name and now holds gui object
 
 	; 2025-11-28 AMB - need to reset smGuiList any time gGuiList is reset
 	if (Trim(gGuiList, ' |') = '') {		; if gGuiList has been reset.. [in ConvertFuncs->setGlobals()]
@@ -276,9 +276,15 @@ _Gui(p) {
 				LineResult .= ", "
 			}
 			if (TxtList != "") {
-				if (RegExMatch(OptCtrl, "i)^tab[23]?$") || OptCtrl = "ListView" || OptCtrl = "DropDownList" || OptCtrl = "DDL" || OptCtrl = "ListBox" || OptCtrl = "ComboBox") {
+				if (RegExMatch(OptCtrl, "i)^tab[23]?$")
+							|| OptCtrl = "ListView"
+							|| OptCtrl = "DropDownList"
+							|| OptCtrl = "DDL"
+							|| OptCtrl = "ListBox"
+							|| OptCtrl = "ComboBox") {
 					searchIdx := 1
-					while (gOScriptStr.Has(gO_Index + searchIdx) && SubStr(gOScriptStr.GetLine(gO_Index + searchIdx), 1, 1) ~= "^(\||)$") {
+					while (gOScriptStr.Has(gO_Index + searchIdx)
+					&& SubStr(gOScriptStr.GetLine(gO_Index + searchIdx), 1, 1) ~= "^(\||)$") {
 						;TxtList .= contStr := gOScriptStr[gO_Index + searchIdx]
 						TxtList .= contStr := gOScriptStr.GetLine(gO_Index + searchIdx)
 						nlCount := (SubStr(contStr, 1, 1) = "|" ? 0 : (IsSet(nlCount) ? nlCount : 0) + 1)
@@ -286,7 +292,7 @@ _Gui(p) {
 					}
 					if (searchIdx != 1)
 						gO_Index += (searchIdx - 1 - nlCount)
-						gOScriptStr.SetIndex(gO_Index)
+					gOScriptStr.SetIndex(gO_Index)
 					if (RegExMatch(TxtList, "%(.*)%", &match)) {
 						LineResult .= ', StrSplit(' match[1] ', "|")'
 						LineSuffix .= " `; V1toV2: Check that this " OptCtrl " has the correct choose value"

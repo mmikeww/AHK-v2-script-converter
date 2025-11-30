@@ -365,7 +365,9 @@ _NumPut(p) {
     }
     Out := "NumPut(" Type ", " Number ", " VarOrAddress ", " OffSet ")"
   }
-  Return RegExReplace(Out, "[\s\,]*\)$", ")")
+  Out := RegExReplace(Out, "[\s\,]*\)$", ")")
+  Mask_TC(Out, 'NUMPUT')    ; 2025-11-30 AMB, compress multi-lines into single-line tag (as needed)
+  Return Out
 }
 
 ;################################################################################

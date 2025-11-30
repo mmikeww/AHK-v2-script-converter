@@ -168,7 +168,9 @@ _WinGet(p)
 		gaList_PseudoArr.Push({name: P[1], newname: "a" P[1]})
 		gaList_PseudoArr.Push({strict: true, name: P[1], newname: "a" P[1] ".Length"})
 	}
-	Return RegExReplace(Out, "[\s\,]*\)$", ")")
+	Out := RegExReplace(Out, "[\s\,]*\)$", ")")
+	Out := Mask_TC(Out, 'WINGET')   ; 2025-11-30 AMB - compress multi-line additions into single-line tag, as needed
+	Return Out
 }
 ;################################################################################
 _RegExMatch(p)

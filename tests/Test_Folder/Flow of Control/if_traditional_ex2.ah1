@@ -6,6 +6,10 @@ var = val
 IfNotEqual, var, value
     MsgBox, %var%
 
+var := "helloooo"
+IfNotEqual, var
+   MsgBox, %var%
+
 var = value
 IfGreaterOrEqual, var, value
     MsgBox, %var%

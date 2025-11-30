@@ -101,7 +101,7 @@ MyMenuBar.Add("Misc", Tab7)
 MyMenuBar.Add("Format", Tab5, "+Right")
 MyMenuBar.Add("Icons", Tab6)
 
-Tray:= A_TrayMenu
+Tray := A_TrayMenu
 Tray.Add()
 Tray.Add("Custom option in tray", MenuHandler)
 

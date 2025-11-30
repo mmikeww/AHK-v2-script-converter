@@ -1,1 +1,0 @@
-IB := InputBox("(your input will be hidden)", "Enter Password", "Password"), password := IB.Value

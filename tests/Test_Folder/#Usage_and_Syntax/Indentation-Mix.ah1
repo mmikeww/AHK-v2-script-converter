@@ -7,4 +7,4 @@ if (1) {
          StringGetPos, pos, var, al
    }
 }
-FileAppend, pos=%pos%, *
+MsgBox, pos=%pos%

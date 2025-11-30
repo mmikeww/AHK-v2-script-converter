@@ -1,2 +1,0 @@
-ToolTip, helloworld
-FileAppend, hi, *

@@ -646,26 +646,31 @@ addMenuCBArgs(&code) {
 ; 2025-06-12 AMB, UPDATED to fix interference with IF/LOOP/WHILE
 ; 2025-10-05 AMB, MOVED to GuiAndMenu.ahk
 ; 2025-10-10 AMB, UPDATED to fix missing params
+; 2025-11-30 AMB, UPDATED - minor refactor
 
 	;Mask_T(&code, 'C&S')	; 2025-10-10 - now handled in FinalizeConvert()
 	; add menu args to callback functions
-	nCommon	:= '^\h*(?<fName>[_a-z]\w*+)(?<fArgG>\((?<Args>(?>[^()]|\((?&Args)\))*+)'
-	nFUNC	:= RegExReplace(gPtn_Blk_FUNC, 'i)\Q(?:\b(?:IF|WHILE|LOOP)\b)(?=\()\K|\E')					; 2025-06-12, remove exclusion
-	nDeclare:= '(?im)' nCommon '\))(?<trail>.*)'														; make needle for func declaration
-	nArgs	:= '(?im)' nCommon '\K\)).*'																; make needle for func params/args
+	nCommon		:= '^\h*(?<fName>[_a-z]\w*+)(?<fArgG>\((?<Args>(?>[^()]|\((?&Args)\))*+)'
+	nFUNC		:= RegExReplace(gPtn_Blk_FUNC, 'i)\Q(?:\b(?:IF|WHILE|LOOP)\b)(?=\()\K|\E')				; 2025-06-12, remove exclusion
+	nDeclare	:= '(?im)' nCommon '\))(?<trail>.*)'													; make needle for func declaration
+	nArgs		:= '(?im)' nCommon '\K\)).*'															; make needle for func params/args
+	targParams	:= 'A_ThisMenuItem:="", A_ThisMenuItemPos:="", A_ThisMenu:=""'
 	m := [], declare := []
 	for key, val in gmMenuCBChecks
 	{
-		nTargFunc := RegExReplace(nFUNC, 'i)\Q?<fName>[_a-z]\w*+\E', key)								; target specific function name
-		if (pos := RegExMatch(code, nTargFunc, &m)) {
+		funcName	:= key																				; grab callback func
+		nTargFunc	:= RegExReplace(nFUNC, 'i)\Q?<fName>[_a-z]\w*+\E', funcName)						; target specific function name
+		if (pos		:= RegExMatch(code, nTargFunc, &m)) {
 			; target function found
 			if (RegExMatch(m[], nDeclare, &declare)) {													; get just declaration line
 				argList		:= declare.fArgG, trail := declare.trail
-				if (instr(argList, 'A_ThisMenuItem') && instr(argList, 'A_ThisMenuItemPos') && instr(argList, 'MyMenu'))
+				if (instr(argList, 'A_ThisMenuItem')
+				&&  instr(argList, 'A_ThisMenuItemPos')
+				&&  instr(argList, 'MyMenu'))
 					continue																			; skip converted labels
-				newArgs		:= '(A_ThisMenuItem:="", A_ThisMenuItemPos:="", A_ThisMenu:=""' . ((m.Args='') ? ')' : ', ' SubStr(argList,2))
-				addArgs		:= RegExReplace(m[],		'\Q' argList '\E', newArgs,,1)					; replace function args
-				code		:= RegExReplace(code, '\Q' m[] '\E', addArgs,,, pos)						; replace function within the code
+				newArgs		:= '(' targParams . ((m.Args='') ? ')' : ', ' SubStr(argList,2))
+				addArgs		:= RegExReplace(m[],	'\Q' argList '\E', newArgs,,1)						; replace function args
+				code		:= RegExReplace(code,	'\Q' m[] '\E', addArgs,,, pos)						; replace function within the code
 			}
 		}
 	}

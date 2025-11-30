@@ -233,7 +233,7 @@
 	for idx, comment in gEOLComment_Cont {
 		if (idx != OutSplit.Length) {							; if not last element
 			; 2025-11-30 AMB, ADDED Try to prevent index errors...
-			; ... when script lines are added by converter (or hidden with Mask_TC())
+			; ... when script lines are added by converter (or hidden with Zip())
 			try {
 				OutSplit[idx] := OutSplit[idx] comment			; add comment to proper line
 			}

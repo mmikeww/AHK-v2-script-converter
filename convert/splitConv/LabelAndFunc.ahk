@@ -1306,10 +1306,10 @@ class ConvLabel
 															getV1LabelNames(code)
 ;################################################################################
 {
-; 2025-11-28 AMB, UPDATED to prevent Default: within Switch from being mistaken for label
+; 2025-11-30 AMB, UPDATED to prevent Default: within Switch from being mistaken for label
 
 	v1LabelNames := ''
-	Mask_T(&code, 'SW')		; hide Default: within Switch blocks
+	Mask_T(&code, 'SW', 1)	; hide Default: within Switch blocks
 	Mask_R(&code, 'STR')	; restore strings
 	for idx, line in StrSplit(code, '`n', '`r') {
 		if (v1Label := getV1Label(line, returnColon:=false)) {

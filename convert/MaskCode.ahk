@@ -163,6 +163,7 @@ global	  gTagChar		:= chr(0x2605) ; '★'															; unique char to ensure 
 	(I can't always remember which string should be used, so convering more than one option)
 	TODO - might just set exclusive strings and a popup in Default when 'targ' is unknown
 2025-10-05 AMB, UPDATED
+2025-11-30 AMB, UPDATED restore option for Switch, when labels are masked (to fix masking bug)
 
  CODE param		- source-code/haystack that will be searched (for target sub-string type)
 					2025-07-06 - CANNOT BE A TRULY GLOABAL VAR - will result in errors during recursion calls (see notes)
@@ -267,7 +268,8 @@ global	  gTagChar		:= chr(0x2605) ; '★'															; unique char to ensure 
 					Mask_T(&code,	'HK',	0,sessID?)		; 	recursion call - mask hotkey declarations			(do not premask or restore)
 					Mask_T(&code,	'HS',	0,sessID?)		; 	recursion call - mask hotstring declarations		(do not premask or restore)
 					Mask_T(&code,	'KV',	0,sessID?)		; 	recursion call - mask key/vals						(do not premask or restore)
-					Mask_T(&code,	'SW',	2,sessID?)		; 	recursion call - mask switch blocks					(do not premask or restore)
+					;Mask_T(&code,	'SW',	2,sessID?)		; 	recursion call - mask switch blocks					(do not premask or restore)
+					Mask_T(&code,	'SW',	0,sessID?)		; 	2025-11-30 AMB, changed restore option to prevent HK's from being restored too soon
 				}
 ;				clsMask.MaskAll(&code, 'LBLBLK'				; mask label blocks (that have braces)
 ;					, gPtn_Blk_LBL, sessID?)					; currently already supports (?im)
@@ -876,10 +878,12 @@ Class IWTLFS
 	;############################################################################
 	Static _maskTargOnly(&code, targ)														; targ nodes will be masked, but other supported types will be restored
 	{
+	; 2025-11-30 AMB, UPDATED to fix masking bug
+
 		this._unMask(&code, targ)															; remove masks/tags from nodes that are NOT targeted
 		; only targeted nodes are masked/tagged now
 		; get full orig subStrs for these, then remask
-		nTag := '(?i)' uniqueTag('([^_]+)_P(\d+)\w+')										; [detect tags]
+		nTag	:= '(?i)' uniqueTag('([^_]+).+?_P(\d+)\w+')									; [detect tags] - 2025-11-30 UPDATED for masking bug
 		uniqStr := ''
 		While(pos	:= RegexMatch(code, nTag, &mTag, pos??1)) {								; for each remaining tag found...
 			tag		:= mTag[],  skipLen := 0
@@ -895,11 +899,16 @@ Class IWTLFS
 						: uniqStr
 				uStr	:= uniqStr . A_Index												; add counter value
 				newTag	:= uniqueTag(uStr '_P' oPos '_L' newLen)							; now has accurate tag details
+				if (!this._needles.Has(nType)) {											; if current tag is NOT a IWTLFS tag...
+					skipLen := StrLen(tag)													; ... prep for next iteration
+					pos += skipLen +1														; ...
+					continue																; ... skip tag that is not a target
+				}
 				pattern := this._needles[nType]												; get needle for targ node
 				mObj	:= clsMask(oStr, newTag, nType, pattern)							; create new clsMask object
 				clsMask.AddMask(newTag, mObj)												; add object to shared maplist (using unique tag as key)
-				code	:= RegExReplace(code, tag, newTag)									; replace old/temp tag with accurate tag
-				;code	:= RegExReplace(code, tag, oStr)									; this will restore orig substrs for testing purposes
+				code	:= StrReplaceAt(code, tag, newTag,,pos,1)	; don't use Regex!		; replace old/temp tag with accurate tag
+				;code	:= StrReplaceAt(code, tag, oStr,,pos,1)								; this will restore orig substrs for testing purpose
 				skipLen	:= InStr(oStr, nType)												; [will skip any leading ws when setting new search position]
 			}
 			pos += skipLen +1
@@ -908,7 +917,9 @@ Class IWTLFS
 	;############################################################################
 	Static _unMask(&code, targ)	; when targ is empty, unmask ALL supported types			; removes masks from ALL supported types, EXCEPT targ (when specified)
 	{
-		nTag	:= '(?i)' uniqueTag('([^_]+)_P(\d+)\w+')									; [detect any tag, and extraction of position]
+	; 2025-11-30 AMB, UPDATED to fix masking bug
+
+		nTag	:= '(?i)' uniqueTag('([^_]+).+?_P(\d+)\w+')									; [detect tags] - 2025-11-29 UPDATED for restore bug
 		nType	:= targ																		; target type will not be restored
 		oStr	:= '', oPos := 0															; ini
 		While(pos	:= RegexMatch(code, nTag, &mTag, pos??1)) {								; for each tag found...
@@ -919,7 +930,8 @@ Class IWTLFS
 				oStr	:= clsMask.GetOrig[tag]												; get orig str for tag
 				oStr	:= RegExReplace(oStr, '(?i) ★TRY_CRLF_\d+★\r\n')					; remove any TRY prefix tag that was added earlier
 				skipLen	:= InStr(oStr, nType)												; next search will begin at min distance from last match
-				code	:= RegExReplace(code, tag, oStr)									; replace tag with orig str
+				code	:= StrReplaceAt(code, tag, oStr,,pos,1)		; don't use Regex!		; 2025-11-30 - changed to StrReplace as part of bug fix
+				;code	:= RegExReplace(code, tag, oStr,,1,pos)								; 2025-11-30 - causes issues with $ char in oStr (endless loop)
 			}
 			pos += skipLen +1
 		}

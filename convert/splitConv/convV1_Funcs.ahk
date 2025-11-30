@@ -538,6 +538,7 @@ _StringMid(p) {
 			out .= format(gIndent "`t{1} := SubStr(SubStr({2}, 1, {3}), -{4})", p*) . "`r`n"
 			out .= format(gIndent "else", p) . "`r`n"
 			out .= format(gIndent "`t{1} := SubStr({2}, {3}, {4})", p*)
+			Out := Mask_TC(Out, 'STRMID')   ; 2025-11-30 AMB - compress multi-line additions into single-line tag, as needed
 			return out
 		}
 	}
@@ -576,7 +577,9 @@ _StringReplace(p) {
 			Out .= "`r`n" . gIndent . gSingleIndent . format("{2} := StrReplace({3}, {4}, {5},{1}, &ErrorLevel)", CaseSense, p*)
 		}
 	}
-	return RegExReplace(Out, "[\s\,]*\)$", ")")
+	Out := RegExReplace(Out, "[\s\,]*\)$", ")")
+	Out := Mask_TC(Out, 'STRREPL')   ; 2025-11-30 AMB - compress multi-line additions into single-line tag, as needed
+	return Out
 }
 ;################################################################################
 _StringTrimLeft() {

@@ -596,13 +596,43 @@ _GuiControlGet(p) {
 }
 ;################################################################################
 addGuiCBArgs(&code) {
-; 2025-10-05 AMB, MOVED to GuiAndMenu.ahk
+; 2025-11-30 AMB, UPDATED to provide better support for existing/missing params
 
-	global gmGuiFuncCBChecks
-	for key, val in gmGuiFuncCBChecks {
-		code := RegExReplace(code, 'im)^(\s*' key ')\((.*?)\)(\s*\{)', '$1(A_GuiEvent:="", A_GuiControl:="", Info:="", *)$3 `; V1toV2: Handle params: $2')
-		code := RegExReplace(code, 'm) `; V1toV2: Handle params: (A_GuiEvent:="", A_GuiControl:="", Info:="", \*)?$')
+	; add Gui args to callback functions
+	nCommon		:= '^\h*(?<fName>[_a-z]\w*+)(?<fArgG>\((?<Args>(?>[^()]|\((?&Args)\))*+)'
+	nFUNC		:= RegExReplace(gPtn_Blk_FUNC, 'i)\Q(?:\b(?:IF|WHILE|LOOP)\b)(?=\()\K|\E')				; remove exclusion
+	nDeclare	:= '(?im)' nCommon '\))(?<trail>.*)'													; make needle for func declaration
+	nArgs		:= '(?im)' nCommon '\K\)).*'															; make needle for func params/args
+	targParams	:= ['A_GuiEvent','A_GuiControl','Info','*']												; params that will be added as necessary
+	m := [], declare := []
+	for key, val in gmGuiFuncCBChecks
+	{
+		funcName	:= key																				; grab callback func
+		nTargFunc	:= RegExReplace(nFUNC, 'i)\Q?<fName>[_a-z]\w*+\E', funcName)						; target specific function name
+		If (pos		:= RegExMatch(code, nTargFunc, &m)) {												; look for the func declaration...
+			; target function found
+			if (RegExMatch(m[], nDeclare, &declare)) {													; get just declaration line
+				argList		:= declare.fArgG, trail := declare.trail									; extract params and trailing portion of line
+				LWS			:= TWS := '', params := ''													; ini existing params details, inc lead/trail ws
+				if (RegExMatch(argList, '\((\h*)(.+?)(\h*)\)', &mWS)) {									; separate lead/trail ws in params
+					LWS := mWS[1], params := mWS[2], TWS := mWS[3]										; extract existing params and preserve lead/trail ws
+				}
+				paramsToAdd	:= ''																		; params will be added to this as necessary
+				for idx, param in targParams {															; determine which params are missing
+					nParam	:= (param = '*') ? '\*' : '(?i)\b' param '\b'								; custom param needle each iteration
+					if (!(params ~= nParam)) {															; if param was not found in script/func params...
+						paramsToAdd .= ', ' param														; ... it will be added
+						paramsToAdd .= (param != '*') ? ':=""' : ''										; ... add null string assignement, except for * param
+					}
+				}
+				paramsToAdd	:= (!params) ? LTrim(paramsToAdd, ', ') : paramsToAdd						; remove preceding comma if not needed
+				newArgs		:= '(' LWS . params . paramsToAdd . TWS ')'									; preserve lead/trail ws while rebuilding params list
+				addArgs		:= RegExReplace(m[],  '\Q' argList '\E', newArgs,,1)						; replace function params/args
+				code		:= RegExReplace(code, '\Q' m[] '\E', addArgs,,, pos)						; replace function within the code
+			}
+		}
 	}
+	return ; code by reference
 }
 ;################################################################################
 addMenuCBArgs(&code) {

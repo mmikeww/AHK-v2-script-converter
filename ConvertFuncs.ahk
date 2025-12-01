@@ -608,17 +608,15 @@ _FileReadLine(p) {
    ; Not really a good alternative, inefficient but the result is the same
 
    if (gaScriptStrsUsed.ErrorLevel) {
-      indent := gIndent = "" ? gSingleIndent : gIndent
-
+      ; 2025-11-30 AMB - fix indent issue
       cmd := ; Very bulky solution, only way for errorlevel
       (
-      gIndent 'Try {`r`n'
-      gIndent indent 'Global ErrorLevel := 0, ' p[1] ' := StrSplit(FileRead(' p[2] '),`"``n`",`"``r`")[' p[3] ']`r`n'
+      'Try {`r`n'
+      gIndent gSingleIndent 'Global ErrorLevel := 0, ' p[1] ' := StrSplit(FileRead(' p[2] '),`"``n`",`"``r`")[' p[3] ']`r`n'
       gIndent '} Catch {`r`n'
-      gIndent indent p[1] ' := "", ErrorLevel := 1`r`n'
+      gIndent gSingleIndent p[1] ' := "", ErrorLevel := 1`r`n'
       gIndent '}'
       )
-
       Return Zip(cmd, 'FILEREADLN')   ; 2025-11-30 AMB - compress multi-line additions into single-line tag, as needed
    } else {
       out := p[1] " := StrSplit(FileRead(" p[2] "),`"``n`",`"``r`")[" P[3] "]"

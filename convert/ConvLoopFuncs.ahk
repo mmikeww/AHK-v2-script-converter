@@ -203,6 +203,7 @@
 ; Updates conversion communication messages to user, for current line
 ; currently the LAST step performed for a line
 ; 2025-10-05 AMB, UPDATED - changed source of mask chars
+; 2025-11-30 AMB, UPDATED - added Try to prevent index errors in certain situations
 
 	global gEOLComment_Cont, gEOLComment_Func, gNL_Func
 
@@ -230,8 +231,13 @@
 ;		MsgBox "[" NoCommentOutput "]`n`n" OutSplit.Length "`n`n" gEOLComment_Cont.Length
 	}
 	for idx, comment in gEOLComment_Cont {
-		if (idx != OutSplit.Length)								; if not last element
-			OutSplit[idx] := OutSplit[idx] comment				; add comment to proper line
+		if (idx != OutSplit.Length) {							; if not last element
+			; 2025-11-30 AMB, ADDED Try to prevent index errors...
+			; ... when script lines are added by converter (or hidden with Zip())
+			try {
+				OutSplit[idx] := OutSplit[idx] comment			; add comment to proper line
+			}
+		}
 		else
 			OutSplit[idx] := StrReplace(OutSplit[idx], 'v1v2EOLCommentCont', comment)
 	}

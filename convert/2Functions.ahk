@@ -365,7 +365,8 @@ _NumPut(p) {
     }
     Out := "NumPut(" Type ", " Number ", " VarOrAddress ", " OffSet ")"
   }
-  Return RegExReplace(Out, "[\s\,]*\)$", ")")
+  Out := RegExReplace(Out, "[\s\,]*\)$", ")")
+  Return Out
 }
 
 ;################################################################################

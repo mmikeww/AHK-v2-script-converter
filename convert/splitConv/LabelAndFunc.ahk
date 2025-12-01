@@ -1306,10 +1306,10 @@ class ConvLabel
 															getV1LabelNames(code)
 ;################################################################################
 {
-; 2025-11-28 AMB, UPDATED to prevent Default: within Switch from being mistaken for label
+; 2025-11-30 AMB, UPDATED to prevent Default: within Switch from being mistaken for label
 
 	v1LabelNames := ''
-	Mask_T(&code, 'SW')		; hide Default: within Switch blocks
+	Mask_T(&code, 'SW', 1)	; hide Default: within Switch blocks
 	Mask_R(&code, 'STR')	; restore strings
 	for idx, line in StrSplit(code, '`n', '`r') {
 		if (v1Label := getV1Label(line, returnColon:=false)) {
@@ -1371,6 +1371,7 @@ class ConvLabel
 ;################################################################################
 {
 ; 2025-11-23 AMB, ADDED - replaces previous Goto handling (part of fix for #413)
+; 2025-11-30 AMB, UPDATED call for Zip()
 ; converts  Goto, label  -->>  Goto("label")
 ;	also adds trailing Return as needed
 ;	places Goto/Return into a single-line tag
@@ -1408,7 +1409,7 @@ class ConvLabel
 	; finalize output
 	line		:= LWS . gotoStr . TC . retStr												; update line with changes (if any)
 	if (retStr)																				; if Return was added...
-		tagGotoReturn(&line)																; ... squash the Goto/Return into a single-line tag
+		line	:= Zip(line, 'GOTORET')														; ... compress added lines into single-line tag
 	return line
 }
 ;################################################################################
@@ -1451,33 +1452,12 @@ class ConvLabel
 	return line
 }
 ;################################################################################
-													tagGotoReturn(&gotoReturnStr)
+													   addBlkBraces(&code, tagID)
 ;################################################################################
 {
 ; 2025-11-23 AMB, ADDED as part of fix for #413
-; bundles Goto/Return (gotoReturnStr - 2 lines) into a single-line tag...
-; this ensures that single-line (non-brace) if/elseif/else detection still...
-; ... works after converter adds trailing Return to Goto commands in those blocks
-
-	Mask_T(&gotoReturnStr, 'GOTORET', '(?s).+')		; custom masking/tagging				; mask entire gotoReturnStr using GOTORET tag
-}
-;################################################################################
-														 restoreGotoReturn(&code)
-;################################################################################
-{
-; 2025-11-23 AMB, ADDED as part of fix for #413
-; restores original Goto/Return from tag created in tagGotoReturn()
-; adds braces to (non-brace) if/elseif/else blocks if they have GotoReturn tags
-; ... then, restores all GotoReturn tags found in code
-
-	addBlkBraces(&code, 'GOTORET')															; adds braces to (non-brace) if/elseif/else, as needed
-	Mask_R(&code, 'GOTORET\w+')																; restore orig code for GotoReturn tags
-}
-;################################################################################
-													 addBlkBraces(&code, tagType)
-;################################################################################
-{
-; 2025-11-23 AMB, ADDED as part of fix for #413
+; 2025-11-30 AMB, UPDATED to support mutiple tagIDs in single operation (tagID can be an array)
+;	used in conjuction with Zip(), UnZip()
 ; adds braces to (non-brace) IF sections, if those sections have target tags
 ; also supports IfMsgBox blocks
 ; TODO - can be adapted to support WHILE/TRY/LOOP/FOR/SWITCH, as needed
@@ -1486,7 +1466,21 @@ class ConvLabel
 	nIF		:= buildPtn_IF().IFSect															; needle for full IF	 section only
 	nEF		:= buildPtn_IF().EFSect															; needle for full ELSEIF section only
 	nEL		:= buildPtn_IF().ELSect															; needle for full ELSE	 section only
-	nTarg	:= '(?i)' uniqueTag(tagType '\w+')												; needle for target tags
+
+	; build needle for tags
+	; 2025-11-30 - added support for array list
+	if (Type(tagID) = 'Array') {															; if multiple tags will be targetted...
+		tagList := '|'																		; ini for detection of duplicate tag id's
+		for idx, id in gaZippedLines {														; for each tag in zip list...
+			if (!id || InStr(tagList, '|' id '|'))											; ... if empty or a dup tag name...
+				continue																	; ... skip it
+			tagList	.= id . '|'																; ... otherwise add tag to needle list
+		}
+		nTarg	:= '(?i)(?:' Trim(tagList, ' |') . ')\w+'									; finalize needle for target tags
+	}
+	else {	; only single tag will be targetted
+		nTarg	:= '(?i)' uniqueTag(tagID '\w+')											; finalize needle for target tags
+	}
 
 	revPos	:= IWTLFS.GetRevPositions(&code)												; get pos for IF/WHILE/TRY/LOOP/FOR/SWITCH nodes, in reverse order
 	Loop parse, revPos, '`n', '`r' {														; for each node in list...
@@ -1509,8 +1503,8 @@ class ConvLabel
 		ifBlk	:= '', ifGuts := '', ifPos := 1												; ini IF vars
 		newGuts	:= orig := tag := ''														; ini working vars
 		if (ifPos	:= RegExMatch(mFull, nIf, &mIf, ifPos)) {								; if IF-section found at position 1... (should always be true)
-			ifBlk	:= mIf[]																; ... If block str
-			ifGuts	:= LTrim(mIf.TCT) . mIf.ifBlk											; ... IF-section block/guts string (including leading comments/WS)
+			ifBlk	:= mIf[]																; ... [IFblock str]
+			ifGuts	:= LTrim(mIf.TCT) . mIf.ifBlk											; ... [IF-section block/guts string (including leading comments/WS)]
 			if (mIf.noBB && ifGuts ~= nTarg) {												; ... if IF-section has no braces, but has targ tag
 				newGuts	:= '`r`n' LWS . '{' ifGuts '`r`n' LWS '}'							; ...	add braces to block/guts string
 				mFull	:= RegExReplace(mFull, escRegexChars(ifGuts), newGuts,,1,ifPos)		; ...	replace block/guts string with brace version

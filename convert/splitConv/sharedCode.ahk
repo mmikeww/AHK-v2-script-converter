@@ -6,14 +6,14 @@
 ; adds support for multi-line compression...
 ; ... this is necessary to add braces to non-brace (single-line) IF/ELSEIF/ELSE blocks
 
-	global gaZippedLines															; multi-lines added by converter
+	global gaZipTagIDs																; multi-lines added by converter
 	if (!srcStr || !TagID) {														; if params are invalid...
 		return 'ERROR in ' A_ThisFunc '() - missing required params'				; ... output an error statement
 	}
 	if (!Force && !InStr(srcStr, '`n')) {											; if not multi-line, and force not requested...
 		return srcStr																; ... return orig str
 	}
-	gaZippedLines.Push(TagID)														; flag the TagID so the lines can be unzipped later
+	gaZipTagIDs.Push(TagID)															; flag the TagID so the lines can be unzipped later
 	Mask_T(&srcStr, TagID, '(?s).+')												; mask the entire srcStr, replace with a tag
 	return srcStr			; is now a custom masked-tag							; return the tag
 }
@@ -27,7 +27,7 @@
 ;	... surrounding braces will be added so the blocks support the multi-line code
 ; addBlkBraces() - see labelAndFunc.ahk
 
-	if (!TagID && !gaZippedLines.Length) {											; if there are no tags to unzip/restore...
+	if (!TagID && !gaZipTagIDs.Length) {											; if there are no tags to unzip/restore...
 		return srcStr																; ... return orig str
 	}
 	if (TagID) {																	; if a single tagID has been specified by caller...
@@ -35,8 +35,8 @@
 		Mask_R(&srcStr, TagID '\w+')												; ... restore all target tags (unzip/expand the lines)
 		return srcStr																; ... return the unzipped/expanded code
 	}
-	addBlkBraces(&srcStr, gaZippedLines)		; array list of all tags			; No tag was specified, add braces for all tags as needed
-	for idx, id in gaZippedLines {													; for each tag in list...
+	addBlkBraces(&srcStr, gaZipTagIDs)		; array list of all tag IDs				; No tag was specified, add braces for all tags as needed
+	for idx, id in gaZipTagIDs {													; for each tag in list...
 		Mask_R(&srcStr, id '\w+')													; ... unzip/expand their associated lines
 	}
 	return srcStr																	; return code with braces added and lines expanded
@@ -61,7 +61,7 @@
 	; 2025-11-30 - added support for array list
 	if (Type(tagID) = 'Array') {															; if multiple tags will be targetted...
 		tagList := '|'																		; ini for detection of duplicate tag id's
-		for idx, id in gaZippedLines {														; for each tag in zip list...
+		for idx, id in gaZipTagIDs {														; for each tag in zip list...
 			if (!id || InStr(tagList, '|' id '|'))											; ... if empty or a dup tag name...
 				continue																	; ... skip it
 			tagList	.= id . '|'																; ... otherwise add tag to needle list

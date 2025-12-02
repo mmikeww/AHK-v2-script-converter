@@ -221,7 +221,7 @@ setGlobals()
    global gTVNameDefault         := "TV"
    global gSBNameDefault         := "SB"
    global gaFileOpenVars         := []          ; 2025-10-12 AMB - callection of FileOpen object names
-   global gaZippedLines          := []          ; 2025-11-30 AMB, TagID list for line compression (Zip,Unzip)
+   global gaZipTagIDs            := []          ; 2025-11-30 AMB, TagID list for line compression (Zip,Unzip)
 
    ; reset Static vars in multiple classes      ; required for Scope support and unit testing
    clsMask.Reset()                              ; 2025-11-01 AMB, ADDED as part of Scope support, unit testing

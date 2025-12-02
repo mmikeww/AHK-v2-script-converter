@@ -152,49 +152,6 @@ global	  gTagChar		:= chr(0x2605) ; '★'															; unique char to ensure 
 	return gTagPfx . uniqueStr . gTagTrl
 }
 ;################################################################################
-												 Zip(srcStr, TagID, Force:=false)
-;################################################################################
-{
-; 2025-11-30 AMB, ADDED - compression of entire string into single tag
-; adds support for multi-line compression...
-; ... this is necessary to add braces to non-brace (single-line) IF/ELSEIF/ELSE blocks
-
-	global gaZippedLines															; multi-lines added by converter
-	if (!srcStr || !TagID) {														; if params are invalid...
-		return 'ERROR in ' A_ThisFunc '() - missing required params'				; ... output an error statement
-	}
-	if (!Force && !InStr(srcStr, '`n')) {											; if not multi-line, and force not requested...
-		return srcStr																; ... return orig str
-	}
-	gaZippedLines.Push(TagID)														; flag the TagID so the lines can be unzipped later
-	Mask_T(&srcStr, TagID, '(?s).+')												; mask the entire srcStr, replace with a tag
-	return srcStr			; is now a custom masked-tag							; return the tag
-}
-;################################################################################
-														 UnZip(srcStr, TagID:='')
-;################################################################################
-{
-; 2025-11-30 AMB, ADDED - restores custom tags created with Zip()
-; But with added feature...
-;	if expanded code is multi-line and is placed within a single-line IF/ELSEIF/ELSE block...
-;	... surrounding braces will be added so the blocks support the multi-line code
-; addBlkBraces() - see labelAndFunc.ahk
-
-	if (!TagID && !gaZippedLines.Length) {											; if there are no tags to unzip/restore...
-		return srcStr																; ... return orig str
-	}
-	if (TagID) {																	; if a single tagID has been specified by caller...
-		addBlkBraces(&srcStr, TagID)												; ... add braces to (non-brace) if/elseif/else, as needed
-		Mask_R(&srcStr, TagID '\w+')												; ... restore all target tags (unzip/expand the lines)
-		return srcStr																; ... return the unzipped/expanded code
-	}
-	addBlkBraces(&srcStr, gaZippedLines)		; array list of all tags			; No tag was specified, add braces for all tags as needed
-	for idx, id in gaZippedLines {													; for each tag in list...
-		Mask_R(&srcStr, id '\w+')													; ... unzip/expand their associated lines
-	}
-	return srcStr																	; return code with braces added and lines expanded
-}
-;################################################################################
 				 Mask_T(&code, targ, option:=unset, sessID:=unset, convert:=true)
 ;################################################################################
 {
@@ -872,7 +829,7 @@ Class IWTLFS
 					,'IFNOTEXIST'
 					,'IFMSGBOX'																; 2025-11-23 AMB, ADDED
 					,'LOOP','SWITCH','TRY','WHILE']
-		posMap := Map_I()
+		posMap := map()
 		for idx, nType in nodeTypes {														; for each node type...
 			pos		:= 1																	; must be reset with each iteraion
 			nTrail	:= '\b.++'
@@ -1012,16 +969,16 @@ class clsMask
 		this.codePtn	:= pattern
 	}
 	;############################################################################
-	static masklist		:= Map_I()			; holds all premask objects, origCode/tags
-	static uniqueIdList	:= Map_I()			; ensures tags have unique ID
+	static masklist		:= map()			; holds all premask objects, origCode/tags
+	static uniqueIdList	:= map()			; ensures tags have unique ID
 	;static maxMasks	:= 16**4			; 65K - CAUSED BUG!! NOT ENOUGH FOR HEAVY TESTING
 	static maxMasks		:= 16**6			; 16.7 million (must be enough for heavy testing!!!)
 	static maskCountT	:= 0				; 2025-06-12 - to prevent endless-loop bug
 	;############################################################################
 	Static Reset()							; 2025-11-01 AMB, ADDED as part of Scope support
 	{
-		this.masklist		:= Map_I()
-		this.uniqueIdList	:= Map_I()
+		this.masklist		:= map()
+		this.uniqueIdList	:= map()
 		this.maskCountT		:= 0
 	}
 	;############################################################################
@@ -1172,7 +1129,7 @@ class clsMask
 	; ... each session keeps its own list of tags that belong to that session only
 	; these session tags are also listed in the static/shared clsMask.Masklist map
 
-		_sessList	:= Map_I()						; holds session tag ids
+		_sessList	:= map()						; holds session tag ids
 		_sessID		:= ''							; unique session id
 
 		__new(sessID) {
@@ -1262,7 +1219,7 @@ class clsNodeMap	; 'block map' might be better term
 	pos						:= -1		; block start position within code, ALSO use as unique key for MapList
 	len						:= 0		; char length of entire block
 	ParentList				:= ''		; list of parent ids (immediate parent will be listed first)
-	ChildList				:= Map_I()	; list of child nodes
+	ChildList				:= map()	; list of child nodes
 
 	; acts as constructor for a node object
 	__new(name, cType, blkCode, uid, pos, len)
@@ -1289,7 +1246,7 @@ class clsNodeMap	; 'block map' might be better term
 ;		return ((m2[2] > m1[2]) ? 1 : ((m2[2] < m1[2]) ? -1 : ((m2[1] > m1[1]) ? 1 : ((m2[1] < m1[1]) ? -1 : 0))))
 ;	}
 	;############################################################################
-	; PUBLIC - convenience - returns string list of ChildList Map_I()
+	; PUBLIC - convenience - returns string list of ChildList map()
 	GetChildren() {
 		cList := ''
 		for key, childNode in this.ChildList {
@@ -1306,8 +1263,8 @@ class clsNodeMap	; 'block map' might be better term
 	hasChildren				=> this.ChildList.Count
 	hasChanged				=> (this.ConvCode && (this.ConvCode = this.BlockCode))
 	;############################################################################
-	static mapList			:= Map_I()
-	static maskList			:= Map_I()						; 2025-10-27 AMB, ADDED
+	static mapList			:= map()
+	static maskList			:= map()						; 2025-10-27 AMB, ADDED
 ;	static idIndex			:= 0
 ;	static nextIdx			=> ++clsNodeMap.IdIndex
 ;	static getNode(id)		=> clsNodeMap.mapList(id)
@@ -1315,8 +1272,8 @@ class clsNodeMap	; 'block map' might be better term
 	;############################################################################
 	static Reset()			; 2025-11-01 AMB, ADDED as part of Scope support
 	{
-		this.mapList		:= Map_I()
-		this.maskList		:= Map_I()
+		this.mapList		:= map()
+		this.maskList		:= map()
 	}
 	;############################################################################
 	; PRIVATE - adds a node to maplist
@@ -1341,7 +1298,7 @@ class clsNodeMap	; 'block map' might be better term
 	; 2025-11-01 AMB, UPDATED as part of Scope support
 	static BuildNodeMap(code)
 	{
-		this.mapList := Map_I()					; each build requires a fresh MapList (2025-11-01 UPDATED)
+		this.mapList := map()					; each build requires a fresh MapList (2025-11-01 UPDATED)
 		Mask_T(&code, 'C&S',1)					; mask comments/strings - might be redundant
 		Mask_T(&code, 'V1MLS')					; mask v1 ML strings
 		uid := clsMask.GenUniqueID()
@@ -1483,7 +1440,7 @@ class clsNodeMap	; 'block map' might be better term
 	; PRIVATE - find all parents/children for passed block, return immediate parent
 	static _findParents(name, pos, len)
 	{
-		cp := -1, parentList := Map_I()
+		cp := -1, parentList := map()
 		; find parent via brute force (by comparing code positions)
 		for key, node in this.mapList {
 			if ((pos>node.pos) && ((pos+len)<node.EndPos)) {

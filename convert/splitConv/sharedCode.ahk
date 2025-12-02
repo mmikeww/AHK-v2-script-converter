@@ -1,4 +1,136 @@
 ;################################################################################
+												 Zip(srcStr, TagID, Force:=false)
+;################################################################################
+{
+; 2025-11-30 AMB, ADDED - compression of entire string into single tag
+; adds support for multi-line compression...
+; ... this is necessary to add braces to non-brace (single-line) IF/ELSEIF/ELSE blocks
+
+	global gaZipTagIDs																; multi-lines added by converter
+	if (!srcStr || !TagID) {														; if params are invalid...
+		return 'ERROR in ' A_ThisFunc '() - missing required params'				; ... output an error statement
+	}
+	if (!Force && !InStr(srcStr, '`n')) {											; if not multi-line, and force not requested...
+		return srcStr																; ... return orig str
+	}
+	gaZipTagIDs.Push(TagID)															; flag the TagID so the lines can be unzipped later
+	Mask_T(&srcStr, TagID, '(?s).+')												; mask the entire srcStr, replace with a tag
+	return srcStr			; is now a custom masked-tag							; return the tag
+}
+;################################################################################
+														 UnZip(srcStr, TagID:='')
+;################################################################################
+{
+; 2025-11-30 AMB, ADDED - restores custom tags created with Zip()
+; But with added feature...
+;	if expanded code is multi-line and is placed within a single-line IF/ELSEIF/ELSE block...
+;	... surrounding braces will be added so the blocks support the multi-line code
+; addBlkBraces() - see labelAndFunc.ahk
+
+	if (!TagID && !gaZipTagIDs.Length) {											; if there are no tags to unzip/restore...
+		return srcStr																; ... return orig str
+	}
+	if (TagID) {																	; if a single tagID has been specified by caller...
+		addBlkBraces(&srcStr, TagID)												; ... add braces to (non-brace) if/elseif/else, as needed
+		Mask_R(&srcStr, TagID '\w+')												; ... restore all target tags (unzip/expand the lines)
+		return srcStr																; ... return the unzipped/expanded code
+	}
+	addBlkBraces(&srcStr, gaZipTagIDs)		; array list of all tag IDs				; No tag was specified, add braces for all tags as needed
+	for idx, id in gaZipTagIDs {													; for each tag in list...
+		Mask_R(&srcStr, id '\w+')													; ... unzip/expand their associated lines
+	}
+	return srcStr																	; return code with braces added and lines expanded
+}
+;################################################################################
+													   addBlkBraces(&code, tagID)
+;################################################################################
+{
+; 2025-11-23 AMB, ADDED as part of fix for #413
+; 2025-11-30 AMB, UPDATED to support mutiple tagIDs in single operation (tagID can be an array)
+;	used in conjuction with Zip(), UnZip()
+; adds braces to (non-brace) IF sections, if those sections have target tags
+; also supports IfMsgBox blocks
+; TODO - can be adapted to support WHILE/TRY/LOOP/FOR/SWITCH, as needed
+
+	nIfFull	:= buildPtn_IF().fullIF															; needle for full if/elseif/else blocks
+	nIF		:= buildPtn_IF().IFSect															; needle for full IF	 section only
+	nEF		:= buildPtn_IF().EFSect															; needle for full ELSEIF section only
+	nEL		:= buildPtn_IF().ELSect															; needle for full ELSE	 section only
+
+	; build needle for tags
+	; 2025-11-30 - added support for array list
+	if (Type(tagID) = 'Array') {															; if multiple tags will be targetted...
+		tagList := '|'																		; ini for detection of duplicate tag id's
+		for idx, id in gaZipTagIDs {														; for each tag in zip list...
+			if (!id || InStr(tagList, '|' id '|'))											; ... if empty or a dup tag name...
+				continue																	; ... skip it
+			tagList	.= id . '|'																; ... otherwise add tag to needle list
+		}
+		nTarg	:= '(?i)(?:' Trim(tagList, ' |') . ')\w+'									; finalize needle for target tags
+	}
+	else {	; only single tag will be targetted
+		nTarg	:= '(?i)' uniqueTag(tagID '\w+')											; finalize needle for target tags
+	}
+
+	revPos	:= IWTLFS.GetRevPositions(&code)												; get pos for IF/WHILE/TRY/LOOP/FOR/SWITCH nodes, in reverse order
+	Loop parse, revPos, '`n', '`r' {														; for each node in list...
+		ss	:= StrSplit(A_LoopField, ':'), nPos := ss[1], nType := ss[2]					; separate/extract node-position and node-type
+
+		; ignore anything that is not a target node
+		if (!(nType ~= '(IF|IFMSGBOX)'))													; only targetting IF/IfMsgBox nodes (for now)...
+			continue																		; ... skip if not a targ node
+		if (RegExMatch(code, nIfFull, &ifFull, nPos) != nPos)								; if current position does not have an IF block...
+			continue																		; ... not a target node... skip it
+		if (!(ifFull[] ~= nTarg))															; if IF-node does not have a target tag...
+			continue																		; ... skip it
+
+		; node is a legit target
+		mFull	:= origFull :=  ifFull[]													; FULL if/elseif/else (or IfMsgBox) block
+		LWS		:= RegExReplace(ifFull[2], '[}{]', ' ')										; extract leading whitespace (indent), replace any braces with space
+
+		;########################################################################
+		; add braces to single-line IF section, if target present
+		ifBlk	:= '', ifGuts := '', ifPos := 1												; ini IF vars
+		newGuts	:= orig := tag := ''														; ini working vars
+		if (ifPos	:= RegExMatch(mFull, nIf, &mIf, ifPos)) {								; if IF-section found at position 1... (should always be true)
+			ifBlk	:= mIf[]																; ... [IFblock str]
+			ifGuts	:= LTrim(mIf.TCT) . mIf.ifBlk											; ... [IF-section block/guts string (including leading comments/WS)]
+			if (mIf.noBB && ifGuts ~= nTarg) {												; ... if IF-section has no braces, but has targ tag
+				newGuts	:= '`r`n' LWS . '{' ifGuts '`r`n' LWS '}'							; ...	add braces to block/guts string
+				mFull	:= RegExReplace(mFull, escRegexChars(ifGuts), newGuts,,1,ifPos)		; ...	replace block/guts string with brace version
+			}
+		}
+		;########################################################################
+		; add braces to single-line ELSEIF sections, if target present
+		efGuts := ''																		; ini ELSEIF vars
+		efPos := (StrLen(ifBlk) + ((tag) ? StrLen(newGuts)-StrLen(tag) : 0))				; set approx position for initial elseIf search
+		newGuts	:= orig := tag := ''														; ini working vars
+		While(efPos := RegexMatch(mFull, nEF, &mEF, efPos)) {								; while there are elseIf sections...
+			efGuts := LTrim(mEF.TCT) . mEF.efBlk											; ... ELSEIF-section block/guts string (including leading comments/WS)
+			if (mEF.noBB && efGuts ~= nTarg) {												; ... if ELSEIF-section has no braces, but has targ tag
+				newGuts	:= '`r`n' LWS . '{' efGuts '`r`n' LWS '}'							; ...	add braces to block/guts string
+				mFull	:= RegExReplace(mFull, escRegexChars(efGuts), newGuts,,1,efPos)		; ...	replace block/guts string with brace version
+			}
+			efPos += (StrLen(efGuts) + ((tag) ? StrLen(newGuts)-StrLen(tag) : 0))			; set new starting pos for next elseif search
+		}
+		;########################################################################
+		; add braces to single-line ELSE section, if target present
+		elGuts := ''																		; ini ELSE vars
+		newGuts	:= orig := tag := ''														; ini working vars
+		if (elPos := RegExMatch(mFull, nEL, &mEL)) {										; if ELSE-section found...
+			elGuts := LTrim(mEL.TCT) . mEL.elBlk											; ... ELSE-section block/guts string (including leading comments/WS)
+			if (mEL.noBB && elGuts ~= nTarg) {												; ... if ELSE-section has no braces, but has targ tag
+				newGuts	:= '`r`n' LWS . '{' elGuts '`r`n' LWS '}'							; ...	add braces to block/guts string
+				mFull	:= RegExReplace(mFull, escRegexChars(elGuts), newGuts,,1,elPos)		; ...	replace block/guts string with brace version
+			}
+		}
+		;########################################################################
+		if (mFull != origFull) {															; if replacements were made...
+			code := RegExReplace(code, escRegexChars(origFull), mFull,,1,ifPos)				; ... replace original node string with updated version
+		}
+	}
+}
+;################################################################################
 																	   isHex(val)
 ;################################################################################
 {

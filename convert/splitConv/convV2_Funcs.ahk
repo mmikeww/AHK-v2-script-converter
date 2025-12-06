@@ -303,9 +303,17 @@
 ;################################################################################
 {
 ; 2025-06-12 AMB, Moved to dedicated routine for cleaner convert loop
+; 2025-12-06 AMB, UPDATED needle to avoid false positives (chained assignments)
 ; converts v1 dateTime math to v2 format
 
-	if (RegExMatch(lineStr, 'i)^(\h*)([a-z_][a-z_0-9]*)\h*(\+|-)=\h*([^,\h]*)\h*,\h*([smhd]\w*)(.*)$', &m)) {
+	nVar		:= '([a-z_]\w*+)'									; variable
+	nOp			:= '\h*([+-])=\h*'									; operator
+	nVal		:= '([^,\h]+)\h*'									; value (digits or varible)
+	nUnits		:= '\h*([smhd]\w*+)'								; units [secs,mins,hours,days]
+	nNotAssign	:= '([^,+-=]*+)'									; anything after, 2025-12-06 - avoid chained assignments
+	nAssign		:= nVar nOp nVal ',' nUnits nNotAssign
+	;if (RegExMatch(lineStr, 'i)^(\h*)([a-z_][a-z_0-9]*)\h*(\+|-)=\h*([^,\h]*)\h*,\h*([smhd]\w*)(.*)$', &m)) {
+	if (RegExMatch(lineStr, 'i)^(\h*)' nAssign '$', &m)) {
 		cmd := (m[3]='+') ? 'DateAdd' : 'DateDiff'
 		lineStr := m[1] m[2] ' := ' cmd '(' m[2] ', ' FormatParam('ValueCBE2E', m[4]) ", '" m[5] "')" m[6]
 	}

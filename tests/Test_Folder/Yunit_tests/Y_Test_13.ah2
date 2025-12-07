@@ -2,4 +2,4 @@ var :=
    (
    "hello world"
    )
-FileAppend(var, "*")
+MsgBox(var)

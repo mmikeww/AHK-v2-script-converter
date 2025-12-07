@@ -1,0 +1,1 @@
+MsgBox(Ord("t"))

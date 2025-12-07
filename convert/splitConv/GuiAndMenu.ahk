@@ -833,7 +833,7 @@ _Menu(p) {
 	if (!InStr(gMenuList, "|" menuNameLine "|"))
 	{
 		if (menuNameLine = "Tray") {
-			LineResult .= menuNameLine ":= A_TrayMenu`r`n" gIndent		; initialize/declare systray object (only once)
+			LineResult .= menuNameLine " := A_TrayMenu`r`n" gIndent		; initialize/declare systray object (only once)
 		} else {
 			; 2024-07-02, CHANGED, AMB - to support MenuBar detection and initialization
 			global gMenuBarName										; was set prior to any conversion taking place, see Before_LineConverts() and getMenuBarName()

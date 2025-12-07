@@ -1,1 +1,0 @@
-RunWait, %comspec% /c dir c:\

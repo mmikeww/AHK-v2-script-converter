@@ -1,2 +1,0 @@
-var := "hello"
-FileAppend(var, "*")

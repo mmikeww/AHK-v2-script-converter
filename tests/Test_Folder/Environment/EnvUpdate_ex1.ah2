@@ -1,0 +1,1 @@
+SendMessage(0x1A, 0, StrPtr("Environment"), 0xFFFF)

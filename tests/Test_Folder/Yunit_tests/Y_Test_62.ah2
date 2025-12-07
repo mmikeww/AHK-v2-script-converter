@@ -1,2 +1,2 @@
 if FileExist("C:\")
-   FileAppend("the drive exists", "*")
+   MsgBox("the drive exists")

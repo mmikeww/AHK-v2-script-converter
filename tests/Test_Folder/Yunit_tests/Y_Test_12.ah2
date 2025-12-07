@@ -4,4 +4,4 @@ var :=
 "line1
 line2"
 )
-FileAppend(var, "*")
+MsgBox(var)

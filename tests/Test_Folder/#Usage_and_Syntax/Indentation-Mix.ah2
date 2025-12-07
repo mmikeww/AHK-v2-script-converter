@@ -7,4 +7,4 @@ if (1) {
          pos := InStr(var, "al") - 1
    }
 }
-FileAppend("pos=" pos, "*")
+MsgBox("pos=" pos)

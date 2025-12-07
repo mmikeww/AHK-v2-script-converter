@@ -1319,7 +1319,7 @@ class ConvertTests
       expected := "
          (Join`r`n
                                  var := A_Now
-                                 var := DateAdd(var, 7, "days")
+                                 var := DateAdd((var != "" ? var : A_Now), 7, "days")
                                  var := FormatTime(var, "ShortDate")
                                  FileAppend(var, "*")
          )"
@@ -1438,7 +1438,7 @@ class ConvertTests
          (Join`r`n
                                  var1 := 20050126
                                  var2 := 20040126
-                                 var1 := DateDiff(var1, var2, "days")
+                                 var1 := DateDiff((var1 != "" ? var1 : A_Now), (var2 != "" ? var2 : A_Now), "days")
                                  FileAppend(var1, "*")
          )"
       ; first test that our expected code actually produces the same results in v2
@@ -4061,7 +4061,7 @@ class ConvertTests
          )"
       expected := "
          (Join`r`n
-                           SendMessage, % WM_SETTINGCHANGE := 0x001A, 0, Environment,, % "ahk_id " . HWND_BROADCAST := "0xFFFF"
+                           SendMessage(0x1A, 0, StrPtr("Environment"), 0xFFFF)
          )"
       ; first test that our expected code actually produces the same results in v2
       ; if (this.test_exec = true) {
@@ -5480,7 +5480,7 @@ Menu, Tray, Add, Item1, MenuHandler  ; Creates a new menu item.
 
       expected := "
          (Join`r`n
-Tray:= A_TrayMenu
+Tray := A_TrayMenu
 Tray.Add()  ; Creates a separator line.
 Tray.Add("Item1", MenuHandler)  ; Creates a new menu item.
          )"

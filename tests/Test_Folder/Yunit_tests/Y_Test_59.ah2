@@ -1,3 +1,3 @@
 var := ","
 if (var = ",")
-   FileAppend("var is a comma", "*")
+   MsgBox("var is a comma")

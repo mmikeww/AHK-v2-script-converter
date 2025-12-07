@@ -204,7 +204,7 @@ gmAhkCmdsToConvertV2 := OrderedMap(
   , "EnvGet,OutputVar,EnvVarNameT2E" ,
     "{1} := EnvGet({2})"
   , "EnvUpdate" ,
-    'SendMessage, % WM_SETTINGCHANGE := 0x001A, 0, Environment,, % "ahk_id " . HWND_BROADCAST := "0xFFFF"'
+    'SendMessage(0x1A, 0, StrPtr("Environment"), 0xFFFF)'
   , "Exit,ExitCode" ,
     "Exit({1})"
   , "ExitApp,ExitCode" ,

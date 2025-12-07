@@ -1,0 +1,1 @@
+MsgBox, % Asc("t")

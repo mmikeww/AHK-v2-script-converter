@@ -976,9 +976,10 @@ _Process(p) {
 }
 ;################################################################################
 _Random(p) {
+; 2025-12-10 AMB, UPDATED - added line fill to prevent lockups in certain cases
    ; v1: Random, OutputVar, Min, Max
    if (p[1] = "") {
-      Return "; V1toV2: Removed Random reseed"
+      Return "`; V1toV2: Removed Random reseed" . '`r`n' gIndent gLineFillMsg
    }
    Out := format("{1} := Random({2}, {3})", p*)
    Return RegExReplace(Out, "[\s\,]*\)$", ")")

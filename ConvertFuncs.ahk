@@ -2,31 +2,7 @@
 #SingleInstance Force
 CoordMode("tooltip", "screen")          ; for debugging msgs
 
-; to do: strsplit (old command)
-; requires should change the version :D
-global   dbg         := 0
-global   gV2Conv     := true            ; for testing separate V1,V2 conversions
-global   gFilePath   := ''              ; TEMP, for testing
-
-#Include lib/ClassOrderedMap.ahk
-#Include lib/dbg.ahk
-#Include Convert/MaskCode.ahk                   ; 2024-06-26 ADDED AMB (masking support)
-#Include Convert/Scope.ahk                      ; 2025-11-01 ADDED AMB (scope   support)
-#Include Convert/1Commands.ahk
-#Include Convert/2Functions.ahk
-#Include Convert/3Methods.ahk
-#Include Convert/4ArrayMethods.ahk
-#Include Convert/5Keywords.ahk
-#Include Convert/ConvLoopFuncs.ahk              ; 2025-06-12 ADDED AMB (separated loop code)
-#Include Convert/Conversion_CLS.ahk             ; 2025-06-12 ADDED AMB (future support of Class version)
-#Include Convert/ContSections.ahk               ; 2025-06-22 ADDED AMB (for support dedicated to continuation sections)
-#Include Convert/SplitConv/ConvV1_Funcs.ahk     ; 2025-07-01 ADDED AMB (for support of separated conversion)
-#Include Convert/SplitConv/ConvV2_Funcs.ahk     ; 2025-07-01 ADDED AMB (for support of separated conversion)
-#Include Convert/SplitConv/SharedCode.ahk       ; 2025-07-01 ADDED AMB (code shared for v1 or v2 converssion)
-#Include Convert/SplitConv/PseudoHandling.ahk   ; 2025-07-01 ADDED AMB (temp while separating dual conversion)
-#Include Convert/SplitConv/LabelAndFunc.ahk     ; 2025-07-06 ADDED AMB
-#Include Convert/SplitConv/GuiAndMenu.ahk       ; 2025-07-06 ADDED AMB
-
+#Include Global_Declare.ahk             ; global definitions, classes, etc
 
 ; 2025-07-06 AMB, ERROR related to combination of recursion AND global scope
 ; will cause error when called using a global var, AND performing recursion
@@ -35,21 +11,6 @@ global   gFilePath   := ''              ; TEMP, for testing
 ;   globalVar := "This is a test"
 ;   Mask_T(&globalVar, 'C&S') ; mask comments and strings (uses recursion)
 
-
-;################################################################################
-Class Map_I extends Map {
-; 2025-11-28 AMB, ADDED - custom Map with case-sensitivity disabled by default
-   caseSense    := 0                                ; disable case-sensitivity by default
-   KeysToString => Map_I._Join(this       )         ; return list of object keys
-   KeyValPairs  => Map_I._Join(this,1     )         ; return list of {key:val}  pairs
-   LabelMap     => Map_I._Join(this,1,'=>')         ; return list of {key=>val} pairs
-   ;#############################################################################
-   Static _Join(obj,kv:=0,d:=':',s:='') {           ; @rommmcek 2025-11-30
-   for k,v in obj
-      s .= ((kv) ? k d v : k) ', '
-   return (s:=Trim(s,', '))?((kv)?'{' s '}':s):''
-   }
-}
 ;################################################################################
 Convert(code)                    ; MAIN ENTRY POINT for conversion process
 ;################################################################################
@@ -159,79 +120,6 @@ After_LineConverts(&code)
    Mask_R(&code, 'C&S')                     ; ensure all comments/strings are restored (just in case)
    return    ; code by reference
 }
-
-;################################################################################
-setGlobals()
-{
-; 2024-07-11 AMB, ADDED dedicated function for global declarations
-;  ... so that they can be initialized prior to any other code...
-;  ... this is being done to fix a bug between global masking and onMessage handling
-;  ... and so all code within script has access to these globals prior to _convertLines() call
-; 2025-11-01 AMB, UPDATED as part of Scope support
-
-   ;global gUseMasking            := 1           ; 2025-11-01 - removed option to disable, as part of Scope support
-   ; func and label
-   global gAllFuncNames          := ""          ; 2024-07-07 - comma-deliminated string holding the names of all functions
-   global gAllClassNames         := ""          ; 2024-10-08 - comma-deliminated string holding the names of all classes
-   global gAllV1LabelNames       := ""          ; 2024-07-09 - comma-deliminated string holding the names of all v1 labels
-   global gmAllV2LablNames       := Map_I()     ; 2024-07-07 - map holding v1 labelNames (key) and their new v2 label/FuncName (value)
-   global gmList_LblsToFunc      := Map_I()     ; 2025-10-05 - replaces gaList_LblsToFuncO and gaList_LblsToFuncC
-   global gmList_GosubToFunc     := Map_I()     ; 2025-10-05 - AMB, ADDED - tracks gosubs that need to be converted to func calls
-   global gmList_HKCmdToFunc     := Map_I()     ; 2025-10-12 - AMB, ADDED - tracks funcs that should be called using 'hotkey' cmd
-   global gmByRefParamMap        := Map_I()     ; Map of FuncNames and ByRef params
-   global gmAltLabel             := Map_I()     ; map of labels that point to same reference
-   global gFuncParams            := ""
-   global gmList_GotoLabel       := Map_I()
-   ; gui and menu
-   global gMenuBarName           := ""          ; 2024-07-02 - holds the name of the main gui menubar
-   global gMenuList              := "|"
-   global gmMenuCBChecks         := Map_I()     ; 2024-06-26 AMB, for fix #131
-   global gGuiActiveFont         := ""
-   global gGuiControlCount       := 0
-   global gmGuiCtrlObj           := Map_I()     ; Create a map to return the object of a control
-   global gmGuiCtrlType          := Map_I()     ; Create a map to return the type of control
-   global gmGuiFuncCBChecks      := Map_I()     ; for gui funcs
-   global gGuiList               := "|"
-   global gGuiNameDefault        := "myGui"
-   global gmGuiVList             := Map_I()     ; Used to list all variable names defined in a Gui
-   global gUseLastName           := False       ; Keep track of if we use the last set name in gGuiList
-
-   global gaScriptStrsUsed       := Array()     ; Keeps an array of interesting strings used in the script
-   global gOScriptStr            := Object()    ; now a ScriptCode class object (for future use)
-;   global gOScriptStr            := []          ; array of all the lines
-   global gEarlyLine             := ""          ; portion of line to process, prior to processing, will not include trailing comment
-   global gO_Index               := 0           ; current index of the lines
-   global gIndent                := ""
-   global gSingleIndent          := ""
-
-   global gEOLComment_Cont       := []          ; 2025-05-24 fix for #296 - comments for continuation sections
-   global gEOLComment_Func       := ""          ; _Funcs can use this to add comments at EOL
-   global gNL_Func               := ""          ; _Funcs can use this to add New Previous Line
-   global gfrePostFuncMatch      := False       ; _Funcs can use this to know their regex matched
-
-   global goWarnings             := Object()    ; global object [with props] to keep track of warnings to add, see FinalizeConvert()
-   global gaList_PseudoArr       := Array()     ; list of strings that should be converted from pseudoArray to Array
-   global gaList_MatchObj        := Array()     ; list of strings that should be converted from v1 Match Object to v2 Match Object
-
-   global gmOnMessageMap         := Map_I()     ; list of OnMessage listeners
-   global gmVarSetCapacityMap    := Map_I()     ; list of VarSetCapacity variables, with definition type
-   global gfLockGlbVars          := False       ; flag used to prevent global vars from being changed
-
-   global gLVNameDefault         := "LV"
-   global gTVNameDefault         := "TV"
-   global gSBNameDefault         := "SB"
-   global gaFileOpenVars         := []          ; 2025-10-12 AMB - callection of FileOpen object names
-   global gaZipTagIDs            := []          ; 2025-11-30 AMB, TagID list for line compression (Zip,Unzip)
-
-   ; reset Static vars in multiple classes      ; required for Scope support and unit testing
-   clsMask.Reset()                              ; 2025-11-01 AMB, ADDED as part of Scope support, unit testing
-   clsNodeMap.Reset()                           ; 2025-11-01 AMB, ADDED as part of Scope support, unit testing
-   clsSection.Reset()                           ; 2025-11-01 AMB, ADDED as part of Scope support, unit testing
-   clsScopeSect.Reset()                         ; 2025-11-01 AMB, ADDED as part of Scope support, unit testing
-
-   global gAhkCmdsToRemoveV1, gAhkCmdsToRemoveV2, gmAhkCmdsToConvertV1, gmAhkCmdsToConvertV2, gmAhkFuncsToConvert, gmAhkMethsToConvert
-         , gmAhkArrMethsToConvert, gmAhkKeywdsToRename, gmAhkLoopRegKeywds
-}
 ;################################################################################
 PreProcessLines(&code)
 ;################################################################################
@@ -255,7 +143,7 @@ PreProcessLines(&code)
         outStr  .= line '`r`n'                                                          ; add line to output str
     }
     code := RegExReplace(outStr, '\r\n$',,,1)                                           ; update code (also remove very last CRLF)
-    code := UnZip(code, 'GOTORET')                                                    ; handle GotoReturn - add braces to IF/ELSEIF/ELSE as needed
+    code := UnZip(code, 'GOTORET')                                                      ; handle GotoReturn - add braces to IF/ELSEIF/ELSE as needed
     return                                                                              ; return Code by reference
 }
 ;################################################################################
@@ -374,7 +262,7 @@ FinalizeConvert(&code)
    code := UnZip(code)
 
    ; Add global warnings
-   If goWarnings.HasProp("AddedV2VRPlaceholder") && goWarnings.AddedV2VRPlaceholder = 1 {
+   If (goWarnings.HasProp("AddedV2VRPlaceholder") && goWarnings.AddedV2VRPlaceholder = 1) {
       code := "; V1toV2: Some mandatory VarRefs replaced with AHKv1v2_vPlaceholder`r`n" code
    }
 

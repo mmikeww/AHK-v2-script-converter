@@ -47,18 +47,23 @@
 {
 ; 2025-11-23 AMB, ADDED as part of fix for #413
 ; 2025-11-30 AMB, UPDATED to support mutiple tagIDs in single operation (tagID can be an array)
-;	used in conjuction with Zip(), UnZip()
-; adds braces to (non-brace) IF sections, if those sections have target tags
-; also supports IfMsgBox blocks
-; TODO - can be adapted to support WHILE/TRY/LOOP/FOR/SWITCH, as needed
+; 2025-12-10 AMB, UPDATED to support LOOP blocks
+; used in conjuction with Zip(), UnZip()
+; adds braces to (non-brace) IF, IfMsgBox, LOOP sections, when those sections have target tags
+; TODO - can be adapted to also support WHILE/TRY/FOR/SWITCH, as needed
 
+	; IF needles
 	nIfFull	:= buildPtn_IF().fullIF															; needle for full if/elseif/else blocks
 	nIF		:= buildPtn_IF().IFSect															; needle for full IF	 section only
 	nEF		:= buildPtn_IF().EFSect															; needle for full ELSEIF section only
 	nEL		:= buildPtn_IF().ELSect															; needle for full ELSE	 section only
 
+	; LOOP needle - customized (2025-12-10)
+	Kloc	:= InStr(gPtn_Blk_LP, '\K')														; find \K within loop needle (not needed here)
+	nLoop	:= SubStr(gPtn_Blk_LP, Kloc+2)													; capture everything after \K
+	nloop	:= '(?im)^([\h{}]*+(?:TRY\b\h*+)?)' . nLoop										; customize prefix to Loop needle
+
 	; build needle for tags
-	; 2025-11-30 - added support for array list
 	if (Type(tagID) = 'Array') {															; if multiple tags will be targetted...
 		tagList := '|'																		; ini for detection of duplicate tag id's
 		for idx, id in gaZipTagIDs {														; for each tag in zip list...
@@ -66,26 +71,47 @@
 				continue																	; ... skip it
 			tagList	.= id . '|'																; ... otherwise add tag to needle list
 		}
-		nTarg	:= '(?i)(?:' Trim(tagList, ' |') . ')\w+'									; finalize needle for target tags
+		nTarg	:= '(?i)' uniqueTag('(?:' Trim(tagList, ' |') . ')\w+')						; finalize needle for target tags
 	}
 	else {	; only single tag will be targetted
 		nTarg	:= '(?i)' uniqueTag(tagID '\w+')											; finalize needle for target tags
 	}
 
 	revPos	:= IWTLFS.GetRevPositions(&code)												; get pos for IF/WHILE/TRY/LOOP/FOR/SWITCH nodes, in reverse order
-	Loop parse, revPos, '`n', '`r' {														; for each node in list...
+	Loop parse, revPos, '`n', '`r'														; for each node in list...
+	{
 		ss	:= StrSplit(A_LoopField, ':'), nPos := ss[1], nType := ss[2]					; separate/extract node-position and node-type
 
-		; ignore anything that is not a target node
-		if (!(nType ~= '(IF|IFMSGBOX)'))													; only targetting IF/IfMsgBox nodes (for now)...
-			continue																		; ... skip if not a targ node
+		;########################################################################
+		; LOOP (2025-12-10)
+		if (nType = 'LOOP') {																; if node is a Loop block...
+			if (RegExMatch(code, nLoop, &mLoop, nPos) = nPos) {								; verify that loop block is actually at node position
+				if (mLoop[] ~= nTarg) {														; if loop block has a target tag...
+					lpBlk	:= mLoop.TCT . mLoop.LPBlk										; [loop block, including leading comments, tags, ws]
+					if (isBraceBlock(lpBlk))												; if loop block already has braces...
+						continue															; ... ignore this node
+					mFull	:= origFull :=  mLoop[]											; [FULL Loop block]
+					LWS		:= RegExReplace(mLoop[1], '(?i)[}{TRY]', ' ')					; extract leading whitespace (indent), replace any braces or TRY with spaces
+					newBlk	:= '`r`n' LWS '{' lpBlk '`r`n' LWS '}'							; build new loop block (with braces)
+					mFull	:= RegExReplace(mFull, escRegexChars(lpBlk), newBlk,,1)			; replace orig loop block with brace-block
+					if (mFull != origFull) {												; if replacements were made...
+						code := RegExReplace(code, escRegexChars(origFull), mFull,,1,nPos)	; ... replace original node string with updated version
+					}
+					continue																; loop block now has braces - search for next node
+				}
+			}
+		}
+		;########################################################################
+		; IF
+		if (!(nType ~= '(IF|IFMSGBOX)'))													; if node is NOT IF/IfMsgBox...
+			continue																		; ... skip it (not currently targetting other node types)
 		if (RegExMatch(code, nIfFull, &ifFull, nPos) != nPos)								; if current position does not have an IF block...
-			continue																		; ... not a target node... skip it
+			continue																		; ... skip it
 		if (!(ifFull[] ~= nTarg))															; if IF-node does not have a target tag...
 			continue																		; ... skip it
 
-		; node is a legit target
-		mFull	:= origFull :=  ifFull[]													; FULL if/elseif/else (or IfMsgBox) block
+		; node is a legit IF target
+		mFull	:= origFull :=  ifFull[]													; [FULL if/elseif/else (or IfMsgBox) block]
 		LWS		:= RegExReplace(ifFull[2], '[}{]', ' ')										; extract leading whitespace (indent), replace any braces with space
 
 		;########################################################################

@@ -24,6 +24,7 @@
 	2025-07-01,03,06		- UPDATED, Multiple enhancements/improvements - see comments in code
 	2025-10-05,10,27		- UPDATED, Multiple enhancements/improvements - see comments in code
 	2025-11-01,23,28,29,30	- UPDATED, Multiple enhancements/improvements - see comments in code
+	2025-12-13				- UPDATED, see comments in code
 
 	TODO
 		Finish support for Continuation sections
@@ -1198,7 +1199,10 @@ class clsMLLineCont extends clsMask
 	; Overrides clsMask._convertCode() method for custom conversion
 	Static _convertCode(&code)
 	{
-		code := CSect.FilterAndConvert(code)								; 2025-06-22 - redirected conversion (should be permanent)
+		; 2025-12-13 AMB, allow bypass so MaskCode.ahk can be used in other projects
+		if (IsSet(CSect?)) {
+			code := CSect.FilterAndConvert(code)							; 2025-06-22 - redirected conversion (should be permanent)
+		}
 	}
 }
 ;################################################################################

@@ -146,6 +146,7 @@ gmAhkCmdsToConvertV1 := OrderedMap(
 ; 2025-10-05 AMB, UPDATED - changed Goto to custom handling
 ; 2025-11-23 AMB, UPDATED - removed Goto ( see convertGoto() now )
 ; 2025-11-28 AMB, UPDATED - changed to Case-Insensitive Map
+; 2025-12-13 AMB, UPDATED - added Try to FileDelete
 ;global gmAhkCmdsToConvert := OrderedMap(
 global gmAhkCmdsToConvertV2 := Map_I()
 gmAhkCmdsToConvertV2 := OrderedMap(
@@ -220,7 +221,7 @@ gmAhkCmdsToConvertV2 := OrderedMap(
   , "FileCreateShortcut,TargetT2E,LinkFileT2E,WorkingDirT2E,ArgsT2E,DescriptionT2E,IconFileT2E,ShortcutKeyT2E,IconNumberT2E,RunStateT2E" ,
     "FileCreateShortcut({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9})"
   , "FileDelete,dirT2E" ,
-    "FileDelete({1})"
+    "Try FileDelete({1})"   ; 2025-12-13 AMB, Added Try
   , "FileEncoding,FilePatternT2E" ,
     "FileEncoding({1})"
   , "FileGetAttrib,OutputVar,FilenameT2E" ,

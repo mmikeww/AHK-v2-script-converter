@@ -78,7 +78,7 @@
 	}
 
 	revPos	:= IWTLFS.GetRevPositions(&code)												; get pos for IF/WHILE/TRY/LOOP/FOR/SWITCH nodes, in reverse order
-	Loop parse, revPos, '`n', '`r'														; for each node in list...
+	Loop parse, revPos, '`n', '`r'															; for each node in list...
 	{
 		ss	:= StrSplit(A_LoopField, ':'), nPos := ss[1], nType := ss[2]					; separate/extract node-position and node-type
 

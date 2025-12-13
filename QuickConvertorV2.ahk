@@ -806,7 +806,7 @@ GuiTest(strV1Script:="")
     OutputMenu.Add("Replace \n with \r\n", MenuFixLineEndings)
     TestMenu := Menu()
     ;TestMenu.Add("AddBracketToHotkeyTest", (*) => editCnv.Text := AddBracket(editSrc.Text))
-    ;TestMenu.Add("GetAltLabelsMap", (*) => editCnv.Text := GetAltLabelsMap(editSrc.Text))
+    TestMenu.Add("GetAltLabelsMap", (*) => editCnv.Text := GetAltLabelsMap(editSrc.Text).LabelMap)  ; 2025-12-13 Added labelMap
     TestMenu.Add("Performance Test", MenuPerformanceTest)
     ViewMenu := Menu()
     ViewMenu.Add("Zoom In`tCtrl+NumpadAdd", MenuZoomIn)

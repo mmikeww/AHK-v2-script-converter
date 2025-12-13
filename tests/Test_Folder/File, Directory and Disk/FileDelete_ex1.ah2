@@ -1,1 +1,1 @@
-FileDelete("C:\temp files\*.tmp")
+Try FileDelete("C:\temp files\*.tmp")

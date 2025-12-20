@@ -10,6 +10,7 @@
 
 ; 2025-10-05 AMB, UPDATED - changed source of mask chars
 ; 2025-11-28 AMB, UPDATED - changed to Case-Insensitive Map
+; 2025-12-20 AMB, REMOVED - MinIndex, MaxIndex - see FixMinMaxIndex() in ConvertFuncs
 global gmAhkArrMethsToConvert := Map_I()
 gmAhkArrMethsToConvert := OrderedMap(
     "length()" ,
@@ -20,10 +21,10 @@ gmAhkArrMethsToConvert := OrderedMap(
     "*_InsertAt"
   , "Remove(Keys*)",
     "*_RemoveAt"
-  , "MaxIndex()" ,
-     gMXPH              ; see MaskCode.ahk
-  , "MinIndex()" ,
-     gMNPH              ; see MaskCode.ahk
+;  , "MaxIndex()" ,
+;     gMXPH              ; see MaskCode.ahk
+;  , "MinIndex()" ,
+;     gMNPH              ; see MaskCode.ahk
   )
 
 _InsertAt(p) {

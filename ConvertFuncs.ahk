@@ -254,6 +254,7 @@ FinalizeConvert(&code)
 ;################################################################################
 {
 ; 2024-06-27 ADDED, 2025-06-12 UPDATED, 2025-10-05 UPDATED
+; 2025-12-20 UPDATED - Moved Min/MaxIndex,OnClipboardChange to dedicated funcs
 ; Performs tasks that finalize overall conversion
 
    ; 2025-11-30 AMB, ADDED
@@ -266,25 +267,12 @@ FinalizeConvert(&code)
       code := "; V1toV2: Some mandatory VarRefs replaced with AHKv1v2_vPlaceholder`r`n" code
    }
 
-   ; Fix MinIndex() and MaxIndex() for arrays
-   ; 2025-10-05 AMB, UPDATED mask chars
-   code := RegExReplace(code, "i)([^(\s]*\.)" gMXPH, '$1Length != 0 ? $1Length : ""')
-   code := RegExReplace(code, "i)([^(\s]*\.)" gMNPH, '$1Length != 0 ? 1 : ""')          ; Can be done in 4ArrayMethods.ahk, but done here to add EOLComment
-
-   ; labels named 'OnClipboardChange' require a name change (since OnClipboardChange is now a built in AHK function)
-   ; see validV2LabelName() in LabelAndFunc.ahk for the name change to 'OnClipboardChange_v2'
    ; add OnClipboardChange(OnClipboardChange_v2) to top of script, and provide a way to update A_EventInfo within the func, as needed
-   ; Update_LBL_HK_HS() below will do the rest
-   ; 2025-11-01 AMB, UPDATED gmList_LblsToFunc key case-sensitivity)
-   maskedCode := code, Mask_T(&maskedCode, 'C&S')   ; prevent false positives (for Instr) within strings and comments
-   if (InStr(maskedCode, 'OnClipboardChange:')) {
-      code := 'OnClipboardChange(OnClipboardChange_v2)`r`n' . code      ; add this to top of script
-      gmList_LblsToFunc['OnClipboardChange_v2'] := ConvLabel('OCC', 'OnClipboardChange_v2', 'dataType:=""', 'OnClipboardChange_v2'
-                                                , {NeedleRegEx: "im)^(.*?)\b\QA_EventInfo\E\b(.*+)$", Replacement: "$1dataType$2"})
-   }
+   code := FixOnClipboardChange(code)   ; 2025-12-20 AMB, MOVED to dedicated func
 
    code := Update_LBL_HK_HS(code)       ; 2025-10-05 AMB, UPDATED conversion for labels,HKs,HSs to v2 format
    Mask_T(&code, 'C&S')                 ; 2025-10-10 AMB, first attempt to improve efficiency of conversion (WORK IN PROGRESS)
+   code := FixMinMaxIndex(code)         ; 2025-12-20 AMB, Moved to dedicated func - Fix MinIndex() and MaxIndex() for arrays
    code := FixOnMessage(code)           ; Fix turning off OnMessage when defined after turn off
    code := FixVarSetCapacity(code)      ; &buf -> buf.Ptr   &vssc -> StrPtr(vssc)
    code := FixByRefParams(code)         ; Replace ByRef with & in func declarations and calls - see related fixFuncParams()
@@ -298,6 +286,41 @@ FinalizeConvert(&code)
    updateFileOpenProps(&code)           ; 2025-10-12, AMB - support for #358
 
    return   ; code by reference
+}
+;################################################################################
+FixMinMaxIndex(code) {
+; 2025-12-20 AMB, ADDED to fix issue #423
+
+   nStrSplit    := '(?i)(STRSPLIT' gPtn_PrnthBlk '\.)'
+   nSqBktArr    := '(?i)(\b' gPtn_SqrBkts '\b\.)'
+   ;nVarAsgn     := '(?i)([^!&\|\(\[\s,:=]+\.)'
+   ;nQSTag       := UniqueTag('QS\w+')
+   ;nVarAsgn     := '(?i)(([\w,]|\.|\[(?:["\w\h,]*|' nQSTag ')*\])+\.)'
+   ;nVarAsgn     := '(?i)(([\w.]|\[(?:["\w\h,]*|' nQSTag ')*\])+\.)'
+   nOther       := '(?i)(([\w.]|\[[^\]]*+\])+\.)'
+   nMinIdx      := 'MinIndex\(\)',  nMaxIdx := 'MaxIndex\(\)'
+   nMinRepl     := '(($1Length != 0) ? 1 : 0)', nMaxRepl := '(($1Length != 0) ? $1Length : 0)'
+   ;code        := RegExReplace(code, "i)([^(\s]*\.)" gMXPH, '$1Length != 0 ? $1Length : ""')
+   ;code        := RegExReplace(code, "i)([^(\s]*\.)" gMNPH, '$1Length != 0 ? 1 : ""')
+   code         := RegExReplace(code, nStrSplit . nMinIdx, nMinRepl)
+   code         := RegExReplace(code, nStrSplit . nMaxIdx, nMaxRepl)
+   code         := RegExReplace(code, nSqBktArr . nMinIdx, nMinRepl)
+   code         := RegExReplace(code, nSqBktArr . nMaxIdx, nMaxRepl)
+   code         := RegExReplace(code, nOther    . nMinIdx, nMinRepl)
+   code         := RegExReplace(code, nOther    . nMaxIdx, nMaxRepl)
+   return       code
+}
+;################################################################################
+FixOnClipboardChange(code) {
+; 2025-12-20 AMB, ADDED - Moved code here from FinalizeConvert
+
+   maskedCode := code, Mask_T(&maskedCode, 'C&S')   ; prevent false positives (for Instr) within strings and comments
+   if (InStr(maskedCode, 'OnClipboardChange:')) {
+      code := 'OnClipboardChange(OnClipboardChange_v2)`r`n' . code      ; add this to top of script
+      gmList_LblsToFunc['OnClipboardChange_v2'] := ConvLabel('OCC', 'OnClipboardChange_v2', 'dataType:=""', 'OnClipboardChange_v2'
+                                                , {NeedleRegEx: "im)^(.*?)\b\QA_EventInfo\E\b(.*+)$", Replacement: "$1dataType$2"})
+   }
+   return code
 }
 ;################################################################################
 ; Command formatting functions

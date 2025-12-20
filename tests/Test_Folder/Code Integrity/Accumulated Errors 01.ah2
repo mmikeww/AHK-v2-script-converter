@@ -201,7 +201,7 @@ MsgBox(retstr)
          , ColB := (ColColors.B != "") ? ColColors.B : UseAltCol ? This.ACB : This.RowB
          , ColT := (ColColors.T != "") ? ColColors.T : UseAltCol ? This.ACT : This.RowT
          , NumPut("UInt", ColT, L + OffCT), NumPut("UInt", ColB, L + OffCB)
-         Return (!This.AltCols && !This.Has(Row) && (Col > This["Cells", Row].MaxIndex())) ? 0x00 : 0x20
+         Return (!This.AltCols && !This.Has(Row) && (Col > ((This["Cells", Row].Length != 0) ? This["Cells", Row].Length : 0))) ? 0x00 : 0x20
       }
 
 ;################################################################################

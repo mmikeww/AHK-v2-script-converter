@@ -204,6 +204,7 @@
 ; currently the LAST step performed for a line
 ; 2025-10-05 AMB, UPDATED - changed source of mask chars
 ; 2025-11-30 AMB, UPDATED - added Try to prevent index errors in certain situations
+; 2025-12-20 AMB, REMOVED - Min/MaxIndex warning
 
 	global gEOLComment_Cont, gEOLComment_Func, gNL_Func
 
@@ -211,13 +212,6 @@
 	gEOLComment_Func := (trim(gEOLComment_Func))				; if not empty string
 	? RegExReplace(gEOLComment_Func, '^(\h*[^;].*)$', ' `; $1') ; ensure it has a leading semicolon
 	: gEOLComment_Func											; semi-colon already exists
-
-	; V2 ONLY !
-	; Add warning for Array.MinIndex()
-	nMinMaxIndexTag	:= '([^(\s]*\.)' gMNPH						; gMNPH - see MaskCode.ahk
-	if (lineStr		~= nMinMaxIndexTag) {
-		EOLComment	.= ' `; V1toV2: Not perfect fix, fails on cases like [ , "Should return 2"]'
-	}
 
 	; 2025-05-24 Banaanae, ADDED for fix #296
 	gNL_Func .= (gNL_Func) ? '`r`n' : ''						; ensure this has a trailing CRLF

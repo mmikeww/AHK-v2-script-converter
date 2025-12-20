@@ -293,15 +293,9 @@ FixMinMaxIndex(code) {
 
    nStrSplit    := '(?i)(STRSPLIT' gPtn_PrnthBlk '\.)'
    nSqBktArr    := '(?i)(\b' gPtn_SqrBkts '\b\.)'
-   ;nVarAsgn     := '(?i)([^!&\|\(\[\s,:=]+\.)'
-   ;nQSTag       := UniqueTag('QS\w+')
-   ;nVarAsgn     := '(?i)(([\w,]|\.|\[(?:["\w\h,]*|' nQSTag ')*\])+\.)'
-   ;nVarAsgn     := '(?i)(([\w.]|\[(?:["\w\h,]*|' nQSTag ')*\])+\.)'
    nOther       := '(?i)(([\w.]|\[[^\]]*+\])+\.)'
    nMinIdx      := 'MinIndex\(\)',  nMaxIdx := 'MaxIndex\(\)'
    nMinRepl     := '(($1Length != 0) ? 1 : 0)', nMaxRepl := '(($1Length != 0) ? $1Length : 0)'
-   ;code        := RegExReplace(code, "i)([^(\s]*\.)" gMXPH, '$1Length != 0 ? $1Length : ""')
-   ;code        := RegExReplace(code, "i)([^(\s]*\.)" gMNPH, '$1Length != 0 ? 1 : ""')
    code         := RegExReplace(code, nStrSplit . nMinIdx, nMinRepl)
    code         := RegExReplace(code, nStrSplit . nMaxIdx, nMaxRepl)
    code         := RegExReplace(code, nSqBktArr . nMinIdx, nMinRepl)

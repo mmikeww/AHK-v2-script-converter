@@ -266,11 +266,6 @@ FinalizeConvert(&code)
       code := "; V1toV2: Some mandatory VarRefs replaced with AHKv1v2_vPlaceholder`r`n" code
    }
 
-   ; Fix MinIndex() and MaxIndex() for arrays
-   ; 2025-10-05 AMB, UPDATED mask chars
-   code := RegExReplace(code, "i)([^(\s]*\.)" gMXPH, '$1Length != 0 ? $1Length : ""')
-   code := RegExReplace(code, "i)([^(\s]*\.)" gMNPH, '$1Length != 0 ? 1 : ""')          ; Can be done in 4ArrayMethods.ahk, but done here to add EOLComment
-
    ; labels named 'OnClipboardChange' require a name change (since OnClipboardChange is now a built in AHK function)
    ; see validV2LabelName() in LabelAndFunc.ahk for the name change to 'OnClipboardChange_v2'
    ; add OnClipboardChange(OnClipboardChange_v2) to top of script, and provide a way to update A_EventInfo within the func, as needed
@@ -285,6 +280,7 @@ FinalizeConvert(&code)
 
    code := Update_LBL_HK_HS(code)       ; 2025-10-05 AMB, UPDATED conversion for labels,HKs,HSs to v2 format
    Mask_T(&code, 'C&S')                 ; 2025-10-10 AMB, first attempt to improve efficiency of conversion (WORK IN PROGRESS)
+   code := FixMinMaxIndex(code)         ; 2025-12-21 AMB, MOVED to dedicated func
    code := FixOnMessage(code)           ; Fix turning off OnMessage when defined after turn off
    code := FixVarSetCapacity(code)      ; &buf -> buf.Ptr   &vssc -> StrPtr(vssc)
    code := FixByRefParams(code)         ; Replace ByRef with & in func declarations and calls - see related fixFuncParams()
@@ -298,6 +294,23 @@ FinalizeConvert(&code)
    updateFileOpenProps(&code)           ; 2025-10-12, AMB - support for #358
 
    return   ; code by reference
+}
+;################################################################################
+FixMinMaxIndex(code) {
+; 2025-12-21 AMB, ADDED to update MnxIndex handling
+
+   nStrSplit    := '(?i)(STRSPLIT' gPtn_PrnthBlk '\.)'
+   nSqBktArr    := '(?i)((?<!\w)' gPtn_SqrBkts '\.)'
+   nOther       := '(?i)(([\w.]|\[[^\]]*+\])+\.)'
+   nMinIdx      := 'MinIndex\(\)',  nMaxIdx := 'MaxIndex\(\)'
+   nMinRepl     := '(($1Length) ? 1 : 0)', nMaxRepl := '$1Length'
+   code         := RegExReplace(code, nStrSplit . nMinIdx, nMinRepl)
+   code         := RegExReplace(code, nStrSplit . nMaxIdx, nMaxRepl)
+   code         := RegExReplace(code, nSqBktArr . nMinIdx, nMinRepl)
+   code         := RegExReplace(code, nSqBktArr . nMaxIdx, nMaxRepl)
+   code         := RegExReplace(code, nOther    . gMNPH, nMinRepl)
+   code         := RegExReplace(code, nOther    . gMXPH, nMaxRepl)
+   return       code
 }
 ;################################################################################
 ; Command formatting functions

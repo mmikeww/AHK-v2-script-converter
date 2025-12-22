@@ -204,6 +204,7 @@
 ; currently the LAST step performed for a line
 ; 2025-10-05 AMB, UPDATED - changed source of mask chars
 ; 2025-11-30 AMB, UPDATED - added Try to prevent index errors in certain situations
+; 2025-12-21 AMB, UPDATED - MinIndex, MaxIndex messages
 
 	global gEOLComment_Cont, gEOLComment_Func, gNL_Func
 
@@ -213,10 +214,18 @@
 	: gEOLComment_Func											; semi-colon already exists
 
 	; V2 ONLY !
-	; Add warning for Array.MinIndex()
-	nMinMaxIndexTag	:= '([^(\s]*\.)' gMNPH						; gMNPH - see MaskCode.ahk
-	if (lineStr		~= nMinMaxIndexTag) {
-		EOLComment	.= ' `; V1toV2: Not perfect fix, fails on cases like [ , "Should return 2"]'
+	; Add warning for Array.MinIndex(), Array.MaxIndex()
+	; 2025-12-21 AMB, Updated
+	nMinIdxTag	:= '\.' gMNPH, nMaxIdxTag := '\.' gMXPH			; see MaskCode.ahk
+	hasMin		:= (lineStr ~= nMinIdxTag), hasMax := (lineStr ~= nMaxIdxTag)
+	if (hasMin && hasMax) {
+		EOLComment .= ' `; V1toV2: Verify V2 values match V1 Min/MaxIndex'
+	}
+	else if (hasMin) {
+		EOLComment .= ' `; V1toV2: Verify V2 value matches V1 MinIndex'
+	}
+	else if (hasMax) {
+		EOLComment .= ' `; V1toV2: Verify V2 Length value = V1 MaxIndex'
 	}
 
 	; 2025-05-24 Banaanae, ADDED for fix #296

@@ -86,7 +86,11 @@
     TreeViewWidth       := IniRead(IniFile, Section, "TreeViewWidth", 280)
     ViewExpectedCode    := IniRead(IniFile, Section, "ViewExpectedCode", 0)
     UIDarkMode          := IniRead(IniFile, Section, "UIDarkMode", 0)
- ;   OnExit(ExitFunc)
+    ConvHotkey          := IniRead(IniFile, Section, "ConvHotkey", "F5")
+    ConvHotkeyEnabled   := IniRead(IniFile, Section, "ConvHotkeyEnabled", 0)
+
+    Hotkey(ConvHotkey, CopyAndConvert, (ConvHotkeyEnabled ? "On" : "Off"))
+    OnExit(ExitFunc)
     ;WRITE BACK VARIABLES SO THAT DEFAULTS ARE SAVED TO INI (Seems like this should be moved to exit routine SEE Esc::)
 
 }
@@ -801,6 +805,9 @@ GuiTest(strV1Script:="")
     SettingsMenu := Menu()
     SettingsMenu.Add("Testmode", MenuTestMode)
     SettingsMenu.Add("Include Failing", MenuTestFailing)
+    SettingsMenu.Add()
+    SettingsMenu.Add("Enable Convert Hotkey", MenuEnableConvKey)
+    SettingsMenu.Add("Set Convert Hotkey", MenuSetConvKey)
     OutputMenu := Menu()
     OutputMenu.Add("Remove converter comments", MenuRemoveComments)
     OutputMenu.Add("Replace \n with \r\n", MenuFixLineEndings)
@@ -808,6 +815,7 @@ GuiTest(strV1Script:="")
     ;TestMenu.Add("AddBracketToHotkeyTest", (*) => editCnv.Text := AddBracket(editSrc.Text))
     TestMenu.Add("GetAltLabelsMap", (*) => editCnv.Text := GetAltLabelsMap(editSrc.Text).LabelMap)  ; 2025-12-13 Added labelMap
     TestMenu.Add("Performance Test", MenuPerformanceTest)
+    TestMenu.Add("Time Test Suite", MenuTestSuitePerformance)
     ViewMenu := Menu()
     ViewMenu.Add("Zoom In`tCtrl+NumpadAdd", MenuZoomIn)
     ViewMenu.Add("Zoom Out`tCtrl+NumpadSub", MenuZoomOut)
@@ -835,6 +843,9 @@ GuiTest(strV1Script:="")
     Menus.Add( "Help", HelpMenu)
     MyGui.MenuBar := Menus
 
+    if ConvHotkeyEnabled{
+        SettingsMenu.Check("Enable Convert Hotkey")
+    }
     if ViewExpectedCode{
         ViewMenu.Check("View Expected Code")
     }
@@ -844,6 +855,10 @@ GuiTest(strV1Script:="")
 
     MyGui.Opt("+MinSize450x200")
     MyGui.OnEvent("DropFiles",Gui_DropFiles)
+
+    A_TrayMenu.Add()
+    A_TrayMenu.Add("Open GUI", (*) => MyGui.Show("h" GuiHeight " w" GuiWidth GuiXOpt GuiYOpt GuiMaximise))
+
     setUIMode(MyGui, UIDarkMode)
 
     ; Correct coordinates to a visible position inside the screens
@@ -893,11 +908,11 @@ MenuCommandHelp(*)
         PostString := RegExReplace(SubStr(text,count), "(^[^,，\s,\.\t`"\(\)`']*).*", "$1")
         word := PreString PostString
 
-        if InStr(ogcFocused.Name,"V1"){
+        if InStr(ogcFocused.Name,"Src"){
             Version := "v1"
             URLSearch := "https://www.autohotkey.com/docs/v1/search.htm?q="
         }
-        else{
+        else{ ; Conv
             Version := "v2"
             URLSearch := "https://www.autohotkey.com/docs/v2/search.htm?q="
         }
@@ -952,6 +967,30 @@ MenuTestFailing(*)
     SettingsMenu.ToggleCheck("Include Failing")
     TestFailing := !TestFailing
     IniWrite(TestFailing, IniFile, Section, "TestFailing")
+}
+MenuEnableConvKey(*) {
+    global
+    ConvHotkeyEnabled := !ConvHotkeyEnabled
+    if ConvHotkeyEnabled
+        SettingsMenu.Check("Enable Convert Hotkey")
+    else
+        SettingsMenu.Uncheck("Enable Convert Hotkey")
+    Hotkey(ConvHotkey, (ConvHotkeyEnabled ? "On" : "Off"))
+    IniWrite(ConvHotkeyEnabled, IniFile, Section, "ConvHotkeyEnabled")
+}
+MenuSetConvKey(*) {
+    global
+    NewConvHotkey := InputBox("Enter new key (ahk format)", "Set conversion hotkey")
+    if (NewConvHotkey.Result != "OK")
+        return
+    Hotkey(ConvHotkey, "Off")
+    try {
+        Hotkey(NewConvHotkey.Value, CopyAndConvert, (ConvHotkeyEnabled ? "On" : "Off"))
+        IniWrite(NewConvHotkey.Value, IniFile, Section, "ConvHotkey")
+    } catch {
+        MsgBox("Invalid hotkey", "Set conversion hotkey", "Icon!")
+        Hotkey(ConvHotkey, (ConvHotkeyEnabled ? "On" : "Off"))
+    }
 }
 MenuRemoveComments(*)
 {
@@ -1010,6 +1049,19 @@ MenuPerformanceTest(*)
     }
     MsgBox("Test Complete!`nDid 250 conversions in " Round(timeMean, 3) "ms`nAverage conversion was "
     Round(timeMean /= 250, 3) "ms", "Test complete!")
+}
+MenuTestSuitePerformance(*) 
+{
+    global TestFailing
+    temp := TestFailing
+    TestFailing := false ; Don't include failing tests to avoid warnings
+    DllCall("QueryPerformanceFrequency", "Int64*", &freq := 0)
+    DllCall("QueryPerformanceCounter", "Int64*", &CounterBefore := 0)
+    AddSubFoldersToTree(gTreeRoot, Map())
+    DllCall("QueryPerformanceCounter", "Int64*", &CounterAfter := 0)
+    time := Float(Format("{:.4f}", (CounterAfter - CounterBefore) / freq))
+    MsgBox("Test Complete!`nConverted test suite in " Floor(time / 60) "m " Mod(time, 60) "s")
+    TestFailing := temp    
 }
 MenuZoomIn(*)
 {
@@ -1199,23 +1251,9 @@ ViewDrk(*)
 ;*** HOTKEYS ***
 ;***************
 #HotIf ((IsSet(MyGui)) && WinActive(MyGui.title))
-$Esc::     ;Exit application - Using either <Esc> Hotkey or Goto("MyExit")
-{
-MyExit:
-    CloseSrc(myGui) ; Close active scripts
-    CloseCnv(myGui)
-    CloseExp(myGui)
-    ;WRITE BACK VARIABLES SO THAT DEFAULTS ARE SAVED TO INI
-    IniWrite(FontSize,           IniFile, Section, "FontSize")
-    IniWrite(TestMode,           IniFile, Section, "TestMode")
-    IniWrite(TestFailing,        IniFile, Section, "TestFailing")
-    IniWrite(TreeViewWidth,      IniFile, Section, "TreeViewWidth")
-    IniWrite(ViewExpectedCode,   IniFile, Section, "ViewExpectedCode")
-    IniWrite(UIDarkMode,         IniFile, Section, "UIDarkMode")
-;    ExitApp
-    Return
-}
-XButton1::
+$Esc:: OnExit(0, 0)     ;Exit application - Using either <Esc> Hotkey
+
+CopyAndConvert(*)
 {
     ClipSaved := ClipboardAll()   ; Save the entire clipboard to a variable of your choice.
     A_Clipboard := ""
@@ -1293,7 +1331,10 @@ ExitFunc(ExitReason, ExitCode){
     IniWrite(TreeViewWidth,      IniFile, Section, "TreeViewWidth")
     IniWrite(ViewExpectedCode,   IniFile, Section, "ViewExpectedCode")
     IniWrite(UIDarkMode,         IniFile, Section, "UIDarkMode")
-;    ExitApp
+    if ConvHotkeyEnabled
+        ExitApp
+    else
+        return
 }
 
 On_WM_MOVE(wParam, lParam, msg, hwnd){

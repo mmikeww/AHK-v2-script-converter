@@ -166,63 +166,6 @@
 	return ((IsNumber(val)) && (val ~= '(?i)^0x[0-9a-f]+$'))
 }
 ;################################################################################
-												  separateComment(line, &comment)
-;################################################################################
-{
-; 2025-05-24 Banaanae, ADDED to fix #296
-;   returns comment and 'command' portion of line in separate vars
-; 2025-06-12 AMB, UPDATED - to capture far-left line comment, rather than trailing (far right) occurence
-; 2025-07-03 AMB, UPDATED - moved and changed func name, added support for `; to fix issue #347
-;   needle now handles full separation so removed unnecessary FirstChar param
-; 2025-10-05 AMB, UPDATED - nSep1LC - move needle to MaskCode.ahk
-
-	nSep1LC		:= buildPtn_Sep1LC()							; separation needle (see MaskCode.ahk)
-	comment		:= ''											; ini, in case of no comment
-	if (RegExMatch(line, nSep1LC, &m)) {						; see MaskCode.ahk for needle
-		line	:= m.ln											; 'command' side (if present), supports `;
-		comment	:= m.lc											;  comment - captures FIRST occurence
-	}
-	return	line
-}
-;################################################################################
-								   separateTrailCWS(srcStr, &trail, incHIF:=true)
-;################################################################################
-{
-; 2025-10-05 AMB, ADDED
-;	separates trailing comments and whitespace from srcStr
-
-	tags	:= 'LC|BC|QS'
-	tags	.= (incHIF) ? '|HIF' : ''
-	nTag	:= '(?<=^)\h*' uniqueTag('(?:' tags ')\w++') '.*'		; [tag for comments or quoted string]
-	nLC		:= '(?:(?<=^)|(?<=^)\h+)(?<!``);[^\v]*+'				; [line comment]
-	nSep	:= '(?m)((?:\v+|' nTag '|' nLC ')++)$'					; will separate relevant portion from trailing comments/tags/ws
-	trail	:= ''													; ini, in case nothing to separate
-	if (RegExMatch(srcStr, nSep, &m)) {								; separate trailing comments/tags/ws from srcStr
-		trail	:= m[1]												; returns trailing comments/tags/ws (via reference)
-		srcStr	:= RegExReplace(srcStr, escRegexChars(trail) '$')	; removes trailing comments/tags/ws from srcStr
-	}
-	return srcStr													; return resulting srcStr, trimmed or not
-}
-;################################################################################
-									   separatePreCWS(srcStr, &pre, incHIF:=true)
-;################################################################################
-{
-; 2025-10-27 AMB, ADDED
-;	separates preceding comments and whitespace from srcStr
-
-	tags	:= 'LC|BC|QS'
-	tags	.= (incHIF) ? '|HIF' : ''
-	nTag	:= '(?<=^)\h*' uniqueTag('(?:' tags ')\w++') '.*'		; [tag for comments or quoted string]
-	nLC		:= '(?:(?<=^)|(?<=^)\h+)(?<!``);[^\v]*+'				; [line comment]
-	nSep	:= '^((?:\v+|' nTag '|' nLC ')++)'						; will separate relevant portion from preceding comments/tags/ws
-	trail	:= ''													; ini, in case nothing to separate
-	if (RegExMatch(srcStr, nSep, &m)) {								; separate preceding comments/tags/ws from srcStr
-		pre	:= m[1]													; returns preceding comments/tags/ws (via reference)
-		srcStr	:= RegExReplace(srcStr, '^' escRegexChars(pre))		; removes preceding comments/tags/ws from srcStr
-	}
-	return srcStr													; return resulting srcStr, trimmed or not
-}
-;################################################################################
 														 fixAssignments(&lineStr)
 ;################################################################################
 {

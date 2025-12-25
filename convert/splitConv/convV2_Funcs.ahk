@@ -699,15 +699,15 @@
 	if (SubStr(cmdV2Format, 1, 1) = '*')
 	{
 		/*
-		1. get custom function name from gmAhkCmdsToConvertV2 (thru cmdV2Format var)
+		1. get custom function name from gmAhkCmdsToConvertV2 (thru cmdV2Format var)			; see 1Commands.ahk for gmAhkCmdsToConvertV2 map
 		2. create an on-the-fly function call (funcObj) from that name
 		3. call that custom function (passing array to func)...
 			to get a string value for 'lineStr :=' below
-		FuncObj(cLParamsArr) is a custom func call that returns a string value
+		FuncObj(cLParamsArr) is a custom func call that returns a string value					; 25-12-24 - see AhkLangConv.ahk for actual funcs
 		The FuncObj(FuncName) varies depending on...
 			which line-cmd is being processed/converted
 		FuncObj name usually begins with underscore and...
-			can usually be found in ConvertFuncs.ahk
+			can be found in AhkLangConv.ahk
 		The cLParamsArr is passed to the function, which will return...
 			a string value to be used below for lineStr assignment
 		*/

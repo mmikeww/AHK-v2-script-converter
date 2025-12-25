@@ -13,9 +13,9 @@
 global gmAhkMethsToConvert := Map_I()
 gmAhkMethsToConvert := OrderedMap(
     "Count()" ,
-    "Count"
+      "Count"
   , "HasKey(Key)" ,
-    "Has({1})"
-  , "length()" ,
-    "Length"
-  )
+      "Has({1})"
+  , "Length()" ,
+      "Length"
+)

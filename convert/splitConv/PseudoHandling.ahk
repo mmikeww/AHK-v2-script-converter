@@ -1,9 +1,10 @@
 
+; 2025-12-24 AMB, MOVED Dynamic Conversion Funcs to AhkLangConv.ahk
+
 ;################################################################################
 Class PseudoArray
 {
 ; WORK IN PROGRESS
-
 	static arrList := []
 
 	Name := ''			; Str
@@ -12,8 +13,7 @@ Class PseudoArray
 	strict := true		; boolean T/F - always true
 	regex := true		; boolean T/F - always true
 }
-
-;################################################################################;################################################################################
+;################################################################################
 ;//	Example array123 => array[123]
 ;//	Example array%A_index% => array[A_index]
 ;//	Special cases in RegExMatch		=> {OutVar: OutVar[0],		OutVar0: ""				}
@@ -131,103 +131,4 @@ ConvertMatchObject(ScriptStringInput, ObjectMatchName)
 	}
 
 	return		; lineStr by reference
-}
-;################################################################################
-_StringSplit(p)
-{
-	;V1 StringSplit,OutputArray,InputVar,DelimitersT2E,OmitCharsT2E
-	; Output should be checked to replace OutputArray\d to OutputArray[\d]
-	global gaList_PseudoArr
-	VarName := Trim(p[1])
-	gaList_PseudoArr.Push({name: VarName})
-	gaList_PseudoArr.Push({strict: true, name: VarName "0", newname: VarName ".Length"})
-	Out := Format("{1} := StrSplit({2},{3},{4})", p*)
-	Return RegExReplace(Out, "[\s\,]*\)$", ")")
-}
-;################################################################################
-_WinGet(p)
-{
-; 2025-11-30 AMB, UPDATED output to compress multi-line output into single-line tag
-	global gIndent
-	p[2] := p[2] = "ControlList" ? "Controls" : p[2]
-
-	Out := format("{1} := WinGet{2}({3},{4},{5},{6})", p*)
-	if (P[2] = "Class" || P[2] = "Controls" || P[2] = "ControlsHwnd" || P[2] = "ControlsHwnd") {
-		Out := format("o{1} := WinGet{2}({3},{4},{5},{6})", p*) "`r`n"
-		Out .= gIndent "For v in o" P[1] "`r`n"
-		Out .= gIndent "{`r`n"
-		Out .= gIndent "   " P[1] " .= A_index=1 ? v : `"``r``n`" v`r`n"
-		Out .= gIndent "}"
-	}
-	if (P[2] = "List") {
-		Out := format("o{1} := WinGet{2}({3},{4},{5},{6})", p*) "`r`n"
-		Out .= gIndent "a" P[1] " := Array()`r`n"
-		Out .= gIndent P[1] " := o" P[1] ".Length`r`n"
-		Out .= gIndent "For v in o" P[1] "`r`n"
-		Out .= gIndent "{   a" P[1] ".Push(v)`r`n"
-		Out .= gIndent "}"
-		gaList_PseudoArr.Push({name: P[1], newname: "a" P[1]})
-		gaList_PseudoArr.Push({strict: true, name: P[1], newname: "a" P[1] ".Length"})
-	}
-	Out := RegExReplace(Out, "[\s\,]*\)$", ")")
-	Out := Zip(Out, 'WINGET')   ; 2025-11-30 AMB - compress multi-line additions into single-line tag, as needed
-	Return Out
-}
-;################################################################################
-_RegExMatch(p)
-{
-	global gaList_MatchObj, gaList_PseudoArr
-	; V1: FoundPos := RegExMatch(Haystack, NeedleRegEx , OutputVar, StartingPos := 1)
-	; V2: FoundPos := RegExMatch(Haystack, NeedleRegEx , &OutputVar, StartingPos := 1)
-
-	if (p[3] != "") {
-		OrigPattern := P[2]
-		OutputVar := p[3]
-
-		CaptNames := [], pos := 1
-		while pos := RegExMatch(OrigPattern, "(?<!\\)(?:\\\\)*\(\?<(\w+)>", &Match, pos)
-			pos += Match.Len, CaptNames.Push(Match[1])
-
-		Out := ""
-		if (RegExMatch(OrigPattern, '^"([^"(])*O([^"(])*\)(.*)$', &Match)) {
-			; Mode 3 (match object)
-			; v1OutputVar.Value(1) -> v2OutputVar[1]
-			; The v1 methods Count and Mark are properties in v2.
-			P[2] := ( Match[1] || Match[2] ? '"' Match[1] Match[2] ")" : '"' ) . Match[3] ; Remove the "O" from the options
-			gaList_MatchObj.Push(OutputVar)
-		} else if (RegExMatch(OrigPattern, '^"([^"(])*P([^"(])*\)(.*)$', &Match)) {
-			; Mode 2 (position-and-length)
-			; v1OutputVar		-> v2OutputVar.Len
-			; v1OutputVarPos1	-> v2OutputVar.Pos[1]
-			; v1OutputVarLen1	-> v2OutputVar.Len[1]
-			P[2] := ( Match[1] || Match[2] ? '"' Match[1] Match[2] ")" : '"' ) . Match[3] ; Remove the "P" from the options
-			gaList_PseudoArr.Push({name: OutputVar "Len", newname: OutputVar '.Len'})
-			gaList_PseudoArr.Push({name: OutputVar "Pos", newname: OutputVar '.Pos'})
-			gaList_PseudoArr.Push({strict: true, name: OutputVar, newname: OutputVar ".Len"})
-			for CaptName in CaptNames {
-				gaList_PseudoArr.Push({strict: true, name: OutputVar "Len" CaptName, newname: OutputVar '.Len["' CaptName '"]'})
-				gaList_PseudoArr.Push({strict: true, name: OutputVar "Pos" CaptName, newname: OutputVar '.Pos["' CaptName '"]'})
-			}
-		} else if (RegExMatch(OrigPattern, 'i)^"[a-z``]*\)')) ; Explicit options.
-			|| RegExMatch(OrigPattern, 'i)^"[^"]*[^a-z``]') { ; Explicit no options.
-			; Mode 1 (Default)
-			; v1OutputVar	-> v2OutputVar[0]
-			; v1OutputVar1	-> v2OutputVar[1]
-			; 2024-06-22 AMB - Added regex property to be used in ConvertPseudoArray()
-			gaList_PseudoArr.Push({regex: true, name: OutputVar})
-			gaList_PseudoArr.Push({regex: true, strict: true, name: OutputVar, newname: OutputVar "[0]"})
-			for CaptName in CaptNames
-				gaList_PseudoArr.Push({strict: true, name: OutputVar CaptName, newname: OutputVar '["' CaptName '"]'})
-		} else {
-			; Unknown mode. Unclear options, possibly variables obscuring the parameter.
-			; Treat as default mode?... The unhandled options O and P will make v2 throw anyway.
-			; 2024-06-22 AMB - Added regex property to be used in ConvertPseudoArray()
-			gaList_PseudoArr.Push({regex: true, name: OutputVar})
-			gaList_PseudoArr.Push({regex: true, strict: true, name: OutputVar, newname: OutputVar "[0]"})
-		}
-		Out .= Format("RegExMatch({1}, {2}, &{3}, {4})", p*)
-	} else {
-		Out := Format("RegExMatch({1}, {2}, , {4})", p*)
-	}
-	Return RegExReplace(Out, "[\s\,]*\)$", ")")
 }

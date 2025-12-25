@@ -24,7 +24,7 @@
 	2025-07-01,03,06		- UPDATED, Multiple enhancements/improvements - see comments in code
 	2025-10-05,10,27		- UPDATED, Multiple enhancements/improvements - see comments in code
 	2025-11-01,23,28,29,30	- UPDATED, Multiple enhancements/improvements - see comments in code
-	2025-12-13				- UPDATED, see comments in code
+	2025-12-13,24			- UPDATED, see comments in code
 
 	TODO
 		Finish support for Continuation sections
@@ -91,6 +91,8 @@ global	  gTagChar		:= chr(0x2605) ; '★'															; unique char to ensure 
 		, gPtn_Blk_TRY	:= buildPtn_Try()																; 2025-10-05 AMB, ADDED		- Try block
 		, gPtn_Blk_FOR	:= buildPtn_For()																; 2025-10-05 AMB, ADDED		- For block
 		, gPtn_HotIf	:= '(?im)^\h*\K#HOTIF.*'														; 2025-10-05 AMB, ADDED		- HotIf
+		, gPtn_Colon	:= '(?<!:):(?!=)(?!:)'															; 2025-12-24 AMB, ADDED		- lone-colon
+		, gPtn_Ternary	:= '(?im)\?(?<T>[^:]|:=)+' . gPtn_Colon . '(?<F>[^,;\v\)]+)'					; 2025-12-24 AMB, ADDED		- Ternary expression
 		, gHotKeyList	:= ''
 		, gHotStrList	:= ''
 		, gMLContList	:= []
@@ -1352,8 +1354,9 @@ class clsNodeMap	; 'block map' might be better term
 				{
 					mCopy := m[]												; is premasked code - copy to prep for v2 conversion
 					Mask_R(&mCopy, 'V1MLS',0), Mask_R(&mCopy, 'C&S',0)			; restore comments/strings, v1 ML strings (should now be orig)
-					node.ConvCode := (convert)	? _convertLines(mCopy)			; convert or not?
-												: mCopy
+					node.ConvCode	:= ((convert) && IsSet(_convertLines))		; if code should be converted... (2025-12-24 - updated)
+									? _convertLines(mCopy)						; ... convert code and save		for restore later
+									: mCopy										; ... otherwise save orig code	for restore later
 					mLen		:= StrLen(node.ConvCode)
 					uid			:= node.uid										; 2025-10-27 AMB, ensure tag has unique ID
 					mTag		:= uniqueTag('BLKCLS_' uid '_P' pos '_L' mLen)	; tag, also used as key for maskList
@@ -1369,8 +1372,9 @@ class clsNodeMap	; 'block map' might be better term
 				{
 					mCopy := m[]												; is premasked code - copy to prep for v2 conversion
 					Mask_R(&mCopy, 'V1MLS',0), Mask_R(&mCopy, 'C&S',0)			; restore comments/strings, v1 ML strings (should now be orig)
-					node.ConvCode := (convert)	? _convertLines(mCopy)			; convert or not?
-												: mCopy
+					node.ConvCode	:= ((convert) && IsSet(_convertLines))		; if code should be converted... (2025-12-24 - updated)
+									? _convertLines(mCopy)						; ... convert code and save		for restore later
+									: mCopy										; ... otherwise save orig code	for restore later
 					mLen		:= StrLen(node.ConvCode)
 					uid			:= node.uid										; 2025-10-27 AMB, ensure tag has unique ID
 					mTag		:= uniqueTag('BLKFUNC_' uid '_P' pos '_L' mLen)	; tag, also used as key for maskList
@@ -1626,6 +1630,66 @@ class clsNodeMap	; 'block map' might be better term
 	srcStr := RegExReplace(srcStr, '^\R+')
 	srcStr := RegExReplace(srcStr, '\R+$')
 	return
+}
+;################################################################################
+												  separateComment(line, &comment)
+;################################################################################
+{
+; 2025-05-24 Banaanae, ADDED to fix #296
+;   returns comment and 'command' portion of line in separate vars
+; 2025-06-12 AMB, UPDATED - to capture far-left line comment, rather than trailing (far right) occurence
+; 2025-07-03 AMB, UPDATED - moved and changed func name, added support for `; to fix issue #347
+;   needle now handles full separation so removed unnecessary FirstChar param
+; 2025-10-05 AMB, UPDATED - nSep1LC - move needle to MaskCode.ahk
+; 2025-12-24 AMB, MOVED to MaskCode.ahk
+
+	nSep1LC		:= buildPtn_Sep1LC()							; separation needle (see MaskCode.ahk)
+	comment		:= ''											; ini, in case of no comment
+	if (RegExMatch(line, nSep1LC, &m)) {						; see MaskCode.ahk for needle
+		line	:= m.ln											; 'command' side (if present), supports `;
+		comment	:= m.lc											;  comment - captures FIRST occurence
+	}
+	return	line
+}
+;################################################################################
+								   separateTrailCWS(srcStr, &trail, incHIF:=true)
+;################################################################################
+{
+; 2025-10-05 AMB, ADDED
+; 2025-12-24 AMB, MOVED to MaskCode.ahk
+;	separates trailing comments and whitespace from srcStr
+
+	tags	:= 'LC|BC|QS'
+	tags	.= (incHIF) ? '|HIF' : ''
+	nTag	:= '(?<=^)\h*' uniqueTag('(?:' tags ')\w++') '.*'		; [tag for comments or quoted string]
+	nLC		:= '(?:(?<=^)|(?<=^)\h+)(?<!``);[^\v]*+'				; [line comment]
+	nSep	:= '(?m)((?:\v+|' nTag '|' nLC ')++)$'					; will separate relevant portion from trailing comments/tags/ws
+	trail	:= ''													; ini, in case nothing to separate
+	if (RegExMatch(srcStr, nSep, &m)) {								; separate trailing comments/tags/ws from srcStr
+		trail	:= m[1]												; returns trailing comments/tags/ws (via reference)
+		srcStr	:= RegExReplace(srcStr, escRegexChars(trail) '$')	; removes trailing comments/tags/ws from srcStr
+	}
+	return srcStr													; return resulting srcStr, trimmed or not
+}
+;################################################################################
+									   separatePreCWS(srcStr, &pre, incHIF:=true)
+;################################################################################
+{
+; 2025-10-27 AMB, ADDED
+; 2025-12-24 AMB, MOVED to MaskCode.ahk
+;	separates preceding comments and whitespace from srcStr
+
+	tags	:= 'LC|BC|QS'
+	tags	.= (incHIF) ? '|HIF' : ''
+	nTag	:= '(?<=^)\h*' uniqueTag('(?:' tags ')\w++') '.*'		; [tag for comments or quoted string]
+	nLC		:= '(?:(?<=^)|(?<=^)\h+)(?<!``);[^\v]*+'				; [line comment]
+	nSep	:= '^((?:\v+|' nTag '|' nLC ')++)'						; will separate relevant portion from preceding comments/tags/ws
+	trail	:= ''													; ini, in case nothing to separate
+	if (RegExMatch(srcStr, nSep, &m)) {								; separate preceding comments/tags/ws from srcStr
+		pre	:= m[1]													; returns preceding comments/tags/ws (via reference)
+		srcStr	:= RegExReplace(srcStr, '^' escRegexChars(pre))		; removes preceding comments/tags/ws from srcStr
+	}
+	return srcStr													; return resulting srcStr, trimmed or not
 }
 ;################################################################################
 																buildPtn_Sep1LC()

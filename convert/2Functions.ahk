@@ -1,612 +1,413 @@
 ﻿#Requires AutoHotKey v2.0
 
+; 2025-12-24 AMB, MOVED Dynamic Conversion Funcs to AhkLangConv.ahk
 /* a list of all renamed functions, in this format:
     , "OrigV1Function" ,
-      "ReplacementV2Function"
+      "ReplacementV2Function"   (see AhkLangConv.ahk)
     ↑ first comma is not needed for the first pair
   Similar to commands, parameters can be added
   order of Is important do not change
 */
-
 ;################################################################################
 ; 2025-11-28 AMB, UPDATED - changed to Case-Insensitive Map
+; 2025-12-24 AMB, UPDATED - re-ordered Map Keys to alphabetic
 global gmAhkFuncsToConvert := Map_I()
 gmAhkFuncsToConvert := OrderedMap(
-    "Catch(OutputVar)" ,
-    "*_Catch"
-  , "ComObject(vt, value, Flags)" ,
-    "ComValue({1}, {2}, {3})"
+    "Asc(String)" ,
+      "Ord({1})"
+  , "Catch(OutputVar)" ,
+      "*_Catch"
   , "ComObjCreate(CLSID , IID)" ,
-     "ComObject({1}, {2})"
+      "ComObject({1}, {2})"
   , "ComObjError(Enable)" ,
-     "({1} ? true : false) `; V1toV2: Wrap Com functions in try"
+      "({1} ? true : false) `; V1toV2: Wrap Com functions in try"
   , "ComObjParameter(vt, value, Flags)" ,
-     "ComValue({1}, {2}, {3})"
+      "ComValue({1}, {2}, {3})"
+  , "ComObject(vt, value, Flags)" ,
+      "ComValue({1}, {2}, {3})"
   , "DllCall(DllFunction,Type1,Arg1,val*)" ,
-     "*_DllCall"
-  , "Exception(Message, What, Extra)",
-     "Error({1}, {2}, {3})"
+      "*_DllCall"
+  , "Exception(Message, What, Extra)" ,
+      "Error({1}, {2}, {3})"
   , "Func(FunctionNameQ2T)" ,
-     "{1}"
+      "{1}"
   , "Hotstring(String,Replacement,OnOffToggle)" ,
-    "*_Hotstring"
+      "*_Hotstring"
   , "InStr(Haystack,Needle,CaseSensitive,StartingPos,Occurrence)" ,
-    "*_InStr"
-  , "RegExMatch(Haystack, NeedleRegEx, OutputVar, StartingPos)" ,
-    "*_RegExMatch"
-  , "RegExReplace(Haystack,NeedleRegEx,Replacement,OutputVarCountV2VR,Limit,StartingPos)" ,
-    "RegExReplace({1}, {2}, {3}, {4}, {5}, {6})"
-  , "StrReplace(Haystack,Needle,ReplaceText,OutputVarCountV2VR,Limit)" ,
-    "*_StrReplace"
-  , "SubStr(String, StartingPos, Length)" ,
-    "SubStr({1}, {2}, {3})"
-  , "RegisterCallback(FunctionNameQ2T,Options,ParamCount,EventInfo)" ,
-    "CallbackCreate({1}, {2}, {3})"
+      "*_InStr"
   , "LoadPicture(Filename,Options,ImageTypeV2VR)" ,
-     "LoadPicture({1},{2},{3})"
+      "LoadPicture({1},{2},{3})"
   , "LV_Add(Options, Field*)" ,
-     "*_LV_Add"
+      "*_LV_Add"
   , "LV_Delete(RowNumber)" ,
-     "*_LV_Delete"
+      "*_LV_Delete"
   , "LV_DeleteCol(ColumnNumber)" ,
-     "*_LV_DeleteCol"
+      "*_LV_DeleteCol"
   , "LV_GetCount(ColumnNumber)" ,
-     "*_LV_GetCount"
-  , "LV_GetText(OutputVar, RowNumber, ColumnNumber)" ,
-     "*_LV_GetText"
+      "*_LV_GetCount"
   , "LV_GetNext(StartingRowNumber, RowType)" ,
-     "*_LV_GetNext"
-  , "LV_InsertCol(ColumnNumber , Options, ColumnTitle)" ,
-     "*_LV_InsertCol"
+      "*_LV_GetNext"
+  , "LV_GetText(OutputVar, RowNumber, ColumnNumber)" ,
+      "*_LV_GetText"
   , "LV_Insert(RowNumber, Options, Field*)" ,
-     "*_LV_Insert"
+      "*_LV_Insert"
+  , "LV_InsertCol(ColumnNumber , Options, ColumnTitle)" ,
+      "*_LV_InsertCol"
   , "LV_Modify(RowNumber, Options, Field*)" ,
-     "*_LV_Modify"
+      "*_LV_Modify"
   , "LV_ModifyCol(ColumnNumber, Options, ColumnTitle)" ,
-     "*_LV_ModifyCol"
+      "*_LV_ModifyCol"
   , "LV_SetImageList(ImageListID, IconType)" ,
-     "*_LV_SetImageList"
-  , "TV_Add(Name,ParentItemID,Options)" ,
-     "*_TV_Add"
-  , "TV_Modify(ItemID,Options,NewName)" ,
-     "*_TV_Modify"
-  , "TV_Delete(ItemID)" ,
-     "*_TV_Delete"
-  , "TV_GetSelection(ItemID)" ,
-     "*_TV_GetSelection"
-  , "TV_GetParent(ItemID)" ,
-     "*_TV_GetParent"
-  , "TV_GetPrev(ItemID)" ,
-     "*_TV_GetPrev"
-  , "TV_GetNext(ItemID,ItemType)" ,
-     "*_TV_GetNext"
-  , "TV_GetText(OutputVar,ItemID)" ,
-     "*_TV_GetText"
-  , "TV_GetChild(ParentItemID)" ,
-     "*_TV_GetChild"
-  , "TV_GetCount()" ,
-     "*_TV_GetCount"
-  , "TV_SetImageList(ImageListID,IconType)" ,
-     "*_TV_SetImageList"
-  , "SB_SetText(NewText,PartNumber,Style)" ,
-     "*_SB_SetText"
-  , "SB_SetParts(Width*)" ,
-     "*_SB_SetParts"
-  , "SB_SetIcon(Filename,IconNumber,PartNumber)" ,
-     "*_SB_SetIcon"
+      "*_LV_SetImageList"
   , "MenuGetHandle(MenuNameQ2T)" ,
-     "{1}.Handle"
+      "{1}.Handle"
   , "MenuGetName(Handle)" ,
-     "MenuFromHandle({1})"
+      "MenuFromHandle({1})"
   , "NumGet(VarOrAddress,Offset,Type)" ,
-     "*_NumGet"
+      "*_NumGet"
   , "NumPut(Number,VarOrAddress,Offset,Type)" ,
-     "*_NumPut"
+      "*_NumPut"
   , "Object(Array*)" ,
-     "*_Object"
+      "*_Object"
   , "ObjRawGet(Object, KeyQ2T)" ,
-     "{1}.{2}"
+      "{1}.{2}"
   , "ObjRawSet(Object, KeyQ2T, Value)" ,
-     "{1}.{2} := {3}"
-  , "OnError(FuncQ2T,AddRemove)" ,
-     "OnError({1}, {2})"
-  , "OnMessage(MsgNumber, FunctionQ2T, MaxThreads)" ,
-     "*_OnMessage"
+      "{1}.{2} := {3}"
   , "OnClipboardChange(FuncQ2T,AddRemove)" ,
-     "OnClipboardChange({1}, {2})"
-  , "Asc(String)" ,
-     "Ord({1})"
+      "OnClipboardChange({1}, {2})"
+  , "OnError(FuncQ2T,AddRemove)" ,
+      "OnError({1}, {2})"
+  , "OnMessage(MsgNumber, FunctionQ2T, MaxThreads)" ,
+      "*_OnMessage"
+  , "RegExMatch(Haystack, NeedleRegEx, OutputVar, StartingPos)" ,
+      "*_RegExMatch"
+  , "RegExReplace(Haystack,NeedleRegEx,Replacement,OutputVarCountV2VR,Limit,StartingPos)" ,
+      "RegExReplace({1}, {2}, {3}, {4}, {5}, {6})"
+  , "RegisterCallback(FunctionNameQ2T,Options,ParamCount,EventInfo)" ,
+      "CallbackCreate({1}, {2}, {3})"
+  , "SB_SetIcon(Filename,IconNumber,PartNumber)" ,
+      "*_SB_SetIcon"
+  , "SB_SetParts(Width*)" ,
+      "*_SB_SetParts"
+  , "SB_SetText(NewText,PartNumber,Style)" ,
+      "*_SB_SetText"
+  , "StrReplace(Haystack,Needle,ReplaceText,OutputVarCountV2VR,Limit)" ,
+      "*_StrReplace"
+  , "SubStr(String, StartingPos, Length)" ,
+      "SubStr({1}, {2}, {3})"
+  , "TV_Add(Name,ParentItemID,Options)" ,
+      "*_TV_Add"
+  , "TV_Delete(ItemID)" ,
+      "*_TV_Delete"
+  , "TV_GetChild(ParentItemID)" ,
+      "*_TV_GetChild"
+  , "TV_GetCount()" ,
+      "*_TV_GetCount"
+  , "TV_GetNext(ItemID,ItemType)" ,
+      "*_TV_GetNext"
+  , "TV_GetParent(ItemID)" ,
+      "*_TV_GetParent"
+  , "TV_GetPrev(ItemID)" ,
+      "*_TV_GetPrev"
+  , "TV_GetSelection(ItemID)" ,
+      "*_TV_GetSelection"
+  , "TV_GetText(OutputVar,ItemID)" ,
+      "*_TV_GetText"
+  , "TV_Modify(ItemID,Options,NewName)" ,
+      "*_TV_Modify"
+  , "TV_SetImageList(ImageListID,IconType)" ,
+      "*_TV_SetImageList"
   , "VarSetCapacity(TargetVar,RequestedCapacity,FillByte)^(\s*[*+\-\/][\/]?)(\s*[.\d]{1,})(\s*[*+\-\/])?" ,
-    "*_VarSetCapacity"
-  )
-
-
+      "*_VarSetCapacity"
+)
 ;################################################################################
-; See ConvertFuncs.ahk for _Catch() (also used for command conversion)
-; 2025-10-05 AMB, UPDATED - changed var name gfNoSideEffect to gfLockGlbVars
-; 2025-11-28 AMB, UPDATED - prevent ampersand from being added to numbers
-
-_DllCall(p) {
-  ParBuffer := ""
-  global gfLockGlbVars
-  loop p.Length
-  {
-    if (p[A_Index] ~= "i)^U?(Str|AStr|WStr|Int64|Int|Short|Char|Float|Double|Ptr)P?\*?$") {
-      ; Correction of old v1 DllCalls who forget to quote the types
-      p[A_Index] := '"' p[A_Index] '"'
-    }
-    NeedleRegEx := "(\*\s*0\s*\+\s*)(&)(\w*)" ; *0+&var split into 3 groups (*0+), (&), and (var)
-    ;if (p[A_Index] ~= "^&") {                       ; Remove the & parameter
-    ;  p[A_Index] := SubStr(p[A_Index], 2)
-    ;} else
-    if (RegExMatch(p[A_Index], NeedleRegEx)) { ; even if it's behind a *0 var assignment preceding it
-      gfLockGlbVars := 1    ; lock global vars (no changes allowed)
-        V1toV2_Functions(ScriptString:=p[A_Index], Line:=p[A_Index], &v2:="", &gotFunc:=False)
-      gfLockGlbVars := 0    ; unlock global vars (changes allowed)
-      if (commentPos:=InStr(v2,"`;")) {
-        v2 := SubStr(v2, 1, commentPos-1)
-      }
-      if (RegExMatch(v2, "VarSetStrCapacity\(&")) {   ; guard var in StrPtr if UTF-16 passed as "Ptr"
-        if (p.Has(A_Index-1) && (p[A_Index-1] = '"Ptr"')) {
-          p[A_Index] := RegExReplace(p[A_Index],      NeedleRegEx,"$1StrPtr($3)")
-          dbgTT(3, "@DllCall: 1StrPtr", Time:=3,id:=9)
+;// FormatParam:
+;//          - param names ending in "T2E" will convert a literal Text param TO an Expression
+;//              this would be used when converting a Command to a Func or otherwise needing an expr
+;//              such as      word -> "word"      or      %var% -> var
+;//              Changed: empty strings will return an emty string
+;//              like the 'value' param in those  `IfEqual, var, value`  commands
+;//          - param names ending in "T2QE" will convert a literal Text param TO an Quoted Expression
+;//              this would be used when converting a Command to a expr
+;//              This is the same as T2E, but will return an "" if empty.
+;//          - param names ending in "Q2T" will convert a Quoted Text param TO text
+;//              this would be used when converting a function variable that holds a label or function
+;//              "WM_LBUTTONDOWN" => WM_LBUTTONDOWN
+;//          - param names ending in "CBE2E" would convert parameters that 'Can Be an Expression TO an EXPR'
+;//              this would only be used if the conversion goes from Command to Func
+;//              we'd need to strip a preceeding "% " which was used to force an expr when it was unnecessary
+;//          - param names ending in "CBE2T" would convert parameters that 'Can Be an Expression TO literal TEXT'
+;//              this would be used if the conversion goes from Command to Command
+;//              because in v2, those command parameters can no longer optionally be an expression.
+;//              these will be wrapped in %%s, so   expr+1   is now    %expr+1%
+;//          - param names ending in "Q2T" would convert parameters that 'Can Be an quoted TO literal TEXT'
+;//               "var" => var
+;//               'var' => var
+;//                var => var
+;//          - param names ending in "V2VR" would convert an output variable name to a v2 VarRef
+;//              basically it will just add an & at the start. so var -> &var
+;//          - param names ending in "V2VRM" would convert an output variable name to a v2 VarRef
+;//              same as V2VR but adds a placeholder name if blank, only use if its mandatory param in v2
+;//          - any other param name will not be converted
+;//              this means that the literal text of the parameter is unchanged
+;//              this would be used for InputVar/OutputVar params, or whenever you want the literal text preserved
+; Converts Parameter to different format T2E T2QE Q2T CBE2E CBE2T Q2T V2VR V2VRM
+; 2025-06-12 AMB, UPDATED - changed function name, some var and funcCall names
+; 2025-12-24 AMB, MOVED to 2Functions.ahk
+FormatParam(ParName, ParValue) {
+;   ParName := StrReplace(Trim(ParName), "*")  ; Remove the *, that indicate an array (2025-06-12 NOT USED)
+    ParValue := Trim(ParValue)
+    if (ParName ~= "V2VRM?$") {
+        if (ParValue != "" && !InStr(ParValue, "&"))
+            ParValue := "&" . ParValue
+        else if (ParName ~= "M$" && ParValue = "" && !InStr(ParValue, "&"))
+            ParValue := "&AHKv1v2_vPlaceholder", goWarnings.AddedV2VRPlaceholder := 1
+    } else if (ParName ~= "CBE2E$") {                                                       ; 'Can Be an Expression TO an Expression'
+        if (SubStr(ParValue, 1, 2) = "% ")                                                  ; if this param expression was forced
+            ParValue := SubStr(ParValue, 3)                                                 ; remove the forcing
+        else
+            ParValue := RemoveSurroundingPercents(ParValue)
+    } else if (ParName ~= "CBE2T$") {                                                       ; 'Can Be an Expression TO literal Text'
+        if (isInteger(ParValue))                                                            ; if this param is int
+        || (SubStr(ParValue, 1, 2) = "% ")                                                  ; or the expression was forced
+        || ((SubStr(ParValue, 1, 1) = "%") && (SubStr(ParValue, -1) = "%"))                 ; or var already wrapped in %%s
+            ParValue := ParValue                                                            ; dont do any conversion
+        else
+            ParValue := "%" . ParValue . "%"                                                ; wrap in percent signs to evaluate the expr
+    } else if (ParName ~= "Q2T$") {                                                         ; 'Can Be an quote TO literal Text'
+        if ((SubStr(ParValue, 1, 1) = "`"") && (SubStr(ParValue, -1) = "`""))               ;  var already wrapped in Quotes
+        || ((SubStr(ParValue, 1, 1) = "`'") && (SubStr(ParValue, -1) = "`'"))               ;  var already wrapped in Quotes
+            ParValue := SubStr(ParValue, 2, StrLen(ParValue) - 2)
+        else
+            ParValue := "%" ParValue "%"
+    } else if (ParName ~= "T2E$") {                                                         ; 'Text TO Expression'
+        if (SubStr(ParValue, 1, 2) = "% ") {
+            ParValue := SubStr(ParValue, 3)                                                 ; remove '% '
         } else {
-          p[A_Index] := RegExReplace(p[A_Index],      NeedleRegEx,"$1$3")
-          dbgTT(3, "@DllCall: 2NotPtr", Time:=3,id:=9)
+            ; 2025-06-12 AMB, ADDED support for continuation sections
+            csStr := ''
+            ParValue := (ParValue != "") ? ((csStr := CSect.HasContSect(ParValue)) ? csStr : ToExp(parValue)) : ""
         }
-      } else if (RegExMatch(v2, "Buffer\(")) {         ; leave only the variable,  _VarSetCapacity(p) should place the rest on a new line before this
-          p[A_Index] := RegExReplace(p[A_Index], ".*" NeedleRegEx,"$3")
-          dbgTT(3, "@DllCall: 3Buff", Time:=3,id:=9)
-      } else {
-          p[A_Index] := RegExReplace(p[A_Index],      NeedleRegEx,"$1$3")
-          dbgTT(3, "@DllCall: 4Else", Time:=3,id:=9)
-      }
-    }
-    if (((A_Index !=1) && (mod(A_Index, 2) = 1)) && (InStr(p[A_Index - 1], "*`"")
-       || InStr(p[A_Index - 1], "*`'") || InStr(p[A_Index - 1], "P`"") || InStr(p[A_Index - 1], "P`'"))) {
-         ; 2025-11-28 AMB, UPDATED - prevent ampersand from being added to numbers
-         if (!IsNumber(p[A_index])) {
-            p[A_Index] := "&" p[A_Index]
-          }
-      if (!InStr(p[A_Index], ":=")) {
-        ; Disabled for now because of issue #54, but this can result in undefined variables...
-        ; p[A_Index] .= " := 0"
-      }
-    }
-    ParBuffer .= A_Index=1 ? p[A_Index] : ", " p[A_Index]
-  }
-  Return "DllCall(" ParBuffer ")"
-}
-
-;################################################################################
-_Hotstring(p) {
-; 2025-10-05 AMB, UPDATED - changed gaList_LblsToFuncO to gmList_LblsToFunc
-; 2025-11-01 AMB, UPDATED - gmList_LblsToFunc key case-sensitivity
-  global gmList_LblsToFunc
-  if (RegExMatch(p[1], '":') and p.Has(2)) {
-    p[2] := Trim(p[2], '"')
-    gmList_LblsToFunc[p[2]] := ConvLabel('HS', p[2], '*', getV2Name(p[2]))
-  }
-
-  Out := "Hotstring("
-  loop p.Length {
-    Out .= p[A_Index] ", "
-  }
-  Out .= ")"
-  Return RegExReplace(Out, "[\s\,]*\)$", ")")
-}
-
-;################################################################################
-_InStr(p) {
-  global gaScriptStrsUsed
-  p[3] := p[3] = "" and gaScriptStrsUsed.StringCaseSense ? "A_StringCaseSense" : p[3]
-  Out := Format("InStr({1}, {2}, {3}, {4}, {5})", p*)
-  return RegExReplace(Out, "[\s,]*\)", ")")
-}
-
-;################################################################################
-_LV_Add(p) {
-  global gLVNameDefault
-  Out := gLVNameDefault ".Add("
-  loop p.Length {
-    Out .= p[A_Index] ", "
-  }
-  Out .= ")"
-  ; Out := format("{1}.Add({2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}, {16}, {17})", gLVNameDefault, p*)
-  Return RegExReplace(Out, "[\s\,]*\)$", ")")
-}
-;################################################################################
-_LV_Delete(p) {
-  global gLVNameDefault
-  Return format("{1}.Delete({2})", gLVNameDefault, p*)
-}
-;################################################################################
-_LV_DeleteCol(p) {
-  global gLVNameDefault
-  Return format("{1}.DeleteCol({2})", gLVNameDefault, p*)
-}
-;################################################################################
-_LV_GetCount(p) {
-  global gLVNameDefault
-  Return format("{1}.GetCount({2})", gLVNameDefault, p*)
-}
-;################################################################################
-_LV_GetText(p) {
-  global gLVNameDefault
-  Return format("{2} := {1}.GetText({3})", gLVNameDefault, p*)
-}
-;################################################################################
-_LV_GetNext(p) {
-  global gLVNameDefault
-  Return format("{1}.GetNext({2},{3})", gLVNameDefault, p*)
-}
-;################################################################################
-_LV_InsertCol(p) {
-  global gLVNameDefault
-  Return format("{1}.InsertCol({2}, {3}, {4})", gLVNameDefault, p*)
-}
-;################################################################################
-_LV_Insert(p) {
-  global gLVNameDefault
-  Out := gLVNameDefault ".Insert("
-  loop p.Length {
-    Out .= p[A_Index] ", "
-  }
-  Out .= ")"
-  Return RegExReplace(Out, "[\s\,]*\)$", ")")
-}
-;################################################################################
-_LV_Modify(p) {
-  global gLVNameDefault
-  Out := gLVNameDefault ".Modify("
-  loop p.Length {
-    Out .= p[A_Index] ", "
-  }
-  Out .= ")"
-  Return RegExReplace(Out, "[\s\,]*\)$", ")")
-}
-;################################################################################
-_LV_ModifyCol(p) {
-  global gLVNameDefault
-  Return format("{1}.ModifyCol({2}, {3}, {4})", gLVNameDefault, p*)
-}
-;################################################################################
-_LV_SetImageList(p) {
-  global gLVNameDefault
-  Return format("{1}.SetImageList({2}, {3})", gLVNameDefault, p*)
-}
-
-;################################################################################
-_NumGet(p) {
-  ;V1: NumGet(VarOrAddress , Offset := 0, Type := "UPtr")
-  ;V2: NumGet(Source, Offset, Type)
-  if (p[2] = "" && p[3] = "") {
-    p[2] := '"UPtr"'
-  }
-  if (p[3] = "" && InStr(p[2],"A_PtrSize")) {
-    p[3] := '"UPtr"'
-  }
-  Out := "NumGet(" P[1] ", " p[2] ", " p[3] ")"
-  Return RegExReplace(Out, "[\s\,]*\)$", ")")
-}
-;################################################################################
-_NumPut(p) {
-  ;V1 NumPut(Number,VarOrAddress,Offset,Type)
-  ;V2 NumPut Type, Number, Type2, Number2, ... Target , Offset
-  ; This should work to unwind the NumPut labyrinth
-  p[1] := StrReplace(StrReplace(p[1], "`r"), "`n")
-  p[2] := StrReplace(StrReplace(p[2], "`r"), "`n")
-  p[3] := StrReplace(StrReplace(p[3], "`r"), "`n")
-  p[4] := StrReplace(StrReplace(p[4], "`r"), "`n")
-  ; Get size from VarSetCapacity
-  ; Only for NumPut, if this is common for enough other functions a global solution may be required
-  for i, param in p {
-    p[i] := RegExReplace(param, "i)VarSetCapacity\(.+?\)", "($0).Size")
-  }
-  if (InStr(p[2], "Numput(")) {
-    ParBuffer := ""
-    loop {
-      p[1] := Trim(p[1])
-      p[2] := Trim(p[2])
-      p[3] := Trim(p[3])
-      p[4] := Trim(p[4])
-      Number := p[1]
-      VarOrAddress := p[2]
-      if (p[4] = "") {
-        if (P[3] = "") {
-          OffSet := ""
-          Type := "`"UPtr`""
-        } else if (IsInteger(p[3])) {
-          OffSet := p[3]
-          Type := "`"UPtr`""
-        } else {
-          OffSet := ""
-          Type := p[3]
+    } else if (ParName ~= "T2QE$") {                                                        ; 'Text TO Quote Expression'
+        ParValue := ToExp(ParValue)
+    } else if (ParName ~= "i)On2True$") {                                                   ; 'Text TO Quote Expression'
+        ParValue := RegexReplace(ParValue, "^%\s*(.*?)%?$", "$1")
+        ParValue := RegexReplace(RegexReplace(RegexReplace(ParValue, "i)\btoggle\b", "-1"), "i)\bon\b", "true"), "i)\boff\b", "false")
+    } else if (ParName ~= "i)^StartingPos$") {                                              ; Only parameters with this name. Found at InStr, SubStr, RegExMatch and RegExReplace.
+        if (ParValue != "") {
+            if (IsNumber(ParValue)) {
+                ParValue := ParValue<1 ? ParValue-1 : ParValue
+            } else {
+                ParValue := "(" ParValue ")<1 ? (" ParValue ")-1 : (" ParValue ")"
+            }
         }
-      } else {  ;
-        OffSet := p[3]
-        Type := p[4]
-      }
-
-      ParBuffer := Type ", " Number ", `r`n" gIndent "   " ParBuffer
-
-      NextParameters := RegExReplace(VarOrAddress, "is)^\s*Numput\((.*)\)\s*$", "$1", &OutputVarCount)
-      if (OutputVarCount = 0) {
-        break
-      }
-
-      p := V1ParamSplit(NextParameters)
-      loop 4 - p.Length {
-        p.Push("")
-      }
-    }
-    Out := "NumPut(" ParBuffer VarOrAddress ", " OffSet ")"
-  } else {
-    p[1] := Trim(p[1])
-    p[2] := Trim(p[2])
-    p[3] := Trim(p[3])
-    p[4] := Trim(p[4])
-    Number := p[1]
-    VarOrAddress := p[2]
-    if (p[4] = "") {
-      if (P[3] = "") {
-        OffSet := ""
-        Type := "`"UPtr`""
-      } else if (IsInteger(p[3])) {
-        OffSet := p[3]
-        Type := "`"UPtr`""
-      } else {
-        OffSet := ""
-        Type := p[3]
-      }
-    } else {  ;
-      OffSet := p[3]
-      Type := p[4]
-    }
-    Out := "NumPut(" Type ", " Number ", " VarOrAddress ", " OffSet ")"
-  }
-  Out := RegExReplace(Out, "[\s\,]*\)$", ")")
-  Return Out
-}
-
-;################################################################################
-_Object(p) {
-  Parameters := ""
-  Function := (p.Has(2)) ? "Map" : "Object" ; If parameters are used, a map object is intended
-  Loop p.Length
-  {
-    Parameters .= Parameters = "" ? p[A_Index] : ", " p[A_Index]
-  }
-  ; Should we convert used statements as mapname.test to mapname["test"]?
-  Return Function "(" Parameters ")"
-}
-
-;################################################################################
-class clsOnMsg
-{
-; 2025-10-12 AMB - ADDED for better support of OnMessage params and binding
-; used with gmOnMessageMap
-  msg       := ''                       ; OnMessage message ID
-  cbFunc    := ''                       ; callback func - from OnMessage-call perspective
-  bindStr   := ''                       ; bind string (can be used for sensing or appending)
-
-  __new(msg,cbf:='',bs:='') {                 ; must be instantiated using msg id
-    this.msg        := msg
-    this.cbFunc     := cbf
-    this.bindStr    := bs
-  }
-  funcName => Trim(this.cbFunc, '% ')   ; callback func NAME ONLY (in case it's needed)
-}
-;################################################################################
-_OnMessage(p) {
-; 2025-10-05 AMB, UPDATED - changed masking src to gCBPH - see MaskCode.ahk
-; 2025-10-12 AMB, UPDATED - to provide better support for params and binding
-;   gmOnMessageMap now holds custom clsOnMsg objects
-  ; OnMessage(MsgNumber, FunctionQ2T, MaxThreads)
-  ; OnMessage({1}, {2}, {3})
-  global gmOnMessageMap
-
-  if (p.Has(1) && p.Has(2) && p[1] != '' && p[2] != '') {
-    msg := string(p[1]), cbFunc := p[2], bindStr := ''                          ; use vars for better clarity
-    if (InStr(cbFunc, 'Func(')) {                                                 ; when cbFunc param is using v1 Func()...
-      if (RegExMatch(cbFunc, '\.Bind\(.*\)', &bindContent)) {                   ; if OnMsg call includes .Bind()...
-        bindStr := bindContent[]                                                ; ... save .Bind() string
-      }
-      if (RegExMatch(cbFunc, '%Func\("(\w+)"\)', &m)) {                           ; when cbFunc param is using Func("name")...
-        cbFunc := m[1]                                                          ; ... record just the CB func name
-      }
-      else if RegExMatch(cbFunc, '%Func\((\w+)\)', &m) {                        ; when cbFunc param is using Func(var)...
-        cbFunc := '%' m[1] '%'                                                  ; ... add deref to cb func name
-      }
-    }
-    ; 2025-10-12 AMB - changed to using clsOnMsg object for issue #384-2
-    ; see addOnMessageCBArgs() in GuiAndMenu.ahk
-    gmOnMessageMap[msg] := clsOnMsg(msg,cbFunc,bindStr)                         ; create a new clsOnMsg object
-    maxThds := (p.Has(3) && p[3] != '') ? ', ' p[3] : ''                        ; include maxThreads param if present
-    return  'OnMessage(' msg ', ' cbFunc bindStr maxThds ')'                    ; create/return OnMessage Call str
-  }
-  if (p.Has(2) && p[2] = '') {                                                  ; if cbFunc is empty...
-    Try {
-      callback := gmOnMessageMap[string(p[1])].cbFunc                           ; try to get cb func...
-    } Catch {                                                                   ; ... (no object has been created for this msg)
-      Return 'OnMessage(' p[1] ', ' gCBPH ', 0)'                                ; Didnt find lister to turn off
-    }
-    Return 'OnMessage(' p[1] ', ' callback ', 0)'                               ; Found the listener to turn off
-  }
-}
-
-;################################################################################
-_StrReplace(p) {
-  global gaScriptStrsUsed
-  CaseSense := gaScriptStrsUsed.StringCaseSense ? "A_StringCaseSense" : ""
-  Out := Format("StrReplace({2}, {3}, {4}, {1}, {5}, {6})", CaseSense, p*)
-  return RegExReplace(Out, "[\s,]*\)", ")")
-}
-
-;################################################################################
-_SB_SetText(p) {
-  global gSBNameDefault
-  Return format("{1}.SetText({2}, {3}, {4})", gSBNameDefault, p*)
-}
-;################################################################################
-_SB_SetParts(p) {
-  global gSBNameDefault
-  Out := gSBNameDefault ".SetParts("
-  for , v in p {
-    Out .= v ", "
-  }
-  Return RTrim(Out, ", ") ")"
-}
-;################################################################################
-_SB_SetIcon(p) {
-  global gSBNameDefault, gFuncParams
-  Return format("{1}.SetIcon({2})", gSBNameDefault, gFuncParams)
-}
-
-;################################################################################
-_TV_Add(p) {
-  global gTVNameDefault
-  Return format("{1}.Add({2}, {3}, {4})", gTVNameDefault, p*)
-}
-;################################################################################
-_TV_Modify(p) {
-  global gTVNameDefault
-  Return format("{1}.Modify({2}, {3}, {4})", gTVNameDefault, p*)
-}
-;################################################################################
-_TV_Delete(p) {
-  global gTVNameDefault
-  Return format("{1}.Delete({2})", gTVNameDefault, p*)
-}
-;################################################################################
-_TV_GetSelection(p) {
-  global gTVNameDefault
-  Return format("{1}.GetSelection({2})", gTVNameDefault, p*)
-}
-;################################################################################
-_TV_GetParent(p) {
-  global gTVNameDefault
-  Return format("{1}.GetParent({2})", gTVNameDefault, p*)
-}
-;################################################################################
-_TV_GetChild(p) {
-  global gTVNameDefault
-  Return format("{1}.GetChild({2})", gTVNameDefault, p*)
-}
-;################################################################################
-_TV_GetPrev(p) {
-  global gTVNameDefault
-  Return format("{1}.GetPrev({2})", gTVNameDefault, p*)
-}
-;################################################################################
-_TV_GetNext(p) {
-  global gTVNameDefault
-  Return format("{1}.GetNext({2}, {3})", gTVNameDefault, p*)
-}
-;################################################################################
-_TV_GetText(p) {
-  global gTVNameDefault
-  Return format("{2} := {1}.GetText({3})", gTVNameDefault, p*)
-}
-;################################################################################
-_TV_GetCount(p) {
-  global gTVNameDefault
-  Return format("{1}.GetCount()", gTVNameDefault)
-}
-;################################################################################
-_TV_SetImageList(p) {
-  global gTVNameDefault
-  Return format("{2} := {1}.SetImageList({3})", gTVNameDefault)
-}
-
-;################################################################################
-_VarSetCapacity(p) {
-; 2025-10-05 AMB, UPDATED - changed some var names
-  global gfrePostFuncMatch, gNL_Func, gEOLComment_Func, gfLockGlbVars
-
-  ; if global vars are locked, update local temp vars instead (using ref vars)
-  if (gfLockGlbVars) {
-    vrNL_Func           := &tmp1 := ''
-    vrEOLComment_Func   := &tmp2 := ''
-  } else {
-    vrNL_Func           := &gNL_Func
-    vrEOLComment_Func   := &gEOLComment_Func := ''
-  }
-  reM := gfrePostFuncMatch
-  if (p[3] != "") {
-    ; since even multiline continuation allows line comments adding vrEOLComment_Func shouldn't break anything, but if it does, add this hacky comment
-      ;`{3} + 0*StrLen("V1toV2: comment")`, or when you can't add a 0 (to a buffer)
-      ; p.Push("V1toV2: comment")
-      ; retStr := Format('RegExReplace("{1} := Buffer({2}, {3}) ``; {4}", " ``;.*$")', p*)
-    varA   := Format("{1}"                           , p*)
-    retStr := Format("VarSetStrCapacity(&{1}, {2})"  , p*)
-    %vrEOLComment_Func% .= format("V1toV2: if '{1}' is a UTF-16 string, use '{2}' and replace all instances of '{1}.Ptr' with 'StrPtr({1})'", varA, retStr)
-    gmVarSetCapacityMap.Set(p[1], "B")
-    if (!reM) {
-      retBuf := Format("{1} := Buffer({2}, {3})"     , p*)
-      dbgTT(3, "@_VarSetCapacity: 3 args, plain", Time:=3,id:=5,x:=-1,y:=-1)
     } else {
-      if (reM.Count = 1) { ; just in case, min should be 2
-        p.Push(reM[])
-        retBuf   := Format("({1} := Buffer({2}, {3})).Size{4}", p*)
-        dbgTT(3, "@_VarSetCapacity: 3 args, Regex 1 group", Time:=3,id:=5,x:=-1,y:=-1)
-      } else if (reM.Count = 2) { ; one operator and a number, e.g. *0
-        ; op  := reM[1]
-        ; num := reM[2]
-        ; if Trim(op) = "//"
-        p.Push(reM[])
-        retBuf   := Format("({1} := Buffer({2}, {3})).Size{4}", p*)
-        dbgTT(3, "@_VarSetCapacity: 3 args, Regex 2 groups", Time:=3,id:=5,x:=-1,y:=-1)
-      } else if (reM.Count = 3) { ; op1, number, op2, e.g. *0+
-        op1 := reM[1]
-        num := reM[2]
-        op2 := reM[3]
-        if (Trim(op1)="*" && Trim(num)="0") { ; move to the previous new line, remove regex matches
-          if (%vrNL_Func%) {                       ; add a newline for multiple calls in a line
-            %vrNL_Func% .= "`r`n" ;;;;; but breaks other calls
-          }
-          %vrEOLComment_Func% .= " NB! if this is part of a control flow block without {}, please enclose this and the next line in {}!"
-          p.Push(%vrEOLComment_Func%)
-          %vrNL_Func% .= Format("{1} := Buffer({2}, {3}) `; {4}"   , p*)
-          ; DllCall("oleacc", "Ptr", VarSetCapacity(vC,8,0)*0 + &vC)
-          %vrEOLComment_Func% := ""
-          retBuf := ""
-          dbgTT(3, "@_VarSetCapacity: 3 args, Regex 3 groups, NEWLINE", Time:=3,id:=5,x:=-1,y:=-1)
-        } else {
-          p.Push(reM[])
-          retBuf := Format("({1} := Buffer({2}, {3})).Size{4}", p*)
-          dbgTT(3, "@_VarSetCapacity: 3 args, Regex 3 groups", Time:=3,id:=5,x:=-1,y:=-1)
-        }
+        v2_DQ_Literals(&ParValue)
+    }
+   Return ParValue
+}
+;################################################################################
+; --------------------------------------------------------------------
+; Purpose: Read a ahk v1 command line and separate the variables
+; Input:
+;   String - The string to parse.
+; Output:
+;   RETURN - array of the parsed commands.
+; --------------------------------------------------------------------
+; Returns an Array of the parameters, taking into account brackets and quotes
+; Created by Ahk_user
+; Tries to split the parameters better because sometimes the , is part of a quote, function or object
+; spinn-off from DeathByNukes from https://autohotkey.com/board/topic/35663-functions-to-get-the-original-command-line-and-parse-it/
+; I choose not to trim the values as spaces can be valuable too
+; 2025-12-24 AMB, MOVED to 2Functions.ahk
+V1ParamSplit(String, IsFromFunc := 0) {
+   oResult := Array()   ; Array to store result
+   oIndex := 1   ; index of array
+   InArray := 0
+   InApostrophe := false
+   InFunction := 0
+   InObject := 0
+   InQuote := false
+   CanBeExpr := true
+   IsExpr := IsFromFunc
+
+   ; Checks if an even number was found, not bulletproof, fixes 50%
+   ;StrReplace(String, '"', , , &NumberQuotes)
+   RegexReplace(" " String, '[^``]"',, &NumberQuotes) ; Use regex to ignore `"
+   CheckQuotes := Mod(NumberQuotes + 1, 2)
+   ;MsgBox(CheckQuotes "`n" NumberQuotes)
+
+   StrReplace(String, "'", , , &NumberApostrophes)
+   CheckApostrophes := Mod(NumberApostrophes + 1, 2)
+
+   oString := StrSplit(String)
+   oResult.Push("")
+   Loop oString.Length
+   {
+      Char := oString[A_Index]
+
+      if (oString.has(A_Index + 1) && Char = "%" && oString[A_Index + 1] = " " && CanBeExpr) {
+         IsExpr := true
+      } else if (CanBeExpr && Char != " ") {
+         CanBeExpr := false
       }
-    }
-    Return retBuf
-  } else if (p[3]  = "") {
-    dbgTT(3, "@_VarSetCapacity: 2 args", Time:=3,id:=5,x:=-1,y:=-1)
-    varA   := Format("{1}"                           , p*)
-    retBuf := Format("{1} := Buffer({2})"            , p*)
-    %vrEOLComment_Func% .= format("V1toV2: if '{1}' is NOT a UTF-16 string, use '{2}' and replace all instances of 'StrPtr({1})' with '{1}.Ptr'", varA, retBuf)
-    gmVarSetCapacityMap.Set(p[1], "V")
-    if (!reM) {
-      retStr := Format("VarSetStrCapacity(&{1}, {2})"  , p*)
-    } else {
-      p.Push(reM[])
-      retStr := Format("VarSetStrCapacity(&{1}, {2}){4}"  , p*)
-    }
-    Return retStr
-  } else {
-    dbgTT(3, "@_VarSetCapacity: fallback", Time:=3,id:=5,x:=-1,y:=-1)
-    varA   := Format("{1}", p*)
-    retStr := Format("VarSetStrCapacity(&{1}, {2})"        , p*)
-    %vrEOLComment_Func% .= format("V1toV2: if '{1}' is a UTF-16 string, use '{2}' and replace all instances of '{1}.Ptr' with 'StrPtr({1})'", varA, retStr)
-    gmVarSetCapacityMap.Set(p[1], "B")
-    if (!reM) {
-      retBuf := Format("{1} := Buffer({2}, {3})"           , p*)
-    } else {
-      p.Push(reM[])
-      retBuf := Format("({1} := Buffer({2}, {3}).Size){4}" , p*)
-    }
-    Return retBuf
-  }
+
+      if (!InQuote && !InObject && !InArray && !InApostrophe && !InFunction) {
+         if (Char = "," && (A_Index = 1 || oString[A_Index - 1] != "``")) {
+            oIndex++
+            oResult.Push("")
+            Continue
+         }
+      }
+
+      if (Char = "`"" && !InApostrophe && CheckQuotes) {
+         if (IsExpr && !InQuote) {
+            ;  2024-06-24 andymbody - added double quote to Instr search just in case causing hidden issues
+            if (A_Index = 1 || (oString.has(A_Index - 1) && Instr('(" ,', oString[A_Index - 1]))) {
+               InQuote := 1
+            } else {
+               CheckQuotes := 0
+            }
+         } else {
+            ;  2024-06-24 andymbody - added double quote to Instr search to fix failed test RegexMatch_O-Mode_ex2.ah1
+            if (A_Index = oString.Length || (oString.has(A_Index + 1) && Instr(')" ,', oString[A_Index + 1]))) {
+               InQuote := 0
+            } else {
+               CheckQuotes := 0     ; could also just remove this to fix RegexMatch_O-Mode_ex2.ah1
+            }
+         }
+
+      } else if (Char = "`'" && !InQuote && CheckApostrophes) {
+         if (!InApostrophe) {
+            if (A_Index != 1 || (oString.has(A_Index - 1) && Instr("( ,", oString[A_Index - 1]))) {
+               CheckApostrophes := 0
+            } else {
+               InApostrophe := 1
+            }
+         } else {
+            if (A_Index != oString.Length || (oString.has(A_Index + 1) && Instr(") ,", oString[A_Index + 1]))) {
+               CheckApostrophes := 0
+            } else {
+               InApostrophe := 0
+            }
+         }
+      } else if (!InQuote && !InApostrophe) {
+         if (Char = "{") {
+            InObject++
+         } else if (Char = "}" && InObject) {
+            InObject--
+         } else if (Char = "[") {
+            InArray--
+         } else if (Char = "]" && InArray) {
+            InArray++
+         } else if (Char = "(") {
+            InFunction++
+         } else if (Char = ")" && InFunction) {
+            InFunction--
+         }
+      }
+      oResult[oIndex] := oResult[oIndex] Char
+   }
+   ;for i, v in oResult
+   ;   MsgBox "[" v "]"
+   return oResult
+}
+;################################################################################
+; Purpose: Read a ahk v1 command line and return the function, parameters, post and pre text
+; Input:
+;     String - The string to parse.
+;     FuctionTarget - The number of the function that you want to target
+; Output:
+;   oResult - array
+;       oResult.pre           text before the function
+;       oResult.func          function name
+;       oResult.parameters    parameters of the function
+;       oResult.post          text afther the function
+;       oResult.separator     character before the function
+; --------------------------------------------------------------------
+; Returns an object of parameters in the function properties: pre, function, parameters, post & separator
+; Will try to extract the function of the given line
+; Created by Ahk_user
+; TODO - add support for "(steps[steps.maxindex()"
+;    use gPtn_FuncCall needle instead ?
+; 2025-12-24 AMB, MOVED to 2Functions.ahk
+V1ParSplitFunctions(String, FunctionTarget := 1) {
+
+
+   oResult          := Array()      ; Array to store result Pre func params post
+   oIndex           := 1            ; index of array
+   InArray          := 0
+   InApostrophe     := false
+   InQuote          := false
+   Hook_Status      := 0
+
+   FunctionNumber   := 0
+   Searchstatus     := 0
+   HE_Index         := 0
+   oString          := StrSplit(String)
+   oResult.Push("")
+
+   Loop oString.Length
+   {
+      Char := oString[A_Index]
+
+      if (Char = "'" && !InQuote) {
+         InApostrophe := !InApostrophe
+      } else if (Char = "`"" && !InApostrophe) {
+         InQuote := !InQuote
+      }
+      if (Searchstatus = 0) {
+
+         if (Char = "(" && !InQuote && !InApostrophe) {
+            FunctionNumber++
+            if (FunctionNumber = FunctionTarget) {
+               H_Index := A_Index
+               ; loop to find function
+               loop H_Index - 1 {
+                  if (!IsNumber(oString[H_Index - A_Index]) && !IsAlpha(oString[H_Index - A_Index]) && !InStr("#_@$", oString[H_Index - A_Index])) {
+                     F_Index := H_Index - A_Index + 1
+                     Searchstatus := 1
+                     break
+                  } else if (H_Index - A_Index = 1) {
+                     F_Index := 1
+                     Searchstatus := 1
+                     break
+                  }
+               }
+            }
+         }
+      }
+      if (Searchstatus = 1) {
+         if (oString[A_Index] = "(" && !InQuote && !InApostrophe) {
+            Hook_Status++
+         } else if (oString[A_Index] = ")" && !InQuote && !InApostrophe) {
+            Hook_Status--
+         }
+         if (Hook_Status = 0) {
+            HE_Index := A_Index
+            break
+         }
+      }
+      oResult[oIndex]       := oResult[oIndex] Char
+   }
+   if (Searchstatus = 0) {
+      oResult.Pre           := String
+      oResult.Func          := ""
+      oResult.Parameters    := ""
+      oResult.Post          := ""
+      oResult.Separator     := ""
+      oResult.Found         := 0
+
+   } else {
+      oResult.Pre           := SubStr(String, 1, F_Index - 1)
+      oResult.Func          := SubStr(String, F_Index, H_Index - F_Index)
+      oResult.Parameters    := SubStr(String, H_Index + 1, HE_Index - H_Index - 1)
+      oResult.Post          := SubStr(String, HE_Index + 1)
+      oResult.Separator     := SubStr(String, F_Index - 1, 1)
+      oResult.Found         := 1
+   }
+   oResult.Hook_Status      := Hook_Status
+   return oResult
 }
 ;################################################################################
 ; V1toV2_Functions() - Convert a v1 function in a single script line to v2
@@ -614,18 +415,15 @@ _VarSetCapacity(p) {
 ;   Set gfLockGlbVars to 1 to lock global vars from being changed by funcs
 ; 2025-06-12 AMB, UPDATED - changed func name and some var and funcCall names
 ; 2025-10-05 AMB, MOVED from ConvertFuncs.ahk
-;################################################################################
-V1toV2_Functions(ScriptString, Line, &retV2, &gotFunc) {
 ; 2025-11-01 AMB, UPDATED as part of Scope support
 ;   TODO - REMOVE ScriptString param
-
+V1toV2_Functions(ScriptString, Line, &retV2, &gotFunc) {
     global gFuncParams, gfrePostFuncMatch, gFileOpenVars
     FuncsRemoved := 0   ; Number of funcs that have been removed during conversion (e.g Arr.Length() -> Arr.Length)
     ScriptString := gOrigScript ; 2025-11-01 AMB, ADDED as part of Scope support
     loop {
         if (!InStr(Line, "("))
             break
-
 
         oResult := V1ParSplitfunctions(Line, A_Index - FuncsRemoved)
 
@@ -734,7 +532,7 @@ V1toV2_Functions(ScriptString, Line, &retV2, &gotFunc) {
 
                     FuncObj := %FuncName%   ; // https://www.autohotkey.com/boards/viewtopic.php?p=382662#p382662
                     if (FuncObj is Func) {
-                        NewFunction := FuncObj(oPar)
+                        NewFunction := FuncObj(oPar)    ; 2025-12-24 - see AhkLangConv.ahk for dynamic functions
                     }
                 } Else {
                     FormatString := Trim(v2)

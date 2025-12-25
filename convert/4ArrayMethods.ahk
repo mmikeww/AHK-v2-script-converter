@@ -1,56 +1,29 @@
 ﻿#Requires AutoHotKey v2.0
 
+; 2025-12-24 AMB, MOVED Dynamic Conversion Funcs to AhkLangConv.ahk
 /* a list of all renamed Array Methods, in this format:
   a method has the syntax Array.method(Par1, Par2)
     , "OrigV1Method" ,
-      "ReplacementV2Method"
+      "ReplacementV2Method"     (see AhkLangConv.ahk)
     ↑ first comma is not needed for the first pair
   Similar to commands, parameters can be added
 */
 
 ; 2025-10-05 AMB, UPDATED - changed source of mask chars
 ; 2025-11-28 AMB, UPDATED - changed to Case-Insensitive Map
+; 2025-12-24 AMB, UPDATED - re-ordered Map Keys (method names) to alphabetic
 global gmAhkArrMethsToConvert := Map_I()
 gmAhkArrMethsToConvert := OrderedMap(
-    "length()" ,
-    "Length"
-  , "HasKey(Key)" ,
-    "Has({1})"
-  , "Insert(Keys*)",
-    "*_InsertAt"
-  , "Remove(Keys*)",
-    "*_RemoveAt"
+    "HasKey(Key)" ,
+      "Has({1})"
+  , "Insert(Keys*)" ,
+      "*_InsertAt"
+  , "Length()" ,
+      "Length"
   , "MaxIndex()" ,
-     gMXPH              ; see MaskCode.ahk
+      gMXPH              ; see MaskCode.ahk
   , "MinIndex()" ,
-     gMNPH              ; see MaskCode.ahk
-  )
-
-_InsertAt(p) {
-  if (p.Length = 1) {
-    Return "Push(" p[1] ")"
-  } else if (p.Length > 1 && (IsDigit(p[1]) || p[1] = Trim(p[1], '"'))) {
-    for i, v in p {
-      val .= ", " v
-    }
-    Return "InsertAt(" LTrim(val, ", ") ")"
-
-  }
-}
-
-_RemoveAt(p) {
-  if (p.Length = 1 && p[1] = "") { ; Arr.Remove()
-    Return "Pop()"
-  } else if (p.Length = 1 && (IsDigit(p[1]) || p[1] = Trim(p[1], '"'))) { ; Arr.Remove(n)
-    Return "RemoveAt(" p[1] ")"
-  } else if (p.Length = 2 && (IsDigit(p[1]) || p[1] = Trim(p[1], '"')) && (IsDigit(p[2]) || p[2] = Trim(p[2], '"'))) { ; Arr.Remove(n, n)
-    Return "RemoveAt(" p[1] ", " p[2] " - " p[1] " + 1)"
-  } else if (p.Length = 2 && (IsDigit(p[1]) || p[1] = Trim(p[1], '"')) && p[2] = "`"`"") { ; Arr.Remove(n, "")
-    Return "Delete(" p[1] ")"
-  } else {
-    params := ""
-    for , param in p
-      params .= param ", "
-    Return "Delete(" RTrim(params, ", ") ") `; V1toV2: Check Object.Remove in v1 docs to see which one matches"
-  }
-}
+      gMNPH              ; see MaskCode.ahk
+  , "Remove(Keys*)" ,
+      "*_RemoveAt"
+)

@@ -12,6 +12,7 @@
 ;################################################################################
 {
 ; 2025-11-01 AMB, ADDED
+; 2025-12-24 AMB, UPDATED output to object
 ;	Separates code into sections, returns SIMPLE sub-strings (for now)
 ;	Each section contains sub-string blocks for one of the following...
 ;	 Label, HK, HS, Func, Class, or global (may be multiple global sections)
@@ -24,8 +25,9 @@
 	sects		:= clsScopeSect.GetSections(code)											; separate code into sections
 	outSects := []																			; [output array]
 	for idx, sect in sects {																; for each section...
-		sectStr := codeChop.RestoreMasksAll(sect.GetSectStr)								; ... restore masking
-		outSects.Push(sectStr)																; ... update output array
+		sectCode := codeChop.RestoreMasksAll(sect.GetSectStr)								; ... restore masking
+		sectType := sect._tType																; ... get section type
+		outSects.Push({sectCode:sectCode,sectType:sectType})								; ... update output array
 	}
 	return outSects																			; return output array (simple sub-strings for each section)
 }

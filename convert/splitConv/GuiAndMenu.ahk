@@ -13,7 +13,7 @@ class clsGui
 }
 
 ;################################################################################
-_Gui(p) {
+GuiConv(p) {
 ; 2025-06-12 AMB, UPDATED - changed some var and func names, gOScriptStr is now an object
 ; 2025-10-05 AMB, UPDATED - moved to GuiAndMenu.ahk, changed gaList_LblsToFuncO to gmList_LblsToFunc
 ; 2025-10-13 AMB, UPDATED - to fix #202, also changed some var names and functionality
@@ -38,7 +38,7 @@ _Gui(p) {
 	static smGuiList := Map_I()				; 2025-10-13 AMB - changed var name and now holds gui object
 
 	; 2025-11-28 AMB - need to reset smGuiList any time gGuiList is reset
-	if (Trim(gGuiList, ' |') = '') {		; if gGuiList has been reset.. [in ConvertFuncs->setGlobals()]
+	if (Trim(gGuiList, ' |') = '') {		; if gGuiList has been reset.. [in Global_Declare->setGlobals()]
 		smGuiList := Map_I()				; ... also reset smGuiList !
 	}
 
@@ -384,7 +384,7 @@ _Gui(p) {
 	return Out
 }
 ;################################################################################
-_GuiControl(p) {
+GuiControlConv(p) {
 ; 2025-10-05 AMB, MOVED to GuiAndMenu.ahk
 ; 2025-11-30 AMB, UPDATED output to compress multi-line output into single-line tag
 
@@ -556,7 +556,7 @@ _GuiControl(p) {
 	Return
 }
 ;################################################################################
-_GuiControlGet(p) {
+GuiControlGetConv(p) {
 ; 2025-10-05 AMB, MOVED to GuiAndMenu.ahk
 
 	; GuiControlGet, OutputVar , SubCommand, ControlID, Value
@@ -738,7 +738,7 @@ getMenuBarName(srcStr) {
 	return ''
 }
 ;################################################################################
-_Menu(p) {
+MenuConv(p) {
 ; 2025-10-05 AMB, UPDATED - moved to GuiAndMenu.ahk, changed gaList_LblsToFuncO to gmList_LblsToFunc
 ; 2025-11-01 AMB. UPDATED as part of Scope support, and gmList_LblsToFunc key case-sensitivity
 

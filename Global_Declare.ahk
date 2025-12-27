@@ -14,12 +14,12 @@ global	  gmAhkKeywdsToRename,	gmAhkLoopRegKeywds
 #Include lib/dbg.ahk
 #Include Convert/MaskCode.ahk									; 2024-06-26 - support for masking
 #Include Convert/Scope.ahk										; 2025-11-01 - support for scope
+#Include Convert/AhkLangConv.ahk								; 2025-12-24 - to organize v1 to v2 cmd/func convert funcs
 #Include Convert/1Commands.ahk
 #Include Convert/2Functions.ahk
 #Include Convert/3Methods.ahk
 #Include Convert/4ArrayMethods.ahk
 #Include Convert/5Keywords.ahk
-#Include Convert/ConvLoopFuncs.ahk								; 2025-06-12 - separated loop code
 #Include Convert/Conversion_CLS.ahk								; 2025-06-12 - future support of Class version
 #Include Convert/ContSections.ahk								; 2025-06-22 - support for continuation sections
 #Include Convert/SplitConv/ConvV1_Funcs.ahk						; 2025-07-01 - support for separated conversion
@@ -57,13 +57,14 @@ setGlobals() {													; for globals that are reset with each new conversion
 	gmGuiVList				:= Map_I()							; Used to list all variable names defined in a Gui
 	gUseLastName			:= False							; Keep track of if we use the last set name in gGuiList
 
-	gaScriptStrsUsed		:= Array()							; Keeps an array of interesting strings used in the script
 	;gOScriptStr			:= []								; array of all the lines (prior to being an object)
 	gOScriptStr				:= Object()							; now a ScriptCode class object
+	gaScriptStrsUsed		:= Array()							; Keeps an array of interesting strings used in the script
 	gEarlyLine				:= ''								; portion of line to process, prior to processing, will not include trailing comment
 	gO_Index				:= 0								; current index of the lines
 	gIndent					:= ''
 	gSingleIndent			:= ''
+	gfNewScope				:= 0								; 2025-12-24 - tracks scope
 
 	gEOLComment_Cont		:= []								; 2025-05-24 - fix for #296 - comments for continuation sections
 	gEOLComment_Func		:= ''								; _Funcs can use this to add comments at EOL
@@ -93,14 +94,14 @@ setGlobals() {													; for globals that are reset with each new conversion
 ;################################################################################
 class NL {
 ; 2025-12-10 - dynamic newLine that includes current indent
-	Static CRLF => ('`r`n' . (IsSet(gIndent) ? gIndent : ''))
+	Static CRLF		=> ('`r`n' . (IsSet(gIndent) ? gIndent : ''))
 }
 ;################################################################################
 Class Map_I extends Map {
 ; 2025-11-28 - custom Map with case-sensitivity disabled by default
-	caseSense	:= 0											; disable case-sensitivity by default
-	KeysToString => Map_I._Join(this		 	)				; return list of object keys
-	KeyValPairs	=> Map_I._Join(this,1			)				; return list of {key:val}	pairs
+	caseSense		:= 0										; disable case-sensitivity by default
+	KeysToString	=> Map_I._Join(this		 	)				; return list of object keys
+	KeyValPairs		=> Map_I._Join(this,1		)				; return list of {key:val}	pairs
 	LabelMap		=> Map_I._Join(this,1,'=>'	)				; return list of {key=>val} pairs
 	;#############################################################################
 	Static _Join(obj,kv:=0,d:=':',s:='') {						; 2025-11-30 - @rommmcek

@@ -1,14 +1,17 @@
+﻿#Warn Unreachable, Off
 myGui := Gui()
 myGui.OnEvent("Close", GuiClose)
 ogcTextC := myGui.Add("Text", "vTextC", "First name:")
 ogcEditFirstName := myGui.Add("Edit", "vFirstName"), test := ogcEditFirstName.hwnd  ; The ym option starts a new column of controls.
-ogcPictureMyPic := myGui.Add("Picture", "vMyPic w20 h-1", "C:\Users\Dimitri\Pictures\Save24.png")
+ogcMyButton := myGui.Add("Button", "xp+140 vMyButton  default", "Empty Test")
+ogcMyButton.OnEvent("Click", EmptyTest.Bind("Normal"))
+ogcPictureMyPic := myGui.Add("Picture", "x10 vMyPic w20 h-1", "C:\Users\Dimitri\Pictures\Save24.png")
 
-ogcMyCheckBox := myGui.Add("CheckBox", "vMyCheckBox", "Option1")
-ogcMyRadio := myGui.Add("Radio", "vMyRadio", "Radio")
-myGui.Add("Radio", , "Radio2")
+ogcMyCheckBox := myGui.Add("CheckBox", "x10 vMyCheckBox", "Option1")
+ogcMyRadio := myGui.Add("Radio", "xp+70 vMyRadio", "Radio")
+myGui.Add("Radio", "xp+70", "Radio2")
 
-ogcMyDropDownList := myGui.Add("DropDownList", "vMyDropDownList", ["Black", "White", "Red", "Green", "Blue"])
+ogcMyDropDownList := myGui.Add("DropDownList", "x10 vMyDropDownList", ["Black", "White", "Red", "Green", "Blue"])
 ogcMyComboBox := myGui.Add("ComboBox", "vMyComboBox", ["Red", "Green", "Blue", "Black", "White"])
 
 ogcmyListBox := myGui.Add("ListBox", "r5 vmyListBox", ["Red", "Green", "Blue", "Black", "White"])
@@ -22,10 +25,8 @@ ogcMySlider := myGui.Add("Slider", "vMySlider", "50")
 ogcMyProgress := myGui.Add("Progress", "w200 h20 cBlue vMyProgress", "75")
 
 ogcMyGroupBox := myGui.Add("GroupBox", "w200 h50 vMyGroupBox", "Geographic Criteria")
-Tab := ogcMyTab3 := myGui.Add("Tab3", "vMyTab3", ["General", "View", "Settings"])
+Tab := ogcMyTab3 := myGui.Add("Tab3", "h75 vMyTab3", ["General", "View", "Settings"])
 Tab.UseTab()
-ogcMyButton := myGui.Add("Button", "vMyButton  default", "Empty Test")
-ogcMyButton.OnEvent("Click", EmptyTest.Bind("Normal"))  ; The label ButtonOK (if it exists) will be run when the button is pressed.
 
 ogcMyStatusbar := myGui.Add("StatusBar", "vMyStatusbar", "Bar's starting text (omit to start off empty).")
 ; Gui Add, ActiveX, w600 h500 vWB, Shell.Explorer  ; The final parameter is the name of the ActiveX component.

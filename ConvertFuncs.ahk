@@ -185,12 +185,13 @@ _convertLines(ScriptString)
 ;   added block-comment masking as a global condition for full ScriptString
 ;   changed many variable and function names
 ; 2025-11-01 AMB, UPDATED as part of Scope support
+; 2026-01-01 AMB, UPDATED - changed global gEarlyLine to gV1Line
 
    Mask_T(&ScriptString, 'BC')      ; 2025-06-12 AMB, mask all block-comments globally
 
    global gOrig_ScriptStr           := ScriptString
    global gaList_PseudoArr          := []                                  ; 2025-11-01 AMB, ADDED here as part of Scope support
-   global gEarlyLine                := ''
+   global gV1Line                   := ''                                  ; 2026-01-01 changed name from gEarlyLine
 ;   global gOScriptStr               := StrSplit(ScriptString, '`n', '`r') ; array for all the lines
    global gOScriptStr               := ScriptCode(ScriptString)            ; now a class object, for future use
    global gO_Index                  := 0                                   ; current index of the lines
@@ -220,7 +221,7 @@ _convertLines(ScriptString)
       gIndent           := RegExReplace(curLine,'^(\h*).*','$1')    ; original line indentation (if present)
       EOLComment        := lp_DirectivesAndComment(&curLine)        ; process character directives and extract initial trailing comment from line
       lineOpen          := lp_SplitLine(&curLine)                   ; see lp_splitLine() for details
-      gEarlyLine        := curLine                                  ; portion of line to process [prior to processing], has no trailing comment
+      gV1Line           := curLine                                  ; portion of line to process [prior to processing], has no trailing comment
       lineClose         := ''                                       ; initial value, used later
       gEOLComment_Cont  := [EOLComment]                             ; 2025-05-24 fix for #296 - support for multiple comments within line continuations
 
@@ -254,7 +255,7 @@ _convertLines(ScriptString)
 ;################################################################################
 FinalizeConvert(&code)
 {
-; 2024-06-27 ADDED, 2025-06-12 UPDATED, 2025-10-05 UPDATED
+; 2024-06-27 ADDED, 2025-06-12, 2025-10-05, 2026-01-01 UPDATED
 ; Performs tasks that finalize overall conversion
 
    ; 2025-11-30 AMB, ADDED
@@ -262,12 +263,7 @@ FinalizeConvert(&code)
    ; This also adds braces to (non-brace) IF/ELSEIF/ELSE/LOOP blocks to support any new multi-line code
    code := UnZip(code)
 
-   ; Add global warnings
-   If (goWarnings.HasProp("AddedV2VRPlaceholder") && goWarnings.AddedV2VRPlaceholder = 1) {
-      code := "; V1toV2: Some mandatory VarRefs replaced with AHKv1v2_vPlaceholder`r`n" code
-   }
-
-   code := FixOnClipboardChange(code)   ; labels named 'OnClipboardChange' require a name change
+   code := addToCode(code)              ; 2026-01-01 AMB, add messages and directives to code
    code := Update_LBL_HK_HS(code)       ; 2025-10-05 AMB, UPDATED conversion for labels,HKs,HSs to v2 format
    Mask_T(&code, 'C&S')                 ; 2025-10-10 AMB, first attempt to improve efficiency of conversion (WORK IN PROGRESS)
    code := FixMinMaxIndex(code)         ; 2025-12-21 AMB, MOVED to dedicated func
@@ -286,6 +282,25 @@ FinalizeConvert(&code)
    return   ; code by reference
 }
 ;################################################################################
+; 2026-01-01 AMB, ADDED - Add global warnings, etc
+addToCode(code) {
+
+   If (goWarnings.HasProp("AddedV2VRPlaceholder") && goWarnings.AddedV2VRPlaceholder = 1) {
+      code := "; V1toV2: Some mandatory VarRefs replaced with AHKv1v2_vPlaceholder`r`n" code
+   }
+   ; 2025-12-24 AMB, ADDED - Moved code here from FinalizeConvert
+   ; labels named 'OnClipboardChange' require a name change
+   ; see validV2LabelName() in LabelAndFunc.ahk for the name change to 'OnClipboardChange_v2'
+   ; add OnClipboardChange(OnClipboardChange_v2) to top of script, and provide a way to update A_EventInfo within the func, as needed
+   maskedCode := code, Mask_T(&maskedCode, 'C&S')   ; prevent false positives (for Instr) within strings and comments
+   if (InStr(maskedCode, 'OnClipboardChange:')) {
+      code := 'OnClipboardChange(OnClipboardChange_v2)`r`n' . code      ; add this to top of script
+      gmList_LblsToFunc['OnClipboardChange_v2'] := ConvLabel('OCC', 'OnClipboardChange_v2', 'dataType:=""', 'OnClipboardChange_v2'
+                                                , {NeedleRegEx: "im)^(.*?)\b\QA_EventInfo\E\b(.*+)$", Replacement: "$1dataType$2"})
+   }
+   return code
+}
+;################################################################################
 ; Function to debug
 DebugWindow(Text, Clear := 0, LineBreak := 0, Sleep := 0, AutoHide := 0) {
    if (WinExist("AHK Studio")) {
@@ -295,20 +310,6 @@ DebugWindow(Text, Clear := 0, LineBreak := 0, Sleep := 0, AutoHide := 0) {
       OutputDebug Text
    }
    return
-}
-;################################################################################
-; 2025-12-24 AMB, ADDED - Moved code here from FinalizeConvert
-; labels named 'OnClipboardChange' require a name change
-; see validV2LabelName() in LabelAndFunc.ahk for the name change to 'OnClipboardChange_v2'
-; add OnClipboardChange(OnClipboardChange_v2) to top of script, and provide a way to update A_EventInfo within the func, as needed
-FixOnClipboardChange(code) {
-   maskedCode := code, Mask_T(&maskedCode, 'C&S')   ; prevent false positives (for Instr) within strings and comments
-   if (InStr(maskedCode, 'OnClipboardChange:')) {
-      code := 'OnClipboardChange(OnClipboardChange_v2)`r`n' . code      ; add this to top of script
-      gmList_LblsToFunc['OnClipboardChange_v2'] := ConvLabel('OCC', 'OnClipboardChange_v2', 'dataType:=""', 'OnClipboardChange_v2'
-                                                , {NeedleRegEx: "im)^(.*?)\b\QA_EventInfo\E\b(.*+)$", Replacement: "$1dataType$2"})
-   }
-   return code
 }
 ;################################################################################
 ; 2025-12-21 AMB, ADDED to update MnxIndex handling
@@ -329,42 +330,42 @@ FixMinMaxIndex(code) {
 ;################################################################################
 ; 2025-06-12 AMB, ADDED to separate processing of character directives and line comment
 ; 2025-12-24 AMB, MOVED to ConvertFuncs.ahk
-;	(for cleaner conversion loop, and v1.0 => v1.1 conversion)
+;  (for cleaner conversion loop, and v1.0 => v1.1 conversion)
 lp_DirectivesAndComment(&lineStr) {
    ; if current line is char-directive declaration, grab the attributes
    if (RegExMatch(lineStr, 'i)^\h*#(CommentFlag|EscapeChar|DerefChar|Delimiter)\h+.')) {
       _grabCharDirectiveAttribs(lineStr)
-      return ''		; might need to change this to actual line comment (EOLComment)
+      return ''      ; might need to change this to actual line comment (EOLComment)
    }
    ; not a char-directive declaration - update comment character on current line
    if (HasProp(gaScriptStrsUsed, 'CommentFlag')) {
-      char	:= HasProp(gaScriptStrsUsed, 'EscapeChar') ? gaScriptStrsUsed.EscapeChar : '``'
+      char    := HasProp(gaScriptStrsUsed, 'EscapeChar') ? gaScriptStrsUsed.EscapeChar : '``'
       lineStr := RegExReplace(lineStr, '(?<!\Q' char '\E)\Q' gaScriptStrsUsed.CommentFlag '\E', ';')
    }
 
    ; separate trailing comment from current line temporarily, will put it back later
-   lineStr		:= separateComment(lineStr, &EOLComment:='')
+   lineStr    := separateComment(lineStr, &EOLComment:='')
 
    ; update EscapeChar, DeRefChar, Delimiter for current line
    deref := '``'
    if (HasProp(gaScriptStrsUsed, 'EscapeChar')) {
-      deref	:= gaScriptStrsUsed.EscapeChar
-      lineStr	:= StrReplace(lineStr, '``', '``````')
-      lineStr	:= StrReplace(lineStr, gaScriptStrsUsed.EscapeChar, '``')
+      deref    := gaScriptStrsUsed.EscapeChar
+      lineStr  := StrReplace(lineStr, '``', '``````')
+      lineStr  := StrReplace(lineStr, gaScriptStrsUsed.EscapeChar, '``')
    }
    if (HasProp(gaScriptStrsUsed, 'DerefChar')) {
-      lineStr	:= RegExReplace(lineStr, '(?<!\Q' deref '\E)\Q' gaScriptStrsUsed.DerefChar '\E', '%')
+      lineStr  := RegExReplace(lineStr, '(?<!\Q' deref '\E)\Q' gaScriptStrsUsed.DerefChar '\E', '%')
    }
    if (HasProp(gaScriptStrsUsed, 'Delimiter')) {
-      lineStr	:= RegExReplace(lineStr, '(?<!\Q' deref '\E)\Q' gaScriptStrsUsed.Delimiter '\E', ',')
+      lineStr  := RegExReplace(lineStr, '(?<!\Q' deref '\E)\Q' gaScriptStrsUsed.Delimiter '\E', ',')
    }
 
-   return EOLComment		; return trailing comment for current line
+   return EOLComment    ; return trailing comment for current line
 
    ;############################################################################
    _grabCharDirectiveAttribs(lineStr) {
    ; 2025-06-12 AMB, ADDED to separate processing of character directives
-   ;	(for cleaner conversion loop, and v1.0 => v1.1 conversion)
+   ;  (for cleaner conversion loop, and v1.0 => v1.1 conversion)
    ; only one of these directives may be found on current line
    ; sets data within gaScriptStrsUsed for use later
    ; 2025-12-24 AMB, UPDATED - converted to internal func
@@ -391,35 +392,36 @@ lp_DirectivesAndComment(&lineStr) {
          gaScriptStrsUsed.Delimiter := m[1]
          return
       }
-      return	; nothing
+      return   ; nothing
    }
 }
 ;################################################################################
 ; 2025-06-12 AMB, Moved to dedicated routine for cleaner convert loop
 ; 2025-12-24 AMB, MOVED to ConvertFuncs.ahk
+; 2026-01-01 AMB, UPDATED - changed global gEarlyLine to gV1Line
 ; Purpose: Remove/Disable incompatible commands (that are no longer allowed)
 lp_DisableInvalidCmds(&lineStr, fCmdConverted) {
    ; V1 and V2, but with different commands for each version
    ; 2025-10-08 AMB, Updated to fix #375
    fDisableLine := false
-   if (!fCmdConverted) {											; if a targetted command was found earlier...
-      Loop Parse, gAhkCmdsToRemoveV1, '`n', '`r' {				; [check for v1 deprecated]
-         targStr	:= escRegexChars(A_LoopField)					; prep for regex check
-         lead	:= (A_LoopField ~= '^#') ? '' : '\b'			; add word boundary to beginning of needle, but only when hask char not present
-         nTarg	:= '(?i)' lead targStr '\b'						; needle to cover all scenerios in gAhkCmdsToRemoveV1
-         if (gEarlyLine ~= nTarg)								; ... is that command invalid after v1.0?
-            fDisableLine := true								; flag it as invalid
+   if (!fCmdConverted) {                                    ; if a targetted command was found earlier...
+      Loop Parse, gAhkCmdsToRemoveV1, '`n', '`r' {          ; [check for v1 deprecated]
+         targStr:= escRegexChars(A_LoopField)               ; prep for regex check
+         lead   := (A_LoopField ~= '^#') ? '' : '\b'        ; add word boundary to beginning of needle, but only when hask char not present
+         nTarg  := '(?i)' lead targStr '\b'                 ; needle to cover all scenerios in gAhkCmdsToRemoveV1
+         if (gV1Line ~= nTarg)                              ; ... is that command invalid after v1.0?
+            fDisableLine := true                            ; flag it as invalid
       }
-      if (gV2Conv) { ; v2
-         Loop Parse, gAhkCmdsToRemoveV2, '`n', '`r' {			; [check for v2 deprecated]
-            targStr	:= escRegexChars(A_LoopField)				; prep for regex check
-            lead	:= (A_LoopField ~= '^#') ? '' : '\b'		; add word boundary to beginning of needle, but only when hask char not present
-            nTarg	:= '(?i)' lead targStr '\b'					; needle to cover all scenerios in gAhkCmdsToRemoveV2
-            if (gEarlyLine ~= nTarg)							; ... is that command invalid after v2?
-               fDisableLine := true							; flag it as invalid
+      if (gV2Conv) {                                        ; v2
+         Loop Parse, gAhkCmdsToRemoveV2, '`n', '`r' {       ; [check for v2 deprecated]
+            targStr := escRegexChars(A_LoopField)           ; prep for regex check
+            lead    := (A_LoopField ~= '^#') ? '' : '\b'    ; add word boundary to beginning of needle, but only when hask char not present
+            nTarg   := '(?i)' lead targStr '\b'             ; needle to cover all scenerios in gAhkCmdsToRemoveV2
+            if (gV1Line ~= nTarg)                           ; ... is that command invalid after v2?
+               fDisableLine := true                         ; flag it as invalid
          }
-         if (lineStr ~= '^\h*(\blocal\b)\h*$')	{				; V2 Only - only force-local
-            fDisableLine := true								; flag it as invalid
+         if (lineStr ~= '^\h*(\blocal\b)\h*$')  {           ; V2 Only - only force-local
+            fDisableLine := true                            ; flag it as invalid
          }
       }
    }
@@ -431,20 +433,20 @@ lp_DisableInvalidCmds(&lineStr, fCmdConverted) {
          lineStr := format('; V1toV2: Removed {1}', lineStr)
       }
    }
-   return		; lineStr by reference
+   return      ; lineStr by reference
 }
 ;################################################################################
 ; 2025-06-12 AMB, Moved to dedicated routine for cleaner convert loop
 ; 2025-12-24 AMB, MOVED to ConvertFuncs.ahk
-;	TODO - See if these can be combined in v2_Conversions
+;   TODO - See if these can be combined in v2_Conversions
 lp_PostConversions(&lineStr) {
-   v1v2_FixNEQ(&lineStr)						; Convert <> to !=
-   v2_PseudoAndRegexMatchArrays(&lineStr)		; mostly v2 (separating...)
-   v2_RemoveNewKeyword(&lineStr)				; V2 ONLY! Remove New keyword from classes
-   v2_RenameKeywords(&lineStr)					; V2 ONLY
-   v2_RenameLoopRegKeywords(&lineStr)			; V2 ONLY! Can this be combined with keywords step above?
-   v2_VerCompare(&lineStr)						; V2 ONLY
-   return										; lineStr by reference
+   v1v2_FixNEQ(&lineStr)                    ; Convert <> to !=
+   v2_PseudoAndRegexMatchArrays(&lineStr)   ; mostly v2 (separating...)
+   v2_RemoveNewKeyword(&lineStr)            ; V2 ONLY! Remove New keyword from classes
+   v2_RenameKeywords(&lineStr)              ; V2 ONLY
+   v2_RenameLoopRegKeywords(&lineStr)       ; V2 ONLY! Can this be combined with keywords step above?
+   v2_VerCompare(&lineStr)                  ; V2 ONLY
+   return                                   ; lineStr by reference
 }
 ;################################################################################
 ; 2025-06-12 AMB, Moved to dedicated routine for cleaner convert loop
@@ -458,15 +460,15 @@ lp_PostLineMsgs(&lineStr, &EOLComment) {
    global gEOLComment_Cont, gEOLComment_Func, gNL_Func
 
    ; add a leading semi-colon to func comment string if it doesn't already exist
-   gEOLComment_Func := (trim(gEOLComment_Func))				; if not empty string
-   ? RegExReplace(gEOLComment_Func, '^(\h*[^;].*)$', ' `; $1') ; ensure it has a leading semicolon
-   : gEOLComment_Func											; semi-colon already exists
+   gEOLComment_Func := (trim(gEOLComment_Func))                 ; if not empty string
+   ? RegExReplace(gEOLComment_Func, '^(\h*[^;].*)$', ' `; $1')  ; ensure it has a leading semicolon
+   : gEOLComment_Func                                           ; semi-colon already exists
 
    ; V2 ONLY !
    ; Add warning for Array.MinIndex(), Array.MaxIndex()
    ; 2025-12-21 AMB, Updated
-   nMinIdxTag	:= '\.' gMNPH, nMaxIdxTag := '\.' gMXPH			; see MaskCode.ahk
-   hasMin		:= (lineStr ~= nMinIdxTag), hasMax := (lineStr ~= nMaxIdxTag)
+   nMinIdxTag  := '\.' gMNPH, nMaxIdxTag := '\.' gMXPH          ; see MaskCode.ahk
+   hasMin      := (lineStr ~= nMinIdxTag), hasMax := (lineStr ~= nMaxIdxTag)
    if (hasMin && hasMax) {
       EOLComment .= ' `; V1toV2: Verify V2 values match V1 Min/MaxIndex'
    }
@@ -478,22 +480,22 @@ lp_PostLineMsgs(&lineStr, &EOLComment) {
    }
 
    ; 2025-05-24 Banaanae, ADDED for fix #296
-   gNL_Func .= (gNL_Func) ? '`r`n' : ''						; ensure this has a trailing CRLF
-   NoCommentOutput	:= gNL_Func . lineStr . 'v1v2EOLCommentCont' . EOLComment . gEOLComment_Func
+   gNL_Func .= (gNL_Func) ? '`r`n' : ''                         ; ensure this has a trailing CRLF
+   NoCommentOutput   := gNL_Func . lineStr . 'v1v2EOLCommentCont' . EOLComment . gEOLComment_Func
    OutSplit := StrSplit(NoCommentOutput, '`r`n')
 
    ; TEMP - DEBUGGING - THESE TWO LENGTHS DO NOT MATCH SOMETIMES - CAUSES SCRIPT RUN ERRORS
    ; ... ESPECIALLY IN OLD VERSION OF CONVERTER
    if (OutSplit.Length < gEOLComment_Cont.Length)
    {
-;		MsgBox "[" NoCommentOutput "]`n`n" OutSplit.Length "`n`n" gEOLComment_Cont.Length
+;       MsgBox "[" NoCommentOutput "]`n`n" OutSplit.Length "`n`n" gEOLComment_Cont.Length
    }
    for idx, comment in gEOLComment_Cont {
-      if (idx != OutSplit.Length) {							; if not last element
+      if (idx != OutSplit.Length) {                             ; if not last element
          ; 2025-11-30 AMB, ADDED Try to prevent index errors...
          ; ... when script lines are added by converter (or hidden with Zip())
          try {
-            OutSplit[idx] := OutSplit[idx] comment			; add comment to proper line
+            OutSplit[idx] := OutSplit[idx] comment              ; add comment to proper line
          }
       }
       else
@@ -505,7 +507,7 @@ lp_PostLineMsgs(&lineStr, &EOLComment) {
    }
    finalLine := StrReplace(finalLine, 'v1v2EOLCommentCont')
    gNL_Func  := '', gEOLComment_Func := '' ; reset global variables
-   return	finalLine
+   return    finalLine
 }
 ;################################################################################
 ; 2025-06-12 AMB, Moved to dedicated routine for cleaner convert loop
@@ -514,62 +516,62 @@ lp_PostLineMsgs(&lineStr, &EOLComment) {
 ; returns non-convert portion in 'lineOpen' (hotkey declaration, opening brace, Try\Else, etc)
 ; returns rest of line (that requires conversion) in 'lineStr'
 lp_SplitLine(&lineStr) {
-   v1v2_noKywdCommas(&lineStr)			; first remove trailing commas from keywords (including Switch)
-   lineOpen := ''						; will become non-convert portion of line
+   v1v2_noKywdCommas(&lineStr)     ; first remove trailing commas from keywords (including Switch)
+   lineOpen := ''                  ; will become non-convert portion of line
    firstTwo := subStr(lineStr, 1, 2)
 
    ; if line is not a hotstring, but is single-line hotkey with cmd, separate hotkey from cmd temporarily...
-   ;	so the cmd can be processed alone. The hotkey will be re-combined with cmd after it is converted.
-   ;	nHotKey	:= gPtn_HOTKEY . '(.*)' ;((?:(?:^\h*+|\h*+&\h*+)(?:[^,\h]*|[$~!^#+]*,))+::)(.*+)$'
+   ;   so the cmd can be processed alone. The hotkey will be re-combined with cmd after it is converted.
+   ;   nHotKey   := gPtn_HOTKEY . '(.*)' ;((?:(?:^\h*+|\h*+&\h*+)(?:[^,\h]*|[$~!^#+]*,))+::)(.*+)$'
    ; TODO - need to update needle for more accurate targetting
-   nHotKey	:= '((?:(?:^\h*+|\h*+&\h*+)(?:[^,\h]*|[$~!^#+]*,))+::)(.*+)$'
-   if ((firstTwo	!= '::') && RegExMatch(LineStr, nHotKey, &m)) {
-      lineOpen	:= m[1]				; non-convert portion
-      LineStr		:= m[2]				; portion to convert
+   nHotKey   := '((?:(?:^\h*+|\h*+&\h*+)(?:[^,\h]*|[$~!^#+]*,))+::)(.*+)$'
+   if ((firstTwo   != '::') && RegExMatch(LineStr, nHotKey, &m)) {
+      lineOpen   := m[1]           ; non-convert portion
+      LineStr      := m[2]         ; portion to convert
       return lineOpen
    }
 
    ; if line begins with switch, separate any value following it temporarily....
-   ;	so the cmd can be processed alone. The opening part will be re-combined with cmd after it is converted.
+   ;   so the cmd can be processed alone. The opening part will be re-combined with cmd after it is converted.
    ; any trailing comma for switch statement should have already been removed via noKywdCommas()
    nSwitch := 'i)^(\h*\bswitch\h*+)(.*+)'
    if (RegExMatch(LineStr, nSwitch, &m)) {
-      lineOpen	:= m[1]				; non-convert portion
-      LineStr		:= m[2]				; portion to convert
+      lineOpen   := m[1]           ; non-convert portion
+      LineStr      := m[2]         ; portion to convert
       return lineOpen
    }
 
    ; if line begins with case or default, separate any command following it temporarily...
-   ;	so the cmd can be processed alone. The opening part will be re-combined with cmd after it is converted.
+   ;   so the cmd can be processed alone. The opening part will be re-combined with cmd after it is converted.
    nCaseDefault := 'i)^(\h*(?:case .*?|default):(?!=)\h*+)(.*+)$'
    if (RegExMatch(LineStr, nCaseDefault, &m)) {
-      lineOpen	:= m[1]				; non-convert portion
-      LineStr		:= m[2]				; portion to convert
+      lineOpen   := m[1]           ; non-convert portion
+      LineStr      := m[2]         ; portion to convert
       return lineOpen
    }
 
    ; if line begins with Try or Else, separate any command that may follow them temporarily...
-   ;	so the cmd can be processed alone. The try/else will be re-combined with cmd after it is converted.
+   ;   so the cmd can be processed alone. The try/else will be re-combined with cmd after it is converted.
    nTryElse := 'i)^(\h*+}?\h*+(?:Try|Else)\h*[\h{]\h*+)(.*+)$'
    if (RegExMatch(LineStr, nTryElse, &m) && m[2]) {
-      lineOpen	:= m[1]				; non-convert portion
-      LineStr		:= m[2]				; portion to convert
+      lineOpen   := m[1]           ; non-convert portion
+      LineStr      := m[2]         ; portion to convert
       return lineOpen
    }
 
    ; if line begins with {, separate any command following it temporarily...
-   ;	so the cmd can be processed alone. The { will be re-combined with cmd after it is converted.
+   ;   so the cmd can be processed alone. The { will be re-combined with cmd after it is converted.
    if (RegExMatch(LineStr, '^(\h*+{\h*+)(.*+)$', &m)) {
-      lineOpen	:= m[1]				; non-convert portion
-      LineStr		:= m[2]				; portion to convert
+      lineOpen   := m[1]           ; non-convert portion
+      LineStr      := m[2]         ; portion to convert
       return lineOpen
    }
 
    ; if line begins with } (but not else), separate any command following it temporarily...
-   ;	so the cmd can be processed alone. The } will be re-combined with cmd after it is converted.
+   ;   so the cmd can be processed alone. The } will be re-combined with cmd after it is converted.
    if (RegExMatch(LineStr, 'i)^(\h*}(?!\h*else|\h*\n)\h*)(.*+)$', &m)) {
-      lineOpen	:= m[1]				; non-convert portion
-      LineStr		:= m[2]				; portion to convert
+      lineOpen   := m[1]           ; non-convert portion
+      LineStr      := m[2]         ; portion to convert
       return lineOpen
    }
    return lineOpen

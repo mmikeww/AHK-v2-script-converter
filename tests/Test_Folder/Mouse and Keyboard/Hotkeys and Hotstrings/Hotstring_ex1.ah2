@@ -1,3 +1,4 @@
+﻿#Warn Unreachable, Off
 Hotstring(":*X:]d", DatePaste)
 Return
 

@@ -1,3 +1,4 @@
+﻿#Warn Unreachable, Off
 SetTimer(ControlMoveTimer)
 IB := InputBox("", "My Input Box"), OutputVar := IB.Value
 return

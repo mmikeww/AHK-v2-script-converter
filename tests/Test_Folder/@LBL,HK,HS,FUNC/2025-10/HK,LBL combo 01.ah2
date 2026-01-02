@@ -1,3 +1,4 @@
+﻿#Warn Unreachable, Off
 
 
 LBL2() ; V1toV2: Gosub

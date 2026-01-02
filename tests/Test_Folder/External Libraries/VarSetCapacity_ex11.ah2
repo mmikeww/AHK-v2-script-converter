@@ -1,3 +1,4 @@
+﻿#Warn Unreachable, Off
 myGui := Gui()
 myGui.OnEvent("Close", GuiClose)
 myGui.OnEvent("Escape", GuiEscape)

@@ -1,3 +1,4 @@
+﻿#Warn Unreachable, Off
 
 
 guiclose() ; V1toV2: Gosub

@@ -1,3 +1,4 @@
+﻿#Warn Unreachable, Off
 OnClipboardChange(OnClipboardChange_v2)
 Persistent
 MsgBox("copy something to the clipboard")

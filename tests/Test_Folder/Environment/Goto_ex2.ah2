@@ -1,3 +1,4 @@
+﻿#Warn Unreachable, Off
 myGui := Gui()
 ogcButtonMakeMsgBox := myGui.Add("Button", , "Make MsgBox")
 ogcButtonMakeMsgBox.OnEvent("Click", InitVars.Bind("Normal"))

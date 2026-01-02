@@ -1,3 +1,4 @@
+﻿#Warn Unreachable, Off
 Persistent
 SetTimer(WatchCursor,100)
 return

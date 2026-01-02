@@ -1,3 +1,4 @@
+﻿#Warn Unreachable, Off
 Persistent
 Sleep(1000)
 SetTimer(WatchCaret,100)

@@ -1,3 +1,4 @@
+﻿#Warn Unreachable, Off
 ; Create the popup menu by adding some items to it.
 MyMenu := Menu()
 MyMenu.Add("Item1", MenuHandler)

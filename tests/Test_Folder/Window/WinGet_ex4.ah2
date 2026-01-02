@@ -1,3 +1,4 @@
+﻿#Warn Unreachable, Off
 Persistent
 SetTimer(WatchActiveWindow,200)
 return

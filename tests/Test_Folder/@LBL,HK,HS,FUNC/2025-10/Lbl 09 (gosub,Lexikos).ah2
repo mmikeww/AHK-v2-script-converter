@@ -1,3 +1,4 @@
+﻿#Warn Unreachable, Off
 ; https://github.com/mmikeww/AHK-v2-script-converter/issues/236#issuecomment-2495219614
 
 LabelA() ; V1toV2: Gosub

@@ -1,3 +1,4 @@
+﻿#Warn Unreachable, Off
 
 ; gosub -> label -> pass-through -> HK func
 A() ; V1toV2: Gosub

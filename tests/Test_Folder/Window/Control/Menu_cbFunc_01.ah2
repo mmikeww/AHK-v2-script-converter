@@ -1,3 +1,4 @@
+﻿#Warn Unreachable, Off
 Tray := A_TrayMenu
 Tray.Add("Reload Wallpaper Launcher", lbReload)
 Tray.Add("Exit", lbExit)

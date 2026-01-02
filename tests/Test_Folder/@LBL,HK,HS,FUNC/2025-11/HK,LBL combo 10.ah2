@@ -1,3 +1,4 @@
+﻿#Warn Unreachable, Off
 ; https://github.com/mmikeww/AHK-v2-script-converter/issues/409
 
 count := ""

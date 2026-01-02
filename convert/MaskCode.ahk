@@ -25,6 +25,7 @@
 	2025-10-05,10,27		- UPDATED, Multiple enhancements/improvements - see comments in code
 	2025-11-01,23,28,29,30	- UPDATED, Multiple enhancements/improvements - see comments in code
 	2025-12-13,24			- UPDATED, see comments in code
+	2026-01-01				- UPDATED, see comments in code
 
 	TODO
 		Finish support for Continuation sections
@@ -41,6 +42,8 @@
 ;################################################################################
 ; 2025-06-22 - UPDATED most of these needles
 ; global needles that can be used from anywhere within project
+
+#Warn Unreachable, Off
 
 global	  gTagChar		:= chr(0x2605) ; '★'															; unique char to ensure tags are unique
 		, gTagPfx		:= '#TAG' . gTagChar															; common tag-prefix
@@ -1616,6 +1619,19 @@ class clsNodeMap	; 'block map' might be better term
 				, nBlk	:nBlk }						; also includes needle itself
 	}
 	return false
+}
+;################################################################################
+																 cleanCWS(srcStr)
+;################################################################################
+{
+; 2026-01-01 AMB, ADDED
+; clean code of comments and whitespace
+
+	srcStr	:= RegExReplace(srcStr, gPtn_LC)							; remove any raw line comments
+	srcStr	:= RegExReplace(srcStr, '(?im)' UniqueTag('LC\w+'))			; remove line comment tags
+	srcStr	:= RegExReplace(srcStr, '(?im)' UniqueTag('BC\w+'))			; remove block-comment tags
+	TrimWS(&srcStr)														; trim all WS
+	return	srcStr
 }
 ;################################################################################
 																  TrimWS(&srcStr)

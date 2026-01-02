@@ -1,3 +1,4 @@
+﻿#Warn Unreachable, Off
 ; fix for func params not being updated when label text-case does not match AHK map key
 
 myGui := Gui()

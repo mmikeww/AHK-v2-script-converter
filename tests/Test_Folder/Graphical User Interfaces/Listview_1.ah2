@@ -1,3 +1,4 @@
+﻿#Warn Unreachable, Off
 ; Create the ListView with two columns, Name and Size:
 myGui := Gui()
 myGui.OnEvent("Close", GuiClose)

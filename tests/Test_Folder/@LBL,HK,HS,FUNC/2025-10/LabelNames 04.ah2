@@ -1,3 +1,4 @@
+﻿#Warn Unreachable, Off
 ; glabel name will cause conflict once renamed
 myGui := Gui()
 ogcButtonMakeMsgBox := myGui.Add("Button", , "Make MsgBox")

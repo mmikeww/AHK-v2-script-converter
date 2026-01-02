@@ -1,3 +1,4 @@
+﻿#Warn Unreachable, Off
 
 ; 2025-07-03 - prevent this from being mistaken as label
 ; which caused it to be conv to func by mistake

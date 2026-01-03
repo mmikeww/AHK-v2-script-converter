@@ -1,3 +1,4 @@
+﻿#Warn Unreachable, Off
 #Requires Autohotkey v2.0
 #SingleInstance Force
 #Warn All, MsgBox

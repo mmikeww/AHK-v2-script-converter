@@ -60,7 +60,7 @@ setGlobals() {													; for globals that are reset with each new conversion
 	;gOScriptStr			:= []								; array of all the lines (prior to being an object)
 	gOScriptStr				:= Object()							; now a ScriptCode class object
 	gaScriptStrsUsed		:= Array()							; Keeps an array of interesting strings used in the script
-	gEarlyLine				:= ''								; portion of line to process, prior to processing, will not include trailing comment
+	gV1Line					:= ''								; portion of line to process, prior to processing, will not include trailing comment (2026-01-01 changed Name)
 	gO_Index				:= 0								; current index of the lines
 	gIndent					:= ''
 	gSingleIndent			:= ''

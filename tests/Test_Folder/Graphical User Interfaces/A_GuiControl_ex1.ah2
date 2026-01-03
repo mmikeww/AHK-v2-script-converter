@@ -1,3 +1,4 @@
+﻿#Warn Unreachable, Off
 myGui := Gui()
 ogcButtonName := myGui.Add("Button", "w100", "Name")
 ogcButtonName.OnEvent("Click", ButtonName.Bind("Normal"))

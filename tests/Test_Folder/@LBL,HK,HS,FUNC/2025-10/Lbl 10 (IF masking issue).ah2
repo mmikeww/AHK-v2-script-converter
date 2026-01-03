@@ -1,3 +1,4 @@
+﻿#Warn Unreachable, Off
 
 LoadClipboardHistory() ; V1toV2: Gosub
 LoadAutoTextList() ; V1toV2: Gosub

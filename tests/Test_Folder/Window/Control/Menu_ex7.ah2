@@ -1,3 +1,4 @@
+﻿#Warn Unreachable, Off
 #SingleInstance force
 Tab1 := Menu()
 Tab1.Add("First Tab Item", MenuHandler)

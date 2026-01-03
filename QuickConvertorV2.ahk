@@ -34,6 +34,7 @@
 { ;DIRECTIVES AND SETTINGS:
     #Requires AutoHotKey v2.0
     #SingleInstance Force
+    FileEncoding "UTF-8"
 }
 { ;INCLUDES:
     #Include ConvertFuncs.ahk

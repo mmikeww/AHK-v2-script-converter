@@ -1,3 +1,4 @@
+﻿#Warn Unreachable, Off
 #z::HK1_z() ; Win+Z hotkey
 return
 

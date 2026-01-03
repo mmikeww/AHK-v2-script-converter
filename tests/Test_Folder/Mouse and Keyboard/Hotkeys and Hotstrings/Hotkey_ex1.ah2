@@ -1,3 +1,4 @@
+﻿#Warn Unreachable, Off
 Hotkey("^!z", MyLabel)
 return
 

@@ -1,3 +1,4 @@
+﻿#Warn Unreachable, Off
 Persistent
 SetTimer(Msg,1)
 Return

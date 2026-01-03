@@ -1,3 +1,4 @@
+﻿#Warn Unreachable, Off
 ^h::HK1_h()
 Return ; V1toV2: post-return for Goto
 V1toV2_GblCode_001:

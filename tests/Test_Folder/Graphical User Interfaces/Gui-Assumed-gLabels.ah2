@@ -1,3 +1,4 @@
+﻿#Warn Unreachable, Off
 Gui1Pos := A_ScreenHeight // 2 * 0.7
 
 myGui := Gui()

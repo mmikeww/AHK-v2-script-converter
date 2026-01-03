@@ -280,8 +280,9 @@ _FileReadLine(p) {
 ;################################################################################
 ; V1: FileSelectFile, OutputVar [, Options, RootDir\Filename, Title, Filter]
 ; V2: SelectedFile := FileSelect([Options, RootDir\Filename, Title, Filter])
+; 2026-01-01 AMB, UPDATED - changed global gEarlyLine to gV1Line
 _FileSelect(p) {
-	oPar			:= V1ParamSplit(RegExReplace(gEarlyLine, "i)^\s*FileSelectFile\s*[\s,]\s*(.*)$", "$1"))
+	oPar			:= V1ParamSplit(RegExReplace(gV1Line, "i)^\s*FileSelectFile\s*[\s,]\s*(.*)$", "$1"))
 	OutputVar		:= oPar[1]
 	Options			:= oPar.Has(2) ? oPar[2] : ""
 	RootDirFilename	:= oPar.Has(3) ? oPar[3] : ""

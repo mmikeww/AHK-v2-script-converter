@@ -1,3 +1,4 @@
+﻿#Warn Unreachable, Off
 myGui := Gui()
 ogcRadio_Type := myGui.Add("Radio", "v_Type", "Option 1")
 myGui.Add("Radio", , "Option 2")

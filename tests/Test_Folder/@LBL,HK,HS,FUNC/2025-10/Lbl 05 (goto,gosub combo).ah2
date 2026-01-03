@@ -1,3 +1,4 @@
+﻿#Warn Unreachable, Off
 
 LBL3() ; V1toV2: Gosub
 goto("LBL1")

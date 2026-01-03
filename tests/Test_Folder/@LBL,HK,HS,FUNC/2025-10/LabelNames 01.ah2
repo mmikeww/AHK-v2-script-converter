@@ -1,4 +1,5 @@
-﻿; these are all VALID V1 label names
+﻿#Warn Unreachable, Off
+; these are all VALID V1 label names
 ; V1 allows all character except whitespace, comma, and escape char.
 ; V2 allows ascii alphanumeric and underscore. But cannot start with a number. Does allow non-ascii characters.
 

@@ -194,9 +194,7 @@ class clsScopeSect
 			code := RegExReplace(code, '(?i)\bRETURN\b')									; ... remove return
 			code := RegExReplace(code, '(?i)\bEXITAPP\b(?:\(\))?')							; ... remove exitapp
 		}
-		code := RegExReplace(code, uniqueTag('BC\w+'))										; remove block-comment tags
-		code := RegExReplace(code, uniqueTag('LC\w+'))										; remove line-comment tags
-		code := RegExReplace(code, '\s')													; remove all whitespace
+		code := cleanCWS(code)																; remove comments, and whitespace (2026-01-01 see MaskCode.ahk)
 		return code																			; remainder should be 'executable' code
 	}
 	;################################################################################

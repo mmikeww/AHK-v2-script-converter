@@ -1,3 +1,4 @@
+﻿#Warn Unreachable, Off
 
 LBL1:
 LBL2:

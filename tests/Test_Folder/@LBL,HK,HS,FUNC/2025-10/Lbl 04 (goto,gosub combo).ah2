@@ -1,3 +1,4 @@
+﻿#Warn Unreachable, Off
 ; https://github.com/mmikeww/AHK-v2-script-converter/issues/236#issuecomment-3244926208
 
 A() ; V1toV2: Gosub ; Runs A then returns here

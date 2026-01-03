@@ -1,3 +1,4 @@
+﻿#Warn Unreachable, Off
 ; Menu Example #4
 FileMenu := Menu()
 FileMenu.Add("Script Icon", MenuHandler)

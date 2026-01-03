@@ -18,9 +18,10 @@ GuiConv(p) {
 ; 2025-10-05 AMB, UPDATED - moved to GuiAndMenu.ahk, changed gaList_LblsToFuncO to gmList_LblsToFunc
 ; 2025-10-13 AMB, UPDATED - to fix #202, also changed some var names and functionality
 ; 2025-11-01 AMB, UPDATED - as part of Scope support, and gmList_LblsToFunc key case-sensitivity
-; 2025-11-30 AMB, UPDATED output to compress multi-line output into single-line tag
+; 2025-11-30 AMB, UPDATED - output to compress multi-line output into single-line tag
+; 2026-01-01 AMB, UPDATED - changed global gEarlyLine to gV1Line
 
-	global gEarlyLine
+	global gV1Line							; 2026-01-01 changed name from gEarlyLine
 	global gGuiNameDefault
 	global gGuiControlCount
 	global gLVNameDefault
@@ -45,7 +46,7 @@ GuiConv(p) {
 	SubCommand	:= RegExMatch(p[1], "i)^\s*[^:]*?\s*:\s*(.*)$", &newGuiName) = 0 ? Trim(p[1]) : newGuiName[1]
 	GuiName		:= RegExMatch(p[1], "i)^\s*([^:]*?)\s*:\s*.*$", &newGuiName) = 0 ? ""		  : newGuiName[1]
 
-	GuiLine		:= gEarlyLine
+	GuiLine		:= gV1Line
 	LineResult	:= ""
 	LineSuffix	:= ""
 	if (RegExMatch(GuiLine, "i)^\s*Gui\s*[,\s]\s*.*$")) {
@@ -387,6 +388,7 @@ GuiConv(p) {
 GuiControlConv(p) {
 ; 2025-10-05 AMB, MOVED to GuiAndMenu.ahk
 ; 2025-11-30 AMB, UPDATED output to compress multi-line output into single-line tag
+; 2026-01-01 AMB, UPDATED - changed global gEarlyLine to gV1Line, Type to CtrlType
 
 	global gGuiNameDefault
 	global gGuiActiveFont
@@ -397,19 +399,20 @@ GuiControlConv(p) {
 	Out				:= ""
 	ControlObject	:= gmGuiCtrlObj.Has(ControlID) ? gmGuiCtrlObj[ControlID] : "ogc" ControlID
 
-	Type := gmGuiCtrlType.Has(ControlObject) ? gmGuiCtrlType[ControlObject] : ""
+	ctrlType := gmGuiCtrlType.Has(ControlObject) ? gmGuiCtrlType[ControlObject] : ""
 
 	if (SubCommand = "") {
-		if (Type = "Groupbox" || Type = "Button" || Type = "Link") {
+		if (ctrlType = "Groupbox" || ctrlType = "Button" || ctrlType = "Link") {
 			SubCommand := "Text"
-		} else if (Type = "Radio" && (Value != "0" || Value != "1" || Value != "-1" || InStr(Value, "%"))) {
+		} else if (ctrlType = "Radio" && (Value != "0" || Value != "1" || Value != "-1" || InStr(Value, "%"))) {
+		;} else if (ctrlType = "Radio" && (Value != 0 && Value != 1 && Value != -1 && InStr(Value, "%"))) {
 			SubCommand := "Text"
 		}
 	}
 	if (SubCommand = "") {
 		; Not perfect, as this should be dependent on the type of control
 
-		if (Type = "ListBox" || Type = "DropDownList" || Type = "ComboBox" || Type = "tab") {
+		if (ctrlType = "ListBox" || ctrlType = "DropDownList" || ctrlType = "ComboBox" || ctrlType = "tab") {
 			PreSelected := ""
 			if (SubStr(Value, 1, 1) = "|") {
 				Value := SubStr(Value, 2)
@@ -456,7 +459,7 @@ GuiControlConv(p) {
 			}
 			Return Zip(Out, 'GUICTRL')   ; 2025-11-30 AMB - compress multi-line additions into single-line tag, as needed
 		}
-		if (Type = "UpDown" || Type = "Slider" || Type = "Progress") {
+		if (ctrlType = "UpDown" || ctrlType = "Slider" || ctrlType = "Progress") {
 			if (SubStr(Value, 1, 1) = "-") {
 				return ControlObject ".Value -= " ToExp(Value)
 			} else if (SubStr(Value, 1, 1) = "+") {
@@ -466,7 +469,7 @@ GuiControlConv(p) {
 		}
 		return ControlObject ".Value := " ToExp(Value)
 	} else if (SubCommand = "Text") {
-		if (Type = "ListBox" || Type = "DropDownList" || Type = "tab" || Type ~= "i)tab\d") {
+		if (ctrlType = "ListBox" || ctrlType = "DropDownList" || ctrlType = "tab" || ctrlType ~= "i)tab\d") {
 			PreSelected := ""
 			if (SubStr(Value, 1, 1) = "|") {
 				Value	:= SubStr(Value, 2)
@@ -558,6 +561,7 @@ GuiControlConv(p) {
 ;################################################################################
 GuiControlGetConv(p) {
 ; 2025-10-05 AMB, MOVED to GuiAndMenu.ahk
+; 2026-01-01 AMB, UPDATED - changed global gEarlyLine to gV1Line, Type to CtrlType
 
 	; GuiControlGet, OutputVar , SubCommand, ControlID, Value
 	global gGuiNameDefault
@@ -572,10 +576,10 @@ GuiControlGetConv(p) {
 
 	Out := ""
 	ControlObject := gmGuiCtrlObj.Has(ControlID) ? gmGuiCtrlObj[ControlID] : "ogc" ControlID
-	Type := gmGuiCtrlType.Has(ControlObject) ? gmGuiCtrlType[ControlObject] : ""
+	ctrlType := gmGuiCtrlType.Has(ControlObject) ? gmGuiCtrlType[ControlObject] : ""
 
 	if (SubCommand = "") {
-		if (Value = "text" || Type = "ListBox") {
+		if (Value = "text" || ctrlType = "ListBox") {
 			Out := OutputVar " := " ControlObject ".Text"
 		} else {
 			Out := OutputVar " := " ControlObject ".Value"
@@ -740,13 +744,14 @@ getMenuBarName(srcStr) {
 ;################################################################################
 MenuConv(p) {
 ; 2025-10-05 AMB, UPDATED - moved to GuiAndMenu.ahk, changed gaList_LblsToFuncO to gmList_LblsToFunc
-; 2025-11-01 AMB. UPDATED as part of Scope support, and gmList_LblsToFunc key case-sensitivity
+; 2025-11-01 AMB. UPDATED - as part of Scope support, and gmList_LblsToFunc key case-sensitivity
+; 2026-01-01 AMB, UPDATED - changed global gEarlyLine to gV1Line
 
-	global gEarlyLine
+	global gV1Line
 	global gMenuList
 	global gIndent
 	global gmList_LblsToFunc
-	MenuLine := gEarlyLine
+	MenuLine   := gV1Line
 	LineResult := ""
 	menuNameLine := RegExReplace(MenuLine, "i)^\s*Menu\s*[,\s]\s*([^,]*).*$", "$1", &RegExCount1)
 	; e.g.: Menu, Tray, Add, % func_arg3(nested_arg3a, nested_arg3b), % func_arg4(nested_arg4a, nested_arg4b), % func_arg5(nested_arg5a, nested_arg5b)

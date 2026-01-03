@@ -1,3 +1,4 @@
+﻿#Warn Unreachable, Off
 Persistent  ; Keep the script running until the user exits it.
 Tray := A_TrayMenu
 Tray.Add()  ; Creates a separator line.

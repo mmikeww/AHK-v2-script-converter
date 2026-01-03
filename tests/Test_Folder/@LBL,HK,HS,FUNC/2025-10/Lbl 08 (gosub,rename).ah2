@@ -1,3 +1,4 @@
+﻿#Warn Unreachable, Off
 ; https://github.com/mmikeww/AHK-v2-script-converter/issues/236#issuecomment-2289653604
 
 MyFunc__() ; V1toV2: Gosub

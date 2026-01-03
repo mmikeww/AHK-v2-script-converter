@@ -1,3 +1,4 @@
+﻿#Warn Unreachable, Off
 
 label() ; V1toV2: Gosub
 return

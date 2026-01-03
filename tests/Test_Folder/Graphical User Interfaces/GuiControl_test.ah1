@@ -1,12 +1,13 @@
 Gui, Add, Text,vTextC, First name:
 Gui, Add, Edit, vFirstName hwndtest  ; The ym option starts a new column of controls.
-Gui, Add, Picture, vMyPic w20 h-1, C:\Users\Dimitri\Pictures\Save24.png
+Gui, Add, Button, xp+140 vMyButton gEmptyTest default, Empty Test
+Gui, Add, Picture, x10 vMyPic w20 h-1, C:\Users\Dimitri\Pictures\Save24.png
 
-Gui, Add, CheckBox, vMyCheckBox, Option1
-Gui, Add, Radio, vMyRadio, Radio
-Gui, Add, Radio, , Radio2
+Gui, Add, CheckBox, x10 vMyCheckBox, Option1
+Gui, Add, Radio, xp+70 vMyRadio, Radio
+Gui, Add, Radio, xp+70, Radio2
 
-Gui, Add, DropDownList, vMyDropDownList, Black|White|Red|Green|Blue
+Gui, Add, DropDownList, x10 vMyDropDownList, Black|White|Red|Green|Blue
 Gui, Add, ComboBox, vMyComboBox, Red|Green|Blue|Black|White
 
 Gui, Add, ListBox, r5 vmyListBox, Red|Green|Blue|Black|White
@@ -20,9 +21,8 @@ Gui, Add, Slider, vMySlider, 50
 Gui, Add, Progress, w200 h20 cBlue vMyProgress, 75
 
 Gui, Add, GroupBox, w200 h50 vMyGroupBox, Geographic Criteria
-Gui, Add, Tab3,vMyTab3, General|View|Settings
+Gui, Add, Tab3, h75 vMyTab3, General|View|Settings
 Gui, Tab
-Gui, Add, Button, vMyButton gEmptyTest default, Empty Test  ; The label ButtonOK (if it exists) will be run when the button is pressed.
 
 Gui, Add, StatusBar,vMyStatusbar, Bar's starting text (omit to start off empty).
 ; Gui Add, ActiveX, w600 h500 vWB, Shell.Explorer  ; The final parameter is the name of the ActiveX component.

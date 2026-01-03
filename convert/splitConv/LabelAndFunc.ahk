@@ -262,6 +262,8 @@ class clsSection
 	;################################################################################
 	Static Main_ProcessSects(code)															; Main operation for this class
 	{
+	; 2026-01-01 AMB, UPDATED - added 'Unreachable' directive
+
 		/*
 		1. separate code into sections
 			each section will be one of the following (lbl,hk,hs,func,class)
@@ -296,6 +298,7 @@ class clsSection
 		rawSects	:= this._getRawSects(code)												; get raw sections from orig code
 		rawSects	:= this._shiftTCWS(rawSects)											; rearrage comments/CRLFs between sections
 		dummy		:= this._rawToFinal(rawSects)											; organize global code between sects, create final Sects array
+		newFuncList	:= ''																	; ini
 		if (this.HasSects) {																; if sections were established...
 			flowStr		:= this._logicFlow													; determine logic flow between sections
 			dummy		:= this._hkhsToFunc()												; convert HK/HS to funcs (will be added in next step)
@@ -307,6 +310,8 @@ class clsSection
 		code := this._gotoToFC_orig(code)													; converts goto to funcCalls as needed (for orig script funcs only)
 		code := codeChop.RestoreMasksAll(code)												; removes temp-masking, performs cleanup of script code
 		code := this._gosubUpdate(code)														; update Gosub calls (to reflect changes made here, and fix issue #322)
+		if (newFuncList)																	; if labels/HKs were converted to funcs...
+			code := '#Warn Unreachable, Off`r`n' . code										; ... prevent 'unreachable' warning (add to top of script)
 		return code																			; return updated script code
 	}
 	;################################################################################
@@ -359,16 +364,14 @@ class clsSection
 		}
 	}
 	;################################################################################
-	; 2025-10-27 AMB, UPDATED
+	; 2025-10-27, 2026-01-01 AMB, UPDATED
 	Static _cleanCode(code, inclExit:=false)												; removes comments, ws, etc, so executable code is easier to decect
 	{
 		if (inclExit) {																		; if exit cmds should be removed...
 			code := RegExReplace(code, '(?i)\bRETURN\b')									; ... remove return
 			code := RegExReplace(code, '(?i)\bEXITAPP\b(?:\(\))?')							; ... remove exitapp
 		}
-		code := RegExReplace(code, uniqueTag('BC\w+'))										; remove block-comment tags
-		code := RegExReplace(code, uniqueTag('LC\w+'))										; remove line-comment tags
-		code := Trim(code, ' `t`r`n')														; trim all whitespace
+		code := cleanCWS(code)																; remove comments, and whitespace (see MaskCode.ahk)
 		return code																			; remainder should be 'executable' code
 	}
 	;################################################################################
@@ -1372,6 +1375,7 @@ class ConvLabel
 {
 ; 2025-11-23 AMB, ADDED - replaces previous Goto handling (part of fix for #413)
 ; 2025-11-30 AMB, UPDATED call for Zip()
+; 2026-01-01 AMB, UPDATED with cleanCWS() call
 ; converts  Goto, label  -->>  Goto("label")
 ;	also adds trailing Return as needed
 ;	places Goto/Return into a single-line tag
@@ -1390,7 +1394,7 @@ class ConvLabel
 	LWS := m[1], gotoStr := m[2], param := m[3]												; extract line/goto parts
 	Mask_R(&param, 'LC')																	; expose any trailing line comment
 	param		:= separateComment(param, &TC:='')											; separate trailing line comment (first occurence)
-	param		:= Trim(LTrim(param, ','))													; remove teading comma if present
+	param		:= Trim(LTrim(param, ','))													; remove leading comma if present
 	v1LabelName	:= param																	; should be left with v1 label name
 	v2FuncName	:= Trim(getV2Name(v1LabelName))												; get v2 funcname associated with v1 label name
 	gmList_GotoLabel[v1LabelName] := true													; 2025-11-18 ADDED as part of fix for #409
@@ -1400,7 +1404,7 @@ class ConvLabel
 	; add Return line as needed
 	While(idx+offset <= lines.Length && !nextCmd) {											; find the next line that has ahk code (ignore comments/empty)
 		nextLn	:= lines[idx + offset++]													; ... get next line
-		nextCmd	:= cleanCmd(nextLn)															; ... remove comments, and whitespace
+		nextCmd	:= cleanCWS(nextLn)															; ... remove comments, and whitespace (see MaskCode.ahk)
 		retStr	:= (nextCmd ~= nExitCmd)													; ... if next line already has an exit cmd...
 				? ''																		; ...	do NOT add a Return
 				: '`r`n' . LWS . returnStr													; ...	otherwise, add a Return Line (preserving leading indent)
@@ -1451,20 +1455,6 @@ class ConvLabel
 	}
 	return line
 }
-;################################################################################
-																 cleanCmd(srcStr)
-;################################################################################
-{
-; 2025-11-23 AMB, ADDED as part of ix for #413
-; removes comments and empty lines from srcStr, executable code remains
-
-	srcStr	:= RegExReplace(srcStr, gPtn_LC)												; remove any raw line comments
-	srcStr	:= RegExReplace(srcStr, '(?im)' UniqueTag('LC\w+'))								; remove line comment tags
-	srcStr	:= RegExReplace(srcStr, '(?im)' UniqueTag('BC\w+'))								; remove block-comment tags
-	srcStr	:= RegExReplace(srcStr, '(?m)^\R+')												; remove empty lines
-	return	Trim(srcStr)	; should be left with ahk-code, or empty						; trim/return cleaned string
-}
-
 ;################################################################################
 addHKCmdFunc(varName) {
 ; 2025-10-12 AMB, ADDED to fix #328

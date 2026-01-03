@@ -1,3 +1,4 @@
+﻿#Warn Unreachable, Off
 ; Part of issue #201
 #Requires Autohotkey v2.0
 ; show foo bar

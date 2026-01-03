@@ -1,3 +1,4 @@
+﻿#Warn Unreachable, Off
 myGui := Gui()
 ogcTextC := myGui.Add("Text", "vTextC", "HWND Test")
 ogcEditFirstName := myGui.Add("Edit", "vFirstName"), test := ogcEditFirstName.hwnd

@@ -1,3 +1,4 @@
+﻿#Warn Unreachable, Off
 myGui := Gui()
 myGui.OnEvent("Close", GuiClose)
 ogcListViewIconNumberDescription := myGui.Add("ListView", "h200 w180", ["Icon & Number", "Description"])  ; Create a ListView.

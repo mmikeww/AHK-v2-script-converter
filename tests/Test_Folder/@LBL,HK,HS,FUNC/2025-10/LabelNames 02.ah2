@@ -1,3 +1,4 @@
+﻿#Warn Unreachable, Off
 
 ; Demonstrate fix for label-to-func naming conflicts
 

@@ -614,71 +614,97 @@ FixVarSetCapacity(ScriptString) {
 }
 ;################################################################################
 /**
- * Finds function calls with ByRef params
- * and appends an &
+ * Updates ByRef params for all func declarations or calls
+ * (Byref param) -->> (&param)
  */
 /*
 2025-10-05 AMB, MOVED/UPDATED to fix errors and missing line comments
 2025-10-10 AMB, UPDATED handling of trailing CRLFs
 2025-11-28 AMB, UPDATED to prevent ampersand from being added to numbers and THIS.X
-	* param-detection issues/errors when params contain funcCalls (due to extra commas)
-		ADDED funcCall masking - TODO - test to verify full resolution...
- Known issues that still remain
-	* can conflict with converter-manufactured function/methods (or AHK funcCalls)
-		... such as _Input/InputHook added methods [ .Start(), .Wait() ]
-	* conflicts can arise between same-name funcs/methods (different scope)
-	* adds & to &this.func(param) - 2025-11-28 temp/partial solution
+2026-01-03 AMB, now supports obj.prop, multi-line, multiple calls on same line (nested or separated by comma)
+NOTES:
+ * watch for param-detection issues/errors when params have nested funcCalls (due to extra commas)...
+	... ADDED funcCall masking - TODO - NEED TO ALSO CHECK THESE FOR BYREF PARAMS...
+Known issues that may still remain
+ * can conflict with converter-manufactured function/methods (or AHK funcCalls)
+	... such as _Input/InputHook added methods [ .Start(), .Wait() ]
+ * conflicts can arise between same-name funcs/methods (different scope)
  TODO
+	* check nested func calls for nested Byref params
 	* mask strings? (test to see if this is necessary)
 	* mask all functions/classes and func calls first...
 	* 	to assist with detection of declaration/blocks
-	* 	to include continuation sections
 	* 	to assist with controlling scope
 */
-FixByRefParams(ScriptString) {
-
-	retScript	:= ''																	; ini return string
-	maskSessID	:= clsMask.NewSession()													; 2025-10-05 - establish an isolated mask session
-	loop parse ScriptString, '`n', '`r' {												; for each line...
-		fReplaced	:= false
-		Line		:= separateComment(A_LoopField, &EOLComment:='')					; 2025-10-05 AMB, fix missing line comments
-		for fName, v in gmByRefParamMap {												; for each byRef entry in map...
-			needle := '(?m)^(.*?)\b\Q' fName '\E\b' gPtn_PrnthBlk '(.*)$'				; 2025-10-05 [detect function calls and declarations?]
-			if (RegExMatch(Line, needle, &mFD)
-				&& !InStr(Line, '&')) {													; if line not already converted? (might req string masking)
-				newLine	:= mFD[1] fName '('												; beginning of line, including func name and open parenthesis
-				params	:= mFD.FcParams													; params inside parentheses
-				trail	:= mFD[4]														; trailing portion of line
-				pTWS	:= ''															; will preserve trailing whitspace for next param
-				Mask_T(&params, 'FC',,maskSessID)										; 2025-10-05 AMB - mask any func calls within params
-				fParamCountError := false												; ini error flag
-				while (pos := RegExMatch(params, '(\h*)([^,]+)', &mParams)) {			; grab each param (between commas)
-					pLWS		:= mParams[1]											; preserve leading whitespace for current param
-					curParam	:= mParams[2]											; current parameter
-					if (RegExMatch(curParam, '^(.+?)(\h*)$', &mWS2)) {					; if param has trailing WS...
-						curParam := mWS2[1], pTWS := mWS2[2]							; ... separate any trailing WS from param
-					}
-					if (A_Index > v.Length) {											; detect false-positives (not fool-proof) and avoid errors
-						fParamCountError := true										; will prevent any replacement in current line
-						break
-					}
-					if (v[A_Index]														; if current param is BYREF...
-						&& !IsNumber(curParam)											; ... 2025-11-28 ADDED - and not a number...
-						&& !InStr(curParam, 'THIS.')) {									; ... 2025-11-28 ADDED - and not this.X... (still need to provide a solution)
-						curParam := '&' . RegExReplace(LTrim(curParam),'i)^ByRef ')		; ...	update current param by adding &, remove ByRef
-					}
-					newLine .= pLWS . curParam . pTWS . ','								; add updated param to updated line
-					params	:= StrReplace(params, mParams[],,,,1)						; remove current param from param list (prep for next search)
-				}
-				newLine		:= RTrim(newLine, ', ') . pTWS . ')' . trail				; finalize newly-created line
-				fReplaced	:= !fParamCountError										; flag for retScript update below
-			}
+FixByRefParams(code) {
+	sessID		:= clsMask.NewSession()													; start new masking session
+	nObj		:= '(?i)^(.+\.)([_a-z]\w*)'												; needle to separate obj from method, if present
+	While(pos	:= RegexMatch(code, gPtn_FuncCall, &mFD, pos??1)) {						; for each func declaration or call...
+		oFunc	:= mFD[], params := mFD.FcParams, fName := mFD.fcName					; extract details
+		objName := _extractfuncName(fName)												; separate obj from property, if fName is 'obj.prop'
+		oName	:= objName.oName, fName := objName.fName								; obj and prop name, or just func name
+		if (!gmByRefParamMap.Has(fName)) {												; if func is NOT a BYREF func...
+			pos += StrLen(oName . fName)												; ... skip it (slide just past func name, not full func declare/call)
+			continue
 		}
-		retScript .= ((fReplaced) ? newLine : Line) . EOLComment . '`r`n'				; update return string with updated line
+		Mask_T(&params, 'FC',,sessID)													; 2025-10-05 AMB - mask any nested func calls within params
+		brMapObj	:= gmByRefParamMap[fName]											; grab byref map obj for current func name
+		rParam		:= ''																; ini, but not currently used - see optional usage below
+		pos2		:= 1																; ini for each new func/call
+		while (pos2 := RegExMatch(params, '(\h*)([^,]+)', &mParam, pos2)) {				; grab each param (between commas)
+			if (A_Index > brMapObj.Length)												; if current param count exceeeds array length
+				break																	; ... avoid errors (temp fix)
+			oParam	:= mParam[]															; current (orig) param, WITH leading WS
+			pLWS	:= mParam[1]														; preserve leading WS for current param
+			cParam	:= mParam[2]														; current (clean) param - WITHOUT leading WS
+			pTWS	:= ''																; preserve trailing WS for current param
+			if (RegExMatch(cParam, '^(.+?)(\s*)$', &mWS2))								; if param has trailing WS (\s - support multiline CRLF!)...
+				cParam := mWS2[1], pTWS := mWS2[2]										; ... separate any trailing WS from param
+			tag		:= '', saveParam := cParam											; ini
+			if (tag := hasTag(cParam, 'FC'))											; if current param has/is a nested func call...
+				Mask_R(&cParam, 'FC',,sessID)											; ... restore the nested call
+			if (saveParam = tag && isByRefFunc(cParam)) {								; if current param IS a nested BYREF func call...
+				p := FixByRefParams(cParam)												; ... handle its BYREF params (use recursion)
+				cParam := '&v2Param' A_index ':=' p										; ... use temp-VarRef to allow param to become ref param
+			}
+			else if (brMapObj[A_Index] && cParam ~= nObj) {								; if param is BYREF and is 'obj.prop'...
+				tempParam	:= 'v2Param' A_Index										; ... create temp-VarRef param
+				;rParam		:= " = (" cParam ':=' tempParam ')'							; ... optional reverse assignment (this will allow 'obj.prop' to be updated!!)
+				cParam		:= '&' tempParam ':=' cParam								; ... apply temp-VarRef assignment to orig param
+			}
+			else if (brMapObj[A_Index]													; if current param is BYREF...
+			 && !IsNumber(cParam)														; ... 2025-11-28 ADDED - and not a number...
+			 && !InStr(cParam, 'THIS.')) {												; ... 2025-11-28 ADDED - and not this.X...  (just in case)
+				cParam := '&' . RegExReplace(cParam,'i)^ByRef ')						; ...	update current param by adding &, remove ByRef
+			}
+			cParam		:= pLWS . cParam . pTWS											; update  current param with lead/trail WS
+			;params		:= RegExReplace(params,escRegexChars(oParam),cParam,,1,pos2)	; replace current param with updated one
+			params		:= StrReplaceAt(params,oParam,cParam,,pos2,1)					; replace current param with updated one
+			pos2		+= StrLen(cParam)												; prep for next param search
+		}
+		outLine	:= oName . fName . '(' . params . ')' . rParam							; assemble final output for current func/Call
+		;code	:= RegExReplace(code,escRegexChars(oFunc),outLine,,1,pos)				; replace orig func/call declaration/params with updated ones
+		code	:= StrReplaceAt(code,oFunc,outLine,,pos,1)								; replace orig func/call declaration/params with updated ones
+		pos		+= StrLen(outLine)														; prep for next func/call search
 	}
-	retScript := RegExReplace(retScript,'\r\n$',,,1)
-	Mask_R(&retScript, 'FC',,maskSessID)												; 2025-10-05 restore any func calls found in param lists
-	return retScript
+	Mask_R(&code, 'FC',,sessID)															; restore any nested func calls
+	return code																			; return updated code
+	;############################################################################
+	_extractfuncName(str) {																; if str is 'obj.prop', separate obj name from prop name
+		local m := obn := '', fcn := str												; ini
+		if (RegExMatch(str, nObj '$', &m))												; if str is actually obj.prop...
+			obn := m[1], fcn := m[2]													; ... separate obj from prop
+		return {oName:obn,fName:fcn}													; return result as object
+	}
+	;############################################################################
+	isByRefFunc(str) {																	; determines whether str is a BYREF func
+		local m,fcn := ''																; ini
+		if (RegExMatch(str, gPtn_FuncCall, &m)) {										; if str is a func declaration or call...
+			fcn := m.fcName, fcn := _extractfuncName(fcn).fName							; ... grab the func name
+			return gmByRefParamMap.Has(fcn)												; ... return true if is BYREF func, false otherwise
+		}
+		return false																	; not a BYREF func
+	}
 }
 ;################################################################################
 FixIncDec(ScriptString) {

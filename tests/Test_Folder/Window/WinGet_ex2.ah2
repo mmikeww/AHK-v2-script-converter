@@ -1,8 +1,9 @@
-oid := WinGetList(,,"Program Manager",)
+﻿oid := WinGetList(,,"Program Manager",)
 aid := Array()
 id := oid.Length
 For v in oid
-{   aid.Push(v)
+{
+    aid.Push(v)
 }
 Loop aid.Length
 {

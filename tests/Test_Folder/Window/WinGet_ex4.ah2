@@ -13,7 +13,7 @@ global
 oControlList := WinGetControls("A",,,)
 For v in oControlList
 {
-   ControlList .= A_index=1 ? v : "`r`n" v
+    ControlList .= A_index=1 ? v : "`r`n" v
 }
 ToolTip(ControlList)
 return

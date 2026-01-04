@@ -623,17 +623,14 @@ FixVarSetCapacity(ScriptString) {
 2025-11-28 AMB, UPDATED to prevent ampersand from being added to numbers and THIS.X
 2026-01-03 AMB, now supports obj.prop, multi-line, multiple calls on same line (nested or separated by comma)
 NOTES:
- * watch for param-detection issues/errors when params have nested funcCalls (due to extra commas)...
-	... ADDED funcCall masking - TODO - NEED TO ALSO CHECK THESE FOR BYREF PARAMS...
 Known issues that may still remain
  * can conflict with converter-manufactured function/methods (or AHK funcCalls)
 	... such as _Input/InputHook added methods [ .Start(), .Wait() ]
  * conflicts can arise between same-name funcs/methods (different scope)
  TODO
-	* check nested func calls for nested Byref params
-	* mask strings? (test to see if this is necessary)
-	* mask all functions/classes and func calls first...
-	* 	to assist with detection of declaration/blocks
+	* mask strings/comments? (test to see if this is necessary) ?
+	* mask all functions/classes and func calls first... ?
+	* 	to assist with detection of declaration/blocks ?
 	* 	to assist with controlling scope
 */
 FixByRefParams(code) {

@@ -59,6 +59,7 @@ _Control(p) {
 ;################################################################################
 ; V1: ControlGet, OutputVar, SubCommand, Value, Control, WinTitle, WinText, ExcludeTitle, ExcludeText
 ; unfinished
+; 2026-01-03 AMB, UPDATED - fixed indent issue
 _ControlGet(p) {
 	if (p[2] = "Tab" || p[2] = "FindString") {
 		p[2] := "Index"
@@ -88,8 +89,8 @@ _ControlGet(p) {
 			Out := format("o{1} := ControlGet{2}({4}, {5}, {6}, {7}, {8})", p*) "`r`n"
 			Out .= gIndent "loop o" p[1] ".length`r`n"
 			Out .= gIndent "{`r`n"
-			Out .= gIndent p[1] " .= A_index=1 ? `"`" : `"``n`"`r`n"	; Attention do not add ``r!!!
-			Out .= gIndent p[1] " .= o" p[1] "[A_Index] `r`n"
+			Out .= gIndent gSingleIndent p[1] " .= A_index=1 ? `"`" : `"``n`"`r`n"	; Attention do not add ``r!!!
+			Out .= gIndent gSingleIndent p[1] " .= o" p[1] "[A_Index] `r`n"
 			Out .= gIndent "}"
 		}
 	}

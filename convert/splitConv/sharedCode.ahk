@@ -171,6 +171,7 @@
 {
 ; 2025-06-12 AMB, Moved and consolidated to dedicated routine for cleaner convert loop
 ; 2025-07-03 AMB, UPDATED to support multi-line and orig whitespace
+; 2026-01-04 AMB, UPDATED, added support for issue #428 - "Invalid Array Index" errors
 ; Purpose: conversions related to assignments, in different situatons
 ; TODO - needs to be updated to cover all situations
 
@@ -183,6 +184,10 @@
 	}
 	else if (v1v2_fixLSG_Assignments(&lineStr))	{		; for local, static, global assignments
 	;	return
+	}
+	else if (v2_fixArrayAssignments(&lineStr))	{		; for Arr[idx] := val (for Invalid Index errors #428)
+	;	will also allow expression assignment...
+	;	... checks below for chanined commands			; will ALWAYS allow expression checks, for now...
 	}
 	else if (v1v2_FixExpAssignments(&lineStr))	{		; for expression assignments
 	;	return
@@ -243,6 +248,83 @@
 	Mask_R(&lineStr, 'STR')												; restore orignal strings
 
 	return	(lineStr != origStr)										; and return lineStr by reference
+}
+;################################################################################
+												 v2_FixArrayAssignments(&lineStr)
+;################################################################################
+{
+; 2026-01-04 AMB, ADDED
+;	Purpose: Fix for 'Invalid Array Index' errors (issue #428) when array index...
+;	... has not yet been assigned a value (needs push instead)
+;	also supports chained assignments and multi-line
+; TODO - CURRENTLY JUST ADDS WARNING FOR USER...
+;		 ... DUE TO POSSIBLE SPLILL OVER TO OBJECTS
+
+	if (!InStr(lineStr, ':='))											; if line does not contain an assignment...
+		return false													; ... exit, flag caller
+
+	; common to both solutions
+	origStr		:= lineStr												; save orig to flag whether change was made
+	sess		:= clsMask.NewSession()									; create new masking session
+	ntNeedle	:= uniqueTag('AA\w+')									; [needle for array assignment TAGS]
+	nArrAssign	:= _premask(&lineStr)									; premask input, grab array-assign needle
+	return		_warn428(&lineStr)										; use warning for now
+	;return		_fix428(&lineStr)										; DISABLED FOR NOW - fix for #428
+
+	;############################################################################
+	_premask(&lineStr) {												; premask input str, returns array-assign needle
+		; pre-mask to avoid char detection interferrence
+		Mask_T(&lineStr, 'FC' ,,sess)									; hide commas within func calls		 (hides STR also)
+		Mask_T(&lineStr, 'KV' ,,sess)									; hide commas within key/val objects (do not restore C&S)
+		; mask array assignments for easier detection
+		nVar := '(?i)(\h*)([_a-z](?|\w++|\.(?=\w))*+)'					; [variable]	(also supports obj.prop)
+		nIdx := '\[([^\]]+?)\]'											; [index]		(var/val - basic only)
+		nOp	 := '(\h*:=\h*)'											; [operator]	(will preserve surrounding WS)
+		nVal := '([^=,\v]*)'											; [value]		(may req tweaks later)
+		nArrAssign	:= nVar . nIdx . nOp . nVal							; [detection for array assignments]
+		Mask_T(&lineStr, 'AA', nArrAssign)								; tag array assignments (custom mask/tag)
+		return nArrAssign												; return array-assign needle
+	}
+	;############################################################################
+	_removeMasks(&lineStr) {											; remove all masks from this session
+		Mask_R(&lineStr, 'AA', nArrAssign)								; restore array-assign orig code
+		Mask_R(&lineStr, 'KV' ,,sess)									; restore key/val objects
+		Mask_R(&lineStr, 'FC' ,,sess)									; restore func calls (converts as part of restore)
+		Mask_R(&lineStr, 'STR',,sess)									; restore strings
+	}
+	;############################################################################
+	_warn428(&lineStr) {												; TEMP FIX - just add a warning for now
+		if (RegExMatch(lineStr, ntNeedle, &m)) {						; if array assignment detected...
+			oStr := HasTag(,m[])										; ... get orig array code
+			if (RegExMatch(oStr, nArrAssign, &mA)) {					; ... extract details of array assignment
+				var := mA[2], val := mA[5], _removeMasks(&val) 			; ... grab var and value, for msg below
+				msg := ' V1toV2: Invalid Index errors?, try '			; ... ini msg to user
+				msg .= "'" var ".Push(<val>)'" ;val ")'"				; ... add details
+				global gEOLComment_Func .= msg							; ... add msg to end of line (later)
+			}
+		}
+		_removeMasks(&lineStr)											; remove masks
+		return false													; exit, no changes made to input str
+	}
+	;############################################################################
+	_fix428(&lineStr) {													; "FIX" FOR #428 - DISABLED FOR NOW
+		chainedCmds := !!InStr(lineStr, ',')							; detect chained commands (allows checks by other fixAssignments() funcs)
+		While(pos	:= RegexMatch(lineStr, ntNeedle, &m, pos??1)) {		; for each array assignment...
+			mTag 	:= m[], oStr := HasTag(,mTag)						; found tag, extract original string from tag
+			if (RegExMatch(oStr, nArrAssign, &mA)) {					; separate parts of array assignment
+				LWS		:= mA[1], var := mA[2], idx	:= mA[3]			; lead ws, var, index
+				op		:= mA[4], val := mA[5]							; operator, value
+				cond	:= '(('  var '.Has('	idx ')) '				; out - condition str
+				cT		:= '&& ' var '['		idx ']' op val ') '		; out - True  str
+				cF		:= '|| ' var '.Push('	val ')'					; out - False str
+				outStr	:= LWS . cond . cT . cF							; outStr assembly
+				lineStr := RegExReplace(lineStr, mTag, outStr,,1,pos)	; update original str
+				pos		+= StrLen(outStr)								; prep for next search
+			}
+		}
+		_removeMasks(&lineStr)											; remove masks
+		return	(!chainedCmds && (lineStr != origStr))					; return whether changes were made
+	}
 }
 ;################################################################################
 												 v1v2_FixExpAssignments(&lineStr)

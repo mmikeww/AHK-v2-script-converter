@@ -278,9 +278,9 @@
 		Mask_T(&lineStr, 'KV' ,,sess)									; hide commas within key/val objects (do not restore C&S)
 		; mask array assignments for easier detection
 		nVar := '(?i)(\h*)([_a-z](?|\w++|\.(?=\w))*+)'					; [variable]	(also supports obj.prop)
-		nIdx := '\[([^\]]+?)\]'											; [index]		(var/val - basic only)
-		nOp	 := '(\h*:=\h*)'											; [operator]	(will preserve surrounding WS)
-		nVal := '([^=,\v]*)'											; [value]		(may req tweaks later)
+		nIdx := '\[([^\]]+?)\]'											; [index]		(var/val - basic, since supported by rest of needle)
+		nOp	 := '(\h*+:=\h*+)'											; [operator]	(will preserve surrounding WS)
+		nVal := '([^=,\v]++)'											; [value]		(must have - may req tweaks later)
 		nArrAssign	:= nVar . nIdx . nOp . nVal							; [detection for array assignments]
 		Mask_T(&lineStr, 'AA', nArrAssign)								; tag array assignments (custom mask/tag)
 		return nArrAssign												; return array-assign needle
@@ -297,9 +297,9 @@
 		if (RegExMatch(lineStr, ntNeedle, &m)) {						; if array assignment detected...
 			oStr := HasTag(,m[])										; ... get orig array code
 			if (RegExMatch(oStr, nArrAssign, &mA)) {					; ... extract details of array assignment
-				var := mA[2], val := mA[5], _removeMasks(&val) 			; ... grab var and value, for msg below
+				var := mA[2], val := mA[5] ;, _removeMasks(&val) 		; ... grab var and value, for msg below
 				msg := ' V1toV2: Invalid Index errors?, try '			; ... ini msg to user
-				msg .= "'" var ".Push(<val>)'" ;val ")'"				; ... add details
+				msg .= "'" var ".Push(<val>)'" ;val ")'"				; ... add details (some vals too long to include)
 				global gEOLComment_Func .= msg							; ... add msg to end of line (later)
 			}
 		}

@@ -1,7 +1,7 @@
-oActiveControlList := WinGetControls("A",,,)
+﻿oActiveControlList := WinGetControls("A",,,)
 For v in oActiveControlList
 {
-   ActiveControlList .= A_index=1 ? v : "`r`n" v
+    ActiveControlList .= A_index=1 ? v : "`r`n" v
 }
 Loop Parse, ActiveControlList, "`n"
 {

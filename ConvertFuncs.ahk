@@ -197,6 +197,7 @@ _convertLines(ScriptString)
    global gO_Index                  := 0                                   ; current index of the lines
    global gIndent                   := ''
    global gSingleIndent             := (RegExMatch(ScriptString, '(^|[\r\n])( +|\t)', &ws)) ? ws[2] : '    ' ; First spaces or single tab found
+          gSingleIndent             := StrLen(gSingleIndent) > 4 ? '    ' : gSingleIndent                    ; in case of unusual LWS
    global gNL_Func                  := ''                                  ; _Funcs can use this to add New Previous Line
    global gEOLComment_Func          := ''                                  ; _Funcs can use this to add comments at EOL
    global gEOLComment_Cont          := []                                  ; 2025-05-24 Banaanae, ADDED for fix #296

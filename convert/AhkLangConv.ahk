@@ -59,6 +59,7 @@ _Control(p) {
 ;################################################################################
 ; V1: ControlGet, OutputVar, SubCommand, Value, Control, WinTitle, WinText, ExcludeTitle, ExcludeText
 ; unfinished
+; 2026-01-03 AMB, UPDATED - fixed indent issue
 _ControlGet(p) {
 	if (p[2] = "Tab" || p[2] = "FindString") {
 		p[2] := "Index"
@@ -88,8 +89,8 @@ _ControlGet(p) {
 			Out := format("o{1} := ControlGet{2}({4}, {5}, {6}, {7}, {8})", p*) "`r`n"
 			Out .= gIndent "loop o" p[1] ".length`r`n"
 			Out .= gIndent "{`r`n"
-			Out .= gIndent p[1] " .= A_index=1 ? `"`" : `"``n`"`r`n"	; Attention do not add ``r!!!
-			Out .= gIndent p[1] " .= o" p[1] "[A_Index] `r`n"
+			Out .= gIndent gSingleIndent p[1] " .= A_index=1 ? `"`" : `"``n`"`r`n"	; Attention do not add ``r!!!
+			Out .= gIndent gSingleIndent p[1] " .= o" p[1] "[A_Index] `r`n"
 			Out .= gIndent "}"
 		}
 	}
@@ -196,10 +197,10 @@ _EnvSub(p) {
 _FileCopy(p) {
 	if (gaScriptStrsUsed.ErrorLevel) {
 		Out := format("Try {`r`n"
-		. gIndent "   FileCopy({1}, {2}, {3})`r`n"
-		. gIndent "   ErrorLevel := 0`r`n"
+		. gIndent gSingleIndent "FileCopy({1}, {2}, {3})`r`n"
+		. gIndent gSingleIndent "ErrorLevel := 0`r`n"
 		. gIndent "} Catch as Err {`r`n"
-		. gIndent "   ErrorLevel := Err.Extra`r`n"
+		. gIndent gSingleIndent "ErrorLevel := Err.Extra`r`n"
 		. gIndent "}", p*)
 	} Else {
 		out := format("FileCopy({1}, {2}, {3})", p*)
@@ -212,10 +213,10 @@ _FileCopy(p) {
 _FileCopyDir(p) {
 	if (gaScriptStrsUsed.ErrorLevel) {
 		Out := format("Try {`r`n"
-		. gIndent "   DirCopy({1}, {2}, {3})`r`n"
-		. gIndent "   ErrorLevel := 0`r`n"
+		. gIndent gSingleIndent "DirCopy({1}, {2}, {3})`r`n"
+		. gIndent gSingleIndent "ErrorLevel := 0`r`n"
 		. gIndent "} Catch {`r`n"
-		. gIndent "   ErrorLevel := 1`r`n"
+		. gIndent gSingleIndent "ErrorLevel := 1`r`n"
 		. gIndent "}", p*)
 	} Else {
 		out := format("DirCopy({1}, {2}, {3})", p*)
@@ -228,10 +229,10 @@ _FileCopyDir(p) {
 _FileMove(p) {
 	if (gaScriptStrsUsed.ErrorLevel) {
 		Out := format("Try {`r`n"
-		. gIndent "   FileMove({1}, {2}, {3})`r`n"
-		. gIndent "   ErrorLevel := 0`r`n"
+		. gIndent gSingleIndent "FileMove({1}, {2}, {3})`r`n"
+		. gIndent gSingleIndent "ErrorLevel := 0`r`n"
 		. gIndent "} Catch as Err {`r`n"
-		. gIndent "   ErrorLevel := Err.Extra`r`n"
+		. gIndent gSingleIndent "ErrorLevel := Err.Extra`r`n"
 		. gIndent "}", p*)
 	} Else {
 		out := format("FileMove({1}, {2}, {3})", p*)
@@ -312,14 +313,14 @@ _FileSelect(p) {
 		Line .= gIndent p[1] " := `"`"`r`n"
 		Line .= gIndent "for FileName in o" OutputVar "`r`n"
 		Line .= gIndent "{`r`n"
-		Line .= gIndent OutputVar " .= A_Index=1 ? RegExReplace(FileName, `"(.+)\\(.*)`", `"$1``r``n$2``r``n`") : RegExReplace(FileName, `".+\\(.*)`", `"$1``r``n`")`r`n"
+		Line .= gIndent gSingleIndent OutputVar " .= A_Index=1 ? RegExReplace(FileName, `"(.+)\\(.*)`", `"$1``r``n$2``r``n`") : RegExReplace(FileName, `".+\\(.*)`", `"$1``r``n`")`r`n"
 		Line .= gIndent "}"
 	}
 	if (gaScriptStrsUsed.ErrorLevel) {
 		Line .= "`r`n" gIndent "if (" OutputVar " = `"`") {`r`n"
-		Line .= gIndent "ErrorLevel := 1`r`n"
+		Line .= gIndent gSingleIndent "ErrorLevel := 1`r`n"
 		Line .= gIndent "} else {`r`n"
-		Line .= gIndent "ErrorLevel := 0`r`n"
+		Line .= gIndent gSingleIndent "ErrorLevel := 0`r`n"
 		Line .= gIndent "}"
 	}
 	return Zip(Line, 'FILESELECT')		; 2025-11-30 AMB - compress to single-line tag, as needed
@@ -1292,13 +1293,13 @@ _SB_SetIcon(p) {
 _SendMessage(p) {
 	if (p[3] ~= "^&.*") {
 		p[3] := SubStr(p[3],2)
-		Out := format('if (type(' . p[3] . ')="Buffer") { `; V1toV2: If statement may be removed depending on type parameter`n`r'
-			. gIndent . ' ErrorLevel := SendMessage({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9})', p*)
+		Out := format('if (type(' . p[3] . ')="Buffer") { `; V1toV2: If statement may be removed depending on type parameter`r`n'
+			. gIndent . gSingleIndent 'ErrorLevel := SendMessage({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9})', p*)
 		Out := RegExReplace(Out, "[\s\,]*\)$", ")")
-		Out .= format('`n`r' . gIndent . '} else{`n`r'
-			. gIndent . ' ErrorLevel := SendMessage({1}, {2}, StrPtr({3}), {4}, {5}, {6}, {7}, {8}, {9})', p*)
+		Out .= format('`r`n' . gIndent . '} else{`r`n'
+			. gIndent . gSingleIndent 'ErrorLevel := SendMessage({1}, {2}, StrPtr({3}), {4}, {5}, {6}, {7}, {8}, {9})', p*)
 		Out := RegExReplace(Out, "[\s\,]*\)$", ")")
-		Out .= '`n`r' . gIndent . "}"
+		Out .= '`r`n' . gIndent . "}"
 		return Out
 	}
 	if (p[3] ~= "^`".*") {
@@ -1501,9 +1502,9 @@ _StringMid(p) {
 			return format("{1} := SubStr(SubStr({2}, 1, {3}), StrLen({2}) >= {3} ? -{4} : StrLen({2})-{3})", p*)
 		} else {
 			out := format("if (SubStr({5}, 1, 1) = `"L`")", p*) . "`r`n"
-			out .= format(gIndent "`t{1} := SubStr(SubStr({2}, 1, {3}), -{4})", p*) . "`r`n"
+			out .= format(gIndent gSingleIndent "{1} := SubStr(SubStr({2}, 1, {3}), -{4})", p*) . "`r`n"
 			out .= format(gIndent "else", p) . "`r`n"
-			out .= format(gIndent "`t{1} := SubStr({2}, {3}, {4})", p*)
+			out .= format(gIndent gSingleIndent "{1} := SubStr({2}, {3}, {4})", p*)
 			Out := Zip(Out, 'STRMID')	; 2025-11-30 AMB - compress to single-line tag, as needed
 			return out
 		}
@@ -1767,7 +1768,7 @@ _WinGet(p) {
 		Out := format("o{1} := WinGet{2}({3},{4},{5},{6})", p*) "`r`n"
 		Out .= gIndent "For v in o" P[1] "`r`n"
 		Out .= gIndent "{`r`n"
-		Out .= gIndent "   " P[1] " .= A_index=1 ? v : `"``r``n`" v`r`n"
+		Out .= gIndent gSingleIndent P[1] " .= A_index=1 ? v : `"``r``n`" v`r`n"
 		Out .= gIndent "}"
 	}
 	if (P[2] = "List") {
@@ -1775,7 +1776,8 @@ _WinGet(p) {
 		Out .= gIndent "a" P[1] " := Array()`r`n"
 		Out .= gIndent P[1] " := o" P[1] ".Length`r`n"
 		Out .= gIndent "For v in o" P[1] "`r`n"
-		Out .= gIndent "{   a" P[1] ".Push(v)`r`n"
+		Out .= gIndent "{`r`n"
+		Out .= gIndent gSingleIndent "a" P[1] ".Push(v)`r`n"
 		Out .= gIndent "}"
 		gaList_PseudoArr.Push({name: P[1], newname: "a" P[1]})
 		gaList_PseudoArr.Push({strict: true, name: P[1], newname: "a" P[1] ".Length"})

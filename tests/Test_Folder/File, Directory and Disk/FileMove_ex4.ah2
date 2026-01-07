@@ -1,4 +1,4 @@
-ErrorCount := MoveFilesAndFolders("C:\a\*.*", "C:\b")
+﻿ErrorCount := MoveFilesAndFolders("C:\a\*.*", "C:\b")
 if (ErrorCount != 0)
     MsgBox(ErrorCount " files/folders could not be moved.")
 
@@ -11,10 +11,10 @@ MoveFilesAndFolders(SourcePattern, DestinationFolder, DoOverwrite := false)
         DoOverwrite := 2  ; See FileMoveDir for description of mode 2 vs. 1.
     ; First move all the files (but not the folders):
     Try {
-       FileMove(SourcePattern, DestinationFolder, DoOverwrite)
-       ErrorLevel := 0
+        FileMove(SourcePattern, DestinationFolder, DoOverwrite)
+        ErrorLevel := 0
     } Catch as Err {
-       ErrorLevel := Err.Extra
+        ErrorLevel := Err.Extra
     }
     ErrorCount := ErrorLevel
     ; Now move all the folders:

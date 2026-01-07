@@ -277,8 +277,8 @@
 		Mask_T(&lineStr, 'FC' ,,sess)									; hide commas within func calls		 (hides STR also)
 		Mask_T(&lineStr, 'KV' ,,sess)									; hide commas within key/val objects (do not restore C&S)
 		; mask array assignments for easier detection
-		nVar := '(?i)(\h*)([_a-z](?|\w++|\.(?=\w))*+)'					; [variable]	(also supports obj.prop)
-		nIdx := '\[([^\]]+?)\]'											; [index]		(var/val - basic, since supported by rest of needle)
+		nVar := '(?i)(\h*)([_a-z](?:\w++|\.(?=\w)|\[|\])*)'				; [variable]	(also supports obj.prop, obj[key].arr[idx] )
+		nIdx := '\[([^\]]+)\]'											; [index]		(var/val - basic, since supported by rest of needle)
 		nOp	 := '(\h*+:=\h*+)'											; [operator]	(will preserve surrounding WS)
 		nVal := '([^=,\v]++)'											; [value]		(must have - may req tweaks later)
 		nArrAssign	:= nVar . nIdx . nOp . nVal							; [detection for array assignments]

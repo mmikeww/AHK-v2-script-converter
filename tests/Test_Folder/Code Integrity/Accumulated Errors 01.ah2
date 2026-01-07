@@ -296,15 +296,15 @@ cc.Sections := []
 
 x := 0
 w := 120
-cc.Sections[ 1 ] := { Header: "Section 1" , X: x , Y: 0 , W: w , H: 24  , MoveVector: New Vector( x + w + 1 , 0 ) } 
+cc.Sections[ 1 ] := { Header: "Section 1" , X: x , Y: 0 , W: w , H: 24  , MoveVector: New Vector( x + w + 1 , 0 ) }  ;  V1toV2: Invalid Index errors?, try 'cc.Sections.Push(<val>)'
 x += w + 3 
-cc.Sections[ 2 ] := { Header: "Section 2" , X: x , Y: 0 , W: w , H: 24  , MoveVector: New Vector( x + w + 1 , 0 ) } 
+cc.Sections[ 2 ] := { Header: "Section 2" , X: x , Y: 0 , W: w , H: 24  , MoveVector: New Vector( x + w + 1 , 0 ) }  ;  V1toV2: Invalid Index errors?, try 'cc.Sections.Push(<val>)'
 x += w + 3 
-cc.Sections[ 3 ] := { Header: "Section 3" , X: x , Y: 0 , W: w , H: 24  , MoveVector: New Vector( x + w + 1 , 0 ) } 
+cc.Sections[ 3 ] := { Header: "Section 3" , X: x , Y: 0 , W: w , H: 24  , MoveVector: New Vector( x + w + 1 , 0 ) }  ;  V1toV2: Invalid Index errors?, try 'cc.Sections.Push(<val>)'
 x += w + 3 
-cc.Sections[ 4 ] := { Header: "Section 4" , X: x , Y: 0 , W: w , H: 24  , MoveVector: New Vector( x + w + 1 , 0 ) } 
+cc.Sections[ 4 ] := { Header: "Section 4" , X: x , Y: 0 , W: w , H: 24  , MoveVector: New Vector( x + w + 1 , 0 ) }  ;  V1toV2: Invalid Index errors?, try 'cc.Sections.Push(<val>)'
 x += w + 3 
-cc.Sections[ 5 ] := { Header: "Section 5" , X: x , Y: 0 , W: w , H: 24  , MoveVector: New Vector( x + w + 1 , 0 ) } 
+cc.Sections[ 5 ] := { Header: "Section 5" , X: x , Y: 0 , W: w , H: 24  , MoveVector: New Vector( x + w + 1 , 0 ) }  ;  V1toV2: Invalid Index errors?, try 'cc.Sections.Push(<val>)'
 
 
 ;################################################################################
@@ -320,10 +320,10 @@ cc.Sections[ 5 ] := { Header: "Section 5" , X: x , Y: 0 , W: w , H: 24  , MoveVe
 		ascPos	:= Ord((char&&char[0]))						; array index number
 		if (ascPos>0 && ascPos<256)					; if not super-extended ascii char
 			charObj[ascPos] := {Asc:ascPos		; add charObj to list - char array index will be...
-			,(char&&char[0]):(char&&char[0]),Count:cCnt}				;	 same as char ascii value
+			,(char&&char[0]):(char&&char[0]),Count:cCnt}				;	 same as char ascii value ;  V1toV2: Invalid Index errors?, try 'charObj.Push(<val>)'
 		else
 			charObj[extIdx] := {Asc:ascPos		; push super-extended chars (or null) to end of list
-			,(char&&char[0]):(char&&char[0]),Count:cCnt}, extIdx++
+			,(char&&char[0]):(char&&char[0]),Count:cCnt}, extIdx++ ;  V1toV2: Invalid Index errors?, try 'charObj.Push(<val>)'
 		tCount += cCnt								; testing/debugging
 		;ToolTip % StrLen(srcStr)
 		; build unique list
@@ -348,7 +348,7 @@ cc.Sections[ 5 ] := { Header: "Section 5" , X: x , Y: 0 , W: w , H: 24  , MoveVe
 ;#####################################
 
 	SwitchToSlim() {
-		v := this.ov, n := this[v].n, this[v].Needle[n] := this.Fpat(), this[v].eFlag := True
+		v := this.ov, n := this[v].n, this[v].Needle[n] := this.Fpat(), this[v].eFlag := True ;  V1toV2: Invalid Index errors?, try 'this[v].Needle.Push(<val>)'
 		this.GuiClose(this.id)
 		this.SlimGui(this.id)
 		ControlSetText(this[v].Needle[n], "Edit1", "A")

@@ -1361,11 +1361,13 @@ class clsNodeMap	; 'block map' might be better term
 					node.ConvCode	:= ((convert) && IsSet(_convertLines))		; if code should be converted... (2025-12-24 - updated)
 									? _convertLines(mCopy)						; ... convert code and save		for restore later
 									: mCopy										; ... otherwise save orig code	for restore later
-					mLen		:= StrLen(node.ConvCode)
-					uid			:= node.uid										; 2025-10-27 AMB, ensure tag has unique ID
-					mTag		:= uniqueTag('BLKCLS_' uid '_P' pos '_L' mLen)	; tag, also used as key for maskList
+					mLen	:= StrLen(node.ConvCode)
+					uid		:= node.uid											; 2025-10-27 AMB, ensure tag has unique ID
+					mTag	:= uniqueTag('BLKCLS_' uid '_P' pos '_L' mLen)		; tag, also used as key for maskList
 					this.maskList[mTag] := node									; 2025-10-27 AMB, so FUNC/CLS masking is more flexible
-					code := RegExReplace(code, escRegexChars(m[]), mTag,,1,pos)	; replace block of premasked-code with tag
+					;ercStr	:= escRegexChars(m[])								; escape special regex chars for orig subStr
+					;code	:= RegExReplace(code, ercStr, mTag,,1,pos)			; replace block of premasked-code with tag (will fault if needle length > 40K)
+					code	:= StrReplaceAt(code, m[], mTag,,pos,1)				; replace block of premasked-code with tag
 				}
 			}
 
@@ -1379,12 +1381,12 @@ class clsNodeMap	; 'block map' might be better term
 					node.ConvCode	:= ((convert) && IsSet(_convertLines))		; if code should be converted... (2025-12-24 - updated)
 									? _convertLines(mCopy)						; ... convert code and save		for restore later
 									: mCopy										; ... otherwise save orig code	for restore later
-					mLen		:= StrLen(node.ConvCode)
-					uid			:= node.uid										; 2025-10-27 AMB, ensure tag has unique ID
-					mTag		:= uniqueTag('BLKFUNC_' uid '_P' pos '_L' mLen)	; tag, also used as key for maskList
+					mLen	:= StrLen(node.ConvCode)
+					uid		:= node.uid											; 2025-10-27 AMB, ensure tag has unique ID
+					mTag	:= uniqueTag('BLKFUNC_' uid '_P' pos '_L' mLen)		; tag, also used as key for maskList
 					this.maskList[mTag] := node									; 2025-10-27 AMB, so FUNC/CLS masking is more flexible
-					;ercStr		:= escRegexChars(m[])							; escape special regex chars for orig subStr
-					;code		:= RegExReplace(code, ercStr, mTag,,1,pos)		; replace block of premasked-code with tag (will fault if needle length > 40K)
+					;ercStr	:= escRegexChars(m[])								; escape special regex chars for orig subStr
+					;code	:= RegExReplace(code, ercStr, mTag,,1,pos)			; replace block of premasked-code with tag (will fault if needle length > 40K)
 					code	:= StrReplaceAt(code, m[], mTag,,pos,1)				; replace block of premasked-code with tag
 				}
 			}

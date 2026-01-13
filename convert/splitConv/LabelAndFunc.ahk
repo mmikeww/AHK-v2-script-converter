@@ -990,9 +990,9 @@ class clsSection
 			for idx, reObj in L2F_Obj.RegExList {											; apply regexs as needed
 				funcStr := this._applyRegex(funcStr, L2f_Obj.RegExList)						; perform ALL occurences of ALL needles
 			}
-			code := RegExReplace(code,escRegexChars(origStr),funcStr,,1,pos)				; apply updates to orig code
-			;code := StrReplaceAt(code, orig, funcStr,, pos, 1)
-			pos += StrLen(funcStr)															; prep for next func search
+			;code	:= RegExReplace(code,escRegexChars(origStr),funcStr,,1,pos)				; apply updates to orig code (will fault if needle length > 40K)
+			code	:= StrReplaceAt(code, origStr, funcStr,, pos, 1)						; apply updates to orig code
+			pos		+= StrLen(funcStr)														; prep for next func search
 		}
 		return code																			; return updated code
 	}

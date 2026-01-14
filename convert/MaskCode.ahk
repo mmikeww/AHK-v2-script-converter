@@ -871,13 +871,14 @@ Class IWTLFS
 			nCur := this._needles[nType]													; needle for current node type
 			if (RegExMatch(code, nCur, &m, pos)) {											; this should always succeed
 				oStr	:= m[]																; record original code/substring for current node
-				ercStr	:= escRegexChars(oStr)												; escape special regex chars for orig subStr
 				uid		:= clsMask.GenUniqueID()											; unique ID (this is a must to avoid issues!)
 				uStr	:= nType '_' uid '_P' pos '_L' m.Len								; unique str (must have unique ID !)
 				tag		:= uniqueTag(uStr)													; build a unique tag for current node
 				mObj	:= clsMask(oStr, tag, nType, nCur)									; create new clsMask object
 				clsMask.AddMask(tag, mObj)													; add object to shared maplist (using unique tag as key)
-				code	:= RegExReplace(code, ercStr, tag,,1,pos)							; replace orig subStr with a tag
+				;ercStr	:= escRegexChars(oStr)												; escape special regex chars for orig subStr
+				;code	:= RegExReplace(code, ercStr, tag,,1,pos)							; replace orig subStr with a tag (will fault if needle length > 40K)
+				code	:= StrReplaceAt(code, oStr, tag,,pos,1)								; replace orig subStr with a tag
 			}
 		}
 	}
@@ -1360,11 +1361,13 @@ class clsNodeMap	; 'block map' might be better term
 					node.ConvCode	:= ((convert) && IsSet(_convertLines))		; if code should be converted... (2025-12-24 - updated)
 									? _convertLines(mCopy)						; ... convert code and save		for restore later
 									: mCopy										; ... otherwise save orig code	for restore later
-					mLen		:= StrLen(node.ConvCode)
-					uid			:= node.uid										; 2025-10-27 AMB, ensure tag has unique ID
-					mTag		:= uniqueTag('BLKCLS_' uid '_P' pos '_L' mLen)	; tag, also used as key for maskList
+					mLen	:= StrLen(node.ConvCode)
+					uid		:= node.uid											; 2025-10-27 AMB, ensure tag has unique ID
+					mTag	:= uniqueTag('BLKCLS_' uid '_P' pos '_L' mLen)		; tag, also used as key for maskList
 					this.maskList[mTag] := node									; 2025-10-27 AMB, so FUNC/CLS masking is more flexible
-					code := RegExReplace(code, escRegexChars(m[]), mTag,,1,pos)	; replace block of premasked-code with tag
+					;ercStr	:= escRegexChars(m[])								; escape special regex chars for orig subStr
+					;code	:= RegExReplace(code, ercStr, mTag,,1,pos)			; replace block of premasked-code with tag (will fault if needle length > 40K)
+					code	:= StrReplaceAt(code, m[], mTag,,pos,1)				; replace block of premasked-code with tag
 				}
 			}
 
@@ -1378,11 +1381,13 @@ class clsNodeMap	; 'block map' might be better term
 					node.ConvCode	:= ((convert) && IsSet(_convertLines))		; if code should be converted... (2025-12-24 - updated)
 									? _convertLines(mCopy)						; ... convert code and save		for restore later
 									: mCopy										; ... otherwise save orig code	for restore later
-					mLen		:= StrLen(node.ConvCode)
-					uid			:= node.uid										; 2025-10-27 AMB, ensure tag has unique ID
-					mTag		:= uniqueTag('BLKFUNC_' uid '_P' pos '_L' mLen)	; tag, also used as key for maskList
+					mLen	:= StrLen(node.ConvCode)
+					uid		:= node.uid											; 2025-10-27 AMB, ensure tag has unique ID
+					mTag	:= uniqueTag('BLKFUNC_' uid '_P' pos '_L' mLen)		; tag, also used as key for maskList
 					this.maskList[mTag] := node									; 2025-10-27 AMB, so FUNC/CLS masking is more flexible
-					code := RegExReplace(code, escRegexChars(m[]), mTag,,1,pos)	; replace block of premasked-code with tag
+					;ercStr	:= escRegexChars(m[])								; escape special regex chars for orig subStr
+					;code	:= RegExReplace(code, ercStr, mTag,,1,pos)			; replace block of premasked-code with tag (will fault if needle length > 40K)
+					code	:= StrReplaceAt(code, m[], mTag,,pos,1)				; replace block of premasked-code with tag
 				}
 			}
 		}
@@ -1892,7 +1897,7 @@ class clsNodeMap	; 'block map' might be better term
 	k07		:= 'numpad(?:\d|end|add|sub)'									; numpad special
 	k08		:= 'wheel(?:up|down)'											; mouse
 	k09		:= '(?:f|joy)\d++'												; func keys or joystick button
-	k10		:= '(?:(?:appskey|bkspc|(?:back)?space|del|delete|'				; named keys
+	k10		:= '(?:(?:appskey|bs|(?:back)?space|del|delete|'				; named keys
 			   . 'end|enter|esc(?:ape)?|home|pgdn|pgup|pause|tab|'
 			   . 'up|dn|down|left|right|(?:caps|scroll)lock)(?:\h+up)?)'
 	k11		:= '(?:sc[a-f0-9]{3})'											; 2025-06-22 ADDED - scancodes

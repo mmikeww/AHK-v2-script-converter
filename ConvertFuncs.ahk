@@ -111,15 +111,10 @@ After_LineConverts(&code)
 
    ;####  Please place CALLS TO YOUR FUNCTIONS here - not boilerplate code  #####
 
-   ; remove masking from classes, functions
-   Mask_R(&code, 'FUNC&CLS')                ; (returned as v2 converted)
-
    ; operations that must be performed last
    ; inspect to see whether your code is best placed here or in the following
    FinalizeConvert(&code)                   ; perform all final operations
 
-   Mask_R(&code, 'CSect')                   ; restore remaining cont sects (returned as v2 converted)
-   Mask_R(&code, 'C&S')                     ; ensure all comments/strings are restored (just in case)
    return    ; code by reference
 }
 ;################################################################################
@@ -259,6 +254,8 @@ FinalizeConvert(&code)
 ; 2024-06-27 ADDED, 2025-06-12, 2025-10-05, 2026-01-01 UPDATED
 ; Performs tasks that finalize overall conversion
 
+   Mask_R(&code, 'FUNC&CLS')            ; remove masking from classes/funcs (returned as v2 converted)
+
    ; 2025-11-30 AMB, ADDED
    ; Expand/Restore all remaining tagged multi-line code that was added by converter
    ; This also adds braces to (non-brace) IF/ELSEIF/ELSE/LOOP blocks to support any new multi-line code
@@ -279,6 +276,11 @@ FinalizeConvert(&code)
    addOnMessageCBArgs(&code)            ; 2024-06-28, AMB - Fix #136
    addHKCmdCBArgs(&code)                ; 2025-10-12, AMB - Fix #328
    updateFileOpenProps(&code)           ; 2025-10-12, AMB - support for #358
+
+   Mask_R(&code, 'CSect')                ; restore remaining cont sects (returned as v2 converted)
+   Mask_R(&code, 'V1MLS')                ; restore remaining V1 ML string
+   Mask_R(&code, 'MLPB')                 ; restore remaining ML parenth blocks
+   Mask_R(&code, 'C&S')                  ; ensure all comments/strings are restored (just in case)
 
    return   ; code by reference
 }

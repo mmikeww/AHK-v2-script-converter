@@ -98,25 +98,25 @@ class CSect
 		; code is a properly formatted continuation section
 		; route code to proper function for conversion
 
-		if	(mCS.head ~= CSect.nLegAssignVar		. '$')	{
+		if	(mCS.head ~= CSect.nLegAssignVar		. '\h*$')	{
 			return CSect._conv_LegAssignVar(code)									; [var = %var%]
 		}
-		else if (mCS.head ~= CSect.nLegacyAssign	. '$')	{
+		else if (mCS.head ~= CSect.nLegacyAssign	. '\h*$')	{
 			return CSect._conv_LegacyAssign(code)									; [var =]
 		}
-		else if	(mCS.head ~= CSect.nExpAssignQS1	. '$')	{
+		else if	(mCS.head ~= CSect.nExpAssignQS1	. '\h*$')	{
 			return CSect._conv_ExpAssignQS1(code)									; [var/cmd := %? "?]
 		}
-		else if	(mCS.head ~= CSect.nExpAssignQS2	. '$')	{
+		else if	(mCS.head ~= CSect.nExpAssignQS2	. '\h*$')	{
 ;			return CSect._conv_ExpAssignQS2(code)									; [var := var] or [var := "]
 		}
-		else if	(mCS.head ~= CSect.nCmdPlus			. '$')	{
+		else if	(mCS.head ~= CSect.nCmdPlus			. '\h*$')	{
 ;			return 	CSect._conv_CmdComma(code)										; [cmd] or [cmd,]
 		}
-		else if	(mCS.head ~= CSect.nFCall			. '$')	{
+		else if	(mCS.head ~= CSect.nFCall			. '\h*$')	{
 			return 	CSect._conv_FCall(code)											; [ %? funcCall("? ]
 		}
-		else if	(mCS.head ~= CSect.nLegExp			. '$')	{						; CAN CATCH FALSE POSITIVES
+		else if	(mCS.head ~= CSect.nLegExp			. '\h*$')	{					; CAN CATCH FALSE POSITIVES
 			return 	CSect._conv_LegExp(code)										; [,? %? "?]
 		}
 		else {

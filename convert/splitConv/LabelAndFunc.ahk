@@ -991,7 +991,7 @@ class clsSection
 				funcStr := this._applyRegex(funcStr, L2f_Obj.RegExList)						; perform ALL occurences of ALL needles
 			}
 			;code	:= RegExReplace(code,escRegexChars(origStr),funcStr,,1,pos)				; apply updates to orig code (will fault if needle length > 40K)
-			code	:= StrReplaceAt(code, origStr, funcStr,, pos, 1)						; apply updates to orig code
+			code	:= StrReplaceAt(code, origStr, funcStr,, pos, 1)						; 2026-01-17 - apply updates to orig code
 			pos		+= StrLen(funcStr)														; prep for next func search
 		}
 		return code																			; return updated code
@@ -1062,14 +1062,15 @@ class codeChop	; responsible for marking script code with tags that separate sec
 			Mask_T(&code, mType,,,false)													; mask all section types
 		}
 		if (restorePM) {																	; if requested...
-			Mask_R(&code, 'V1MLS',	,sessID)												; ... restore legacy ML strings
+			;Mask_R(&code, 'V1MLS',	,sessID)												; ... 2026-01-17 - removed - restore legacy ML strings
 			Mask_R(&code, 'C&S',	,sessID)												; ... restore comments/strings
 		}
 	}
 	;################################################################################
 	Static RestoreMasksAll(code)															; restores orig code for specified tags
 	{
-		tagTypes := ['CLS&FUNC','HIF','HK','HS','LBL','V1MLS','IWTLFS','KVO','C&S']
+		;tagTypes := ['CLS&FUNC','HIF','HK','HS','LBL','V1MLS','IWTLFS','KVO','C&S']
+		tagTypes := ['CLS&FUNC','HIF','HK','HS','LBL','IWTLFS','KVO','C&S']					; 2026-01-17 - removed V1MLS
 		outStr := code
 		for idx, tag in tagTypes {
 			Mask_R(&outStr, tag)															; restore orig code for tags specified

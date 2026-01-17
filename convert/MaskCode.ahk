@@ -25,7 +25,7 @@
 	2025-10-05,10,27		- UPDATED, Multiple enhancements/improvements - see comments in code
 	2025-11-01,23,28,29,30	- UPDATED, Multiple enhancements/improvements - see comments in code
 	2025-12-13,24			- UPDATED, see comments in code
-	2026-01-01				- UPDATED, see comments in code
+	2026-01-01,13,17		- UPDATED, see comments in code
 
 	TODO
 		Finish support for Continuation sections
@@ -236,7 +236,7 @@ global	  gTagChar		:= chr(0x2605) ; '★'															; unique char to ensure 
 					, nGblHK, sessID?)
 				if (!IsSet(option) || (option & 2)) {		; restore by default, or if bit 2 is set
 					Mask_R(&code,	'MLPB',	,sessID?)		; 	restore multi-line parentheses blocks
-					Mask_R(&code,	'V1MLS',,sessID?)		; 	restore legacy ML strings
+					;Mask_R(&code,	'V1MLS',,sessID?)		; 	2026-01-17 - removed - restore legacy ML strings
 					Mask_R(&code,	'C&S',	,sessID?)		; 	restore comments/strings
 				}
 		;################################################################################
@@ -254,7 +254,7 @@ global	  gTagChar		:= chr(0x2605) ; '★'															; unique char to ensure 
 					, nGblHS, sessID?)
 				if (!IsSet(option) || (option & 2)) {		; restore by default, or if bit 2 is set
 					Mask_R(&code,	'MLPB',	,sessID?)		; 	restore multi-line parentheses blocks
-					Mask_R(&code,	'V1MLS',,sessID?)		; 	restore legacy ML strings
+					;Mask_R(&code,	'V1MLS',,sessID?)		; 	2026-01-17 - removed - restore legacy ML strings
 					Mask_R(&code,	'C&S',	,sessID?)		; 	restore comments/strings
 				}
 		;################################################################################
@@ -287,7 +287,7 @@ global	  gTagChar		:= chr(0x2605) ; '★'															; unique char to ensure 
 					Mask_R(&code,	'HS',	,sessID?)		; 	restore hotstring declarations
 					Mask_R(&code,	'HK',	,sessID?)		; 	restore hotkey declarations
 					Mask_R(&code,	'MLPB',	,sessID?)		; 	restore multi-line parentheses blocks
-					Mask_R(&code,	'V1MLS',,sessID?)		; 	restore legacy ML strings
+					;Mask_R(&code,	'V1MLS',,sessID?)		; 	2026-01-17 - removed - restore legacy ML strings
 					Mask_R(&code,	'C&S',	,sessID?)		; 	restore comments/strings
 				}
 		;################################################################################
@@ -410,7 +410,7 @@ global	  gTagChar		:= chr(0x2605) ; '★'															; unique char to ensure 
 					, gPtn_Blk_FUNC, sessID?)
 				if (IsSet(option) && (option & 2)) {		; restore only when bit 2 is set
 					Mask_R(&code, 'MLPB',	,sessID?)		; 	restore multi-line parentheses blocks
-					Mask_R(&code, 'V1MLS',	,sessID?)		; 	restore legacy ML strings
+					;Mask_R(&code, 'V1MLS',	,sessID?)		; 	2026-01-17 - removed - restore legacy ML strings
 					Mask_R(&code, 'C&S',	,sessID?)		;	restore comments/strings [FROM TEMP SESSION]
 				}
 		;################################################################################
@@ -429,7 +429,7 @@ global	  gTagChar		:= chr(0x2605) ; '★'															; unique char to ensure 
 					, gPtn_Blk_CLS, sessID?)
 				if (IsSet(option) && (option & 2)) {		; restore only when bit 2 is set
 					Mask_R(&code, 'MLPB',	,sessID?)		; 	restore multi-line parentheses blocks
-					Mask_R(&code, 'V1MLS',	,sessID?)		; 	restore legacy ML strings
+					;Mask_R(&code, 'V1MLS',	,sessID?)		; 	2026-01-17 - removed - restore legacy ML strings
 					Mask_R(&code, 'C&S',	,sessID?)		;	restore comments/strings [FROM TEMP SESSION]
 				}
 		;################################################################################
@@ -590,8 +590,10 @@ global	  gTagChar		:= chr(0x2605) ; '★'															; unique char to ensure 
 					, delTag, sessID?)
 		;################################################################################
 		case	'V1MLS','V1LEGMLS':							; V1 LEGACY (non-expression) MULTI-LINE STRING
-				clsMask.RestoreAll(&code, 'V1LEGMLS'
-					, delTag, sessID?)
+				clsMLLineCont.RestoreAll(&code, 'V1LEGMLS'	; 2026-01-17 - UPDATED to support proper conversion
+					, delTag, sessID?, convert)				; will convert as part of restore, unless convert is set to 0
+				;clsMask.RestoreAll(&code, 'V1LEGMLS'
+				;	, delTag, sessID?)
 		;################################################################################
 		case	'DQ','DQSTR':								; QUOTED-STRINGS (1line, "" only)
 				clsMask.RestoreAll(&code, 'DQ'
@@ -809,7 +811,7 @@ Class IWTLFS
 	Static _preMask_R(&code)
 	{
 		Mask_R(&code, 'C&S'	 ,,	this._sessID)												; restore comments and strings
-		Mask_R(&code, 'V1MLS',,	this._sessID)												; restore v1 ML strings
+		;Mask_R(&code, 'V1MLS',,	this._sessID)											; 2026-01-17 - removed - restore v1 ML strings
 	}
 	;############################################################################
 	Static _isolateTry(&code)																; place Try on it's own line
@@ -863,7 +865,7 @@ Class IWTLFS
 	}
 	;############################################################################
 	Static _maskAllNodes(&code)																; mask each node [from bottom to top]
-	{
+	{																						; 2026-01-13 AMB, UPDATED - fix regex bug
 		revPos := this._getPositions(code)													; get node positions in reverse order
 		Loop parse, revPos, '`n', '`r' {													; for each node in list...
 			ss	 := StrSplit(A_LoopField, ':')
@@ -1357,7 +1359,7 @@ class clsNodeMap	; 'block map' might be better term
 				if ((RegExMatch(code, gPtn_Blk_CLS, &m, pos))=pos)				; node position is known and specific
 				{
 					mCopy := m[]												; is premasked code - copy to prep for v2 conversion
-					Mask_R(&mCopy, 'V1MLS',0), Mask_R(&mCopy, 'C&S',0)			; restore comments/strings, v1 ML strings (should now be orig)
+					Mask_R(&mCopy, 'C&S',0)										; 2026-01-17 - restore comments/strings
 					node.ConvCode	:= ((convert) && IsSet(_convertLines))		; if code should be converted... (2025-12-24 - updated)
 									? _convertLines(mCopy)						; ... convert code and save		for restore later
 									: mCopy										; ... otherwise save orig code	for restore later
@@ -1367,7 +1369,7 @@ class clsNodeMap	; 'block map' might be better term
 					this.maskList[mTag] := node									; 2025-10-27 AMB, so FUNC/CLS masking is more flexible
 					;ercStr	:= escRegexChars(m[])								; escape special regex chars for orig subStr
 					;code	:= RegExReplace(code, ercStr, mTag,,1,pos)			; replace block of premasked-code with tag (will fault if needle length > 40K)
-					code	:= StrReplaceAt(code, m[], mTag,,pos,1)				; replace block of premasked-code with tag
+					code	:= StrReplaceAt(code, m[], mTag,,pos,1)				; 2026-01-13 - replace block of premasked-code with tag
 				}
 			}
 
@@ -1377,7 +1379,7 @@ class clsNodeMap	; 'block map' might be better term
 				if ((RegExMatch(code, gPtn_Blk_FUNC, &m, pos))=pos)				; node position is known and specific
 				{
 					mCopy := m[]												; is premasked code - copy to prep for v2 conversion
-					Mask_R(&mCopy, 'V1MLS',0), Mask_R(&mCopy, 'C&S',0)			; restore comments/strings, v1 ML strings (should now be orig)
+					Mask_R(&mCopy, 'C&S',0)										; 2026-01-17 - restore comments/strings
 					node.ConvCode	:= ((convert) && IsSet(_convertLines))		; if code should be converted... (2025-12-24 - updated)
 									? _convertLines(mCopy)						; ... convert code and save		for restore later
 									: mCopy										; ... otherwise save orig code	for restore later
@@ -1387,7 +1389,7 @@ class clsNodeMap	; 'block map' might be better term
 					this.maskList[mTag] := node									; 2025-10-27 AMB, so FUNC/CLS masking is more flexible
 					;ercStr	:= escRegexChars(m[])								; escape special regex chars for orig subStr
 					;code	:= RegExReplace(code, ercStr, mTag,,1,pos)			; replace block of premasked-code with tag (will fault if needle length > 40K)
-					code	:= StrReplaceAt(code, m[], mTag,,pos,1)				; replace block of premasked-code with tag
+					code	:= StrReplaceAt(code, m[], mTag,,pos,1)				; 2026-01-13 - replace block of premasked-code with tag
 				}
 			}
 		}
@@ -1405,7 +1407,7 @@ class clsNodeMap	; 'block map' might be better term
 			; mask classes and functions
 			this.BuildNodeMap(code)								; prep for masking/conversion
 			this.maskAndConvertNodes(&code,convert)				; FUNC/CLS will be added to masklist here
-		Mask_R(&code, 'V1MLS',0,sessID)							; restore v1 ML strings
+		;Mask_R(&code, 'V1MLS',0,sessID)						; 2026-01-17 - removed - restore v1 ML strings
 		Mask_R(&code, 'C&S',0,sessID)							; restore comments/strings
 	}
 	;############################################################################
@@ -1886,6 +1888,7 @@ class clsNodeMap	; 'block map' might be better term
 ; 2024-08-06 AMB, ADDED - Hotkey declaration
 ; 2025-06-22 AMB, UPDATED
 ; 2025-11-23 AMB, UPDATED - added named capture group to hotkeys needle
+; 2026-01-13 AMB, UPDATED - fixed backspace key name
 
 	opt 	:= '(?i)'														; pattern options
 	k01		:= '(?:[$~*]*)'													; special commands

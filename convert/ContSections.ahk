@@ -46,7 +46,7 @@ class CSect
 	static tag				:= '(?<tag1>(?:\h*+#TAG★(?:LC|BC|QS)\w++★#)*+)'		; optional tag on head line (comments or quoted-string ONLY!)
 
 	; head configurations
-	static nLegacyAssign	:= CSect.var	. '``?='								. CSect.tag ; . '$'		; [var/cmd =]
+	static nLegacyAssign	:= CSect.var	. '``?='								. CSect.tag ; . '$'		; [var/cmd =] (DO NOT ADD OPTIONAL TRAILING WS)
 	static nLegAssignVar	:= CSect.var	. '``?=(\h*+)%(\w++)%'					. CSect.tag ; . '$'		; [var = %var%] (MAY BE CONVERTED TO [var .= ])
 	static nExpAssignQS1	:= CSect.cmdVar . '([.:]=)(\h*%)?(\h*")?'				. CSect.tag ; . '$'		; [var/cmd :=] or [var/cmd .= "]
 	static nExpAssignQS2	:= CSect.cmdVar . '[:]=\h*+\w+\h*"?'					. CSect.tag ; . '$'		; [var := var] or [var := "] (CAN BE COVERTED TO [var .= "])
@@ -98,25 +98,25 @@ class CSect
 		; code is a properly formatted continuation section
 		; route code to proper function for conversion
 
-		if	(mCS.head ~= CSect.nLegAssignVar		. '$')	{
+		if	(mCS.head ~= CSect.nLegAssignVar		. '\h*$')	{
 			return CSect._conv_LegAssignVar(code)									; [var = %var%]
 		}
-		else if (mCS.head ~= CSect.nLegacyAssign	. '$')	{
+		else if (mCS.head ~= CSect.nLegacyAssign	. '\h*$')	{
 			return CSect._conv_LegacyAssign(code)									; [var =]
 		}
-		else if	(mCS.head ~= CSect.nExpAssignQS1	. '$')	{
+		else if	(mCS.head ~= CSect.nExpAssignQS1	. '\h*$')	{
 			return CSect._conv_ExpAssignQS1(code)									; [var/cmd := %? "?]
 		}
-		else if	(mCS.head ~= CSect.nExpAssignQS2	. '$')	{
+		else if	(mCS.head ~= CSect.nExpAssignQS2	. '\h*$')	{
 ;			return CSect._conv_ExpAssignQS2(code)									; [var := var] or [var := "]
 		}
-		else if	(mCS.head ~= CSect.nCmdPlus			. '$')	{
+		else if	(mCS.head ~= CSect.nCmdPlus			. '\h*$')	{
 ;			return 	CSect._conv_CmdComma(code)										; [cmd] or [cmd,]
 		}
-		else if	(mCS.head ~= CSect.nFCall			. '$')	{
+		else if	(mCS.head ~= CSect.nFCall			. '\h*$')	{
 			return 	CSect._conv_FCall(code)											; [ %? funcCall("? ]
 		}
-		else if	(mCS.head ~= CSect.nLegExp			. '$')	{						; CAN CATCH FALSE POSITIVES
+		else if	(mCS.head ~= CSect.nLegExp			. '\h*$')	{					; CAN CATCH FALSE POSITIVES
 			return 	CSect._conv_LegExp(code)										; [,? %? "?]
 		}
 		else {
@@ -133,7 +133,7 @@ class CSect
 	; head	->	var/cmd :=  %? "?
 	; body	->	(...)"?
 	static _conv_ExpAssignQS1(code)
-	{
+	{																		; 2026-01-17 - UPDATED to fix DQ and IF block bug
 		; verify code matches pattern
 		nML := CSect.nExpAssignQS1 . buildPtn_MLBlock().FullT
 		if (!RegExMatch(code, nML, &mML)) {
@@ -147,11 +147,13 @@ class CSect
 		head		:= varCmd . equals . tag1								; newly formatted cmd line
 		neck		:= mML.neck												; portion between head and opening body '('
 		body		:= mML.parBlk											; parentheses block '(...)' - before conversion
-		if (dq)																; if cmd line had "...
+
+		if (dq)	{															; if cmd line had "...
 			body	:= conv_ContParBlk(body)								; ... convert the block code
-		else
+		} else {
 			Mask_R(&body, 'C&S')											; restore comments/strings
-			body	:= RegExReplace(body, '""', '``"')						; change "" to `", nothing else
+			body	:= RegExReplace(body, '(?<!``)""', '``"')				; change "" to `", nothing else
+		}
 		trail		:= RegExReplace(mML.trail, '^"')						; remove any [optional] trailing DQ following ')"'
 		outStr		:= head . neck . body . trail							; assemble output string
 		Mask_R(&outStr, 'C&S')												; restore comments/strings

@@ -278,8 +278,8 @@ FinalizeConvert(&code)
    updateFileOpenProps(&code)           ; 2025-10-12, AMB - support for #358
 
    Mask_R(&code, 'CSect')                ; restore remaining cont sects (returned as v2 converted)
-   Mask_R(&code, 'V1MLS')                ; restore remaining V1 ML string
    Mask_R(&code, 'MLPB')                 ; restore remaining ML parenth blocks
+   Mask_R(&code, 'V1MLS')                ; restore remaining V1 ML strings
    Mask_R(&code, 'C&S')                  ; ensure all comments/strings are restored (just in case)
 
    return   ; code by reference

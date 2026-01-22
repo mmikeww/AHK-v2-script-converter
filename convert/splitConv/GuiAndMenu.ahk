@@ -110,7 +110,7 @@ GuiConv(p) {
 		if (RegExMatch(OptList, "i)^.*?(?<=^|\h)g([^,\h``]+).*$") && !RegExMatch(guiCmd, "i)show|margin|font|new")) {
 			; Record and remove gLabel
 			ControlLabel	:= RegExReplace(OptList, "i)^.*?(?<=^|\h)g([^,\h``]+).*$", "$1")					; get glabel name
-			OptList			:= RegExReplace(OptList, "i)^(.*?)(?<=^|\h)g([^,\h``]+)(.*)$", "$1$3")				; remove glabel
+			OptList			:= RegExReplace(OptList, "i)^(.*?)(?<=^|\h)g([^,\h``]+)\h*(.*)$", "$1$3")			; remove glabel - 2026-01-21 UPDATED to remove extra WS
 
 		} else if (OptCtrl = "Button") {
 			ControlLabel := smGuiList[curGuiName].orgName OptCtrl RegExReplace(TxtList, "[\s&]", "")			; 2025-10-13 - this fixes #202 (tracking of orig gui name)
@@ -272,7 +272,8 @@ GuiConv(p) {
 				LineResult .= ToExp(OptCtrl,,1)
 			}
 			if (OptList != "") {
-				LineResult .= ", " ToExp(OptList,,1)
+				str := ToExp(OptList,,1), str := ((str='""') ? '' : str)	; 2026-01-21 - remove empty quotes
+				LineResult .= ", " str
 			} else if (TxtList != "") {
 				LineResult .= ", "
 			}
@@ -296,7 +297,7 @@ GuiConv(p) {
 					gOScriptStr.SetIndex(gO_Index)
 					if (RegExMatch(TxtList, "%(.*)%", &match)) {
 						LineResult .= ', StrSplit(' match[1] ', "|")'
-						LineSuffix .= " `; V1toV2: Check that this " OptCtrl " has the correct choose value"
+						LineSuffix .= " `; V1toV2: Ensure " OptCtrl " has correct choose value"		; 2026-01-21 AMB, UPDATED
 					} else {
 						ObjectValue := "["
 						ChooseString := ""

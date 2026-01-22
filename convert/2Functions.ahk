@@ -416,6 +416,7 @@ V1ParSplitFunctions(String, FunctionTarget := 1) {
 ; 2025-06-12 AMB, UPDATED - changed func name and some var and funcCall names
 ; 2025-10-05 AMB, MOVED from ConvertFuncs.ahk
 ; 2025-11-01 AMB, UPDATED as part of Scope support
+; 2026-01-21 AMB, UPDATED Catch
 ;   TODO - REMOVE ScriptString param
 V1toV2_Functions(ScriptString, Line, &retV2, &gotFunc) {
     global gFuncParams, gfrePostFuncMatch, gFileOpenVars
@@ -499,16 +500,17 @@ V1toV2_Functions(ScriptString, Line, &retV2, &gotFunc) {
                         oListParam.InSertAt(A_Index, oListParam[A_Index - 1])
                     }
                     ; Uses a function to format the parameters
-                    try
-                    {
+                    try {
                         a := oListParam[A_Index]
                     }
-                    catch
-                    {
-                        A_Clipboard := line
-                        MsgBox "[" "error" "]"
-                    }
-
+                    catch as e { ; 2026-01-21 UPDATED for better handling
+                        msg := "CONVERSION ERROR IN`n" A_ThisFunc "()"
+                            . "`n`nFilePath:`n" gFilePath
+                            . "`n`nScript Line:`n" line
+                            . "`n`n" e.Message "`n`n" e.Extra
+                        A_Clipboard := msg
+                        MsgBox msg
+                   }
                     b := oPar[A_Index]
                     oPar[A_Index] := FormatParam(a,b)
                 }

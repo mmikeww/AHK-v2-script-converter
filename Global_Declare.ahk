@@ -12,6 +12,7 @@ global	  gmAhkKeywdsToRename,	gmAhkLoopRegKeywds
 ;################################################################################
 #Include lib/ClassOrderedMap.ahk
 #Include lib/dbg.ahk
+#Include Interface.ahk											; 2026-01-21
 #Include Convert/MaskCode.ahk									; 2024-06-26 - support for masking
 #Include Convert/Scope.ahk										; 2025-11-01 - support for scope
 #Include Convert/AhkLangConv.ahk								; 2025-12-24 - to organize v1 to v2 cmd/func convert funcs

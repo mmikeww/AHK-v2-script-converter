@@ -5,7 +5,7 @@
 Mute:=1	; mistaken for Mute: after conv to Mute:=1
 
 myGui := Gui()
-ogcCheckboxMute := myGui.Add("Checkbox", "0x8000 vMute  checked" . mute . " xp+140 yp w50", "&Mute")
+ogcCheckboxMute := myGui.Add("Checkbox", "0x8000 vMute checked" . mute . " xp+140 yp w50", "&Mute")
 ogcCheckboxMute.OnEvent("Click", Mute.Bind("Normal"))
 
 If (Mute = 0)	; no confusion here

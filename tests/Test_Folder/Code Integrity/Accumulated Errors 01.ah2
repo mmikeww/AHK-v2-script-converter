@@ -439,7 +439,7 @@ retStr := RegExReplace(retStr, "(?m)^((?:(?>`"[^`"\v]*`"|[^`"\v;]*)*)*)(;.*)+", 
    ogcTextNOVR := myGui.Add("Text", "hp y+0 vNOVR", "00")
    ogcButtonNewCheck := myGui.Add("Button", "ys", "New Check")
    ogcButtonNewCheck.OnEvent("Click", Check.Bind("Normal"))
-   ogcListviewVLV := myGui.Add("Listview", "xm w500 r10  cWhite  vVLV", ["Col 1", "Col 2", "Col 3", "Icon"])
+   ogcListviewVLV := myGui.Add("Listview", "xm w500 r10 cWhite  vVLV", ["Col 1", "Col 2", "Col 3", "Icon"])
    ogcListviewVLV.OnEvent("DoubleClick", rid.Bind("DoubleClick")), HLV := ogcListviewVLV.hwnd ; add -LV0x20 on Win XP
 
 

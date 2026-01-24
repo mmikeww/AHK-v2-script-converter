@@ -1,2 +1,2 @@
-myGui := Gui()
-ogcTextVar := myGui.Add("Text", "", "Text"), Var := ogcTextVar.hwnd
+﻿myGui := Gui()
+ogcTextVar := myGui.Add("Text", , "Text"), Var := ogcTextVar.hwnd

@@ -110,7 +110,7 @@ GuiConv(p) {
 		if (RegExMatch(OptList, "i)^.*?(?<=^|\h)g([^,\h``]+).*$") && !RegExMatch(guiCmd, "i)show|margin|font|new")) {
 			; Record and remove gLabel
 			ControlLabel	:= RegExReplace(OptList, "i)^.*?(?<=^|\h)g([^,\h``]+).*$", "$1")					; get glabel name
-			OptList			:= RegExReplace(OptList, "i)^(.*?)(?<=^|\h)g([^,\h``]+)(.*)$", "$1$3")				; remove glabel
+			OptList			:= RegExReplace(OptList, "i)^(.*?)(?<=^|\h)g([^,\h``]+)\h*(.*)$", "$1$3")			; remove glabel - 2026-01-24 UPDATED to remove extra WS
 
 		} else if (OptCtrl = "Button") {
 			ControlLabel := smGuiList[curGuiName].orgName OptCtrl RegExReplace(TxtList, "[\s&]", "")			; 2025-10-13 - this fixes #202 (tracking of orig gui name)
@@ -272,7 +272,8 @@ GuiConv(p) {
 				LineResult .= ToExp(OptCtrl,,1)
 			}
 			if (OptList != "") {
-				LineResult .= ", " ToExp(OptList,,1)
+				str := ToExp(OptList,,1), str := ((str='""') ? '' : str)	; 2026-01-24 - remove empty quotes
+				LineResult .= ", " str
 			} else if (TxtList != "") {
 				LineResult .= ", "
 			}
@@ -283,50 +284,7 @@ GuiConv(p) {
 							|| OptCtrl = "DDL"
 							|| OptCtrl = "ListBox"
 							|| OptCtrl = "ComboBox") {
-					searchIdx := 1
-					while (gOScriptStr.Has(gO_Index + searchIdx)
-					&& SubStr(gOScriptStr.GetLine(gO_Index + searchIdx), 1, 1) ~= "^(\||)$") {
-						;TxtList .= contStr := gOScriptStr[gO_Index + searchIdx]
-						TxtList .= contStr := gOScriptStr.GetLine(gO_Index + searchIdx)
-						nlCount := (SubStr(contStr, 1, 1) = "|" ? 0 : (IsSet(nlCount) ? nlCount : 0) + 1)
-						searchIdx++
-					}
-					if (searchIdx != 1)
-						gO_Index += (searchIdx - 1 - nlCount)
-					gOScriptStr.SetIndex(gO_Index)
-					if (RegExMatch(TxtList, "%(.*)%", &match)) {
-						LineResult .= ', StrSplit(' match[1] ', "|")'
-						LineSuffix .= " `; V1toV2: Check that this " OptCtrl " has the correct choose value"
-					} else {
-						ObjectValue := "["
-						ChooseString := ""
-						if (!InStr(OptList, "Choose") && InStr(TxtList, "||")) {		; ChooseN takes priority over ||
-							dPipes		:= StrSplit(TxtList, "||")
-							selIndex 	:= 0
-							for idx, str in dPipes {
-								if (idx=dPipes.length)
-									break
-								RegExReplace(str, "\|",,&curCount)
-								selIndex += curCount+1
-							}
-							LineResult := RegexReplace(LineResult, "`"$", " Choose" selIndex "`"")
-							if (OptList = "")
-								LineResult .= "`"Choose" selIndex "`""
-							TxtList := RTrim(StrReplace(TxtList, "||", "|"), "|")
-						} else if (InStr(OptList, "Choose")) {
-							TxtList := RegexReplace(TxtList, "\|+", "|")				; Replace all pipe groups, this breaks empty choices
-						}
-						Loop Parse TxtList, "|", " "
-						{
-							if (RegExMatch(OptCtrl, "i)^tab[23]?$") && A_LoopField = "") {
-							ChooseString := "`" Choose" A_Index - 1 "`""
-							continue
-							}
-							ObjectValue .= ObjectValue = "[" ? ToExp(A_LoopField,1,1) : ", " ToExp(A_LoopField,1,1)
-						}
-						ObjectValue .= "]"
-						LineResult .= ChooseString ", " ObjectValue
-					}
+					_getListP4(OptCtrl, OptList, &TxtList, &LineResult, &LineSuffix)
 				} else {
 					LineResult .= ", " ToExp(TxtList,1,1)
 				}
@@ -383,6 +341,51 @@ GuiConv(p) {
 	Out := format("{1}", LineResult LineSuffix)
 	Out := Zip(Out, 'GUIML')   ; 2025-11-30 AMB - compress multi-line additions into single-line tag, as needed
 	return Out
+}
+;################################################################################
+_getListP4(OptCtrl, OptList, &TxtList, &LineResult, &LineSuffix)
+{
+	global gO_Index
+	ObjectValue := ''
+	searchIdx := 1
+	while (gOScriptStr.Has(gO_Index + searchIdx)
+	&& SubStr(gOScriptStr.GetLine(gO_Index + searchIdx), 1, 1) ~= "^(\||)$") {
+		TxtList .= contStr := gOScriptStr.GetLine(gO_Index + searchIdx)
+		nlCount := (SubStr(contStr, 1, 1) = "|" ? 0 : (IsSet(nlCount) ? nlCount : 0) + 1)
+		searchIdx++
+	}
+	if (searchIdx != 1)
+		gO_Index += (searchIdx - 1 - nlCount)
+	gOScriptStr.SetIndex(gO_Index)
+	if (RegExMatch(TxtList, "%(.*)%", &match)) {
+		LineResult .= ', StrSplit(' match[1] ', "|")'
+		LineSuffix .= ' `; V1toV2: Ensure ' OptCtrl ' has correct choose value'		; 2026-01-24 AMB, UPDATED
+	} else {
+		ObjectValue := "["
+		ChooseString := ""
+		if (!InStr(OptList, "Choose") && InStr(TxtList, "||")) {		; ChooseN takes priority over ||
+			dPipes		:= StrSplit(TxtList, "||")
+			selIndex 	:= 0
+			for idx, str in dPipes {
+				if (idx=dPipes.length)
+					break
+				RegExReplace(str, "\|",,&curCount)
+				selIndex += curCount+1
+			}
+			LineResult := RegexReplace(LineResult, "`"$", " Choose" selIndex "`"")
+			if (OptList = "")
+				LineResult .= "`"Choose" selIndex "`""
+			TxtList := RTrim(StrReplace(TxtList, "||", "|"), "|")
+		} else if (InStr(OptList, "Choose")) {
+			TxtList := RegexReplace(TxtList, "\|+", "|")				; Replace all pipe groups, this breaks empty choices
+		}
+		Loop Parse TxtList, "|", " "
+		{
+			ObjectValue .= ObjectValue = "[" ? ToExp(A_LoopField,1,1) : ", " ToExp(A_LoopField,1,1)
+		}
+		ObjectValue .= "]"
+		LineResult .= ", " ObjectValue
+	}
 }
 ;################################################################################
 GuiControlConv(p) {

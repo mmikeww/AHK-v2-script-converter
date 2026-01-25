@@ -125,10 +125,13 @@ class clsProgGui {																					; Gui object handling
 		dirTxt		:= Prog.wrapPath(dirTxt)														; format wrapped path (for testing)
 
 		; gui/ctrl dimensions
-		this.oGui	:= Gui('ToolWindow')															; gui
 		hGui		:= this.hGui, hTxt := 28														; heights
 		wGui		:= this.wGui, wTxt := this.wText, wLbl := 60, wEdit := 120						; widths
 		tClr		:= ' cGray'																		; dim text color
+
+		; create gui
+		this.oGui	:= Gui()																		; gui
+		this._disableClose()																		; disable close, but allow minimize
 
 		; set controls
 		this.lblFileName:= this.oGui.AddText(bd tClr ' x20 y+15 w' wlbl, 'FileName:'			)	; label	- current file
@@ -173,6 +176,12 @@ class clsProgGui {																					; Gui object handling
 		this.lblLineNum.Visible	:= vis, this.txtLineNum.Visible	:= vis								; show/hide current v1 script line number
 		this.lblLine.Visible	:= vis, this.txtLineVal.Visible	:= vis								; show/hide current v1 script line details
 		this.oGui.Show('h' ((this.debugMode) ? 200 : this.hGui))									; update gui height based on debug mode
+	}
+	;############################################################################
+	_disableClose() {
+		hMenu := DllCall("GetSystemMenu", "Ptr", this.oGui.Hwnd, "Int", False, "Ptr")				; get handle fo sysmenu
+		DllCall("DeleteMenu", "Ptr", hMenu, "UInt", 0xF060, "UInt", 0x8)							; delete sysMenu - 0x8 is MF_BYPOSITION (or MF_BYCOMMAND 0xF060)
+		this.oGui.OnEvent("Close", (*) => 1)														; prevent close
 	}
 	;############################################################################
 	Hide() {

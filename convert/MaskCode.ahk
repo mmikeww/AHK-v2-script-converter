@@ -25,7 +25,7 @@
 	2025-10-05,10,27		- UPDATED, Multiple enhancements/improvements - see comments in code
 	2025-11-01,23,28,29,30	- UPDATED, Multiple enhancements/improvements - see comments in code
 	2025-12-13,24			- UPDATED, see comments in code
-	2026-01-01,13,17		- UPDATED, see comments in code
+	2026-01-01,13,17,24		- UPDATED, see comments in code
 
 	TODO
 		Finish support for Continuation sections
@@ -1336,8 +1336,11 @@ class clsNodeMap	; 'block map' might be better term
 	}
 	;############################################################################
 	; PUBLIC - mask and convert classes and functions
+	; 2026-01-24 AMB, UPDATED to support conv progress status
 	static MaskAndConvertNodes(&code, convert:=true)
 	{
+		;(IsSet(Prog) && Prog.ULog(,,A_ThisFunc))								; update UI - debug
+
 		; prep for tagging - get list of node positions
 		nodeDepthStr := ''
 		for key, node in this.mapList
@@ -1889,26 +1892,40 @@ class clsNodeMap	; 'block map' might be better term
 ; 2025-06-22 AMB, UPDATED
 ; 2025-11-23 AMB, UPDATED - added named capture group to hotkeys needle
 ; 2026-01-13 AMB, UPDATED - fixed backspace key name
+; 2026-01-24 AMB, UPDATED - added many missing keys, BUT SOME DRAG PERFORMANCE
 
-	opt 	:= '(?i)'														; pattern options
-	k01		:= '(?:[$~*]*)'													; special commands
-	k02		:= '(?:[<>]?[!^+#]*+)*'	; do not use possessive here			; modifiers - short
-	k03		:= '(?:[a-z0-9](?!\w))'	; single char only						; alpha-numeric
-	k04		:= "[.?)(\][}{$|+*^:\\'``-]"									; symbols 1 (regex special)
-	k05		:= '(?:``;|[<>,"~!@#%&=_])'										; symbols 2
-	k06		:= '(?:[lrm]?(?:alt|c(?:on)?tro?l|shift|win|button)(?:\h+up)?)'	; modifiers - long
-	k07		:= 'numpad(?:\d|end|add|sub)'									; numpad special
-	k08		:= 'wheel(?:up|down)'											; mouse
-	k09		:= '(?:f|joy)\d++'												; func keys or joystick button
-	k10		:= '(?:(?:appskey|bs|(?:back)?space|del|delete|'				; named keys
-			   . 'end|enter|esc(?:ape)?|home|pgdn|pgup|pause|tab|'
-			   . 'up|dn|down|left|right|(?:caps|scroll)lock)(?:\h+up)?)'
-	k11		:= '(?:sc[a-f0-9]{3})'											; 2025-06-22 ADDED - scancodes
-	repeat	:= '(?:\h++(?:&\h++)?(?-1))*'									; allow repeated keys
-	hotKeys := '(?<HK>' k01 '(' k02 '(?:' k03 '|' k04 '|' k05 '|' k06
-			. '|' k07 '|' k08 '|' k09 '|' k10 '|' k11 '))' . repeat . ')::'
-	HKLWS	:= opt . '^(\s*+' . hotKeys . ')'								; supports leading blank lines
-	NOLWS	:= opt . '^(\h*+' . hotKeys . ')'								; DOES NOT support leading blank lines
+	opt 	:= '(?i)'																	; pattern options
+	k01		:= '(?:[$~*]*)'																; special commands
+	k02		:= '(?:[<>]?[!^+#~]*+)*'		; do not use possessive here				; modifiers - short
+	k03		:= '(?:[a-z0-9](?!\w))'			; single char only							; alpha-numeric
+	k04		:= "[.?)(\][}{$|+*^:\\'``-]"												; symbols 1 (regex special)
+	k05		:= '(?:``;|[<>,"~!@#%&=_])'													; symbols 2
+	k06		:= '(?:[lrmx]?(?:alt|c(?:on)?tro?l|shift|win|button[12]?)(?:\h+up)?)'		; modifiers - long
+	k07		:= 'numpad(?:\d|add|clear|del|div|dot|end|enter|home|ins|mult|sub|'			; numpad special 1
+			   . 'down|left|right|up|pgdn|pgup)'										; numpad special 2
+	k08		:= 'wheel(?:up|down|left|right)'											; mouse
+	k09		:= '(?:f|joy|vk)\d++'														; func keys, joystick button, VKnn
+	k10		:= '(?:(?:appskey|bs|(?:back)?space|del|delete|end|enter|esc(?:ape)?|'		; named keys 1
+			   . 'home|ins(?:ert)?|pgdn|pgup|tab|'										; named keys 2
+			   . 'up|dn|down|left|right|(?:caps|num|scroll)lock)(?:\h+up)?)'			; named keys 3
+	k11		:= '(?:sc[a-f0-9]{3})'														; 2025-06-22 ADDED - scancodes
+
+	; 2026-01-24 - THESE UNCOMMON KEYS SLOW THE CONVERSION TO A CRAWL !!
+	; WILL GIVE USER THE OPTION TO INCLUDE THEM (FROM UI)
+	;k12		:= '(?:ctrlbreak|help|pause|printscreen|sleep)							; 2026-01-24 ADDED - rare    keys
+	;k13		:= '(?:browser_(?:back|favorites|forward|home|refresh|search|stop))'	; 2026-01-24 ADDED - browser keys
+	;k14		:= '(?:volume_(?:down|mute|up))'										; 2026-01-24 ADDED - volume  keys
+	;k15		:= '(?:media_(?:next|play|prev|stop))'									; 2026-01-24 ADDED - media   keys
+	;k16		:= '(?:launch_(?:app[12]|mail|media))'									; 2026-01-24 ADDED - launch  keys
+
+	repeat	:= '(?:\h++(?:&\h++)?(?-1))*'												; allow repeated keys
+	hotKeys	:= '(?<HK>' k01 '(' k02 '(?:' k03 '|' k04 '|' k05 '|' k06					; assemble needle...
+			. '|' k07 '|' k08 '|' k09 '|' k10 '|' k11 '))'								; ... continued ...
+			;. '|' k12 '|' k13 '|' k14 '|' k15 '|' k16 '))'								; ... continued ... 2026-01-24 - WAY TOO SLOW !!
+			. repeat ')::'																; ... continued (finalized)
+
+	HKLWS	:= opt . '^(\s*+' . hotKeys . ')'											; supports leading blank lines
+	NOLWS	:= opt . '^(\h*+' . hotKeys . ')'											; DOES NOT support leading blank lines
 	return	{noLWS:NOLWS,LWS:HKLWS}
 }
 ;################################################################################

@@ -20,9 +20,10 @@
   ; Feel free to add to this program.  Post changes here: http://www.autohotkey.com/forum/viewtopic.php?t=70266
 }
 { ;DIRECTIVES AND SETTINGS
-   #Requires AutoHotkey >=2.0-<2.1  ; Requires AHK v2 to run this script
-   #SingleInstance Force			   ; Recommended so only one copy is running at a time
-   SetWorkingDir A_ScriptDir  	   ; Ensures a consistent starting directory.
+   #Requires AutoHotkey >=2.0-<2.1      ; Requires AHK v2 to run this script
+   #SingleInstance Force                ; Recommended so only one copy is running at a time
+   FileEncoding "UTF-8"                 ; 2026-01-24 AMB, ADDED
+   SetWorkingDir A_ScriptDir            ; Ensures a consistent starting directory.
 }
 { ;CLASSES:
 }
@@ -30,6 +31,7 @@
    global dbg:=0
    global StartPath := A_ScriptDir ; FileSelect starting directory, useful if mass converting
    global RecurseExts := ["ahk", "ah1", "ahkl"] ; List of file extensions to convert when using -r
+   global gFilePath                ; 2026-01-24 AMB, ADDED for new progress-gui
 }
 { ;INCLUDES:
    #Include ConvertFuncs.ahk
@@ -139,6 +141,7 @@
       ; 2024-07-01, ADDED, AMB - ensure source file has CRLF (no LF terminators)
       ;    this is to avoid read issue by VisualDiff
       ; create new v1 source file that guarantees CRLF terminators
+      gFilePath    := FN                                               ; 2026-01-24 AMB, ADDED for new progress-gui
       SplitPath(FNOut,, &dir)                                          ; get output directory
       SplitPath(FN,,, &ext, &FnNoExt)                                  ; get original source fileName and extension
       unique       := FormatTime(, 'MMddHHmmss')                       ; Remove A_Now - for fix #250
@@ -153,6 +156,7 @@
       outfile      := FileOpen(FNOut, "w", "utf-8")
       outfile.Write(outscript)
       outfile.Close()
+      try Prog.Hide()                                                  ; 2026-01-24 AMB, ADDED for new progress-gui
 
       MyMsg        := "Conversion complete.`n`n"
       MyMsg        .= "New file saved as:`n" . FNOut . "`n`n"
@@ -179,6 +183,7 @@
             outfile      := FileOpen(FNOut, "w", "utf-8")
             outfile.Write(outscript)
             outfile.Close()
+            try Prog.Hide()                                            ; 2026-01-24 AMB, ADDED for new progress-gui
             idx++
          }
       }

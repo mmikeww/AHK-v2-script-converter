@@ -35,6 +35,7 @@
     #Requires AutoHotKey v2.0
     #SingleInstance Force
     FileEncoding "UTF-8"
+    global gQCV2_Test := 0  ; 2026-01-24 AMB, 0 - DO NOT ALLOW update to new progress-gui
 }
 { ;INCLUDES:
     #Include ConvertFuncs.ahk
@@ -142,6 +143,7 @@
 ;*****************
 AddSubFoldersToTree(Folder, DirList, ParentItemID := 0,*)
 {
+    global gFilePath            ; 2026-01-24 AMB, ADDED for new progress-gui
     if (ParentItemID="0") {
         global Number_Tests := 0
         global Number_Tests_Pass := 0
@@ -153,20 +155,21 @@ AddSubFoldersToTree(Folder, DirList, ParentItemID := 0,*)
     ; It also calls itself recursively to gather nested folders to any depth.
     Loop Files, Folder "\*.*", "DF"  ; Retrieve all of Folder's sub-folders.
     {
-        LoadingFileName.Text := A_LoopFileName
+        ;LoadingFileName.Text := A_LoopFileName            ; 2026-01-24 REMOVED - for new progress-gui
         If InStr( FileExist(A_LoopFileFullPath ), "D" ) {
             If (!TestFailing and A_LoopFileName = "Failed conversions")
                 continue ; Skip failed conversions when test mode if off
             ItemID := TV.Add(A_LoopFileName, ParentItemID, icons.Folder)
         }
         else If InStr(A_LoopFileFullPath,".ah1") {
+            gFilePath := A_LoopFileFullPath            ; 2026-01-24 AMB, ADDED for new progress-gui
             FileFullPathAh2 := StrReplace(A_LoopFileFullPath, ".ah1", ".ah2")
             if FileExist(FileFullPathAh2) {
                 TextSrc := StrReplace(StrReplace(FileRead(A_LoopFileFullPath), "`r`n", "`n"), "`n", "`r`n")
                 TextCnv := StrReplace(StrReplace(Convert(TextSrc), "`r`n", "`n"), "`n", "`r`n")
                 TextExp := StrReplace(StrReplace(FileRead(StrReplace(A_LoopFileFullPath, ".ah1", ".ah2")), "`r`n", "`n"), "`n", "`r`n")
                 Number_Tests++
-                if (TextExp=TextCnv){
+                if (TextExp==TextCnv){  ; 2026-01-24 AMB, UPDATED - now case-sensitive
                     ItemID := TV.Add(A_LoopFileName, ParentItemID, icons.pass)
                     Number_Tests_Pass++
                 }
@@ -454,6 +457,7 @@ Edit_Change(*)
 }
 EvalSelectedTest(thisCtrl, *)
 {
+    global gFilePath            ; 2026-01-24 AMB, ADDED for new progress-gui
     global Number_Tests, Number_Tests_Pass, gTreeRoot
 
     selItemID := TV.GetSelection()
@@ -477,6 +481,7 @@ EvalSelectedTest(thisCtrl, *)
     FN_ah1      := TV.GetText(selItemID)
     FN_ah2      := StrReplace(FN_ah1, ".ah1", ".ah2")
     file_ah1    := fullParentPath "/" FN_ah1
+    gFilePath   := file_ah1            ; 2026-01-24 AMB, ADDED for new progress-gui
     file_ah2    := fullParentPath "/" FN_ah2
 
     parentAttr  := FileExist(fullParentPath)
@@ -681,20 +686,23 @@ GuiTest(strV1Script:="")
     SB := MyGui.Add("StatusBar")
     SB.SetParts(300, 300, 300)  ; Create four parts in the bar (the fourth part fills all the remaining width).
 
+    ; 2026-01-24 AMB, REMOVED - for new progress-gui
     ; Add folders and their subfolders to the tree. Display the status in case loading takes a long time:
-;    LT := Gui("ToolWindow -SysMenu Disabled AlwaysOnTop", "Loading the tree..."), LT.Show("w200 h0")
-    LT := Gui("ToolWindow -SysMenu Disabled", "Loading the tree...")
-    LoadingFileName := LT.AddText("w200")
-    LT.Show("w200")
+    ;LT := Gui("ToolWindow -SysMenu Disabled AlwaysOnTop", "Loading the tree..."), LT.Show("w200 h0")
+    ;LT := Gui("ToolWindow -SysMenu Disabled", "Loading the tree...")
+    ;LoadingFileName := LT.AddText("w200")
+    ;LT.Show("w200")
 
     if TestMode{
+        global gQCV2_Test := 1  ; 2026-01-24 AMB, 1 - ALLOW update to new progress-gui
         DirList := AddSubFoldersToTree(gTreeRoot, Map())
+        global gQCV2_Test := 0  ; 2026-01-24 AMB, 0 - DO NOT ALLOW update to new progress-gui
     }
     else{
         DirList := Map()
     }
 
-    LT.Hide()
+    ;LT.Hide()  ; 2026-01-24 AMB, REMOVED - for new progress-gui
 
     ; Call TV_ItemSelect whenever a new item is selected:
     TV.OnEvent("ItemSelect", TV_ItemSelect)
@@ -877,6 +885,7 @@ GuiTest(strV1Script:="")
 
     OnMessage(0x0200, On_WM_MOUSEMOVE)
     OnMessage(0x03, On_WM_MOVE)
+    try Prog.Hide()            ; 2026-01-24 AMB, ADDED for new progress-gui
     Return
 }
 

@@ -3,7 +3,7 @@ myGui := Gui()
 myGui.OnEvent("Close", GuiClose)
 ogcTextC := myGui.Add("Text", "vTextC", "First name:")
 ogcEditFirstName := myGui.Add("Edit", "vFirstName"), test := ogcEditFirstName.hwnd  ; The ym option starts a new column of controls.
-ogcMyButton := myGui.Add("Button", "xp+140 vMyButton  default", "Empty Test")
+ogcMyButton := myGui.Add("Button", "xp+140 vMyButton default", "Empty Test")
 ogcMyButton.OnEvent("Click", EmptyTest.Bind("Normal"))
 ogcPictureMyPic := myGui.Add("Picture", "x10 vMyPic w20 h-1", "C:\Users\Dimitri\Pictures\Save24.png")
 

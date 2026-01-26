@@ -17,23 +17,27 @@ Convert(code)                    ; MAIN ENTRY POINT for conversion process
 ;################################################################################
 {
 ; 2025-11-01 AMB, UPDATED as part of Scope support
+; 2026-01-24 AMB, UPDATED to support progress-gui
 
    ;####  PLEASE DO NOT PLACE ANY OF YOUR CODE IN THIS FUNCTION  #####
 
    ; Please place any code that must be performed BEFORE _convertLines()...
    ;  ... into the following function
    Before_LineConverts(&code)
+   Prog.ULog(10)                ; update UI - 10% complete
 
    ; DO NOT PLACE YOUR CODE HERE
    ; perform line conversions
    ; [to test WITHOUT using Macro Scope, change fUseScope flag to 0 (below)]
    code := (fUseScope:=1) ? convertLines_UseScope(code) : convertLines_NoScope(code)
+   Prog.ULog(60)                ; update UI - 60% complete
 
    ; Please place any code that must be performed AFTER _convertLines()...
    ;  ... into the following function
    After_LineConverts(&code)
+   Prog.ULog(100)               ; update UI - 100% complete
 
-   return code      ; . 'fail for debugging'
+   return code                  ; . 'fail for debugging'
 }
 ;################################################################################
 convertLines_NoScope(code)
@@ -46,63 +50,78 @@ convertLines_NoScope(code)
 convertLines_UseScope(code)
 {
 ; 2025-11-01 AMB, ADDED to support Scope
+; 2026-01-24 AMB, UPDATED to support progress-gui
 ;   supports processing global-code first (by default)
 ;    change fGblOrder flag to 0 to test orig-order processing
 
-   sects := GetScopeSections(code)                                  ; get Macro-Scope sections
-   if (fGblOrder    :=1) {                                          ; if global code should be processed first...
-      origOrder     := Map_I()                                      ; [will keep track of orig section order]
-      gblOrder      := StrSplit(clsScopeSect.OrderGbl, ',')         ; get global-first index ordering
-      for idx, index in gblOrder {                                  ; for each order index...
-         curSect        := sects[index].sectCode                    ; ... grab section code for that index
-         curType        := sects[index].sectType                    ; ... grab section type for that index
-         Mask_T(&curSect,'CSECT2'), Mask_T(&curSect,'FUNC&CLS')     ; ... mask M2 continuation sections, funcs/classes
-         convSect       := _convertLines(curSect)                   ; ... convert lines within section
-         mKey           := format('{:04}', index)                   ; [ensures orig section order is maintained when reassembled]
-         origOrder[mKey]:= convSect                                 ; place converted section into map
+   curProg          := Prog.curProg                                                     ; get current progress percentage
+   Prog.ULog(,'Getting Script Sections...')                                             ; update UI
+   sects            := GetScopeSections(code)                                           ; get Macro-Scope sections
+   Prog.ULog(,'Processing Script Sections...')                                          ; update UI
+   if (fGblOrder    :=1) {                                                              ; if global code should be processed first...
+      origOrder     := Map_I()                                                          ; [will keep track of orig section order]
+      gblOrder      := StrSplit(clsScopeSect.OrderGbl, ',')                             ; get global-first index ordering
+      sectCount     := gblOrder.Length, progInc := (50/sectCount)                       ; calc average progress percent for each section
+      for idx, index in gblOrder {                                                      ; for each order index...
+         Prog.ULog(,'Processing Section ' idx ' of ' sectCount)                         ; ... update UI
+         curSect        := sects[index].sectCode                                        ; ... grab section code for that index
+         curType        := sects[index].sectType                                        ; ... grab section type for that index
+         Mask_T(&curSect,'CSECT2'), Mask_T(&curSect,'FUNC&CLS')                         ; ... mask M2 continuation sections, funcs/classes
+         convSect       := _convertLines(curSect)                                       ; ... convert lines within section
+         mKey           := format('{:04}', index)                                       ; [ensures orig section order is maintained when reassembled]
+         origOrder[mKey]:= convSect                                                     ; place converted section into map
+         curProg        += progInc, Prog.ULog(curProg)                                  ; update UI with progress percent
       }
-      outStr := ''                                                  ; [will become reassembled/output script string]
-      for idx, convSect in origOrder {                              ; for each converted section...
-         outStr .= convSect                                         ; ... add it to output, reassemble script string
+      outStr := ''                                                                      ; [will become reassembled/output script string]
+      for idx, convSect in origOrder {                                                  ; for each converted section...
+         outStr .= convSect                                                             ; ... add it to output, reassemble script string
       }
    }
    else {   ; process sections in orig order (top to bottom)
-      outStr  := ''                                                 ; [will become reassembled/output script string]
-      for idx, curSect in sects {                                   ; for each section (original order)...
-         Mask_T(&curSect,'CSECT2'), Mask_T(&curSect,'FUNC&CLS')     ; ... mask M2 continuation sections, funcs/classes
-         convSect := _convertLines(curSect)                         ; ... convert lines within section
-         outStr  .= convSect                                        ; ... add converted sect to output, reassemble script string
+      outStr    := ''                                                                   ; [will become reassembled/output script string]
+      sectCount := sects.Length, progInc := (65/sectCount)                              ; calc average progress percent for each section
+      for idx, curSect in sects {                                                       ; for each section (original order)...
+         Prog.ULog(,'Processing Section ' idx ' of ' sectCount)                         ; ... update UI
+         Mask_T(&curSect,'CSECT2'), Mask_T(&curSect,'FUNC&CLS')                         ; ... mask M2 continuation sections, funcs/classes
+         convSect   := _convertLines(curSect)                                           ; ... convert lines within section
+         outStr     .= convSect                                                         ; ... add converted sect to output, reassemble script string
+         curProg    += progInc, Prog.ULog(curProg)                                      ; ... update UI with progress percent
       }
    }
-   return outStr                                                    ; return converted/output str
+   Prog.ULog(,'Processing Sections - COMPLETE')                                         ; update UI - sections complete
+   return outStr                                                                        ; return converted/output str
 }
 ;################################################################################
 Before_LineConverts(&code)
 {
 ; 2025-11-01 AMB, UPDATED as part of Scope support
+; 2026-01-24 AMB, UPDATED to support progress-gui
 
    ;####  Please place CALLS TO YOUR FUNCTIONS here - not boilerplate code  #####
 
-   ; initialize all global vars here so ALL code has access to them
-   setGlobals()
-
-   ; move any labels to their own line (if on same line as opening/closing brace)
-   ; this makes them easier to find and deal with
-   code := isolateLabels(code)                                      ; 2025-06-22 AMB, ADDED
-
-   ; these must also be declared global here because they are being updated here
-   global gAllFuncNames     := getFuncNames(code)                   ; comma-delim stringList of all function names
-   global gAllClassNames    := getClassNames(code)                  ; comma-delim stringList of all class names (2025-10-08)
-   global gAllV1LabelNames  := getV1LabelNames(code)                ; comma-delim stringList of all orig v1 label names
-   global gmAllV2LablNames  := getV2LabelNames(gAllV1LabelNames)    ; map of v1 label names converted to V2 label/funcNames
-   global gMenuBarName      := getMenuBarName(code)                 ; name of GUI main menubar
-   ;global gmAltLabel        := GetAltLabelsMap(code)               ; 2025-11-28 AMB - no longer needed, causes gLabel routing issues
-   PreProcessLines(&code)   ; changes orig code                     ; 2025-11-23 AMB, ADDED as part of fix for #413
-   global gOrigScript       := code                                 ; 2025-11-01 AMB, ADDED as part of Scope support
-
-   getScriptStringsUsed(code)                                       ; 2025-11-01 AMB, ADDED as part of Scope support
-
-   return   ; code by reference
+   Prog.UPath(gFilePath), Prog.ULog(,,A_ThisFunc ' [IN]')                               ; update UI - file path and debug
+   Prog.ULog(1, 'Pre Process - Set Globals...')                                         ; update UI - 1% complete
+      setGlobals()                                                                      ; initialize all global vars here so ALL code has access to them
+   Prog.ULog(,  'Pre Process - Isolated labels...')                                     ; update UI
+      code := isolateLabels(code)                                                       ; 2025-06-22 AMB, move labels to their own line as needed
+   Prog.ULog(,  'Pre Process - Get Func names...')                                      ; update UI
+      global gAllFuncNames     := getFuncNames(code)                                    ; comma-delim stringList of all function names
+   Prog.ULog(2, 'Pre Process - Get Class names...')                                     ; update UI - 2% complete
+      global gAllClassNames    := getClassNames(code)                                   ; comma-delim stringList of all class names (2025-10-08)
+   Prog.ULog(4, 'Pre Process - Get V1 Label names..')                                   ; update UI - 4% complete
+      global gAllV1LabelNames  := getV1LabelNames(code)                                 ; comma-delim stringList of all orig v1 label names
+   Prog.ULog(6, 'Pre Process - Get V2 Label names...')                                  ; update UI - 6% complete
+      global gmAllV2LablNames  := getV2LabelNames(gAllV1LabelNames)                     ; map of v1 label names converted to V2 label/funcNames
+   Prog.ULog(7, 'Pre Process - Get MenuBar name...')                                    ; update UI - 7% complete
+      global gMenuBarName      := getMenuBarName(code)                                  ; name of GUI main menubar
+      ;global gmAltLabel        := GetAltLabelsMap(code)                                ; 2025-11-28 AMB - no longer needed, causes gLabel routing issues
+   Prog.ULog(8, 'Pre Process - Goto/Gui/HK/Ternary...')                                 ; update UI - 8% complete
+      PreProcessLines(&code)   ; changes orig code                                      ; 2025-11-23 AMB, ADDED as part of fix for #413
+      global gOrigScript       := code                                                  ; 2025-11-01 AMB, ADDED as part of Scope support
+   Prog.ULog(9, 'Pre Process - Get V1 Flags...')                                        ; update UI - 9% complete
+      getScriptStringsUsed(code)                                                        ; 2025-11-01 AMB, ADDED as part of Scope support
+   Prog.ULog(,  '',A_ThisFunc ' [OUT]')                                                 ; update UI - debug
+   return                                                                               ; code by reference
 }
 ;################################################################################
 After_LineConverts(&code)
@@ -119,6 +138,7 @@ After_LineConverts(&code)
 }
 ;################################################################################
 PreProcessLines(&code)
+;################################################################################
 {
 ; 2025-11-23 AMB, ADDED - part of fix for #413
 ; pre-processing of certain commands via single-iteration of script lines
@@ -181,6 +201,9 @@ _convertLines(ScriptString)
 ;   changed many variable and function names
 ; 2025-11-01 AMB, UPDATED as part of Scope support
 ; 2026-01-01 AMB, UPDATED - changed global gEarlyLine to gV1Line
+; 2026-01-24 AMB, UPDATED to support progress-gui
+
+   ;Prog.ULog(,,A_ThisFunc)          ; update UI - debug
 
    Mask_T(&ScriptString, 'BC')      ; 2025-06-12 AMB, mask all block-comments globally
 
@@ -214,6 +237,7 @@ _convertLines(ScriptString)
 
 ;      curLine           := gOScriptStr[gO_Index]                    ; current line string to be converted
       curLine           := gOScriptStr.GetNext                      ; current line string to be converted
+      Prog.ULog(,,,gO_Index,Trim(curLine))                          ; update UI - debug
       gIndent           := RegExReplace(curLine,'^(\h*).*','$1')    ; original line indentation (if present)
       EOLComment        := lp_DirectivesAndComment(&curLine)        ; process character directives and extract initial trailing comment from line
       lineOpen          := lp_SplitLine(&curLine)                   ; see lp_splitLine() for details
@@ -252,37 +276,51 @@ _convertLines(ScriptString)
 FinalizeConvert(&code)
 {
 ; 2024-06-27 ADDED, 2025-06-12, 2025-10-05, 2026-01-01 UPDATED
+; 2026-01-24 AMB, UPDATED to support progress-gui
 ; Performs tasks that finalize overall conversion
 
-   Mask_R(&code, 'FUNC&CLS')            ; remove masking from classes/funcs (returned as v2 converted)
+   Prog.ULog(,  'Post Process - Restore Classes/Funcs...', A_ThisFunc       )           ; update UI - current operation, debug
+      Mask_R(&code, 'FUNC&CLS')                                                         ; remove masking from classes/funcs (returned as v2 converted)
+   Prog.ULog(65,'Post Process - Expand zipped lines...'                     )           ; update UI - current operation - 65% complete
+      code := UnZip(code)                                                               ; 2025-11-30 AMB, expand ML code added by converter, add braces to blocks as needed
+   Prog.ULog(,  'Post Process - VarRefs and OnClipboardChange...'           )           ; update UI - current operation
+      code := addToCode(code)                                                           ; 2026-01-01 AMB, add messages and directives to code
+   Prog.ULog(70,'Post Process - Labels/Hotkeys/Hotstrings...'               )           ; update UI - current operation - 70% complete
+      code := Update_LBL_HK_HS(code)                                                    ; 2025-10-05 AMB, UPDATED conversion for labels,HKs,HSs to v2 format
+   Prog.ULog(80,'Post Process - Premask Comments/Strings...'                )           ; update UI - current operation - 85% complete
+      Mask_T(&code, 'C&S')                                                              ; 2025-10-10 AMB, first attempt to improve efficiency of conversion (WORK IN PROGRESS)
+   Prog.ULog(,  'Post Process - Fix Min/MaxIndex...'                        )           ; update UI - current operation
+      code := FixMinMaxIndex(code)                                                      ; 2025-12-21 AMB, MOVED to dedicated func
+   Prog.ULog(,  'Post Process - Fix OnMessage...'                           )           ; update UI - current operation
+      code := FixOnMessage(code)                                                        ; Fix turning off OnMessage when defined after turn off
+   Prog.ULog(,  'Post Process - Fix VarSetCapacity...'                      )           ; update UI - current operation
+      code := FixVarSetCapacity(code)                                                   ; &buf -> buf.Ptr   &vssc -> StrPtr(vssc)
+   Prog.ULog(,  'Post Process - Fix ByRef Params...'                        )           ; update UI - current operation
+      code := FixByRefParams(code)                                                      ; Replace ByRef with & in func declarations and calls - see related fixFuncParams()
+   Prog.ULog(,  'Post Process - Fix Increment/Decrement...'                 )           ; update UI - current operation
+      code := FixIncDec(code)                                                           ; 2025-10-10 AMB, ADDED to cover issue #350
+   Prog.ULog(,  'Post Process - Remove ComObjMissing...'                    )           ; update UI - current operation
+      code := RemoveComObjMissing(code)                                                 ; Removes ComObjMissing() and variables
+   Prog.ULog(,  'Post Process - Add CB Args for Gui...'                     )           ; update UI - current operation
+      addGuiCBArgs(&code)                                                               ; Add args to Gui callback funcs
+   Prog.ULog(,  'Post Process - Add CB Args for Menu...'                    )           ; update UI - current operation
+      addMenuCBArgs(&code)                                                              ; 2024-06-26, AMB - Fix #131
+   Prog.ULog(,  'Post Process - Add CB Args for OnMessage...'               )           ; update UI - current operation
+      addOnMessageCBArgs(&code)                                                         ; 2024-06-28, AMB - Fix #136
+   Prog.ULog(,  'Post Process - Add CB Args for Hotkey Command...'          )           ; update UI - current operation
+      addHKCmdCBArgs(&code)                                                             ; 2025-10-12, AMB - Fix #328
+   Prog.ULog(,  'Post Process - Update FileOpen Properties...'              )           ; update UI - current operation
+      updateFileOpenProps(&code)                                                        ; 2025-10-12, AMB - support for #358
+   Prog.ULog(,  'Post Process - Restore Continuation Sections...'           )           ; update UI - current operation
+      Mask_R(&code, 'CSect')                                                            ; restore remaining cont sects (returned as v2 converted)
+   Prog.ULog(,  'Post Process - Restore Multi-line Parentheses Blocks...'   )           ; update UI - current operation
+      Mask_R(&code, 'MLPB')                                                             ; restore remaining ML parentheses blocks
+   Prog.ULog(,  'Post Process - Restore V1 Multi-line String Blocks...'     )           ; update UI - current operation
+      Mask_R(&code, 'V1MLS')                                                            ; restore remaining V1 ML strings
+   Prog.ULog(90,'Post Process - Restore Comments/Strings...'                )           ; update UI - current operation - 90% complete
+      Mask_R(&code, 'C&S')                                                              ; ensure all comments/strings are restored (just in case)
 
-   ; 2025-11-30 AMB, ADDED
-   ; Expand/Restore all remaining tagged multi-line code that was added by converter
-   ; This also adds braces to (non-brace) IF/ELSEIF/ELSE/LOOP blocks to support any new multi-line code
-   code := UnZip(code)
-
-   code := addToCode(code)              ; 2026-01-01 AMB, add messages and directives to code
-   code := Update_LBL_HK_HS(code)       ; 2025-10-05 AMB, UPDATED conversion for labels,HKs,HSs to v2 format
-   Mask_T(&code, 'C&S')                 ; 2025-10-10 AMB, first attempt to improve efficiency of conversion (WORK IN PROGRESS)
-   code := FixMinMaxIndex(code)         ; 2025-12-21 AMB, MOVED to dedicated func
-   code := FixOnMessage(code)           ; Fix turning off OnMessage when defined after turn off
-   code := FixVarSetCapacity(code)      ; &buf -> buf.Ptr   &vssc -> StrPtr(vssc)
-   code := FixByRefParams(code)         ; Replace ByRef with & in func declarations and calls - see related fixFuncParams()
-   code := FixIncDec(code)              ; 2025-10-10 AMB, ADDED to cover issue #350
-   code := RemoveComObjMissing(code)    ; Removes ComObjMissing() and variables
-
-   addGuiCBArgs(&code)
-   addMenuCBArgs(&code)                 ; 2024-06-26, AMB - Fix #131
-   addOnMessageCBArgs(&code)            ; 2024-06-28, AMB - Fix #136
-   addHKCmdCBArgs(&code)                ; 2025-10-12, AMB - Fix #328
-   updateFileOpenProps(&code)           ; 2025-10-12, AMB - support for #358
-
-   Mask_R(&code, 'CSect')                ; restore remaining cont sects (returned as v2 converted)
-   Mask_R(&code, 'MLPB')                 ; restore remaining ML parenth blocks
-   Mask_R(&code, 'V1MLS')                ; restore remaining V1 ML strings
-   Mask_R(&code, 'C&S')                  ; ensure all comments/strings are restored (just in case)
-
-   return   ; code by reference
+   return                                                                               ; code by reference
 }
 ;################################################################################
 ; 2026-01-01 AMB, ADDED - Add global warnings, etc

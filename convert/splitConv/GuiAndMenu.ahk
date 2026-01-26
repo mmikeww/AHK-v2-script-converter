@@ -20,6 +20,7 @@ GuiConv(p) {
 ; 2025-11-01 AMB, UPDATED - as part of Scope support, and gmList_LblsToFunc key case-sensitivity
 ; 2025-11-30 AMB, UPDATED - output to compress multi-line output into single-line tag
 ; 2026-01-01 AMB, UPDATED - changed global gEarlyLine to gV1Line
+; 2026-01-26 AMB, UPDATED - as part of support for user settings
 
 	global gV1Line							; 2026-01-01 changed name from gEarlyLine
 	global gGuiNameDefault
@@ -72,7 +73,7 @@ GuiConv(p) {
 			curGuiName	:= RegExReplace(GuiLine, "i)^\s*Gui\s*[\s,]\s*([^,\s]*):.*$", "$1", &RegExCount1)
 			GuiLine		:= RegExReplace(GuiLine, "i)^(\s*Gui\s*[\s,]\s*)([^,\s]*):(.*)$", "$1$3", &RegExCount1)
 			if (curGuiName = "1") {																				; if custom name is 1...
-				curGuiName := "myGui"																			; ... rename it to DEFAULT myGui
+				curGuiName := getUserDefGuiName()	; 2026-01-26, see Global_Declare.ahk						; ... rename it to user-preferred default name
 			}
 			; 2025-11-01 AMB, UPDATED to fix Process_ex3 unit test
 			origName		:= ((curGuiName ~= '^\d+$') ? '_'	 : '') . curGuiName								; add leading underscore to gui that starts with number
@@ -92,7 +93,7 @@ GuiConv(p) {
 				smGuiList[curGuiName] := clsGui(curGuiName, "Default") ; created prop not really needed here	; no GUI() was established, do it now
 			}
 		}
-		prevGuiName := (curGuiName = "myGui") ? "" : curGuiName													; prevGuiName and curGuiName will match most of the time
+		prevGuiName := (curGuiName = getUserDefGuiName()) ? "" : curGuiName										; prevGuiName and curGuiName will match most of the time
 		if (RegExMatch(prevGuiName, "^oGui\d+$")) {
 			prevGuiName := StrReplace(prevGuiName, "oGui")
 		}
@@ -126,7 +127,7 @@ GuiConv(p) {
 		if (RegExMatch(OptList, "i)\bv[\w]+\b") && !(guiCmd ~= "i)show|margin|font|new")) {
 			ControlName := RegExReplace(OptList, "i)^.*\bv([\w]+)\b.*$", "$1")
 
-			ControlObject := InStr(ControlName, SubStr(OptCtrl, 1, 4)) ? "ogc" ControlName : "ogc" OptCtrl ControlName
+			ControlObject := InStr(ControlName, SubStr(OptCtrl, 1, 4)) ? gCtrlPfx ControlName : gCtrlPfx OptCtrl ControlName
 			gmGuiCtrlObj[ControlName] := ControlObject
 			if (OptCtrl != "Pic" && OptCtrl != "Picture" && OptCtrl != "Text" && OptCtrl != "Button" && OptCtrl != "Link" && OptCtrl != "Progress"
 				&& OptCtrl != "GroupBox" && OptCtrl != "Statusbar" && OptCtrl != "ActiveX") {		; Exclude Controls from the submit (this generates an error)
@@ -141,7 +142,7 @@ GuiConv(p) {
 			ControlHwnd := match[1]
 			OptList := StrReplace(OptList, match[])
 			if (ControlObject = "" && TxtList != "") {
-				ControlObject := InStr(ControlHwnd, SubStr(TxtList, 1, 4)) ? "ogc" StrReplace(ControlHwnd, "hwnd") : "ogc" TxtList StrReplace(ControlHwnd, "hwnd")
+				ControlObject := InStr(ControlHwnd, SubStr(TxtList, 1, 4)) ? gCtrlPfx StrReplace(ControlHwnd, "hwnd") : gCtrlPfx TxtList StrReplace(ControlHwnd, "hwnd")
 				ControlObject := RegExReplace(ControlObject, "\W")
 			} else if (ControlObject = "") {
 				gGuiControlCount++
@@ -217,9 +218,11 @@ GuiConv(p) {
 				}
 				gSBNameDefault := ControlObject
 			}
-			if (OptCtrl ~= "i)(Button|ListView|TreeView)" || ControlLabel != "" || ControlObject != "") {
-				if (ControlObject = "") {
-					ControlObject := "ogc" OptCtrl RegExReplace(TxtList, "[^\w_]", "")
+			if (OptCtrl ~= "i)(Button|ListView|TreeView)"
+			|| ControlLabel		!= ""
+			|| ControlObject	!= "")	{
+				if (ControlObject = "")	{
+					ControlObject := gCtrlPfx OptCtrl RegExReplace(TxtList, "[^\w_]", "")
 				}
 				LineResult .= ControlObject " := "
 				if (OptCtrl = "ListView") {
@@ -528,6 +531,7 @@ GuiControlConv(p) {
 			H := RegExMatch(Value, "i)^.*\bh%([\w]*)\b%.*$", &newH) = 0 ? "" : newH[1]
 		}
 
+		SubCommand := StrReplace(SubCommand, "draw")
 		Out := ControlObject "." SubCommand "(" X ", " Y ", " W ", " H ")"
 		Out := RegExReplace(Out, "[\s\,]*\)$", ")")
 		Return Out

@@ -1,4 +1,5 @@
 ; 2025-12-10 AMB ADDED - to provide organization for global definitions
+; 2026-01-26 AMB UPDATED - as part of support for user settings
 
 ; these require declaration prior to Includes
 global	dbg					:= 0
@@ -9,6 +10,8 @@ global	  gmAhkKeywdsToRename,	gmAhkLoopRegKeywds
 		, gAhkCmdsToRemoveV1,	gAhkCmdsToRemoveV2
 		, gmAhkCmdsToConvertV1, gmAhkCmdsToConvertV2
 		, gmAhkFuncsToConvert,	gmAhkMethsToConvert, gmAhkArrMethsToConvert
+global	gINIFile			:= 'Converter.ini'					; 2026-01-26 - AMB, ADDED to support user interactive settings
+getINISettings()												; 2026-01-26 - AMB, ADDED to support user interactive settings
 ;################################################################################
 #Include lib/ClassOrderedMap.ahk
 #Include lib/dbg.ahk
@@ -54,7 +57,7 @@ setGlobals() {													; for globals that are reset with each new conversion
 	gmGuiCtrlType			:= Map_I()							; Create a map to return the type of control
 	gmGuiFuncCBChecks		:= Map_I()							; for gui funcs
 	gGuiList				:= '|'
-	gGuiNameDefault			:= 'myGui'
+	gGuiNameDefault			:= getUserDefGuiName()				; 2026-01-26 UPDATED - as part of support for user settings
 	gmGuiVList				:= Map_I()							; Used to list all variable names defined in a Gui
 	gUseLastName			:= False							; Keep track of if we use the last set name in gGuiList
 
@@ -91,6 +94,32 @@ setGlobals() {													; for globals that are reset with each new conversion
 	clsNodeMap.Reset()											; 2025-11-01 - ADDED as part of Scope support, unit testing
 	clsSection.Reset()											; 2025-11-01 - ADDED as part of Scope support, unit testing
 	clsScopeSect.Reset()										; 2025-11-01 - ADDED as part of Scope support, unit testing
+}
+;################################################################################
+getIniSettings() {
+; 2026-01-26 AMB, ADDED as part of support for user settings
+;	reads user settings from disk, transfers settings to script vars
+	iniFile	:= gINIFile, Section := 'Settings'
+	guiMode	:= IniRead(iniFile, Section, 'GuiMode',		''	)
+	guiName	:= IniRead(iniFile, Section, 'GuiStdName',	''	)
+	ctrlPfx	:= IniRead(iniFile, Section, 'CtrlStdName',	''	)
+	global	gNewGuiNaming	:= !!(guiMode=2)
+	global	gGuiNameDefault	:= (gNewGuiNaming) ? 'nnGui'
+							:  (guiName) ? guiName
+							:  'myGui'
+	global gCtrlPfx			:= (ctrlPfx) ? ctrlPfx
+							:  'ogc'
+}
+;################################################################################
+getUserDefGuiName() {
+; 2026-01-26 AMB, ADDED as part of support for user settings
+;	returns user-preferred gui name from ini file
+	iniFile	:= gINIFile, Section := 'Settings'
+	guiMode	:= IniRead(iniFile, Section, 'GuiMode',		''	)
+	guiName	:= IniRead(iniFile, Section, 'GuiStdName',	''	)
+	defName := (guiMode=2) 	? 'nnGui'
+			:  ((guiName)	? guiName : 'myGui')
+	return defName
 }
 ;################################################################################
 class NL {

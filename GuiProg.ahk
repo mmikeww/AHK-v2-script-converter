@@ -1,10 +1,9 @@
 /*
 	2026-01-24 AMB, ADDED
-	To provide a User Interface that can support:
-	* Conversion progress
-	* User settings/preferences
-	* Debug Tool
-	* More as needed...
+	Provides the following:
+	 * Conversion Progress details
+	 * Works with QCV2 and V2Converter
+	 * Debug Tool - limited (for now) to QCV2 unit-test mode
 */
 
 ;; FOR DESIGN MODE - UNCOMMENT THESE, then run this script

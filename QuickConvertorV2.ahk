@@ -104,7 +104,16 @@
       }
       case 1: ;IF ONE ARGUMENT THEN ASSUME THE ARUGMENT IS THE SOURCE FILE (FN) AND USE DEFAULT OUTPUT FILE
       {
-         FileTempScript := A_Args[1]
+        arg := A_Args[1]
+        if (arg = 'QCT') {
+          TestMode := 1, IniWrite(TestMode, IniFile, Section, "TestMode")
+          FileTempScript := A_IsCompiled ? A_ScriptDir "\TempScript.ah1" : A_ScriptDir "\Tests\TempScript.ah1"
+        } else if (arg = 'QCC') {
+          TestMode := 0, IniWrite(TestMode, IniFile, Section, "TestMode")
+          FileTempScript := A_IsCompiled ? A_ScriptDir "\TempScript.ah1" : A_ScriptDir "\Tests\TempScript.ah1"
+        } else {
+          FileTempScript := A_Args[1]
+        }
       }
       default: ;INCORRECT NUMBER OF ARGUMENTS SUPPLIED -> ERROR
       {

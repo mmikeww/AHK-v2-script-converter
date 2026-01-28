@@ -22,7 +22,7 @@
 { ;DIRECTIVES AND SETTINGS
    #Requires AutoHotkey >=2.0-<2.1      ; Requires AHK v2 to run this script
    #SingleInstance Force                ; Recommended so only one copy is running at a time
-   FileEncoding "UTF-8"                 ; 2026-01-24 AMB, ADDED
+   ;FileEncoding "UTF-8"                ; 2026-01-26 - REMOVED - DO NOT UNCOMMENT!, 2026-01-24 AMB, ADDED
    SetWorkingDir A_ScriptDir            ; Ensures a consistent starting directory.
 }
 { ;CLASSES:

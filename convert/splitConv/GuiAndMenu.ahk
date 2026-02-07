@@ -614,9 +614,10 @@ GuiControlGetConv(p) {
 ;################################################################################
 addGuiCBArgs(&code) {
 ; 2025-11-30 AMB, UPDATED to provide better support for existing/missing params
+; 2026-02-07 AMB, UPDATED needle to prevent false positive with [`r`n`t]
 
 	; add Gui args to callback functions
-	nCommon		:= '^\h*(?<fName>[_a-z]\w*+)(?<fArgG>\((?<Args>(?>[^()]|\((?&Args)\))*+)'
+	nCommon		:= '^\h*(?<fName>(?<!``)[_a-z]\w*+)(?<fArgG>\((?<Args>(?>[^()]|\((?&Args)\))*+)'
 	nFUNC		:= RegExReplace(gPtn_Blk_FUNC, 'i)\Q(?:\b(?:IF|WHILE|LOOP)\b)(?=\()\K|\E')				; remove exclusion
 	nDeclare	:= '(?im)' nCommon '\))(?<trail>.*)'													; make needle for func declaration
 	nArgs		:= '(?im)' nCommon '\K\)).*'															; make needle for func params/args
@@ -625,7 +626,7 @@ addGuiCBArgs(&code) {
 	for key, val in gmGuiFuncCBChecks
 	{
 		funcName	:= key																				; grab callback func
-		nTargFunc	:= RegExReplace(nFUNC, 'i)\Q?<fName>[_a-z]\w*+\E', funcName)						; target specific function name
+		nTargFunc	:= RegExReplace(nFUNC, 'i)\Q?<fName>(?<!``)[_a-z]\w*+\E', funcName)					; target specific function name
 		If (pos		:= RegExMatch(code, nTargFunc, &m)) {												; look for the func declaration...
 			; target function found
 			if (RegExMatch(m[], nDeclare, &declare)) {													; get just declaration line
@@ -658,10 +659,11 @@ addMenuCBArgs(&code) {
 ; 2025-10-05 AMB, MOVED to GuiAndMenu.ahk
 ; 2025-10-10 AMB, UPDATED to fix missing params
 ; 2025-11-30 AMB, UPDATED - minor refactor
+; 2026-02-07 AMB, UPDATED needle to prevent false positive with [`r`n`t]
 
 	;Mask_T(&code, 'C&S')	; 2025-10-10 - now handled in FinalizeConvert()
 	; add menu args to callback functions
-	nCommon		:= '^\h*(?<fName>[_a-z]\w*+)(?<fArgG>\((?<Args>(?>[^()]|\((?&Args)\))*+)'
+	nCommon		:= '^\h*(?<fName>(?<!``)[_a-z]\w*+)(?<fArgG>\((?<Args>(?>[^()]|\((?&Args)\))*+)'
 	nFUNC		:= RegExReplace(gPtn_Blk_FUNC, 'i)\Q(?:\b(?:IF|WHILE|LOOP)\b)(?=\()\K|\E')				; 2025-06-12, remove exclusion
 	nDeclare	:= '(?im)' nCommon '\))(?<trail>.*)'													; make needle for func declaration
 	nArgs		:= '(?im)' nCommon '\K\)).*'															; make needle for func params/args
@@ -670,7 +672,7 @@ addMenuCBArgs(&code) {
 	for key, val in gmMenuCBChecks
 	{
 		funcName	:= key																				; grab callback func
-		nTargFunc	:= RegExReplace(nFUNC, 'i)\Q?<fName>[_a-z]\w*+\E', funcName)						; target specific function name
+		nTargFunc	:= RegExReplace(nFUNC, 'i)\Q?<fName>(?<!``)[_a-z]\w*+\E', funcName)					; target specific function name
 		if (pos		:= RegExMatch(code, nTargFunc, &m)) {
 			; target function found
 			if (RegExMatch(m[], nDeclare, &declare)) {													; get just declaration line
@@ -694,10 +696,11 @@ addOnMessageCBArgs(&code) {
 ; 2025-10-05 AMB, MOVED to GuiAndMenu.ahk
 ; 2025-10-10 AMB, UPDATED to fix missing params, improve WS handling
 ; 2025-10-12 AMB, UPDATED to better support existng params and binding
+; 2026-02-07 AMB, UPDATED needle to prevent false positive with [`r`n`t]
 
 	;Mask_T(&code, 'C&S')	; 2025-10-10 - now handled in FinalizeConvert()
 	; add onMessage args to callback functions
-	nCommon	:= '^\h*(?<fName>[_a-z]\w*+)(?<fArgG>\((?<Args>(?>[^()]|\((?&Args)\))*+)'
+	nCommon	:= '^\h*(?<fName>(?<!``)[_a-z]\w*+)(?<fArgG>\((?<Args>(?>[^()]|\((?&Args)\))*+)'
 	nFUNC	:= RegExReplace(gPtn_Blk_FUNC, 'i)\Q(?:\b(?:IF|WHILE|LOOP)\b)(?=\()\K|\E')					; 2025-06-12, remove exclusion
 	nParams := '(?i)(?:\b(?:wParam|lParam|msg|hwnd)\b(\h*,\h*)?)+'
 	nDeclare:= '(?im)' nCommon '\))(?<trail>.*)'														; make needle for func declaration
@@ -706,7 +709,7 @@ addOnMessageCBArgs(&code) {
 	for key, obj in gmOnMessageMap																		; 2025-10-12 - gmOnMessageMap now holds clsOnMsg objects
 	{
 		funcName := obj.cbFunc																			; grab callback func
-		nTargFunc := RegExReplace(nFUNC, 'i)\Q?<fName>[_a-z]\w*+\E', funcName)							; target specific function name
+		nTargFunc := RegExReplace(nFUNC, 'i)\Q?<fName>(?<!``)[_a-z]\w*+\E', funcName)					; target specific function name
 		If (pos := RegExMatch(code, nTargFunc, &m)) {													; look for the func declaration...
 			; target function found
 			if (RegExMatch(m[], nDeclare, &declare)) {													; get just declaration line

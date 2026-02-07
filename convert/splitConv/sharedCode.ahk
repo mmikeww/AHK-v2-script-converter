@@ -277,11 +277,12 @@
 
 	;############################################################################
 	_premask(&lineStr) {												; premask input str, returns array-assign needle
+	; 2026-02-07 AMB, UPDATED
 		; pre-mask to avoid char detection interferrence
 		Mask_T(&lineStr, 'FC' ,,sess)									; hide commas within func calls		 (hides STR also)
 		Mask_T(&lineStr, 'KV' ,,sess)									; hide commas within key/val objects (do not restore C&S)
 		; mask array assignments for easier detection
-		nVar := '(?i)(\h*)([_a-z](?:\w++|\.(?=\w)|\[|\])*)'				; [variable]	(also supports obj.prop, obj[key].arr[idx] )
+		nVar := '(?i)(\h*)((?<!``)[_a-z](?:\w++|\.(?=\w)|\[|\])*)'		; [variable]	(also supports obj.prop, obj[key].arr[idx] )
 		nIdx := '\[([^\]]+)\]'											; [index]		(var/val - basic, since supported by rest of needle)
 		nOp	 := '(\h*+:=\h*+)'											; [operator]	(will preserve surrounding WS)
 		nVal := '([^=,\v]++)'											; [value]		(must have - may req tweaks later)
@@ -708,6 +709,7 @@ FixVarSetCapacity(ScriptString) {
 2025-10-10 AMB, UPDATED handling of trailing CRLFs
 2025-11-28 AMB, UPDATED to prevent ampersand from being added to numbers and THIS.X
 2026-01-03 AMB, now supports obj.prop, multi-line, multiple calls on same line (nested or separated by comma)
+2026-02-07 AMB, UPDATED needle to prevent false positive with [`r`n`t]
 NOTES:
 Known issues that may still remain
  * can conflict with converter-manufactured function/methods (or AHK funcCalls)
@@ -721,7 +723,7 @@ Known issues that may still remain
 */
 FixByRefParams(code) {
 	sessID		:= clsMask.NewSession()													; start new masking session
-	nObj		:= '(?i)^(.+\.)([_a-z]\w*)'												; needle to separate obj from method, if present
+	nObj		:= '(?i)^(.+\.)((?<!``)[_a-z]\w*)'										; needle to separate obj from method, if present
 	While(pos	:= RegexMatch(code, gPtn_FuncCall, &mFD, pos??1)) {						; for each func declaration or call...
 		oFunc	:= mFD[], params := mFD.FcParams, fName := mFD.fcName					; extract details
 		objName := _extractfuncName(fName)												; separate obj from property, if fName is 'obj.prop'

@@ -1471,10 +1471,11 @@ addHKCmdFunc(varName) {
 ;################################################################################
 addHKCmdCBArgs(&code) {
 ; 2025-10-12 AMB, Added to support #328
+; 2026-02-07 AMB, UPDATED needle to prevent false positive with [`r`n`t]
 
 	;Mask_T(&code, 'C&S')	; 2025-10-12 - handled in FinalizeConvert()
 	; add menu args to callback functions
-	nCommon	:= '^\h*(?<fName>[_a-z]\w*+)(?<fArgG>\((?<Args>(?>[^()]|\((?&Args)\))*+)'
+	nCommon	:= '^\h*(?<fName>(?<!``)[_a-z]\w*+)(?<fArgG>\((?<Args>(?>[^()]|\((?&Args)\))*+)'
 	nFUNC	:= RegExReplace(gPtn_Blk_FUNC, 'i)\Q(?:\b(?:IF|WHILE|LOOP)\b)(?=\()\K|\E')		; 2025-06-12, remove exclusion
 	nDeclare:= '(?im)' nCommon '\))(?<trail>.*)'											; make needle for func declaration
 	nArgs	:= '(?im)' nCommon '\K\)).*'													; make needle for func params/args
@@ -1482,7 +1483,7 @@ addHKCmdCBArgs(&code) {
 	for key, obj in gmList_HKCmdToFunc {													; for each entry in list...
 		paramsToAdd	:= obj.params															; get params that will need added
 		funcName	:= obj.FuncName															; get func (name) to add params to
-		nTargFunc	:= RegExReplace(nFUNC, 'i)\Q?<fName>[_a-z]\w*+\E', funcName)			; target specific function name
+		nTargFunc	:= RegExReplace(nFUNC, 'i)\Q?<fName>(?<!``)[_a-z]\w*+\E', funcName)		; target specific function name
 		If (pos := RegExMatch(code, nTargFunc, &m)) {										; look for the func declaration...
 			; target function found
 			if (RegExMatch(m[], nDeclare, &declare)) {										; get just declaration line

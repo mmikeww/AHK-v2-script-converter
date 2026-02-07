@@ -26,6 +26,7 @@
 	2025-11-01,23,28,29,30	- UPDATED, Multiple enhancements/improvements - see comments in code
 	2025-12-13,24			- UPDATED, see comments in code
 	2026-01-01,13,17,24		- UPDATED, see comments in code
+	2026-02-07				- UPDATED, see comments in code
 
 	TODO
 		Finish support for Continuation sections
@@ -41,6 +42,7 @@
 
 ;################################################################################
 ; 2025-06-22 - UPDATED most of these needles
+; 2026-02-07 AMB, UPDATED needle to prevent false positive with [`r`n`t]
 ; global needles that can be used from anywhere within project
 
 #Warn Unreachable, Off
@@ -69,7 +71,7 @@ global	  gTagChar		:= chr(0x2605) ; '★'															; unique char to ensure 
 		, gPtn_PrnthML	:= '\(\R(?>[^\v\))]+|(?<!\n)\)|\R)*?\R\h*\)'				; very general		; nested parentheses block, MULTI-LINE ONLY
 		. gPtn_CSectM1	:= buildPtn_CSM1()																; ADDED - line, plus cont sect 'method 1'
 		, gPtn_CSectM2	:= buildPtn_CSM2()											; general			; ADDED - line, plus cont sect 'method 2', plus trailer
-		, gPtn_FuncCall := '(?im)(?<FcName>[_a-z](?|\w++|\.(?=\w))*+)' . gPtn_PrnthBlk					; UPDATED - function call (supports ml and nested parentheses)
+		, gPtn_FuncCall := '(?im)(?<FcName>(?<!``)[_a-z](?|\w++|\.(?=\w))*+)' . gPtn_PrnthBlk			; UPDATED - function call (supports ml and nested parentheses)
 		, gPtn_Blk_FUNC	:= buildPtn_FUNC()																; function block (supports nesting)
 		, gPtn_Blk_CLS	:= buildPtn_CLS()																; class block (supports nesting)
 		, gPtn_V1L_MLSV	:= buildPtn_V1LegMLSV()															; UPDATED - v1 legacy (non-expr) multi-line string assignment
@@ -86,7 +88,7 @@ global	  gTagChar		:= chr(0x2605) ; '★'															; unique char to ensure 
 		, gPtn_SQ_1L	:= buildPtn_QS_SQ()																; UPDATED - SQ-string, 1l (ADDED 2025-06-12)
 		, gPtn_QS_MLPth	:= buildPtn_MLQSPth()															; UPDATED - quoted-string, ml (within parentheses)
 		, gPtn_QS_ML	:= '(?<line1>:=\h*)\K"(([^"\v]++)\R)(?:\h*+[.|&,](?-2)*+)(?-1)++"'				; UPDATED - quoted-string, ml cont sect (not within parentheses)
-		, gPtnVarAssign	:= '(?i)(\h*[_a-z](?|\w++|\.(?=\w))*+\h*+)'	; also supports obj.property		; 2025-07-03 AMB, ADDED		- Variable/Object assignment
+		, gPtnVarAssign	:= '(?i)(\h*(?<!``)[_a-z](?|\w++|\.(?=\w))*+\h*+)'	; also supports obj.prop	; 2025-07-03 AMB, ADDED		- Variable/Object assignment
 		, gPtn_Blk_IF	:= buildPtn_IF().fullIF															; 2025-10-05 AMB, UPDATED	- IF block
 		, gPtn_Blk_SW	:= buildPtn_Switch()															; 2025-10-05 AMB, UPDATED	- Switch block
 		, gPtn_BLK_WH	:= buildPtn_While()																; 2025-10-05 AMB, ADDED		- While block
@@ -1842,8 +1844,9 @@ class clsNodeMap	; 'block map' might be better term
 ;	This version will ONLY match assignments WITH VARIABLE NAME
 ;	ADDED support for block comments (thru buildPtn_MLBlock())
 ; 2025-07-03 AMB, UPDATED needle to support obj.property
+; 2026-02-07 AMB, UPDATED needle to prevent false positive with [`r`n`t]
 
-	return	'(?im)(?<decl>(?<var>[_a-z](?|\w++|\.(?=\w))*+)\h*+``?=)' . buildPtn_MLBlock().FullT
+	return	'(?im)(?<decl>(?<var>(?<!``)[_a-z](?|\w++|\.(?=\w))*+)\h*+``?=)' . buildPtn_MLBlock().FullT
 }
 ;################################################################################
 															   buildPtn_MLQSPth()
@@ -1934,13 +1937,14 @@ class clsNodeMap	; 'block map' might be better term
 {
 ; CLASS-BLOCK pattern
 ; 2024-07-07 AMB, UPDATED comment needle to bypass escaped semicolon
+; 2026-02-07 AMB, UPDATED needle to prevent false positive with [`r`n`t]
 
 	opt 		:= '(?im)'													; pattern options
 	LC			:= '(?:' gnLineComment ')'									; line comment (allows lead ws to be consumed already)
 	TG			:= '(?:' uniqueTag('\w++') ')'								; mask tags
 	CT			:= '(?:' . LC . '|' . TG . ')*+'							; optional line comment OR tag
 	TCT			:= '(?>\s*+' . CT . ')*+'									; optional trailing comment or tag (MUST BE ATOMIC)
-	cName		:= '(?<cName>[_a-z]\w*+)'									; cName		- captures class name
+	cName		:= '(?<cName>(?<!``)[_a-z]\w*+)'							; cName		- captures class name
 	cExtends	:= '(?:(\h+EXTENDS\h+[_a-z]\w*+)?)'							; cExtends	- support extends keyword
 	declare		:= '^\h*+\bCLASS\b\h++' . cName . cExtends					; declare	- class declaration
 	brcBlk		:= '\s*+(?<brcBlk>\{(?<BBC>(?>[^{}]++|(?-2))*+)})'			; brcBlk	- braces block, BBC - block contents (allows multi-line span)
@@ -1954,6 +1958,7 @@ class clsNodeMap	; 'block map' might be better term
 ; FUNCTION-BLOCK pattern - supports class methods also
 ; 2024-07-07 AMB, UPDATED comment needle to bypass escaped semicolon
 ; 2025-11-29 AMB, UPDATED - added support for static methods
+; 2026-02-07 AMB, UPDATED needle to prevent false positive with [`r`n`t]
 
 	opt 		:= '(?im)'													; pattern options
 	LC			:= '(?:' gnLineComment ')'									; line comment (allows lead ws to be consumed already)
@@ -1961,7 +1966,7 @@ class clsNodeMap	; 'block map' might be better term
 	CT			:= '(?:' . LC . '|' . TG . ')*+'							; optional line comment OR tag
 	TCT			:= '(?>\s*+' . CT . ')*+'									; optional trailing comment or tag (MUST BE ATOMIC)
 	exclude		:= '(?:\b(?:IF|WHILE|LOOP)\b)(?=\()\K|'						; \K|		- added to prevent If/While/Loop from being captured
-	fName		:= '(?<fName>[_a-z]\w*+)'									; fName		- captures function/method name
+	fName		:= '(?<fName>(?<!``)[_a-z]\w*+)'							; fName		- captures function/method name
 	fArgG		:= '(?<fArgG>\((?<Args>(?>[^()]++|(?-2))*+)\))'				; fArgG		- func params/args
 	declare		:= fName . fArgG . '(?<TCT>' . TCT . '\s*+)'				; declare	- function declaration
 	brcBlk		:= '(?<brcBlk>\{(?<BBC>(?>[^{}]++|(?-2))*+)}))'				; brcBlk	- braces block, BBC - block contents (allows multi-line span)

@@ -35,6 +35,7 @@
 */
 ;################################################################################
 ; 2025-06-12 AMB. ADDED
+; 2026-02-07 AMB, UPDATED to fix var needle
 
 ;	THIS IS A WORK IN PROGRESS
 
@@ -42,7 +43,7 @@ class CSect
 {
 	static MLLineCont		:= '(?i)(?<head>.++)' . buildPtn_MLBlock().FullT		; head (cmd line) + body (block) + optional trailer
 	static cmdVar			:= '(?i)^(?<cv>[\h\w]+?)'								; command/var portion of head
-	static var				:= '(?i)(?<var>[_a-z]\w*+\h*+)'							; variable, includes trailing ws (for now)
+	static var				:= '(?i)(?<var>(?<!``)[_a-z]\w*+\h*+)'					; variable, includes trailing ws (for now)
 	static tag				:= '(?<tag1>(?:\h*+#TAG★(?:LC|BC|QS)\w++★#)*+)'		; optional tag on head line (comments or quoted-string ONLY!)
 
 	; head configurations

@@ -88,6 +88,7 @@
     TreeViewWidth       := IniRead(IniFile, Section, "TreeViewWidth", 280)
     ViewExpectedCode    := IniRead(IniFile, Section, "ViewExpectedCode", 0)
     UIDarkMode          := IniRead(IniFile, Section, "UIDarkMode", 0)
+    GuiPath             := 0 ;IniRead("Converter.ini",  "Settings", "GuiMode", 0)
  ;   OnExit(ExitFunc)
     ;WRITE BACK VARIABLES SO THAT DEFAULTS ARE SAVED TO INI (Seems like this should be moved to exit routine SEE Esc::)
 
@@ -166,8 +167,19 @@ AddSubFoldersToTree(Folder, DirList, ParentItemID := 0,*)
     {
         ;LoadingFileName.Text := A_LoopFileName            ; 2026-01-24 REMOVED - for new progress-gui
         If InStr( FileExist(A_LoopFileFullPath ), "D" ) {
-            If (!TestFailing and A_LoopFileName = "Failed conversions")
+            ; 2026-02-11 AMB - UPDATED as part of reorganization of Gui-related unit tests
+            if (DllCall("Shlwapi\PathIsDirectoryEmpty", "Str", A_LoopFileFullPath))
+                continue ; Skip empty folders
+            If (!TestFailing && (A_LoopFileName = "Failed conversions" || A_LoopFileName = "@Fail"))
                 continue ; Skip failed conversions when test mode if off
+            If (GuiPath != 3 && GuiPath > 1 && A_LoopFileName ~= "(?i)@Gui2025")
+                continue ; skip broken tests unless in auto naming mode
+            If (GuiPath != 3 && GuiPath < 2 && A_LoopFileName ~= "(?i)@Gui2026")
+                continue ; skip broken tests unless in auto naming mode
+            If (GuiPath != 3 && GuiPath = 0 && A_LoopFileName ~= "(?i)Updated")
+                continue ; skip broken tests unless in auto naming mode
+            If (GuiPath != 3 && GuiPath = 1 && A_LoopFileName ~= "(?i)Orig")
+                continue ; skip broken tests unless in auto naming mode
             ItemID := TV.Add(A_LoopFileName, ParentItemID, icons.Folder)
         }
         else If InStr(A_LoopFileFullPath,".ah1") {
@@ -505,7 +517,7 @@ EvalSelectedTest(thisCtrl, *)
         TextExp := FileRead(file_ah2)
         TextCnv := Convert(TextSrc)
         ; Number_Tests++
-        if (TextExp=TextCnv){
+        if (TextExp==TextCnv){
             TV.Modify(selItemID, icons.pass)
             Number_Tests_Pass++
         }

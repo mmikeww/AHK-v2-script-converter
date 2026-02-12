@@ -1,0 +1,4 @@
+﻿myGui := Gui()
+ogcButton := myGui.Add("Button", "+Owner" . ThisHwnd)
+
+myGui2 := Gui("+Owner" . ThisHwnd, "Gui Name")

@@ -1,1 +1,0 @@
-Gui, Add, Text, % "hwndVar", Text

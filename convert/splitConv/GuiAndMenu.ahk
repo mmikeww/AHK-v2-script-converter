@@ -244,6 +244,8 @@ GuiConv(p) {
 			gGuiActiveFont := ToExp(OptCtrl,,1) ", " ToExp(OptList,,1)
 		} else if (guiCmd = "Cancel") {
 			guiCmd := "Hide"
+		} else if (guiCmd = "Destroy") {
+			Return LineResult "Try " curGuiName "." guiCmd "()"	; 2026-02-?? AMB - added Try to prevent unnecessary errors
 		} else if (guiCmd = "New") {
 			LineResult	:= Trim(LineResult LineSuffix,"`r`n")	; 2025-10-13 AMB - added CR to fix extra CR being left behind sometimes
 			GuiName		:=	", " ToExp(OptList,,1)

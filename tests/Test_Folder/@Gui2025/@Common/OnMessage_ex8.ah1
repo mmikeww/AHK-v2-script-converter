@@ -1,5 +1,6 @@
 #Persistent
 
+Gui, Add, Text, x15 y35, Left/Right Click
 Gui, Show, w100 h100
 
 OnMessage(0x201, "WM_LBUTTONDOWN")

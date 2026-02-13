@@ -3,10 +3,9 @@ myGui := Gui()
 myGui.OnEvent("Close", GuiClose)
 ogcTextC := myGui.Add("Text", "vTextC", "First name:")
 ogcEditFirstName := myGui.Add("Edit", "vFirstName"), test := ogcEditFirstName.hwnd  ; The ym option starts a new column of controls.
-ogcMyButton := myGui.Add("Button", "xp+140 vMyButton default", "Empty Test")
+ogcMyButton := myGui.Add("Button", "xp+140 vMyButton default", "Click Me")
 ogcMyButton.OnEvent("Click", EmptyTest.Bind("Normal"))
-ogcPictureMyPic := myGui.Add("Picture", "x10 vMyPic w20 h-1", "C:\Users\Dimitri\Pictures\Save24.png")
-
+ogcPictureMyPic := myGui.Add("Picture", "x10 vMyPic w20 h-1", "C:\Windows\SysWOW64\SecurityAndMaintenance.png")
 ogcMyCheckBox := myGui.Add("CheckBox", "x10 vMyCheckBox", "Option1")
 ogcMyRadio := myGui.Add("Radio", "xp+70 vMyRadio", "Radio")
 myGui.Add("Radio", "xp+70", "Radio2")
@@ -60,7 +59,7 @@ myListBox := oSaved.myListBox  ; Save the input from the user to each control's 
 ogcTextC.Value := "test"
 ogcEditFirstName.Value := "test"
 
-ogcPictureMyPic.Value := "C:\Users\Dimitri\Pictures\test.png"
+ogcPictureMyPic.Value := "C:\Windows\SysWOW64\SecurityAndMaintenance_Error.png"
 ogcMyCheckBox.Value := 1
 ogcMyRadio.Text := "true"
 ogcMyDropDownList.Add(["test"])
@@ -74,7 +73,7 @@ ogcMyMonthCal.Value := 20000101010101
 ogcMySlider.Value += 10
 ogcMyProgress.Value += 10
 ogcMyGroupBox.Text := "test"
-ogcMyButton.Text := "test"
+ogcMyButton.Text := "Thanks!"
 ogcMyTab3.Delete() ; V1toV2: Clean the list
 ogcMyTab3.Add(["Test", "Test2", "Test3"])
 ogcMyStatusbar.SetText("Test")

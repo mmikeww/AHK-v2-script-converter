@@ -105,13 +105,14 @@ MsgBox, You selected "%A_ThisMenuItem%".
 Return
 
 Delete:
-Menu, Tab1, Delete
-Menu, Tab2, Delete
-Menu, Tab3, Delete
-Menu, Tab4, Delete
-Menu, Tab5, Delete
-Menu, Tab6, Delete
-Menu, Tab7, Delete
+Menu, MyMenuBar, Delete
+;Menu, Tab1, Delete
+;Menu, Tab2, Delete
+;Menu, Tab3, Delete
+;Menu, Tab4, Delete
+;Menu, Tab5, Delete
+;Menu, Tab6, Delete
+;Menu, Tab7, Delete
 Return
 
 Exit:

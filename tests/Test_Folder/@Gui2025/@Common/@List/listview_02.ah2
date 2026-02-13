@@ -8,7 +8,7 @@ Loop 10  ; Load the ImageList with a series of icons from the DLL.
     IL_Add(ImageListID, "shell32.dll", A_Index) 
 Loop 10  ; Add rows to the ListView (for demonstration purposes, one for each icon).
     ogcListViewIconNumberDescription.Add("Icon" . A_Index, A_Index, "n/a")
-ogcListViewIconNumberDescription.ModifyCol("Hdr")  ; Auto-adjust the column widths.
+ogcListViewIconNumberDescription.Opt("Hdr")  ; Auto-adjust the column widths.
 myGui.Show()
 return
 

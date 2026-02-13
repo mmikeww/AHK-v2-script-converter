@@ -85,6 +85,9 @@ _ControlGet(p) {
 		if (p[3] != "") {
 			Out := format("{1} := ListViewGetContent({3}, {4}, {5}, {6}, {7}, {8})", p*)
 		} Else {
+			if (p[4]="" && p[5] != "") {
+				p[4] := p[5]
+			}
 			p[2] := "Items"
 			Out := format("o{1} := ControlGet{2}({4}, {5}, {6}, {7}, {8})", p*) "`r`n"
 			Out .= gIndent "loop o" p[1] ".length`r`n"
@@ -729,7 +732,10 @@ _LV_Modify(p) {
 }
 ;################################################################################
 _LV_ModifyCol(p) {
-	Return format("{1}.ModifyCol({2}, {3}, {4})", gLVNameDefault, p*)
+; 2026-02-13 AMB, UPDATED to support HDR option, may need adj later
+	if (p.Has(1) && p[1] = '"HDR"')
+		return format("{1}.Opt({2})", gLVNameDefault, p[1])
+	return format("{1}.ModifyCol({2}, {3}, {4})", gLVNameDefault, p*)
 }
 ;################################################################################
 _LV_SetImageList(p) {

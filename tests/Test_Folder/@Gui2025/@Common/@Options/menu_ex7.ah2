@@ -142,13 +142,14 @@ Return
 ;##############################################
 Delete(A_GuiEvent:="", A_GuiControl:="", Info:="", *) { ; V1toV2: Lbl->Func
 global
-Tab1.Delete()
-Tab2.Delete()
-Tab3.Delete()
-Tab4.Delete()
-Tab5.Delete()
-Tab6.Delete()
-Tab7.Delete()
+MyMenuBar.Delete()
+;Menu, Tab1, Delete
+;Menu, Tab2, Delete
+;Menu, Tab3, Delete
+;Menu, Tab4, Delete
+;Menu, Tab5, Delete
+;Menu, Tab6, Delete
+;Menu, Tab7, Delete
 Return
 }
 ;##############################################

@@ -1,8 +1,7 @@
 Gui, Add, Text,vTextC, First name:
 Gui, Add, Edit, vFirstName hwndtest  ; The ym option starts a new column of controls.
-Gui, Add, Button, xp+140 vMyButton gEmptyTest default, Empty Test
-Gui, Add, Picture, x10 vMyPic w20 h-1, C:\Users\Dimitri\Pictures\Save24.png
-
+Gui, Add, Button, xp+140 vMyButton gEmptyTest default, Click Me
+Gui, Add, Picture, x10 vMyPic w20 h-1, % "C:\Windows\SysWOW64\SecurityAndMaintenance.png"
 Gui, Add, CheckBox, x10 vMyCheckBox, Option1
 Gui, Add, Radio, xp+70 vMyRadio, Radio
 Gui, Add, Radio, xp+70, Radio2
@@ -35,7 +34,7 @@ Gui, Submit, nohide  ; Save the input from the user to each control's associated
 GuiControl, , TextC, test
 GuiControl, , % test, test
 
-GuiControl, , MyPic, C:\Users\Dimitri\Pictures\test.png
+GuiControl, , MyPic,  % "C:\Windows\SysWOW64\SecurityAndMaintenance_Error.png"
 GuiControl, , MyCheckBox, 1
 GuiControl, , MyRadio, true
 GuiControl,, MyDropDownList,test
@@ -48,7 +47,7 @@ GuiControl,,MyMonthCal, 20000101010101
 GuiControl,,MySlider, +10
 GuiControl,,MyProgress, +10
 GuiControl,,MyGroupBox, test
-GuiControl, , MyButton, test
+GuiControl, , MyButton, Thanks!
 GuiControl,,MyTab3, |Test|Test2|Test3
 SB_SetText("Test")
 return

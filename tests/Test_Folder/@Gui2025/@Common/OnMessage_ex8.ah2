@@ -1,6 +1,7 @@
-Persistent
+﻿Persistent
 
 myGui := Gui()
+myGui.Add("Text", "x15 y35", "Left/Right Click")
 myGui.Show("w100 h100")
 
 OnMessage(0x201, WM_LBUTTONDOWN)

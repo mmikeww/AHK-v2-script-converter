@@ -1,5 +1,6 @@
 #Persistent
 
+Gui, Add, Text,y25, Press any key`nOR`nLeft/Right Click
 Gui, Show, w100 h100
 
 OnMessage(0x201, Func("WM_LBUTTONDOWN"))

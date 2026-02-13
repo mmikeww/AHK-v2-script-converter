@@ -3,14 +3,14 @@ guiName := Gui()
 guiName.Add("text", , "text              text                text       text")
 ogcButtonAAAA := guiName.Add("Button", "Default", "AAAA")
 guiName.Title := "guiName"
-guiName.Show("w500")
+guiName.Show("y350")
 
 myGui := Gui()
 myGui.OnEvent("Close", GuiClose)
 myGui.OnEvent("Escape", GuiEscape) ; not name
 myGui.Add("text", , "text2              text2                text2       text2")
 ogcButtonBBBB := myGui.Add("Button", "Default", "BBBB")
-myGui.Show()
+myGui.Show("y500")
 
 return
 

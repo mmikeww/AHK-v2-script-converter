@@ -1,6 +1,7 @@
-Persistent
+﻿Persistent
 
 myGui := Gui()
+myGui.Add("Text", "x15 y35", "Left-click Me!")
 myGui.Show("w100 h100")
 
 var := "WM_LBUTTONDOWN"

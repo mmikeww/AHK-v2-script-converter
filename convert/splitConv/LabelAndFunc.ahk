@@ -967,6 +967,7 @@ class clsSection
 	Static _updateLblToFuncs(code)															; applies A_GuiEvent/A_GuiControl params/vars, Regex replacements
 	{
 	; 2025-11-01 AMB, UPDATED key case-sensitivity for gmList_LblsToFunc
+	; 2026-02-22 AMB, UPDATED guiContStr
 
 		While(pos := RegexMatch(code,gPtn_Blk_FUNC, &mFunc, pos??1))						; for each func found in code...
 		{
@@ -981,9 +982,10 @@ class clsSection
 			TCT		:= mFunc.TCT															; get code found between func declaration and brace-blk
 			L2F_Obj	:= gmList_LblsToFunc[funcName]											; get L2F object
 			declare	:= L2F_Obj.funcName '(' L2F_Obj.params ')'								; add any associated params to func declaration
-			if (InStr(declare, 'A_GuiControl') && gaScriptStrsUsed.A_GuiControl) {			; add A_GuiControl vars to block (as needed)
-				guiContStr := 'A_GuiControl := HasProp(A_GuiControl, "Text") '
-							. '? A_GuiControl.Text : A_GuiControl'
+			if (InStr(declare,'A_GuiControl') && gaScriptStrsUsed.A_GuiControl) {			; add A_GuiControl vars to block (as needed)
+				guiContStr := 'A_GuiControl := (A_GuiControl.Name) '						; A_GuiControl replacement
+							. '? A_GuiControl.Name : (HasProp(A_GuiControl, "Text") '		; ...
+							. '? A_GuiControl.Text : A_GuiControl)'							; ...
 				brcBlk := RegExReplace(brcBlk, '(?im)^(`;?global)$', '$1`r`n' guiContStr)	; use 'global' keyword to determine placement of new vars
 			}
 			funcStr := declare . TCT . brcBlk												; rebuild func

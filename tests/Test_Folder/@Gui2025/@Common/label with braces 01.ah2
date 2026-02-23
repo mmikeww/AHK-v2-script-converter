@@ -22,7 +22,7 @@ Return
 ButtonPress(A_GuiEvent:="", A_GuiControl:="", Info:="", *)
 { ; V1toV2: Lbl->Func
 ;global
-A_GuiControl := HasProp(A_GuiControl, "Text") ? A_GuiControl.Text : A_GuiControl
+A_GuiControl := (A_GuiControl.Name) ? A_GuiControl.Name : (HasProp(A_GuiControl, "Text") ? A_GuiControl.Text : A_GuiControl)
 MsgBox("You pressed:" A_GuiControl)
 Return
 }

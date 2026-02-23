@@ -393,15 +393,49 @@ _getListP4(OptCtrl, OptList, &TxtList, &LineResult, &LineSuffix)
 	}
 }
 ;################################################################################
+_parseParam1(p1)
+{
+; 2026-02-22 AMB, ADDED to parse/format param 1
+
+	; prep/split param 1
+	p1 := Trim(p1), perc := '', gn := ''												; ini
+	if (RegExMatch(p1,'^(%\h+)?(.+)',&m))												; if p1 begins with %
+		perc := m[1], p1 := m[2]														; ... separate % from rest of str
+	if (InStr(p1,':'))																	; if p1 has guiname AND subcmd...
+		ss:=StrSplit(p1,':'), gn:=Trim(ss[1]), p1:=Trim(ss[2])							; ... split guiName from subcmd
+	; format guiName
+	gn .= (gn~='^"\w+$') ? '"' : ''														; add  trailing DQ to guiName,	 as needed
+	gn := (gn~='^[\w\h.]+"\h*') ? RTrim(gn,' "') : gn									; trim trailing DQ from guiName, as needed
+	gn := perc gn																		; add  leading  %  to guiName,	 as needed
+	; separate/format strings/vars in subcmd
+	sc := Trim(p1), ss := StrSplit(sc,' '), usc := ''									; ini, mask strs, split subcmd at ws
+	Mask_T(&sc, 'STR')																	; mask strs - must be done AFTER StrSplit()
+	if (ss.Length > 1 || hasTag(sc,'STR')) {											; if sc has more than 1 part, and has a str
+		for idx, s in ss {																; ... for each str that has a missing DQ...
+			s	:= (s ~= '^[^"].+"$') ? '"' s : s										; ...	add leading  DQ, as needed
+			s	:= (s ~= '^".+[^"]$') ? s '"' : s										; ...	add trailing DQ, as needed
+			usc	.= " " s																; ...	add updated str/var to final str
+		}
+		sc := perc Trim(usc)															; add leading % (if present) to subCmd
+	} else if (sc ~= '"') {																; if subcmd is cmd/var that does NOT need quotes...
+		sc := RegExReplace(sc, '"')														; ... remove all DQs
+	} else {																			; if subcmd is a var (for sure)...
+		sc := perc sc																	; ... add leading %
+	}
+	Mask_R(&sc, 'STR')																	; restore quoted strs that were masked in subcmd
+	;MsgBox "[" gn "]`n[" sc "]"
+	return {guiName:gn,subCmd:sc}														; return guiName and subCmd to caller
+}
+;################################################################################
 GuiControlConv(p) {
 ; 2025-10-05 AMB, MOVED to GuiAndMenu.ahk
 ; 2025-11-30 AMB, UPDATED output to compress multi-line output into single-line tag
 ; 2026-01-01 AMB, UPDATED - changed global gEarlyLine to gV1Line, Type to CtrlType
+; 2026-02-22 AMB, UPDATED - parse for param 1
 
 	global gGuiNameDefault
 	global gGuiActiveFont
-	SubCommand		:= RegExMatch(p[1], "i)^\s*[^:]*?\s*:\s*(.*)$", &newSubCommand) = 0 ? Trim(p[1]) : newSubCommand[1]
-	GuiName			:= RegExMatch(p[1], "i)^\s*([^:]*?)\s*:\s*.*$", &newGuiName) = 0 ? gGuiNameDefault : newGuiName[1]
+	p1 := _parseParam1(p[1]), SubCommand := p1.subCmd, GuiName := p1.guiName
 	ControlID		:= Trim(p[2])
 	Value			:= Trim(p[3])
 	Out				:= ""
@@ -617,6 +651,7 @@ GuiControlGetConv(p) {
 addGuiCBArgs(&code) {
 ; 2025-11-30 AMB, UPDATED to provide better support for existing/missing params
 ; 2026-02-07 AMB, UPDATED needle to prevent false positive with [`r`n`t]
+; 2026-02-22 AMB, UPDATED to provide better support for existing/missing params (again)
 
 	; add Gui args to callback functions
 	nCommon		:= '^\h*(?<fName>(?<!``)[_a-z]\w*+)(?<fArgG>\((?<Args>(?>[^()]|\((?&Args)\))*+)'
@@ -632,23 +667,42 @@ addGuiCBArgs(&code) {
 		If (pos		:= RegExMatch(code, nTargFunc, &m)) {												; look for the func declaration...
 			; target function found
 			if (RegExMatch(m[], nDeclare, &declare)) {													; get just declaration line
+				; extract current details
 				argList		:= declare.fArgG, trail := declare.trail									; extract params and trailing portion of line
 				LWS			:= TWS := '', params := ''													; ini existing params details, inc lead/trail ws
 				if (RegExMatch(argList, '\((\h*)(.+?)(\h*)\)', &mWS)) {									; separate lead/trail ws in params
 					LWS := mWS[1], params := mWS[2], TWS := mWS[3]										; extract existing params and preserve lead/trail ws
 				}
-				paramsToAdd	:= ''																		; params will be added to this as necessary
-				for idx, param in targParams {															; determine which params are missing
-					nParam	:= (param = '*') ? '\*' : '(?i)\b' param '\b'								; custom param needle each iteration
-					if (!(params ~= nParam)) {															; if param was not found in script/func params...
-						paramsToAdd .= ', ' param														; ... it will be added
-						paramsToAdd .= (param != '*') ? ':=""' : ''										; ... add null string assignement, except for * param
-					}
+				; get existing params, move P1 to P2, set P2 to A_GuiControl
+				pArr	:= V1ParamSplit(params)															; extract current params into an array
+				ctrlVar	:= ''																			; ini
+				if (pArr.Length) {
+					ctrlVar	:= RegExReplace(Trim(pArr[1]), '^(\w+).*', '$1')							; capture param1 var name
+					if (pArr.Length = 1)																; if only first param present...
+							pArr.Push('A_GuiEvent:=""')													; ... add second param
+					p1		:= pArr[1], p2 := pArr[2]													; ... capture varnames of P1,P2
+					p1		:= (p1 ~= '^A_GuiEvent') ? p1 : p2											; ... set new P1
+					p2		:= 'A_GuiControl:=""'														; ... set new P2
+					pArr[1]	:= p1, pArr[2] := p2														; ... update new P1,P2 in array
 				}
-				paramsToAdd	:= (!params) ? LTrim(paramsToAdd, ', ') : paramsToAdd						; remove preceding comma if not needed
-				newArgs		:= '(' LWS . params . paramsToAdd . TWS ')'									; preserve lead/trail ws while rebuilding params list
-				addArgs		:= RegExReplace(m[],  '\Q' argList '\E', newArgs,,1)						; replace function params/args
-				code		:= RegExReplace(code, '\Q' m[] '\E', addArgs,,, pos)						; replace function within the code
+				; update any references to ctrl hwnd within func block
+				oBrcBlk	:= m.brcBlk, brcBlk := oBrcBlk													; extract func brace-block
+				brcBlk	:= (ctrlVar)																	; [working var for func brace-block]
+						?  RegExReplace(oBrcBlk,'\b' ctrlVar '\b','A_GuiControl.hwnd') : brcBlk			; replace all occurrences of ctrl hwnd in brace-block
+				; update/add params and values as needed
+				pDef	:= ['A_GuiEvent:=""', 'A_GuiControl:=""', 'Info:=""']							; required/default params
+				pCnt	:= max(3,pArr.Length), pStr := ''												; ini
+				Loop(pCnt){																				; for each current param...
+							cp	 := pArr.Has(A_Index)  && Trim(pArr[A_Index])							; ... does a  v1 param already exist? ...
+								 ?  Trim(pArr[A_Index]) : Trim(pDef[A_Index])							; ... replace v1 param with default param as needed
+							cp	 .= (cp = '*' || cp ~= ':=.+')	 ? '' : ':=""'							; ... add blank val to param (as needed)
+							cp	 := (A_Index = pCnt && cp = '*') ? '' : cp								; ... don't add trailing * param
+							pStr .= (cp) ? cp ', ' : ''													; ... add cur param to param str (if not blank)
+				}
+				newArgs		:= '(' LWS pStr '*' TWS ')'													; assemble final param string, preserving lead/trail ws
+				newFunc		:= RegExReplace(m[], 	'\Q' argList '\E',	newArgs,,1	 )					; replace func params
+				newFunc		:= RegExReplace(newFunc,'\Q' oBrcBlk '\E',	brcBlk ,,1	 )					; replace func brace-block
+				code		:= RegExReplace(code,	'\Q' m[]	 '\E',	newFunc,,,pos)					; replace full func within the code
 			}
 		}
 	}

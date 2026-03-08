@@ -4,12 +4,13 @@
 {
 ; 2025-11-30 AMB, ADDED - compression of entire string into single tag
 ; 2026-01-24 AMB, UPDATED to provide better details when params missing
+; 2026-03-08 AMB, UPDATED, added LTrim to gV1Line
 ; adds support for multi-line compression...
 ; ... this is necessary to add braces to non-brace (single-line) IF/ELSEIF/ELSE blocks
 
 	global gaZipTagIDs																; multi-lines added by converter
 	if (!srcStr || !TagID) {														; if params are invalid...
-		str	:= (srcStr) ? srcStr : gV1Line											; ... if srcStr is empty, use orig v1 line
+		str	:= (srcStr) ? srcStr : LTrim(gV1Line)									; ... if srcStr is empty, use orig v1 line
 		p	:= (srcStr) ? "2" : "1"													; ... which param is missing?
 		msg	:= ' `; ERROR in ' A_ThisFunc '() - missing param ' p		 			; ... error msg to add
 		return str . msg															; ... add error msg to str

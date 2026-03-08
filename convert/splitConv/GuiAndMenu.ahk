@@ -245,7 +245,7 @@ GuiConv(p) {
 		} else if (guiCmd = "Cancel") {
 			guiCmd := "Hide"
 		} else if (guiCmd = "Destroy") {
-			Return LineResult "Try " curGuiName "." guiCmd "()"	; 2026-02-?? AMB - added Try to prevent unnecessary errors
+			Return LineResult "Try " curGuiName "." guiCmd "()"	; 2026-02-11 AMB - added Try to prevent unnecessary errors
 		} else if (guiCmd = "New") {
 			LineResult	:= Trim(LineResult LineSuffix,"`r`n")	; 2025-10-13 AMB - added CR to fix extra CR being left behind sometimes
 			GuiName		:=	", " ToExp(OptList,,1)
@@ -307,7 +307,7 @@ GuiConv(p) {
 					Loop Parse, gmGuiVList[curGuiName], "`n", "`r"
 					{
 						if (gmGuiVList[curGuiName])
-							LineResult .= "`r`n" gIndent A_LoopField " := oSaved." A_LoopField
+							LineResult .= "`r`n" gIndent "Try " A_LoopField " := oSaved." A_LoopField
 					}
 				}
 			}
@@ -652,61 +652,67 @@ addGuiCBArgs(&code) {
 ; 2025-11-30 AMB, UPDATED to provide better support for existing/missing params
 ; 2026-02-07 AMB, UPDATED needle to prevent false positive with [`r`n`t]
 ; 2026-02-22 AMB, UPDATED to provide better support for existing/missing params (again)
+; 2026-03-08 AMB, UPDATED to provide better support for existing/missing params (again)
 
-	; add Gui args to callback functions
+	; add Gui params to callback functions, as needed
 	nCommon		:= '^\h*(?<fName>(?<!``)[_a-z]\w*+)(?<fArgG>\((?<Args>(?>[^()]|\((?&Args)\))*+)'
 	nFUNC		:= RegExReplace(gPtn_Blk_FUNC, 'i)\Q(?:\b(?:IF|WHILE|LOOP)\b)(?=\()\K|\E')				; remove exclusion
 	nDeclare	:= '(?im)' nCommon '\))(?<trail>.*)'													; make needle for func declaration
 	nArgs		:= '(?im)' nCommon '\K\)).*'															; make needle for func params/args
-	targParams	:= ['A_GuiEvent','A_GuiControl','Info','*']												; params that will be added as necessary
+	;targParams	:= ['A_GuiEvent','A_GuiControl','Info','*']												; params that will be added as necessary
 	m := [], declare := []
 	for key, val in gmGuiFuncCBChecks
 	{
 		funcName	:= key																				; grab callback func
 		nTargFunc	:= RegExReplace(nFUNC, 'i)\Q?<fName>(?<!``)[_a-z]\w*+\E', funcName)					; target specific function name
-		If (pos		:= RegExMatch(code, nTargFunc, &m)) {												; look for the func declaration...
-			; target function found
-			if (RegExMatch(m[], nDeclare, &declare)) {													; get just declaration line
-				; extract current details
-				argList		:= declare.fArgG, trail := declare.trail									; extract params and trailing portion of line
-				LWS			:= TWS := '', params := ''													; ini existing params details, inc lead/trail ws
-				if (RegExMatch(argList, '\((\h*)(.+?)(\h*)\)', &mWS)) {									; separate lead/trail ws in params
-					LWS := mWS[1], params := mWS[2], TWS := mWS[3]										; extract existing params and preserve lead/trail ws
-				}
-				; get existing params, move P1 to P2, set P2 to A_GuiControl
-				pArr	:= V1ParamSplit(params)															; extract current params into an array
-				ctrlVar	:= ''																			; ini
-				if (pArr.Length) {
-					ctrlVar	:= RegExReplace(Trim(pArr[1]), '^(\w+).*', '$1')							; capture param1 var name
-					if (pArr.Length = 1)																; if only first param present...
-							pArr.Push('A_GuiEvent:=""')													; ... add second param
-					p1		:= pArr[1], p2 := pArr[2]													; ... capture varnames of P1,P2
-					p1		:= (p1 ~= '^A_GuiEvent') ? p1 : p2											; ... set new P1
-					p2		:= 'A_GuiControl:=""'														; ... set new P2
-					pArr[1]	:= p1, pArr[2] := p2														; ... update new P1,P2 in array
-				}
-				; update any references to ctrl hwnd within func block
-				oBrcBlk	:= m.brcBlk, brcBlk := oBrcBlk													; extract func brace-block
-				brcBlk	:= (ctrlVar)																	; [working var for func brace-block]
-						?  RegExReplace(oBrcBlk,'\b' ctrlVar '\b','A_GuiControl.hwnd') : brcBlk			; replace all occurrences of ctrl hwnd in brace-block
-				; update/add params and values as needed
-				pDef	:= ['A_GuiEvent:=""', 'A_GuiControl:=""', 'Info:=""']							; required/default params
-				pCnt	:= max(3,pArr.Length), pStr := ''												; ini
-				Loop(pCnt){																				; for each current param...
-							cp	 := pArr.Has(A_Index)  && Trim(pArr[A_Index])							; ... does a  v1 param already exist? ...
-								 ?  Trim(pArr[A_Index]) : Trim(pDef[A_Index])							; ... replace v1 param with default param as needed
-							cp	 .= (cp = '*' || cp ~= ':=.+')	 ? '' : ':=""'							; ... add blank val to param (as needed)
-							cp	 := (A_Index = pCnt && cp = '*') ? '' : cp								; ... don't add trailing * param
-							pStr .= (cp) ? cp ', ' : ''													; ... add cur param to param str (if not blank)
-				}
-				newArgs		:= '(' LWS pStr '*' TWS ')'													; assemble final param string, preserving lead/trail ws
-				newFunc		:= RegExReplace(m[], 	'\Q' argList '\E',	newArgs,,1	 )					; replace func params
-				newFunc		:= RegExReplace(newFunc,'\Q' oBrcBlk '\E',	brcBlk ,,1	 )					; replace func brace-block
-				code		:= RegExReplace(code,	'\Q' m[]	 '\E',	newFunc,,,pos)					; replace full func within the code
-			}
+		If (!pos	:= RegExMatch(code, nTargFunc, &m))													; look for the func declaration...
+			continue																					; ... skip, if not found
+		if (!RegExMatch(m[], nDeclare, &declare))														; get just declaration line...
+			continue																					; ... skip, if not found
+		; extract v1 details
+		argList		:= declare.fArgG, trail := declare.trail											; extract params and trailing portion of line
+		LWS			:= TWS := '', v1Prms := ''															; ini existing params details, inc lead/trail ws
+		if (RegExMatch(argList, '\((\h*)(.+?)(\h*)\)', &mWS)) {											; separate lead/trail ws in params
+			LWS := mWS[1], v1Prms := mWS[2], TWS := mWS[3]												; extract existing params and preserve lead/trail ws
 		}
+		if (isV2Params(v1Prms))																			; if v1 params are already in v2 format...
+			continue																					; ... skip - no update required
+		; param updates are required
+		updateGuiCBPrms(v1Prms, &v2PStr:='', &v1P1:='')													; convert v1 params to v2 format, but preserve v1 names
+		; update any references to v1P1 within func block (add .hwnd)
+		brcBlk	:= oBrcBlk := m.brcBlk																	; extract func brace-block
+		brcBlk	:= (v1P1) ? RegExReplace(oBrcBlk,'\b' v1P1 '\b',v1P1 '.hwnd') : brcBlk					; add .hwnd to v1P1 references within brace-block
+		; update code with changes
+		newArgs	:= '(' LWS v2PStr '*' TWS ')'															; assemble final param string, preserving lead/trail ws
+		newFunc	:= RegExReplace(m[], 	'\Q' argList '\E',	newArgs,,1	 )								; replace func params
+		newFunc	:= RegExReplace(newFunc,'\Q' oBrcBlk '\E',	brcBlk ,,1	 )								; replace func brace-block
+		code	:= RegExReplace(code,	'\Q' m[]	 '\E',	newFunc,,,pos)								; replace full func within the code
 	}
 	return ; code by reference
+}
+;################################################################################
+isV2Params(params) {									; 2026-03-08 AMB, ADDED
+	nV2Params := '(?i)^A_GuiEvent:=[^,]+,\h*A_GuiControl:=[^,]+,\h*Info:=[^,]+,\h*\*$'
+	return (params ~= nV2Params)
+}
+;################################################################################
+updateGuiCBPrms(params, &v2PStr:='', &v1P1:='') {		; 2026-03-08 AMB, ADDED							; handles v1 to v2 param conversion for addGuiCBArgs()
+	v1Parr	:= V1ParamSplit(params)																		; extract current v1 params into array
+	v2Parr	:= ['A_GuiControl:=""','A_GuiEvent:=""','Info:=""']											; intended v2 params, (p1/p2 are intentionally swapped)
+	; preserve v1 param names when possible
+	for idx, val in v2Parr {																			; for each param in v2 array...
+		if (v1Parr.Has(idx) && v1Parr[idx]) {															; ... if an orig v1 param was provided
+			v1Name		:= (Trim(v1Parr[idx],' :="'))													; ...	grab the v1 param name
+			v2Parr[idx]	:= v1Name . ':=""'																; ...	replace  v2 param name with v1 name (preserve empty val)
+			(idx=1) &&  v1P1 := v1Name																	; ...	save v1 param name for param 1 only
+		}
+	}
+	p1 := v2Parr[1], v2Parr[1] := v2Parr[2], v2Parr[2] := p1											; swap p1/p2, so they are in correct v2 order
+	; create new v2 param string from v2 array
+	for idx, val in v2Parr																				; for each v2 param...
+		v2PStr .= val ', '																				; ... add  v2 param to v2 param str
+	v2PStr	:= LTrim(v2PStr)																			; trim leading ws
+	return	; vars by reference
 }
 ;################################################################################
 addMenuCBArgs(&code) {

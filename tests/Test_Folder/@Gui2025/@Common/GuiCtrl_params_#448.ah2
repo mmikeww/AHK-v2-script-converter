@@ -4,6 +4,6 @@ ogcButtonClickMe.OnEvent("Click", MyFunction.Bind("Normal"))
 myGui.Show()
 return
 
-MyFunction(GuiEvent:="", A_GuiControl:="", EventInfo:="", *) {
-    MsgBox("CtrlHwnd:`t" A_GuiControl.hwnd "`nEvent:`t" GuiEvent "`nInfo:`t" EventInfo)
+MyFunction(GuiEvent:="", CtrlHwnd:="", EventInfo:="", *) {
+    MsgBox("CtrlHwnd:`t" CtrlHwnd.hwnd "`nEvent:`t" GuiEvent "`nInfo:`t" EventInfo)
 }

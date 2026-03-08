@@ -45,17 +45,17 @@ ExitApp()
 EmptyTest(A_GuiEvent:="", A_GuiControl:="", Info:="", *) { ; V1toV2: Lbl->Func
 global
 oSaved := myGui.Submit(0)
-FirstName := oSaved.FirstName
-MyCheckBox := oSaved.MyCheckBox
-MyComboBox := oSaved.MyComboBox
-MyDateTime := oSaved.MyDateTime
-MyDropDownList := oSaved.MyDropDownList
-MyHotkey := oSaved.MyHotkey
-MyMonthCal := oSaved.MyMonthCal
-MyRadio := oSaved.MyRadio
-MySlider := oSaved.MySlider
-MyTab3 := oSaved.MyTab3
-myListBox := oSaved.myListBox  ; Save the input from the user to each control's associated variable.
+Try FirstName := oSaved.FirstName
+Try MyCheckBox := oSaved.MyCheckBox
+Try MyComboBox := oSaved.MyComboBox
+Try MyDateTime := oSaved.MyDateTime
+Try MyDropDownList := oSaved.MyDropDownList
+Try MyHotkey := oSaved.MyHotkey
+Try MyMonthCal := oSaved.MyMonthCal
+Try MyRadio := oSaved.MyRadio
+Try MySlider := oSaved.MySlider
+Try MyTab3 := oSaved.MyTab3
+Try myListBox := oSaved.myListBox  ; Save the input from the user to each control's associated variable.
 ogcTextC.Value := "test"
 ogcEditFirstName.Value := "test"
 

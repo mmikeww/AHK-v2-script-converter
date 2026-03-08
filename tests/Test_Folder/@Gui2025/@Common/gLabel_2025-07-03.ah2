@@ -19,7 +19,7 @@ Return
 Mute(A_GuiEvent:="", A_GuiControl:="", Info:="", *) { ; V1toV2: Lbl->Func
 global
 oSaved := myGui.Submit(0)
-Mute := oSaved.Mute
+Try Mute := oSaved.Mute
 ControlFocus("Edit1", AppWindow)
 Return
 }

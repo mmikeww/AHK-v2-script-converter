@@ -56,6 +56,7 @@ setGlobals() {													; for globals that are reset with each new conversion
 	gmGuiCtrlObj			:= Map_I()							; Create a map to return the object of a control
 	gmGuiCtrlType			:= Map_I()							; Create a map to return the type of control
 	gmGuiFuncCBChecks		:= Map_I()							; for gui funcs
+	gmMethodsToStatic		:= Map_I()							; 2026-03-08 - list of methods that require static kywd
 	gGuiList				:= '|'
 	gGuiNameDefault			:= getUserDefGuiName()				; 2026-01-26 UPDATED - as part of support for user settings
 	gmGuiVList				:= Map_I()							; Used to list all variable names defined in a Gui

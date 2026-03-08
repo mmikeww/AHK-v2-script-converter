@@ -277,6 +277,7 @@ FinalizeConvert(&code)
 {
 ; 2024-06-27 ADDED, 2025-06-12, 2025-10-05, 2026-01-01 UPDATED
 ; 2026-01-24 AMB, UPDATED to support progress-gui
+; 2026-03-08 AMB, UPDATED to add static kywd to methods as needed
 ; Performs tasks that finalize overall conversion
 
    Prog.ULog(,  'Post Process - Restore Classes/Funcs...', A_ThisFunc       )           ; update UI - current operation, debug
@@ -309,6 +310,8 @@ FinalizeConvert(&code)
       addOnMessageCBArgs(&code)                                                         ; 2024-06-28, AMB - Fix #136
    Prog.ULog(,  'Post Process - Add CB Args for Hotkey Command...'          )           ; update UI - current operation
       addHKCmdCBArgs(&code)                                                             ; 2025-10-12, AMB - Fix #328
+   Prog.ULog(,  'Post Process - Add Static keyword to methods...'           )           ; update UI - current operation
+      addStaticKywdToMethod(&code)                                                      ; 2026-03-??, AMB - add static keyword to methods that require it
    Prog.ULog(,  'Post Process - Update FileOpen Properties...'              )           ; update UI - current operation
       updateFileOpenProps(&code)                                                        ; 2025-10-12, AMB - support for #358
    Prog.ULog(,  'Post Process - Restore Continuation Sections...'           )           ; update UI - current operation
@@ -440,6 +443,7 @@ lp_DirectivesAndComment(&lineStr) {
 ; 2025-06-12 AMB, Moved to dedicated routine for cleaner convert loop
 ; 2025-12-24 AMB, MOVED to ConvertFuncs.ahk
 ; 2026-01-01 AMB, UPDATED - changed global gEarlyLine to gV1Line
+; 2026-03-08 AMB, UPDATED - added LTrim to gV1Line
 ; Purpose: Remove/Disable incompatible commands (that are no longer allowed)
 lp_DisableInvalidCmds(&lineStr, fCmdConverted) {
    ; V1 and V2, but with different commands for each version
@@ -448,9 +452,9 @@ lp_DisableInvalidCmds(&lineStr, fCmdConverted) {
    if (!fCmdConverted) {                                    ; if a targetted command was found earlier...
       Loop Parse, gAhkCmdsToRemoveV1, '`n', '`r' {          ; [check for v1 deprecated]
          targStr:= escRegexChars(A_LoopField)               ; prep for regex check
-         lead   := (A_LoopField ~= '^#') ? '' : '\b'        ; add word boundary to beginning of needle, but only when hask char not present
+         lead   := (A_LoopField ~= '^#') ? '' : '\b'        ; add word boundary to beginning of needle, but only when hash char not present
          nTarg  := '(?i)' lead targStr '\b'                 ; needle to cover all scenerios in gAhkCmdsToRemoveV1
-         if (gV1Line ~= nTarg)                              ; ... is that command invalid after v1.0?
+         if (LTrim(gV1Line) ~= nTarg)                       ; ... is that command invalid after v1.0?
             fDisableLine := true                            ; flag it as invalid
       }
       if (gV2Conv) {                                        ; v2
@@ -458,7 +462,7 @@ lp_DisableInvalidCmds(&lineStr, fCmdConverted) {
             targStr := escRegexChars(A_LoopField)           ; prep for regex check
             lead    := (A_LoopField ~= '^#') ? '' : '\b'    ; add word boundary to beginning of needle, but only when hask char not present
             nTarg   := '(?i)' lead targStr '\b'             ; needle to cover all scenerios in gAhkCmdsToRemoveV2
-            if (gV1Line ~= nTarg)                           ; ... is that command invalid after v2?
+            if (LTrim(gV1Line) ~= nTarg)                    ; ... is that command invalid after v2?
                fDisableLine := true                         ; flag it as invalid
          }
          if (lineStr ~= '^\h*(\blocal\b)\h*$')  {           ; V2 Only - only force-local

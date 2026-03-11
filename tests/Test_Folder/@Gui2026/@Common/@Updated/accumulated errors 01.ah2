@@ -1,4 +1,5 @@
-﻿#Warn Unreachable, Off
+﻿; V1toV2: Must place v2DynGui.ahk in library folder
+#Include <v2DynGui>
 
 is_arr := { (tree): 1 }
 
@@ -265,7 +266,7 @@ else if (nt == "'*'") {
 	_HelperClip(){
 		local ClipList 
 		
-		out := ogc% PopUpWindow.EditHwnd.Value
+		out := fcV2GC(PopUpWindow.HelperHwnd,PopUpWindow.EditHwnd).Value ; V1toV2: Verify that control [% PopUpWindow.EditHwnd] is accurate
 		
 		ClipList := 		{ 	__New: 					" := New PopUpWindow( { AutoShow: 1 , X: 0 , Y: 0 , W: A_ScreenWidth , H: A_ScreenHeight , Options: `" -DPIScale +AlwaysOnTop `" } )"
 							,	UpdateSettings:			".UpdateSettings( { X: `"`" , Y: `"`" , W: `"`" , H: `"`" } , UpdateGraphics := 0 )"
@@ -421,26 +422,24 @@ retStr := RegExReplace(retStr, "(?m)^((?:(?>`"[^`"\v]*`"|[^`"\v;]*)*)*)(;.*)+", 
 
 ;################################################################################
 
-   myGui := Gui()
-   myGui.MarginX := 20, myGui.MarginY := 20
-   ogcButtonOrder1234 := myGui.Add("Button", "ym", "Order 1, 2, 3, 4")
-   ogcButtonOrder1234.OnEvent("Click", Order123.Bind("Normal"))
-   ogcButtonOrder3214 := myGui.Add("Button", "ym", "Order 3, 2, 1, 4")
-   ogcButtonOrder3214.OnEvent("Click", Order321.Bind("Normal"))
-   ogcButtonRemoveBkImage := myGui.Add("Button", "ym", "Remove BkImage")
-   ogcButtonRemoveBkImage.OnEvent("Click", RemoveImage.Bind("Normal"))
-   ogcButtonNewBkImage := myGui.Add("Button", "ym", "New BkImage")
-   ogcButtonNewBkImage.OnEvent("Click", NewImage.Bind("Normal"))
-   myGui.Add("Text", "xm Section h20", "First visible row:")
-   myGui.Add("Text", "hp y+0", "Is row 20 visible?")
-   myGui.Add("Text", "hp y+0", "Number of visible rows:")
-   ogcTextFVR := myGui.Add("Text", "ys hp vFVR", "00")
-   ogcTextIRV := myGui.Add("Text", "hp y+0 vIRV", "00")
-   ogcTextNOVR := myGui.Add("Text", "hp y+0 vNOVR", "00")
-   ogcButtonNewCheck := myGui.Add("Button", "ys", "New Check")
-   ogcButtonNewCheck.OnEvent("Click", Check.Bind("Normal"))
-   ogcListviewVLV := myGui.Add("Listview", "xm w500 r10 cWhite  vVLV", ["Col 1", "Col 2", "Col 3", "Icon"])
-   ogcListviewVLV.OnEvent("DoubleClick", rid.Bind("DoubleClick")), HLV := ogcListviewVLV.hwnd ; add -LV0x20 on Win XP
+   If (!HasV2Gui("1")) {
+   	mV2Gui["1"] := NewV2Gui("1")
+   }
+   mV2Gui["1"].MarginX := 20, mV2Gui["1"].MarginY := 20
+   mV2GC[["1","Order1234"]] := mV2Gui["1"].Add("Button","ym","Order 1, 2, 3, 4")
+   mV2GC[["1","Order3214"]] := mV2Gui["1"].Add("Button","ym","Order 3, 2, 1, 4")
+   mV2GC[["1","RemoveBkImage"]] := mV2Gui["1"].Add("Button","ym","Remove BkImage")
+   mV2GC[["1","NewBkImage"]] := mV2Gui["1"].Add("Button","ym","New BkImage")
+   mV2Gui["1"].Add("Text","xm Section h20","First visible row:")
+   mV2Gui["1"].Add("Text","hp y+0","Is row 20 visible?")
+   mV2Gui["1"].Add("Text","hp y+0","Number of visible rows:")
+   mV2GC[["1","FVR"]] := mV2Gui["1"].Add("Text","ys hp vFVR","00")
+   mV2GC[["1","IRV"]] := mV2Gui["1"].Add("Text","hp y+0 vIRV","00")
+   mV2GC[["1","NOVR"]] := mV2Gui["1"].Add("Text","hp y+0 vNOVR","00")
+   mV2GC[["1","NewCheck"]] := mV2Gui["1"].Add("Button","ys","New Check")
+   mV2GC[["1","VLV"]] := mV2Gui["1"].Add("Listview","xm w500 r10 Grid cWhite vVLV",["Col 1","Col 2","Col 3","Icon"])
+   HLV := mV2GC[["1","VLV"]].hwnd
+   global gV2CurLV := mV2GC[["1","VLV"]] ; add -LV0x20 on Win XP
 
 
 ;################################################################################
@@ -526,47 +525,10 @@ $*s::
 	}
 }
 V1toV2_GblCode_001:
-V1toV2_GblCode_001()
 return
 
 
 V1toV2_GblCode_002:
-V1toV2_GblCode_002()
-	Return
-	
-	V1toV2_GblCode_003:
-V1toV2_GblCode_003()
-Return
-
-
-
-V1toV2_GblCode_004:
-V1toV2_GblCode_004()
-return
-;################################################################################
-F11::	; lock to horz axis movement only
-F12::	; lock to vert axis movement only
-{
-	lock :=! lock
-	MouseGetPos(&mX, &mY)
-	((A_ThisHotkey="F11") ? LockAxis(lock, 0, mY, A_ScreenWidth, mY) : LockAxis(lock, mX, 0, mX, A_ScreenHeight))
-	return
-}
-;esc::ExitApp
-;################################################################################
-LockAxis(lock:=false, x1:=0 , y1:=0, x2:=1, y2:=1) {
-	R := Buffer(16, 0),NumPut("UPtr", x1, R.Ptr+0),NumPut("UPtr", y1, R.Ptr+4),NumPut("UPtr", x2, R.Ptr+8),NumPut("UPtr", y2, R.Ptr+12) ; V1toV2: if 'R' is a UTF-16 string, use 'VarSetStrCapacity(&R, 16)' and replace all instances of 'R.Ptr' with 'StrPtr(R)'
-	return (lock) ? DllCall("ClipCursor", "UInt", R.Ptr) : DllCall("ClipCursor")
-}
-
-;###############  V1toV2 FUNCS  ###############
-V1toV2_GblCode_001() { ; V1toV2: Lbl->Func
-global
-return
-}
-;##############################################
-V1toV2_GblCode_002() { ; V1toV2: Lbl->Func
-global
 ; formatComments.ahk - SEEMS TO CONVERT CORRECTLY WITH MY CHANGES
 
 linesObj.push({code:code,comment:comment})	; should become linesObj.push({code:code,comment:comment})
@@ -575,15 +537,13 @@ linesObj.push({code:code,comment:comment})	; should become linesObj.push({code:c
 ; GetDisplaySettings.ahk - SEEMS TO CONVERT CORRECTLY WITH MY CHANGES
 
 	Return {Width:w,Height:h,Qual:q,Freq:f} ;Out_1 "/" Out_2 "/" Out_3 "/" Out_4
-}
-;##############################################
-V1toV2_GblCode_003() { ; V1toV2: Lbl->Func
-global
+	
+	V1toV2_GblCode_003:
 Return {W: (ErrorLevel & 0xFFFF), H: (ErrorLevel >> 16) & 0xFFFF}
-}
-;##############################################
-V1toV2_GblCode_004() { ; V1toV2: Lbl->Func
-global
+
+
+
+V1toV2_GblCode_004:
 ; imagesearch 101814.ahk
 
 			Click(FoundX ", " FoundY)
@@ -611,4 +571,18 @@ CoordMode("pixel", "screen")
 CoordMode("mouse", "screen")
 lock := false
 return
+;################################################################################
+F11::	; lock to horz axis movement only
+F12::	; lock to vert axis movement only
+{
+	lock :=! lock
+	MouseGetPos(&mX, &mY)
+	((A_ThisHotkey="F11") ? LockAxis(lock, 0, mY, A_ScreenWidth, mY) : LockAxis(lock, mX, 0, mX, A_ScreenHeight))
+	return
+}
+;esc::ExitApp
+;################################################################################
+LockAxis(lock:=false, x1:=0 , y1:=0, x2:=1, y2:=1) {
+	R := Buffer(16, 0),NumPut("UPtr", x1, R.Ptr+0),NumPut("UPtr", y1, R.Ptr+4),NumPut("UPtr", x2, R.Ptr+8),NumPut("UPtr", y2, R.Ptr+12) ; V1toV2: if 'R' is a UTF-16 string, use 'VarSetStrCapacity(&R, 16)' and replace all instances of 'R.Ptr' with 'StrPtr(R)'
+	return (lock) ? DllCall("ClipCursor", "UInt", R.Ptr) : DllCall("ClipCursor")
 }

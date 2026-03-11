@@ -365,7 +365,12 @@ _GetKeyState(p) {
 ;}
 ;################################################################################
 _Gui(p) {
-	return GuiConv(p)			; see GuiAndMenu.ahk
+; 2026-03-11 AMB, UPDATED to support updated/dynamic gui handling option
+	if (gUseGuiAlt) {			; see Global_Declare.ahk
+		return GuiAlt(p)		; see GuiAlt.ahk			(updated/dynamic handling)
+	} else {
+		return GuiConv(p)		; see GuiAndMenu.ahk		(orig handling)
+	}
 }
 ;################################################################################
 _GuiControl(p) {

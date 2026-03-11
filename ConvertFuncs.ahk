@@ -141,27 +141,40 @@ PreProcessLines(&code)
 ;################################################################################
 {
 ; 2025-11-23 AMB, ADDED - part of fix for #413
+; 2026-03-11 AMB, UPDATED to detect dynamic naming requirements for Gui/GuiControls
 ; pre-processing of certain commands via single-iteration of script lines
 
-    Mask_T(&code, 'C&S')
-    nGoto       := '(?im)^(\h*)(GOTO)(.+)'                                              ; needle for 'Goto, Label'
-    nHK         := '(?im)^(\h*)' gPtn_HOTKEY . '(?<cmd>.*)'                             ; needle for full HK line
-    lines       := StrSplit(code, '`n', '`r')                                           ; separate all lines within Code
-    outStr      := ''                                                                   ; ini output
-    for idx, line in lines {                                                            ; for each line in script...
-        ; GOTO
-        if (line ~= nGoto) {                                                            ; if line has a Goto command...
-            line := convertGoto(line, idx, &lines)                                      ; ... convert Goto
-        }
-        ; HOTKEY
-        else if (RegExMatch(line, nHK, &m) && m.cmd) {                                  ; if line is HK with possible cmd on same line...
-            line := HK1LToML(line, idx, &lines)                                         ; ... see if cmd needs multi-line instead
-        }
-        outStr  .= line '`r`n'                                                          ; add line to output str
-    }
-    code := RegExReplace(outStr, '\r\n$',,,1)                                           ; update code (also remove very last CRLF)
-    code := UnZip(code, 'GOTORET')                                                      ; handle GotoReturn - add braces to IF/ELSEIF/ELSE as needed
-    return                                                                              ; return Code by reference
+   global gDynGuiNaming, gfHasDynamicGui ;, gAutoGuiNaming
+
+   gfHasDynamicGui  := false
+   gDynGuiNaming    := (!gAutoGuiNaming) ? gDynGuiNaming : false                        ; set dynamic-naming to DISABLED (initially) when naming is set to Auto
+
+   Mask_T(&code, 'C&S')
+   nGoto       := '(?im)^(\h*)(GOTO)(.+)'                                               ; needle for 'Goto, Label'
+   nHK         := '(?im)^(\h*)' gPtn_HOTKEY . '(?<cmd>.*)'                              ; needle for full HK line
+   nTernary    := '\?[^:]+:.+'
+   lines       := StrSplit(code, '`n', '`r')                                            ; separate all lines within Code
+   outStr      := ''                                                                    ; ini output
+   ternaryList := ''
+   for idx, line in lines {                                                             ; for each line in script...
+      ; GOTO
+      if (line ~= nGoto) {                                                              ; if line has a Goto command...
+         line := convertGoto(line, idx, &lines)                                         ; ... convert Goto
+      }
+      ; HOTKEY
+      else if (RegExMatch(line, nHK, &m) && m.cmd) {                                    ; if line is HK with possible cmd on same line...
+         line := HK1LToML(line, idx, &lines)                                            ; ... see if cmd needs multi-line instead
+      }
+      ; GUI related
+      else if (line ~= '(?i)GUI') {                                                     ; if line has 'GUI' string
+         detectDynamicGuiState(line)
+      }
+      outStr  .= line '`r`n'                                                            ; add line to output str
+   }
+   clsGuiObj.ResetDefaultGuiNames()
+   code := RegExReplace(outStr, '\r\n$',,,1)                                            ; update code (also remove very last CRLF)
+   code := UnZip(code, 'GOTORET')                                                       ; handle GotoReturn - add braces to IF/ELSEIF/ELSE as needed
+   return                                                                               ; return Code by reference
 }
 ;################################################################################
 getScriptStringsUsed(scopeCode, term:='')
@@ -311,9 +324,14 @@ FinalizeConvert(&code)
    Prog.ULog(,  'Post Process - Add CB Args for Hotkey Command...'          )           ; update UI - current operation
       addHKCmdCBArgs(&code)                                                             ; 2025-10-12, AMB - Fix #328
    Prog.ULog(,  'Post Process - Add Static keyword to methods...'           )           ; update UI - current operation
-      addStaticKywdToMethod(&code)                                                      ; 2026-03-??, AMB - add static keyword to methods that require it
+      addStaticKywdToMethod(&code)                                                      ; 2026-03-08, AMB - add static keyword to methods that require it
    Prog.ULog(,  'Post Process - Update FileOpen Properties...'              )           ; update UI - current operation
       updateFileOpenProps(&code)                                                        ; 2025-10-12, AMB - support for #358
+   if (gfHasDynamicGui) {                                                               ; 2026-03-11 AMB, Added to support Dynamic Gui handling
+      ; https://www.autohotkey.com/docs/v2/Scripts.htm#lib
+      msg   := '`; V1toV2: Must place v2DynGui.ahk in library folder`r`n'
+      code  := msg . '#Include <v2DynGui>`r`n' . code                                   ; add #Include for dynamic gui handling
+   }
    Prog.ULog(,  'Post Process - Restore Continuation Sections...'           )           ; update UI - current operation
       Mask_R(&code, 'CSect')                                                            ; restore remaining cont sects (returned as v2 converted)
    Prog.ULog(,  'Post Process - Restore Multi-line Parentheses Blocks...'   )           ; update UI - current operation

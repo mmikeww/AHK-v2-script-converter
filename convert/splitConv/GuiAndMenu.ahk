@@ -364,11 +364,11 @@ _getListP4(OptCtrl, OptList, &TxtList, &LineResult, &LineSuffix)
 	gOScriptStr.SetIndex(gO_Index)
 	if (RegExMatch(TxtList, "%(.*)%", &match)) {
 		LineResult .= ', StrSplit(' match[1] ', "|")'
-		LineSuffix .= ' `; V1toV2: Ensure ' OptCtrl ' has correct choose value'		; 2026-01-24 AMB, UPDATED
+		LineSuffix .= ' `; V1toV2: Ensure ' OptCtrl ' has correct choose value'							; 2026-01-24 AMB, UPDATED
 	} else {
 		ObjectValue := "["
 		ChooseString := ""
-		if (!InStr(OptList, "Choose") && InStr(TxtList, "||")) {		; ChooseN takes priority over ||
+		if (!InStr(OptList, "Choose") && InStr(TxtList, "||")) {										; ChooseN takes priority over ||
 			dPipes		:= StrSplit(TxtList, "||")
 			selIndex 	:= 0
 			for idx, str in dPipes {
@@ -382,7 +382,7 @@ _getListP4(OptCtrl, OptList, &TxtList, &LineResult, &LineSuffix)
 				LineResult .= "`"Choose" selIndex "`""
 			TxtList := RTrim(StrReplace(TxtList, "||", "|"), "|")
 		} else if (InStr(OptList, "Choose")) {
-			TxtList := RegexReplace(TxtList, "\|+", "|")				; Replace all pipe groups, this breaks empty choices
+			TxtList := RegexReplace(TxtList, "\|+", "|")												; Replace all pipe groups, this breaks empty choices
 		}
 		Loop Parse TxtList, "|", " "
 		{
@@ -393,55 +393,36 @@ _getListP4(OptCtrl, OptList, &TxtList, &LineResult, &LineSuffix)
 	}
 }
 ;################################################################################
-_parseParam1(p1)
-{
-; 2026-02-22 AMB, ADDED to parse/format param 1
-
-	; prep/split param 1
-	p1 := Trim(p1), perc := '', gn := ''												; ini
-	if (RegExMatch(p1,'^(%\h+)?(.+)',&m))												; if p1 begins with %
-		perc := m[1], p1 := m[2]														; ... separate % from rest of str
-	if (InStr(p1,':'))																	; if p1 has guiname AND subcmd...
-		ss:=StrSplit(p1,':'), gn:=Trim(ss[1]), p1:=Trim(ss[2])							; ... split guiName from subcmd
-	; format guiName
-	gn .= (gn~='^"\w+$') ? '"' : ''														; add  trailing DQ to guiName,	 as needed
-	gn := (gn~='^[\w\h.]+"\h*') ? RTrim(gn,' "') : gn									; trim trailing DQ from guiName, as needed
-	gn := perc gn																		; add  leading  %  to guiName,	 as needed
-	; separate/format strings/vars in subcmd
-	sc := Trim(p1), ss := StrSplit(sc,' '), usc := ''									; ini, mask strs, split subcmd at ws
-	Mask_T(&sc, 'STR')																	; mask strs - must be done AFTER StrSplit()
-	if (ss.Length > 1 || hasTag(sc,'STR')) {											; if sc has more than 1 part, and has a str
-		for idx, s in ss {																; ... for each str that has a missing DQ...
-			s	:= (s ~= '^[^"].+"$') ? '"' s : s										; ...	add leading  DQ, as needed
-			s	:= (s ~= '^".+[^"]$') ? s '"' : s										; ...	add trailing DQ, as needed
-			usc	.= " " s																; ...	add updated str/var to final str
-		}
-		sc := perc Trim(usc)															; add leading % (if present) to subCmd
-	} else if (sc ~= '"') {																; if subcmd is cmd/var that does NOT need quotes...
-		sc := RegExReplace(sc, '"')														; ... remove all DQs
-	} else {																			; if subcmd is a var (for sure)...
-		sc := perc sc																	; ... add leading %
-	}
-	Mask_R(&sc, 'STR')																	; restore quoted strs that were masked in subcmd
-	;MsgBox "[" gn "]`n[" sc "]"
-	return {guiName:gn,subCmd:sc}														; return guiName and subCmd to caller
-}
-;################################################################################
 GuiControlConv(p) {
 ; 2025-10-05 AMB, MOVED to GuiAndMenu.ahk
 ; 2025-11-30 AMB, UPDATED output to compress multi-line output into single-line tag
 ; 2026-01-01 AMB, UPDATED - changed global gEarlyLine to gV1Line, Type to CtrlType
 ; 2026-02-22 AMB, UPDATED - parse for param 1
+; 2026-03-11 AMB, UPDATED - to support updated/dynamic handling
+; TODO
+;	ADD SUPPORT FOR V1 EXPRESSION STRINGS, for SubCommand and ControlID
+;	ADD SUPPORT FOR TERNANY IFS, for SubCommand and ControlID
+;	ADD SUPPORT FOR P1 BEING '+Default' - see DragDropPDF.ahk
 
-	global gGuiNameDefault
-	global gGuiActiveFont
-	p1 := _parseParam1(p[1]), SubCommand := p1.subCmd, GuiName := p1.guiName
-	ControlID		:= Trim(p[2])
-	Value			:= Trim(p[3])
-	Out				:= ""
-	ControlObject	:= gmGuiCtrlObj.Has(ControlID) ? gmGuiCtrlObj[ControlID] : "ogc" ControlID
+	global gGuiNameDefault, gGuiActiveFont
 
-	ctrlType := gmGuiCtrlType.Has(ControlObject) ? gmGuiCtrlType[ControlObject] : ""
+	; common to orig, updated, and dynamic handling
+	if (hasTernary(gV1Line))																			; if orig v1 line has ternary expression...
+		return LTrim(gV1Line) . ' `; V1toV2: Ternary not yet supported (coming soon)'					; ... do not process (for now)
+	p1			:= _splitParam(p[1]), SubCommand := p1.subCmd, GuiName := p1.guiName					; get guiName and subCmd from P1
+	ControlID	:= Trim(RegExReplace(p[2], ':')) ; remove colon from labels								; get ctrlID from P2
+	Value		:= Trim(p[3])																			; get value  from P3
+	Out			:= ''																					; ini output
+
+	if (gDynGuiNaming) {																				; if using dynamic naming method...
+		if (retStr := _guiCtrl_OptG(GuiName, SubCommand, ControlID, Value))								; ... if subCmd is option -/+G...
+			return retStr																				; ... 	return result
+		_getCtrlDetails(GuiName, ControlID, Trim(p[2]), &ControlObject:='', &ctrlType:='')				; ... get ControlObject and ctrlType
+	}
+	else {	; for orig naming																			; if using orig naming method...
+		ControlObject	:= gmGuiCtrlObj.Has(ControlID) ? gmGuiCtrlObj[ControlID] : 'ogc' ControlID		; ... set ControlObject
+		ctrlType		:= gmGuiCtrlType.Has(ControlObject) ? gmGuiCtrlType[ControlObject] : ''			; ... set ctrlType
+	}
 
 	if (SubCommand = "") {
 		if (ctrlType = "Groupbox" || ctrlType = "Button" || ctrlType = "Link") {
@@ -591,11 +572,9 @@ GuiControlConv(p) {
 		} else {
 			Return "; V1toV2: Use " ControlObject ".SetFont(Options, FontName)"
 		}
-	} else if (RegExMatch(SubCommand, "^[+-].*")) {
+	} else if (SubCommand ~= "[+-].+") {
 		Return ControlObject ".Opt(" ToExp(SubCommand) ")"
 	} else { ; Passed as variable, just output something that won't work
-		if (RegExMatch(SubCommand, "[+-].*"))
-			Return ControlObject ".Opt(" ToExp(SubCommand) ")"
 		Return ControlObject ".%" ToExp(SubCommand) "%() `; V1toV2: SubCommand passed as variable, check variable contents and docs"
 	}
 
@@ -605,21 +584,31 @@ GuiControlConv(p) {
 GuiControlGetConv(p) {
 ; 2025-10-05 AMB, MOVED to GuiAndMenu.ahk
 ; 2026-01-01 AMB, UPDATED - changed global gEarlyLine to gV1Line, Type to CtrlType
+; 2026-03-11 AMB, UPDATED - to support updated/dynamic handling
 
 	; GuiControlGet, OutputVar , SubCommand, ControlID, Value
-	global gGuiNameDefault
-	OutputVar	:= Trim(p[1])
-	SubCommand	:= RegExMatch(p[2], "i)^\s*[^:]*?\s*:\s*(.*)$", &newSubCommand) = 0 ? Trim(p[2]) : newSubCommand[1]
-	GuiName		:= RegExMatch(p[2], "i)^\s*([^:]*?)\s*:\s*.*$", &newGuiName) = 0 ? gGuiNameDefault : newGuiName[1]
-	ControlID	:= Trim(p[3])
-	Value		:= Trim(p[4])
-	if (ControlID = "") {
-		ControlID := OutputVar
-	}
+	global gGuiNameDefault, gEOLComment_Func
 
-	Out := ""
-	ControlObject := gmGuiCtrlObj.Has(ControlID) ? gmGuiCtrlObj[ControlID] : "ogc" ControlID
-	ctrlType := gmGuiCtrlType.Has(ControlObject) ? gmGuiCtrlType[ControlObject] : ""
+	; common to orig, updated, and dynamic handling
+	if (hasTernary(gV1Line))																			; if orig v1 line has ternary expression...
+		return LTrim(gV1Line) . ' `; V1toV2: Ternary not yet supported (coming soon)'					; ... do not process (for now)
+	OutputVar	:= Trim(p[1])																			; ... get output var from P1
+	p2			:= _splitParam(p[2]), SubCommand := p2.subCmd, GuiName := p2.guiName					; ... get guiName and subCmd from P2
+	ControlID	:= Trim(RegExReplace(p[3], ':')) ; remove colon from labels								; ... get ctrlID from P3
+	ControlID	:= (ControlID) ? ControlID : OutputVar													; ... if P3 is empty, use P1 instead
+	Value		:= Trim(p[4])																			; ... get value  from P3
+	Out			:= ''																					; ini output
+
+	if (gDynGuiNaming) {																				; if using dynamic naming method...
+		if (retStr := _guiCtrl_OptG(GuiName, SubCommand, ControlID, Value))								; ... if subCmd is option -/+G...
+			return retStr																				; ... 	return result
+		_getCtrlDetails(GuiName, ControlID, Trim(p[3]), &ControlObject:='', &ctrlType:='')				; ... get ControlObject and ctrlType
+	}
+	else {	; for orig naming																			; if using orig naming method...
+		GuiName			:= (GuiName) ? GuiName : gGuiNameDefault										; if GuiName is missing, use default name (not really accurate)
+		ControlObject	:= gmGuiCtrlObj.Has(ControlID) ? gmGuiCtrlObj[ControlID] : "ogc" ControlID		; ... set ControlObject
+		ctrlType		:= gmGuiCtrlType.Has(ControlObject) ? gmGuiCtrlType[ControlObject] : ""			; ... set ctrlType
+	}
 
 	if (SubCommand = "") {
 		if (Value = "text" || ctrlType = "ListBox") {
@@ -646,6 +635,114 @@ GuiControlGetConv(p) {
 	}
 
 	Return RegExReplace(Out, "[\s\,]*\)$", ")")
+}
+;################################################################################
+_splitParam(prm) {
+; 2026-02-22 AMB, ADDED to split/parse/format param containing guiName/subCmd
+; 2026-03-11 AMB, UPDATED func and param names
+
+	; prep/split param 1
+	prm := Trim(prm), perc := '', gn := ''																; ini
+	if (RegExMatch(prm,'^(%\h+)?(.+)',&m))																; if param begins with %
+		perc := m[1], prm := m[2]																		; ... separate % from rest of str
+	if (InStr(prm,':'))																					; if param has guiname AND subcmd...
+		ss:=StrSplit(prm,':'), gn:=Trim(ss[1]), prm:=Trim(ss[2])										; ... split guiName from subcmd
+	; format guiName
+	gn .= (gn~='^"\w+$') ? '"' : ''																		; add  trailing DQ to guiName,	 as needed
+	gn := (gn~='^[\w\h.]+"\h*') ? RTrim(gn,' "') : gn													; trim trailing DQ from guiName, as needed
+	gn := perc gn																						; add  leading  %  to guiName,	 as needed
+	; separate/format strings/vars in subcmd
+	sc := Trim(prm), ss := StrSplit(sc,' '), usc := ''													; ini, mask strs, split subcmd at ws
+	Mask_T(&sc, 'STR')																					; mask strs - must be done AFTER StrSplit()
+	if (ss.Length > 1 || hasTag(sc,'STR')) {															; if sc has more than 1 part, and has a str
+		for idx, s in ss {																				; ... for each str that has a missing DQ...
+			s	:= (s ~= '^[^"].+"$') ? '"' s : s														; ...	add leading  DQ, as needed
+			s	:= (s ~= '^".+[^"]$') ? s '"' : s														; ...	add trailing DQ, as needed
+			usc	.= " " s																				; ...	add updated str/var to final str
+		}
+		sc := perc Trim(usc)																			; add leading % (if present) to subCmd
+	} else if (sc ~= '"') {																				; if subcmd is cmd/var that does NOT need quotes...
+		sc := RegExReplace(sc, '"')																		; ... remove all DQs
+	} else {																							; if subcmd is a var (for sure)...
+		sc := perc sc																					; ... add leading %
+	}
+	Mask_R(&sc, 'STR')																					; restore quoted strs that were masked in subcmd
+	;MsgBox "[" gn "]`n[" sc "]"
+	return {guiName:gn,subCmd:sc}																		; return guiName and subCmd to caller
+}
+;################################################################################
+_getCtrlDetails(guiName, ctrlID, oCtrlID, &cObj:='', &cType:='') {
+; 2026-03-11 AMB, ADDED - to get ctrlObj and ctrlType for dynamic handling
+
+	global gEOLComment_Func
+
+	cTypeKey := '', dynLC := false, badCtrlID := false													; ini
+	ccid	 := RegExReplace(ctrlID, '[%"\s]')															; [clean CtrlID]
+	if (clsGuiObj.HasAny) {																				; if list of Gui objects is NOT empty...
+		; TODO - CHANGE THIS TO LIVE DYNAMIC CHECK ?
+		if (ctrlObj := clsGuiObj.CtrlObjFromCtrlID(ccid, guiName)) {									; ... if ctrl is found in ctrl list...
+			cObj		:= ctrlObj.V2GCVar																; ... 	ctrl v2 variable name
+			cTypeKey	:= ctrlObj.KeyName																; ...	GET mapKey used to id the ctrlType
+		} else {																						; ... ctrl was NOT found in ctrl list
+			dynLC := true, badCtrlID := (!!(oCtrlID) && !isClassNN(ctrlID))								; ...	set flags to process below
+		}
+	} else {																							; ... if list of Gui objects IS empty
+		dynLC := true, badCtrlID := !!(oCtrlID)															; ...	set flags to process below
+	}
+
+	; process results of previous checks
+	if (dynLC) {																						; if dynamic lookup should be performed...
+		cObj	 := gDynFncGC '(' ToExp(guiName,1,1) ',' ToExp(ctrlID,1,1) ')'							; ... create a dynamic lookup call
+		cTypeKey := guiName '_' ccid																	; ... BUILD mapKey used to id the ctrlType
+	}
+	if (badCtrlID) {																					; if ctrlID not identified...
+		gEOLComment_Func .= 'V1toV2: Verify that control [' oCtrlID '] is accurate'						; ... add user msg
+	}
+	cType := gmGuiCtrlType.Has(cTypeKey) ? gmGuiCtrlType[cTypeKey] : ''									; ... set ctrlType
+}
+;################################################################################
+_guiCtrl_OptG(guiName, subCmd, ctrlID, evh) {
+; 2026-03-11 AMB, ADDED - to handle GuiControl option +/-G
+
+	if (!(subCmd ~= '(?i)[+-]\bG\b'))																	; if +/-g option not present
+		return false																					; ... exit - notify caller
+
+	p1		:= (guiName) ? ToExp(guiName,1,1) : '""'													; gui name
+	p2		:= ToExp(ctrlID,1,1)																		; ctrl id
+	p3		:= '""'																						; trigger event (will be determined in real time)
+	p4		:= ToExp(evh)																				; event handler
+	p5		:= (subCmd~='(?i)-G\b' || p4='""') ? ',0' : ''												; option to disable the event handling
+	outStr	:= '`;' LTrim(gV1Line)																		; keep orig GuiControl cmd for now (commented out)
+	outStr	.= NL.CRLF . gDynEH '(' p1 ',' p2 ',' p3 ',' p4 p5 ')'										; dynamic OnEvent handler
+	msg		:= ' `; V1toV2: '																			; msg to user...
+	msg		.= (p5=',0') ? 'Event disabled' : 'Must MANUALLY ADD params or trailing * to CB func!'		; ... msg cont
+	outStr	.= 	msg																						; add msg to output
+	; TODO - TRY TO IDENTIFY FUNC SO PARAMS CAN BE ADDED
+	return	outStr
+}
+;################################################################################
+isV2Params(params) {									; 2026-03-08 AMB, ADDED
+	nV2Params := '(?i)^A_GuiEvent:=[^,]+,\h*A_GuiControl:=[^,]+,\h*Info:=[^,]+,\h*\*$'
+	return (params ~= nV2Params)
+}
+;################################################################################
+updateGuiCBPrms(params, &v2PStr:='', &v1P1:='') {		; 2026-03-08 AMB, ADDED							; handles v1 to v2 param conversion for addGuiCBArgs()
+	v1Parr	:= V1ParamSplit(params)																		; extract current v1 params into array
+	v2Parr	:= ['A_GuiControl:=""','A_GuiEvent:=""','Info:=""']											; intended v2 params, (p1/p2 are intentionally swapped)
+	; preserve v1 param names when possible
+	for idx, val in v2Parr {																			; for each param in v2 array...
+		if (v1Parr.Has(idx) && v1Parr[idx]) {															; ... if an orig v1 param was provided
+			v1Name		:= (Trim(v1Parr[idx],' :="'))													; ...	grab the v1 param name
+			v2Parr[idx]	:= v1Name . ':=""'																; ...	replace  v2 param name with v1 name (preserve empty val)
+			(idx=1) &&  v1P1 := v1Name																	; ...	save v1 param name for param 1 only
+		}
+	}
+	p1 := v2Parr[1], v2Parr[1] := v2Parr[2], v2Parr[2] := p1											; swap p1/p2, so they are in correct v2 order
+	; create new v2 param string from v2 array
+	for idx, val in v2Parr																				; for each v2 param...
+		v2PStr .= val ', '																				; ... add  v2 param to v2 param str
+	v2PStr	:= LTrim(v2PStr)																			; trim leading ws
+	return	; vars by reference
 }
 ;################################################################################
 addGuiCBArgs(&code) {
@@ -689,30 +786,6 @@ addGuiCBArgs(&code) {
 		code	:= RegExReplace(code,	'\Q' m[]	 '\E',	newFunc,,,pos)								; replace full func within the code
 	}
 	return ; code by reference
-}
-;################################################################################
-isV2Params(params) {									; 2026-03-08 AMB, ADDED
-	nV2Params := '(?i)^A_GuiEvent:=[^,]+,\h*A_GuiControl:=[^,]+,\h*Info:=[^,]+,\h*\*$'
-	return (params ~= nV2Params)
-}
-;################################################################################
-updateGuiCBPrms(params, &v2PStr:='', &v1P1:='') {		; 2026-03-08 AMB, ADDED							; handles v1 to v2 param conversion for addGuiCBArgs()
-	v1Parr	:= V1ParamSplit(params)																		; extract current v1 params into array
-	v2Parr	:= ['A_GuiControl:=""','A_GuiEvent:=""','Info:=""']											; intended v2 params, (p1/p2 are intentionally swapped)
-	; preserve v1 param names when possible
-	for idx, val in v2Parr {																			; for each param in v2 array...
-		if (v1Parr.Has(idx) && v1Parr[idx]) {															; ... if an orig v1 param was provided
-			v1Name		:= (Trim(v1Parr[idx],' :="'))													; ...	grab the v1 param name
-			v2Parr[idx]	:= v1Name . ':=""'																; ...	replace  v2 param name with v1 name (preserve empty val)
-			(idx=1) &&  v1P1 := v1Name																	; ...	save v1 param name for param 1 only
-		}
-	}
-	p1 := v2Parr[1], v2Parr[1] := v2Parr[2], v2Parr[2] := p1											; swap p1/p2, so they are in correct v2 order
-	; create new v2 param string from v2 array
-	for idx, val in v2Parr																				; for each v2 param...
-		v2PStr .= val ', '																				; ... add  v2 param to v2 param str
-	v2PStr	:= LTrim(v2PStr)																			; trim leading ws
-	return	; vars by reference
 }
 ;################################################################################
 addMenuCBArgs(&code) {

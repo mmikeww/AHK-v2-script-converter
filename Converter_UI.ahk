@@ -1,11 +1,14 @@
 /*
 	2026-01-26 AMB, ADDED
+	2026-03-11 AMB, UPDATED to enable selection of simple/dynamic/auto gui handling
+
 	Provides user interface supporting the following:
 	 * User conversion-settings
 	 * convenient launch pad for QCV2/v2Converter, after changing settings
 */
 
 #SingleInstance force
+CoordMode('Tooltip','Screen')
 clsUserUI()
 ;################################################################################
 class clsUserUI {																					; Gui handling
@@ -16,9 +19,11 @@ class clsUserUI {																					; Gui handling
 	wText			:= this.wGui - 105																; width of text controls
 	iniFile			:= 'Converter.ini'																; file to save settings
 	autoSave		:= ''																			; ini auto-save setting
+	fTTActive		:= false																		; tooltip flag
 	;############################################################################
 	__New() {
 		this._makeGui()																				; create Gui
+		OnMessage(0x0020, ObjBindMethod(this, "OnMouseMove"))
 	}
 	;############################################################################
 	_makeGui() {
@@ -33,7 +38,7 @@ class clsUserUI {																					; Gui handling
 		hTxt		:= 28, wTxt := this.wText														; text-label height/width
 		hBtn		:= 50, wBtn := 75																; launch buttons height/width
 		btnWH		:= ' w' wBtn ' h' hBtn															; button height/width control string
-		wLbl		:= 60, wEdit := 180, wGB := 95													; other widths
+		wLbl		:= 60, wEdit := 110, wGB := 95													; other widths
 		tabX		:= wGB +15																		; x position for tab ctrl
 
 		; create gui
@@ -78,17 +83,19 @@ class clsUserUI {																					; Gui handling
 		; Gui Tab
 		this.T3.UseTab(2)																			; target Gui settings tab
 		lblMode			:= this.oGui.AddText( 'x' tabX ' y+30 w' wlbl, 'Mode:'					)	; label	- Gui Conversion Mode
-		this.rdoGuiStd	:= this.oGui.AddRadio('yp checked vStd', 'Standard'						)	; Radio	- Gui Conversion - Standard
-		this.rdoGuiDyn	:= this.oGui.AddRadio('yp vDyn disabled', 'Dynamic'						)	; Radio	- Gui Conversion - Dynamic
-		this.rdoGuiAuto	:= this.oGui.AddRadio('yp vAuto disabled', 'Auto'						)	; Radio	- Gui Conversion - Auto
+		this.rdoGuiOrig	:= this.oGui.AddRadio('yp vOrig', 'Orig'								)	; Radio	- Gui Conversion - Orig
+		this.rdoGuiStd	:= this.oGui.AddRadio('yp checked vStd', 'Simple'						)	; Radio	- Gui Conversion - Simple
+		this.rdoGuiDyn	:= this.oGui.AddRadio('yp vDyn', 'Dynamic'								)	; Radio	- Gui Conversion - Dynamic
+		this.rdoGuiAuto	:= this.oGui.AddRadio('yp vAuto', 'Auto'								)	; Radio	- Gui Conversion - Auto
 		lblGuiName		:= this.oGui.AddText( 'x' tabX ' y+15 w' wlbl, 'Gui Name:'				)	; label	- GuiName preference
 		this.edtGuiName	:= this.oGui.AddEdit( 'yp w' wEdit ' vGName', 'GuiName'					)	; Edit	- GuiName preference
 		lblCtrlPfx		:= this.oGui.AddText( 'x' tabX ' y+5 w' wlbl, 'Ctrl Prefix:'			)	; label	- GuiCtrl Prefix preference
 		this.edtCtrlName:= this.oGui.AddEdit( 'yp w' wEdit ' vCName', 'ControlPrefix'			)	; Edit	- GuiCtrl Prefix preference
 		this.txtEx		:= this.oGui.AddText( 'cBlue x' tabX ' y+5 h45 w' wTab-40, ''			)	; label - show example of code output
-		this.rdoGuiStd.OnEvent('Click', this.evGui.bind(this) 									)	; event handler for Radio - Standard (pass entire obj)
+		this.rdoGuiStd.OnEvent('Click', this.evGui.bind(this) 									)	; event handler for Radio - Simple (pass entire obj)
 		this.rdoGuiDyn.OnEvent('Click', this.evGui.bind(this) 									)	; event handler for Radio - Dynamic	 (pass entire obj)
 		this.rdoGuiAuto.OnEvent('Click', this.evGui.bind(this) 									)	; event handler for Radio - Auto	 (pass entire obj)
+		this.rdoGuiOrig.OnEvent('Click', this.evGui.bind(this) 									)	; event handler for Radio - Orig	 (pass entire obj)
 		this.edtGuiName.OnEvent('Change', this.evNmChg.bind(this) 								)	; event handler for Edit  - GuiName	 (pass entire obj)
 		this.edtCtrlName.OnEvent('Change', this.evNmChg.bind(this) 								)	; event handler for Edit  - CtrlName (pass entire obj)
 		this.edtGuiName.OnEvent('LoseFocus', this.evGui.bind(this) 								)	; event handler for Edit  - GuiName	 (pass entire obj)
@@ -118,6 +125,7 @@ class clsUserUI {																					; Gui handling
 	evGui(ctrl:='', *) {	; also receives hidden 'this' obj										; event handler for controls on Gui tab
 		saveGuiMode := this.GuiMode, newGuiMode := saveGuiMode										; track guiMode changes
 		switch ctrl.name, 0 {
+			case 'Orig':	newGuiMode := 0															; track guiMode changes
 			case 'Std':		newGuiMode := 1															; track guiMode changes
 			case 'Dyn':		newGuiMode := 2															; track guiMode changes
 			case 'Auto':	newGuiMode := 3															; track guiMode changes
@@ -138,8 +146,11 @@ class clsUserUI {																					; Gui handling
 	}
 	;############################################################################
 	evRun(ctrl:='', *) {	; also receives hidden 'this' obj										; event handler for handle Run buttons
+		this._toolTip()																				; ensure tooltip is hidden
 		switch ctrl.name {
-			case 'QCT':		Run('QuickConvertorV2.ahk "QCT"')										; run QuickConverter in unit-test mode
+			case 'QCT':
+				mode := (GetKeyState("shift")) ? '"QCTF"' : '"QCT"'									; set whether failed tests are included or not
+				Run('QuickConvertorV2.ahk ' mode)													; run QuickConverter in unit-test mode
 			case 'QCC':		Run('QuickConvertorV2.ahk "QCC"')										; run QuickConverter in normal convert mode
 			case 'CVS':		Run('v2Converter.ahk')													; run V2Converter for script conversions
 		}
@@ -169,7 +180,7 @@ class clsUserUI {																					; Gui handling
 	;############################################################################
 	_guiDefaults(mode) {																			; default strings to use for GuiName and CtrlPfx
 		switch mode, 0 {
-			case 1:		return {gName:'myGui',cName:'ogc'}											; for standard	guiMode
+			case 0,1:	return {gName:'myGui',cName:'ogc'}											; for orig or simple	guiMode
 			;case 2:	return {gName:'v2Gui',cName:'v2GC'}											; for dynamic	guiMode (NOT USED)
 			;case 3:	return {gName:'v2Gui',cName:'v2GC'}											; for auto		guiMode (NOT USED)
 		}
@@ -181,9 +192,9 @@ class clsUserUI {																					; Gui handling
 		IniWrite(this.autoSave,				iniFile, Section, 'AutoSave'		)					; save setting for auto-save
 		; gui tab
 		IniWrite(this.GuiMode,				iniFile, Section, 'GuiMode'			)					; save setting for guiMode
-		if (this.GuiMode = 1) {																		; if standard mode...
-			IniWrite(this.edtGuiName.value,	iniFile, Section, 'GuiStdName'		)					; ... save setting for standard gui name
-			IniWrite(this.edtCtrlName.value,iniFile, Section, 'CtrlStdName'		)					; ... save setting for standard ctrl prefix
+		if (this.GuiMode <= 1) {																	; if orig or simple mode...
+			IniWrite(this.edtGuiName.value,	iniFile, Section, 'GuiStdName'		)					; ... save setting for simple gui name
+			IniWrite(this.edtCtrlName.value,iniFile, Section, 'CtrlStdName'		)					; ... save setting for simple ctrl prefix
 		}
 		;; NOT UTILIZED (for now)
 		;else if (this.GuiMode = 2) {																; if dynamic mode...
@@ -195,9 +206,12 @@ class clsUserUI {																					; Gui handling
 	}
 	;############################################################################
 	_setGuiModeButtons() {																			; update controls related to guiMode
-		this.rdoGuiStd.Value:=this.rdoGuiDyn.Value:=this.rdoGuiAuto.Value:=0						; unselect all radio buttons
+		; deselect all radio buttons
+		this.rdoGuiStd.Value:=this.rdoGuiDyn.Value:=0
+		this.rdoGuiAuto.Value:=this.rdoGuiOrig.Value:=0
 		switch this.GuiMode {
-			case 1: this.rdoGuiStd.Value	:= 1													; set standard	guiMode
+			case 0: this.rdoGuiOrig.Value	:= 1													; set orig		guiMode
+			case 1: this.rdoGuiStd.Value	:= 1													; set simple	guiMode
 			case 2: this.rdoGuiDyn.Value	:= 1													; set dynamic	guiMode
 			case 3: this.rdoGuiAuto.Value	:= 1													; set auto		guiMode
 		}
@@ -213,11 +227,11 @@ class clsUserUI {																					; Gui handling
 	_updateGuiModeNames(mode) {																		; gets guiName/ctrlPfx from disk, sets tab controls
 		iniFile := this.iniFile, Section := 'Settings'
 		; set enablement and name text based on passed gui mode
-		en := (mode = 1) ? 1 : 0																	; disable editing for dynamic and auto mode (for now)
+		en := (mode <= 1) ? 1 : 0																	; disable editing for dynamic and auto mode (for now)
 		this.edtGuiName.enabled:=this.edtCtrlName.enabled:=this.txtEx.Visible:= en					; set enablement/visibility of other controls
 		(!en) && this.edtGuiName.value := this.edtCtrlName.value:= ''								; remove name-text for dynamic and auto mode
 		; update details related to sandard-mode, as needed
-		if (mode = 1) {																				; if standard mode...
+		if (mode <= 1) {																			; if orig or simple mode...
 			guiDefaults				:= this._guiDefaults(mode)										; ... get default names
 			gName					:= guiDefaults.gName											; ... default guiName
 			cName					:= guiDefaults.cName											; ... default ctrl prefix
@@ -236,4 +250,23 @@ class clsUserUI {																					; Gui handling
 		this.chkSave.value := this.autoSave															; keep track of auto-save setting
 		this._setGuiModeButtons()																	; update controls for gui tab
 	}
+	;############################################################################
+	OnMouseMove(*) { ;wParam, lParam, msg, hwnd) {
+		MouseGetPos(,,, &hCtrl, 2)																	; get ctrl (hwnd) under mouse
+		if ((hCtrl = this.QCT.hwnd))																; if ctrl under mouse is QCT button...
+			this._toolTip("Shift-Click to include failing tests")									; ... show brief tooltip
+		else																						; if mouse NOT over QCT button...
+			this._toolTip()																			; ... clear tooltip
+	}
+	;############################################################################
+	_toolTip(msg:='') {																				; central method for showing/clearing tooltip
+		if (msg && !this.fTTActive) {																; if msg should be shown, and not already active...
+			ToolTip(msg), SetTimer(() => ToolTip(), -3000)											; ... show tooltip, set it to auto-clear
+			this.fTTActive := true																	; ... set  tooltip status flag as active
+		} else if (!msg && this.fTTActive) {														; if tt msg should be cleared, and toolip is active...
+			ToolTip(), MouseGetPos(,,, &hCtrl, 2)													; ... clear the tooltip (manual call), get ctrl under mouse
+			(hCtrl != this.QCT.hwnd) && (this.fTTActive := false)									; set tt flag to false only after mouse has moved away from button
+		}
+	}
+
 }

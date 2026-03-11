@@ -13,7 +13,7 @@ class clsGui {
   typing(*) { ; will need params added, or at least (*)
     SoundBeep()
     oSaved := mV2Gui[gCurGuiID].Submit(0)
-    EditVar := oSaved.EditVar
+    Try EditVar := oSaved.EditVar
     ToolTip(editVar, 1, 1)
   }
 

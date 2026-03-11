@@ -50,8 +50,8 @@ LabelConvert()
 Check(A_GuiEvent:="", A_GuiControl:="", Info:="", *) { ; V1toV2: Lbl->Func
 global
  oSaved := mV2Gui[gCurGuiID].Submit(0)
- EditInput := oSaved.EditInput
- EditOutDir := oSaved.EditOutDir
+ Try EditInput := oSaved.EditInput
+ Try EditOutDir := oSaved.EditOutDir
  mV2GC[["1","BATCHPDFConvert"]].Enabled := (FileExist(EditInput) && FileExist(EditOutDir))
  return
 }

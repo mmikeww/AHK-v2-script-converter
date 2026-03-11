@@ -1,0 +1,6 @@
+﻿g1 := Gui()
+ogcButtonB1 := g1.Add("Button", , "B1")
+g1.Show("w300 h300")
+myGui := Gui()
+myGui.Show("w200 h200")
+ogcButtonB2 := myGui.Add("Button", , "B2")

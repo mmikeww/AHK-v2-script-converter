@@ -1174,6 +1174,7 @@ class ConvLabel
 ;################################################################################
 {
 ; 2025-11-01 AMB, ADDED - determines whether v1 script has specified function
+; TODO - add support for detecting class methods as legit funcs
 	return (gAllFuncNames ~= '(?i)\b' funcName ',')
 }
 ;################################################################################
@@ -1182,6 +1183,16 @@ class ConvLabel
 {
 ; 2025-11-01 AMB, ADDED - determines whether v1 script has specified class
 	return (gAllClassNames ~= '(?i)\b' className ',')
+}
+;################################################################################
+														  scriptHasMethod(srcStr)
+;################################################################################
+{
+; 2026-03-08 AMB, ADDED - determines whether v1 script has specified class-method
+	if (RegExMatch(srcStr, '^(?<cls>[^\s]+)\.(?<meth>[^.]+)$', &m)							; if input is a class method...
+	&& ((scriptHasClass(m.cls) && scriptHasFunc(m.meth))))									; AND method exists in v1 script...
+		return {cls:m.cls,method:m.meth}													; ... return cls and method (object)
+	return false																			; not an existing class method
 }
 ;################################################################################
 														 hasValidV1Label(&srcStr)
@@ -1502,6 +1513,24 @@ addHKCmdCBArgs(&code) {
 		}
 	}
 	return ; code by reference
+}
+;################################################################################
+addStaticKywdToMethod(&code) {
+; 2026-03-08 AMB, ADDED - adds Static keyword to methods that require it
+	nCommon	:= '^(\h*)((?<fName>(?<!``)[_a-z]\w*+)\((?<Args>(?>[^()]|\((?&Args)\))*+)'
+	nFUNC	:= RegExReplace(gPtn_Blk_FUNC, 'i)\Q(?:\b(?:IF|WHILE|LOOP)\b)(?=\()\K|\E')
+	nDeclare:= '(?im)' nCommon '\)(?<trail>.*))'											; make needle for func declaration
+	for key, val in gmMethodsToStatic {														; for each entry in list...
+		funcName	:= key																	; get func name
+		nTargFunc	:= RegExReplace(nFUNC, 'i)\Q?<fName>(?<!``)[_a-z]\w*+\E', funcName)		; target specific func name
+		If (!pos := RegExMatch(code, nTargFunc, &m))										; look for the func declaration...
+			continue																		; ... skip if not found
+		if (!RegExMatch(m[], nDeclare, &decl))												; get just declaration line
+			continue																		; ... skip if unable to get func decl (should not happen)
+		newDecl		:= decl[1] . 'Static ' decl[2]											; add static keyword to func declaration, preserve leading ws
+		addStatic	:= RegExReplace(m[],  '\Q' decl[] '\E', newDecl,,1)						; update func declaration
+		code		:= RegExReplace(code, '\Q' m[] '\E', addStatic,,, pos)					; update entire function within code
+	}
 }
 ;################################################################################
 /**

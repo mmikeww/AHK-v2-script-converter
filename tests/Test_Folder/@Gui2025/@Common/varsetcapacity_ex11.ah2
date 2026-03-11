@@ -35,7 +35,7 @@ GetKeyChar(Key, WinTitle:=0)
 ButtonConvert(A_GuiEvent:="", A_GuiControl:="", Info:="", *) { ; V1toV2: Lbl->Func
 global
 oSaved := myGui.Submit(0)
-KeyName := oSaved.KeyName
+Try KeyName := oSaved.KeyName
 MsgBox("GetKeyName: " GetKeyName(KeyName)
     .  "`nGetKeyChar: " GetKeyChar(KeyName))
 return

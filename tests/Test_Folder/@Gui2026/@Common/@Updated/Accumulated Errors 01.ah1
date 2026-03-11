@@ -1,19 +1,19 @@
-﻿
+
 is_arr := { (tree): 1 }
 
-key:={ 0 : 0 ,_0x00: "Icon", 500:"5 hundred"}
+key:={ 0 : 0 ,0x00: "Icon", 500:"5 hundred"}
 
-Static Views := {_0x00: "Icon", _0x01: "Report", _0x02: "IconSmall", _0x03: "List", _0x04: "Tile"}
+Static Views := {0x00: "Icon", 0x01: "Report", 0x02: "IconSmall", 0x03: "List", 0x04: "Tile"}
 
-return this.str({""_INVALID_KEYNAME: param_value}, "")		; missing object property
+return this.str({"": param_value}, "")		; missing object property
 
-strangeKeynames := { (weirdkn): "weird kn", anotherone: "another", [s u p e r "s t r @ n g 3"]_INVALID_KEYNAME: "super-strange"}
+strangeKeynames := { ("weird" . " kn"): "weird kn", "another-one": "another", [s u p e r "s t r @ n g 3"]: "super-strange"}
 
 ;################################################################################
 
-HelpText:=
+HelpText=
 (join`r`n
-"This program allows you to load a CSV file (any delimited file)
+This program allows you to load a CSV file (any delimited file)
 and use various search criteria to filter the listview.
 You can export the results to a new file.
 The regular expression search is case sensitive and should be a
@@ -21,20 +21,20 @@ Perl-compatible regular expression (PCRE, www.pcre.org)
 Note: an entire row of the CSV is searched at once and not
 on a cell by cell basis to provide faster search results.
 
-" CmdlineOpt "
+%CmdlineOpt%
 
 Press enter: Show row data in a message box
 Press ctrl-c: Copy row data to clipboard
 
-" helpforum
+%helpforum%
 )
-MsgBox(HelpText, helptitle, 32)
+MsgBox, 32, %helptitle%, %HelpText%
 
 ;################################################################################
 
-HelpText:=
+HelpText=
 (join`r`n
-"Select a file and set the delimiter and press OK
+Select a file and set the delimiter and press OK
 
 If you want to change the columns that will be visible in
 the listview and/or the order, enter a comma separated list:
@@ -43,18 +43,18 @@ the listview and/or the order, enter a comma separated list:
 The export function will use this order as well.
 If you use columns that don't exist they show up empty.
 
-" helpforum
+%helpforum%
 )
-MsgBox(HelpText, helptitle, 32)
+MsgBox, 32, %helptitle%, %HelpText%
 
 
 ;################################################################################
 
-	gSite_BibleHub := {url: "https://biblehub.com/audio/chapter/{book}/{chapter}.htm", genesis: "genesis", exodus: "exodus", leviticus: "leviticus", numbers: "numbers", deuteronomy: "deuteronomy", joshua: "joshua", judges: "judges", ruth: "ruth", _1samuel: "1_samuel", _2samuel: "2_samuel", _1kings: "1_kings", _2kings: "2_kings", _1chronicles: "1_chronicles", _2chronicles: "2_chronicles", ezra: "ezra", nehemiah: "nehemiah", esther: "esther", job: "job", psalms: "psalms", proverbs: "proverbs", ecclesiastes: "ecclesiastes", songofsolomon: "songs", isaiah: "isaiah", jeremiah: "jeremiah", lamentations: "lamentations", ezekiel: "ezekiel", daniel: "daniel", hosea: "hosea", joel: "joel", amos: "amos", obadiah: "obadiah", jonah: "jonah", micah: "micah", nahum: "nahum", habakkuk: "habakkuk", zephaniah: "zephaniah", haggai: "haggai", zechariah: "zechariah", malachi: "malachi", matthew: "matthew", mark: "mark", luke: "luke", john: "john", acts: "acts", romans: "romans", _1corinthians: "1_corinthians", _2corinthians: "2_corinthians", galatians: "galatians", ephesians: "ephesians", philippians: "philippians", colossians: "colossians", _1thessalonians: "1_thessalonians", _2thessalonians: "2_thessalonians", _1timothy: "1_timothy", _2timothy: "2_timothy", titus: "titus", philemon: "philemon", hebrews: "hebrews", james: "james", _1peter: "1_peter", _2peter: "2_peter", _1john: "1_john", _2john: "2_john", _3john: "3_john", jude: "jude", revelation: "revelation"}
+	gSite_BibleHub := {"url": "https://biblehub.com/audio/chapter/{book}/{chapter}.htm", "genesis": "genesis", "exodus": "exodus", "leviticus": "leviticus", "numbers": "numbers", "deuteronomy": "deuteronomy", "joshua": "joshua", "judges": "judges", "ruth": "ruth", "1 samuel": "1_samuel", "2 samuel": "2_samuel", "1 kings": "1_kings", "2 kings": "2_kings", "1 chronicles": "1_chronicles", "2 chronicles": "2_chronicles", "ezra": "ezra", "nehemiah": "nehemiah", "esther": "esther", "job": "job", "psalms": "psalms", "proverbs": "proverbs", "ecclesiastes": "ecclesiastes", "song of solomon": "songs", "isaiah": "isaiah", "jeremiah": "jeremiah", "lamentations": "lamentations", "ezekiel": "ezekiel", "daniel": "daniel", "hosea": "hosea", "joel": "joel", "amos": "amos", "obadiah": "obadiah", "jonah": "jonah", "micah": "micah", "nahum": "nahum", "habakkuk": "habakkuk", "zephaniah": "zephaniah", "haggai": "haggai", "zechariah": "zechariah", "malachi": "malachi", "matthew": "matthew", "mark": "mark", "luke": "luke", "john": "john", "acts": "acts", "romans": "romans", "1 corinthians": "1_corinthians", "2 corinthians": "2_corinthians", "galatians": "galatians", "ephesians": "ephesians", "philippians": "philippians", "colossians": "colossians", "1 thessalonians": "1_thessalonians", "2 thessalonians": "2_thessalonians", "1 timothy": "1_timothy", "2 timothy": "2_timothy", "titus": "titus", "philemon": "philemon", "hebrews": "hebrews", "james": "james", "1 peter": "1_peter", "2 peter": "2_peter", "1 john": "1_john", "2 john": "2_john", "3 john": "3_john", "jude": "jude", "revelation": "revelation"}
 
 ;################################################################################
 
-EmptyVar :="" 	; needs empty quotes added
+EmptyVar := 	; needs empty quotes added
 
 ;################################################################################
 
@@ -66,7 +66,7 @@ if ("this line has trailing open-brace...") {
 
 ;#####################################
 
-if (!arrayPos:=RegExMatch(srcStr, "(\[(?>[^][]+|(?1))*\])", &m))
+if (!arrayPos:=RegExMatch(srcStr, "(\[(?>[^][]+|(?1))*\])", m))
 {
 	; similarly... part of needle above disappears due to trailing open-brace above
 	; see - "Remove [] from classes with no params" near line 774 - needles need adjusted
@@ -82,7 +82,7 @@ retList := {}, retList.fList := "", retList.fCount := 0	; line contents after } 
 
 ; line contents after } will sometimes disappear, but not always
 
-A_Args.ScrCmp := {Wait: 1},   Bytes := W*H*4,  Count := 0
+A_Args.ScrCmp := {"Wait": 1},   Bytes := W*H*4,  Count := 0
 Static XAlign := {C: 50, L: 0, R: 100}, YAlign := {B: 100, C: 50, T: 0}
 static Problem:={S:"N",N:"S",E:"W",W:"E"},Direction:={Up:"N",Down:"S",Left:"W",Right:"E"}
 WinHook.Shell.Hooks := {}, WinHook.Shell.Events := {}
@@ -99,20 +99,20 @@ folderList := parentList.fList, folderCount := parentList.fCount
 
 ;################################################################################
 
-UpdateLayeredWindow(hwnd, hdc, x:="", y:="", w:="", h:="", Alpha:=255)
+UpdateLayeredWindow(hwnd, hdc, x="", y="", w="", h="", Alpha=255)
 {
 	Ptr := A_PtrSize ? "UPtr" : "UInt"
 
 	if ((x != "") && (y != ""))
-		VarSetStrCapacity(&pt, 8), NumPut("UInt", x, pt, 0), NumPut("UInt", y, pt, 4) ; V1toV2: if 'pt' is NOT a UTF-16 string, use 'pt := Buffer(8)' and replace all instances of 'StrPtr(pt)' with 'pt.Ptr'
+		VarSetCapacity(pt, 8), NumPut(x, pt, 0, "UInt"), NumPut(y, pt, 4, "UInt")
 
 	if (w = "") ||(h = "")
-		WinGetPos(, , &w, &h, "ahk_id " hwnd)
+		WinGetPos,,, w, h, ahk_id %hwnd%
 
 	return DllCall("UpdateLayeredWindow"
 					, Ptr, hwnd
 					, Ptr, 0
-					, Ptr, ((x = "") && (y = "")) ? 0 : StrPtr(pt)
+					, Ptr, ((x = "") && (y = "")) ? 0 : &pt
 					, "int64*", w|h<<32
 					, Ptr, hdc
 					, "int64*", 0
@@ -124,15 +124,15 @@ UpdateLayeredWindow(hwnd, hdc, x:="", y:="", w:="", h:="", Alpha:=255)
 ;################################################################################
 
 			if ( A_Index<db_NumberOfRows )															; if not the last row of database
-				FileAppend(db_LeftPartOfRow "" db_CellContent "" db_RightPartOfRow "`r`n")				; save updated row and a linebreak in output file
+				FileAppend, %db_LeftPartOfRow%%db_CellContent%%db_RightPartOfRow%`r`n				; save updated row and a linebreak in output file
 			else																					; else (the last row of database)
-				FileAppend(db_LeftPartOfRow "" db_CellContent "" db_RightPartOfRow)					; store updated row (but no linebreak) in output file
+				FileAppend, %db_LeftPartOfRow%%db_CellContent%%db_RightPartOfRow%					; store updated row (but no linebreak) in output file
 
 ;################################################################################
 
 	Maker(t) {
 		v := this.ov, t := this.tw4sh(t), r := (this[v].Case ? "i" : "") "m`a)^(?!"
-		Loop Parse, t, A_Space
+		Loop, Parse, t, % A_Space
 			If SubStr(A_LoopField, 1, 1) = "-"
 				r .= "(?!.*(" (this[v].Whole ? "\b" : "") SubStr(A_LoopField, 2) (this[v].Whole ? "\b" : "") "))"
 			Else r .= "(?=.*(" (this[v].Whole ? "\b" : "") A_LoopField (this[v].Whole ? "\b" : "") "))"
@@ -142,7 +142,7 @@ UpdateLayeredWindow(hwnd, hdc, x:="", y:="", w:="", h:="", Alpha:=255)
 
 ;################################################################################
 
-   EscapeStr(&Str, Quote := True) {
+   EscapeStr(ByRef Str, Quote := True) {
       This.ErrorMsg := ""
       This.ErrorCode := 0
       This.SQL := ""
@@ -150,58 +150,58 @@ UpdateLayeredWindow(hwnd, hdc, x:="", y:="", w:="", h:="", Alpha:=255)
          This.ErrorMsg := "Invalid database handle!"
          Return False
       }
-      if isNumber(Str)
+      If Str Is Number
          Return True
-      OP := Buffer(16, 0) ; V1toV2: if 'OP' is a UTF-16 string, use 'VarSetStrCapacity(&OP, 16)' and replace all instances of 'OP.Ptr' with 'StrPtr(OP)'
-      StrPut(Quote ? "%Q" : "%q", OP.Ptr, "UTF-8")
+      VarSetCapacity(OP, 16, 0)
+      StrPut(Quote ? "%Q" : "%q", &OP, "UTF-8")
       This._StrToUTF8(Str, UTF8)
-      Ptr := DllCall("SQLite3.dll\sqlite3_mprintf", "Ptr", OP.Ptr, "Ptr", &UTF8, "Cdecl UPtr")
+      Ptr := DllCall("SQLite3.dll\sqlite3_mprintf", "Ptr", &OP, "Ptr", &UTF8, "Cdecl UPtr")
       If (ErrorLevel) {
          This.ErrorMsg := "DllCall sqlite3_mprintf failed!"
          This.ErrorCode := ErrorLevel
          Return False
       }
       Str := This._UTF8ToStr(Ptr)
-      DllCall("SQLite3.dll\sqlite3_free", "Ptr", "Ptr", "Cdecl")
+      DllCall("SQLite3.dll\sqlite3_free", "Ptr", Ptr, "Cdecl")
       Return True
    }
 
 ;################################################################################
 
 
-F4C_String := "testing"
-F4C_String:="`"" . F4C_String . "`"" ;If needed, bracket the string in double quotes
-MsgBox("[" F4C_String "]")
+F4C_String = testing
+F4C_String=`"%F4C_String%`" ;If needed, bracket the string in double quotes
+MsgBox % "[" F4C_String "]"
 
-str := "changeVar := `n(`n`"" . "change`ntext" . "`"`n)"
-MsgBox(str)
+str := "changeVar := `n(`n""" . "change`ntext" . """`n)"
+msgbox % str
 
 
 tNL			:= "`n`t"
 desc		:= tNL . "`; Property Desc: "
 methodName	:= tNL . "ChangeMe {"
-get			:= tNL . "`tget {" . tNL . "`t`t" . "return `"`"" . tNL . "`t}"
+get			:= tNL . "`tget {" . tNL . "`t`t" . "return """"" . tNL . "`t}"
 setMsg		:= "`t`t`; dont allow change after instantiation" . tNL
 			. "`t`t`; also prevents AHK from creating false local objects" . tNL
-			. "`t`t`; return`t`; note: using this is equivilant to return `"`""
+			. "`t`t`; return`t`; note: using this is equivilant to return """""
 set			:= tNL . "`tset {" . tNL . setMsg . tNL . "`t}"
 tempStr		:= desc . methodName . get . set . tNL . "}" . tNL
-MsgBox(tempStr)
+msgbox % tempStr
 
 
 linkText := linkText=="" ? linkUrl : linkText
-newTab := (inNewTab) ? "`" target=`"_blank" : ""
-retStr := lspc(spPfx) . "<a href=`"" . linkUrl . newTab . "`">" . linkText . "</a>" . lspc(spTrl)
-MsgBox(retstr)
+newTab := (inNewTab) ? """ target=""_blank" : ""
+retStr := lspc(spPfx) . "<a href=""" . linkUrl . newTab . """>" . linkText . "</a>" . lspc(spTrl)
+msgbox %retstr%
 
 
       If (DrawStage = 0x030001) {
          UseAltCol := !(Col & 1) && (This.AltCols)
          , ColColors := This["Cells", Row, Col]
-         , ColB := (ColColors.B != "") ? ColColors.B : UseAltCol ? This.ACB : This.RowB
-         , ColT := (ColColors.T != "") ? ColColors.T : UseAltCol ? This.ACT : This.RowT
-         , NumPut("UInt", ColT, L + OffCT), NumPut("UInt", ColB, L + OffCB)
-         Return (!This.AltCols && !This.Has(Row) && (Col > This["Cells", Row].MaxIndex())) ? 0x00 : 0x20
+         , ColB := (ColColors.B <> "") ? ColColors.B : UseAltCol ? This.ACB : This.RowB
+         , ColT := (ColColors.T <> "") ? ColColors.T : UseAltCol ? This.ACT : This.RowT
+         , NumPut(ColT, L + OffCT, "UInt"), NumPut(ColB, L + OffCB, "UInt")
+         Return (!This.AltCols && !This.HasKey(Row) && (Col > This["Cells", Row].MaxIndex())) ? 0x00 : 0x20
       }
 
 ;################################################################################
@@ -212,22 +212,22 @@ MsgBox(retstr)
 				,"Date Created", "Date Modified"
 				,"Date Accessed"]
 				
-	colToKey := {Row: 			"kRow"
-				,Size:			"kSize"
-				,Type:			"kType"
-				,CRC32:			"kCRC"
-				,Name:			"kName"
-				,Path:			"kPath"
-				,DateCreated:	"kDateC"
-				,DateModified:	"kDateM"
-				,DateAccessed:	"kDateA"}
+	colToKey := {"Row": 			"kRow"
+				,"Size":			"kSize"
+				,"Type":			"kType"
+				,"CRC-32":			"kCRC"
+				,"Name":			"kName"
+				,"Path":			"kPath"
+				,"Date Created":	"kDateC"
+				,"Date Modified":	"kDateM"
+				,"Date Accessed":	"kDateA"}
 	return
 }
 ;################################################################################
 
-	Return CurrentCSV_TotalRows
+	Return %CurrentCSV_TotalRows%
 
-	SendEvent("When you are ready, press Space")
+	SendEvent,When you are ready, press Space
 
 ;################################################################################
 
@@ -241,11 +241,11 @@ MsgBox(retstr)
 
 ;################################################################################
 
-	while(pos := RegExMatch(srcStr, strNeedle, &m, (pos+1)<1 ? (pos+1)-1 : (pos+1)))
+	while(pos := RegExMatch(srcStr, strNeedle, m, pos+1))
 	{
 		savePos := pos
-		retList.push({pos:pos,val:m[1]})
-		pos += StrLen(m[1])-1
+		retList.push({"pos":pos,"val":m1})
+		pos += StrLen(m1)-1
 		;MsgBox % "[" . line . "]`n`nm1 := " . m1 . "`n`npos := " . savePos
 	}
 
@@ -264,24 +264,24 @@ else if (nt == "'*'") {
 	_HelperClip(){
 		local ClipList 
 		
-		out := ogc% PopUpWindow.EditHwnd.Value
+		GuiControlGet, out, % PopUpWindow.HelperHwnd ":", % PopUpWindow.EditHwnd	
 		
-		ClipList := 		{ 	__New: 					" := New PopUpWindow( { AutoShow: 1 , X: 0 , Y: 0 , W: A_ScreenWidth , H: A_ScreenHeight , Options: `" -DPIScale +AlwaysOnTop `" } )"
-							,	UpdateSettings:			".UpdateSettings( { X: `"`" , Y: `"`" , W: `"`" , H: `"`" } , UpdateGraphics := 0 )"
-							,	ShowWindow:				".ShowWindow( Title := `"`" )"
+		ClipList := 		{ 	__New: 					" := New PopUpWindow( { AutoShow: 1 , X: 0 , Y: 0 , W: A_ScreenWidth , H: A_ScreenHeight , Options: "" -DPIScale +AlwaysOnTop "" } )"
+							,	UpdateSettings:			".UpdateSettings( { X: """" , Y: """" , W: """" , H: """" } , UpdateGraphics := 0 )"
+							,	ShowWindow:				".ShowWindow( Title := """" )"
 							,	HideWindow:				".HideWindow()"
 							,	UpdateWindow:			".UpdateWindow()"
 							,	ClearWindow:			".ClearWindow( AutoUpdate := 0 )"
-							,	DrawBitmap:				".DrawBitmap( pBitmap := `"`" , { X: 0 , Y: 0 , W: " Out ".W , H: " Out ".H } , dispose := 1 , AutoUpdate := 0 )"
-							,	PaintBackground:		".PaintBackground( color := `"0xFF000000`" , AutoUpdate := 0 )  "  ";{ Color: `"0xFF000000`" , X: 2 , Y: 2 , W: " Out ".W - 4 , H: " Out ".H - 4 , Round: 10 }"
+							,	DrawBitmap:				".DrawBitmap( pBitmap := """" , { X: 0 , Y: 0 , W: " Out ".W , H: " Out ".H } , dispose := 1 , AutoUpdate := 0 )"
+							,	PaintBackground:		".PaintBackground( color := ""0xFF000000"" , AutoUpdate := 0 )  "  ";{ Color: ""0xFF000000"" , X: 2 , Y: 2 , W: " Out ".W - 4 , H: " Out ".H - 4 , Round: 10 }"
 							,	DeleteWindow:			".DeleteWindow( GDIPShutdown := 0 )"
-							,	AddTrigger:				".AddTrigger( { X: `"`" , Y: `"`" , W: `"`" , H: `"`" , Value: `"`" , Label: `"`" } )"	
-							,	DrawTriggers:			".DrawTriggers( color := `"0xFFFF0000`" , AutoUpdate := 0 )"	
+							,	AddTrigger:				".AddTrigger( { X: """" , Y: """" , W: """" , H: """" , Value: """" , Label: """" } )"	
+							,	DrawTriggers:			".DrawTriggers( color := ""0xFFFF0000"" , AutoUpdate := 0 )"	
 							,	CreateCachedBitmap:		".CreateCachedBitmap( pBitmap , Dispose := 0 )"	
 							,	DrawCachedBitmap: 		".DrawCachedBitmap( AutoUpdate := 0 )"	
 							,	DisposeCachedbitmap:	".DisposeCachedbitmap()"	}
 							
-		A_Clipboard := Out ClipList[ A_GuiControl ]
+		clipboard := Out ClipList[ A_GuiControl ]
 		
 	}
 
@@ -289,48 +289,48 @@ else if (nt == "'*'") {
 ;################################################################################
 
 
-cc := Gui1.Listview1 := PopUpWindow( { AutoShow: 1 , X: x , Y: y , W: w * Gui1.Scale , H: h * Gui1.Scale , Options: " -DPIScale +Parent" Gui1.Hwnd } ) 
+cc := Gui1.Listview1 := New PopUpWindow( { AutoShow: 1 , X: x , Y: y , W: w * Gui1.Scale , H: h * Gui1.Scale , Options: " -DPIScale +Parent" Gui1.Hwnd } ) 
 
 cc.Sections := []
 
 x := 0
 w := 120
-cc.Sections[ 1 ] := { Header: "Section 1" , X: x , Y: 0 , W: w , H: 24  , MoveVector: New Vector( x + w + 1 , 0 ) }  ;  V1toV2: Invalid Index errors?, try 'cc.Sections.Push(<val>)'
+cc.Sections[ 1 ] := { Header: "Section 1" , X: x , Y: 0 , W: w , H: 24  , MoveVector: New Vector( x + w + 1 , 0 ) } 
 x += w + 3 
-cc.Sections[ 2 ] := { Header: "Section 2" , X: x , Y: 0 , W: w , H: 24  , MoveVector: New Vector( x + w + 1 , 0 ) }  ;  V1toV2: Invalid Index errors?, try 'cc.Sections.Push(<val>)'
+cc.Sections[ 2 ] := { Header: "Section 2" , X: x , Y: 0 , W: w , H: 24  , MoveVector: New Vector( x + w + 1 , 0 ) } 
 x += w + 3 
-cc.Sections[ 3 ] := { Header: "Section 3" , X: x , Y: 0 , W: w , H: 24  , MoveVector: New Vector( x + w + 1 , 0 ) }  ;  V1toV2: Invalid Index errors?, try 'cc.Sections.Push(<val>)'
+cc.Sections[ 3 ] := { Header: "Section 3" , X: x , Y: 0 , W: w , H: 24  , MoveVector: New Vector( x + w + 1 , 0 ) } 
 x += w + 3 
-cc.Sections[ 4 ] := { Header: "Section 4" , X: x , Y: 0 , W: w , H: 24  , MoveVector: New Vector( x + w + 1 , 0 ) }  ;  V1toV2: Invalid Index errors?, try 'cc.Sections.Push(<val>)'
+cc.Sections[ 4 ] := { Header: "Section 4" , X: x , Y: 0 , W: w , H: 24  , MoveVector: New Vector( x + w + 1 , 0 ) } 
 x += w + 3 
-cc.Sections[ 5 ] := { Header: "Section 5" , X: x , Y: 0 , W: w , H: 24  , MoveVector: New Vector( x + w + 1 , 0 ) }  ;  V1toV2: Invalid Index errors?, try 'cc.Sections.Push(<val>)'
+cc.Sections[ 5 ] := { Header: "Section 5" , X: x , Y: 0 , W: w , H: 24  , MoveVector: New Vector( x + w + 1 , 0 ) } 
 
 
 ;################################################################################
 
 
-	While (RegExMatch(srcStr, "s)^.", &char))		; get first char in string - s) targets all chars (comparable speed to StrLen(srcStr))
+	While (RegExMatch(srcStr, "s)^.", char))		; get first char in string - s) targets all chars (comparable speed to StrLen(srcStr))
 	{
-		srcStr := StrReplace(srcStr, (char&&char[0]), , , &cCnt)	; 3 TIMES FASTER than RegexReplace() for single chars !!! ('just me' suggestion)
+		srcStr := StrReplace(srcStr, char, , cCnt)	; 3 TIMES FASTER than RegexReplace() for single chars !!! ('just me' suggestion)
 		;ndl		:= "\Q" char "\E"				; update needle for each char
 		;srcStr	:= RegExReplace(srcStr,ndl,,cCnt)	; remove all chars found (speed boost), and...
 													;	count char occurrences at same time
 		; build char obj
-		ascPos	:= Ord((char&&char[0]))						; array index number
+		ascPos	:= asc(char)						; array index number
 		if (ascPos>0 && ascPos<256)					; if not super-extended ascii char
-			charObj[ascPos] := {Asc:ascPos		; add charObj to list - char array index will be...
-			,(char&&char[0]):(char&&char[0]),Count:cCnt}				;	 same as char ascii value ;  V1toV2: Invalid Index errors?, try 'charObj.Push(<val>)'
+			charObj[ascPos] := {"Asc":ascPos		; add charObj to list - char array index will be...
+			,"Char":char,"Count":cCnt}				;	 same as char ascii value
 		else
-			charObj[extIdx] := {Asc:ascPos		; push super-extended chars (or null) to end of list
-			,(char&&char[0]):(char&&char[0]),Count:cCnt}, extIdx++ ;  V1toV2: Invalid Index errors?, try 'charObj.Push(<val>)'
+			charObj[extIdx] := {"Asc":ascPos		; push super-extended chars (or null) to end of list
+			,"Char":char,"Count":cCnt}, extIdx++
 		tCount += cCnt								; testing/debugging
 		;ToolTip % StrLen(srcStr)
 		; build unique list
 ;		if (RegExMatch(unique, ndl)) ; not needed	; RegexMatch is about 2.5 times faster than Instr()
 ;			continue								; do not add dupe chars to unique list
-		fCR		:= (fCR||(char&&char[0])="`r")					; determine whether CR was originally present in srcStr
-		fLF		:= (fLF||(char&&char[0])="`n")					; determine whether LF was originally present in srcStr
-		unique	.= (char&&char[0]) "`r"						; make list of unique chars only, use CR as delim
+		fCR		:= (fCR||char="`r")					; determine whether CR was originally present in srcStr
+		fLF		:= (fLF||char="`n")					; determine whether LF was originally present in srcStr
+		unique	.= char "`r"						; make list of unique chars only, use CR as delim
 	}
 
 ;################################################################################
@@ -347,12 +347,12 @@ cc.Sections[ 5 ] := { Header: "Section 5" , X: x , Y: 0 , W: w , H: 24  , MoveVe
 ;#####################################
 
 	SwitchToSlim() {
-		v := this.ov, n := this[v].n, this[v].Needle[n] := this.Fpat(), this[v].eFlag := True ;  V1toV2: Invalid Index errors?, try 'this[v].Needle.Push(<val>)'
+		v := this.ov, n := this[v].n, this[v].Needle[n] := this.Fpat(), this[v].eFlag := True
 		this.GuiClose(this.id)
 		this.SlimGui(this.id)
-		ControlSetText(this[v].Needle[n], "Edit1", "A")
+		ControlSetText, Edit1, % this[v].Needle[n], A
 		this.RenewGui(this[v].Needle[n]), this[v].eFlag := False
-		Send("{End}")
+		Send, {End}
 	}
 
 ;#####################################
@@ -399,7 +399,7 @@ cc.Sections[ 5 ] := { Header: "Section 5" , X: x , Y: 0 , W: w , H: 24  , MoveVe
 
 ;################################################################################
 
-strV1 := "(`"(?>[^`"\v]+|`"`")*`")"
+strV1 := "(""(?>[^""\v]+|"""")*"")"
 
 
 r .= RegExMatch(A_LoopField, "\w") ? "(?=[\w'\-+]*" A_LoopField ")" : ""
@@ -413,27 +413,26 @@ RegExEscape(str) { ; https://www.regular-expressions.info/characters.html
 }
 
 
-needle		:= RegExReplace(cells[2], "^`"(.*)`"$", "$1", , 1)	; needle is specific for each reserve word (trim leading and trailing double-quotes)
-repl		:= RegExReplace(cells[3], "^`"(.*)`"$", "$1", , 1)	; replacement is specific for each reserve word (trim leading and trailing double-quotes)
-retStr := RegExReplace(retStr, "(?m)^((?:(?>`"[^`"\v]*`"|[^`"\v;]*)*)*)(;.*)+", "$1", &c)
+needle		:= RegExReplace(cells[2], "^""(.*)""$", "$1",,1)	; needle is specific for each reserve word (trim leading and trailing double-quotes)
+repl		:= RegExReplace(cells[3], "^""(.*)""$", "$1",,1)	; replacement is specific for each reserve word (trim leading and trailing double-quotes)
+retStr := RegExReplace(retStr, "(?m)^((?:(?>""[^""\v]*""|[^""\v;]*)*)*)(;.*)+", "$1", c)
 		
 
 ;################################################################################
 
-   myGui := Gui()
-   myGui.MarginX := 20, myGui.MarginY := 20
-   ogcButtonOrder1234 := myGui.Add("Button", "ym", "Order 1, 2, 3, 4")
-   ogcButtonOrder3214 := myGui.Add("Button", "ym", "Order 3, 2, 1, 4")
-   ogcButtonRemoveBkImage := myGui.Add("Button", "ym", "Remove BkImage")
-   ogcButtonNewBkImage := myGui.Add("Button", "ym", "New BkImage")
-   myGui.Add("Text", "xm Section h20", "First visible row:")
-   myGui.Add("Text", "hp y+0", "Is row 20 visible?")
-   myGui.Add("Text", "hp y+0", "Number of visible rows:")
-   ogcTextFVR := myGui.Add("Text", "ys hp vFVR", "00")
-   ogcTextIRV := myGui.Add("Text", "hp y+0 vIRV", "00")
-   ogcTextNOVR := myGui.Add("Text", "hp y+0 vNOVR", "00")
-   ogcButtonNewCheck := myGui.Add("Button", "ys", "New Check")
-   ogcListviewVLV := myGui.Add("Listview", "xm w500 r10 Grid cWhite vVLV", ["Col 1", "Col 2", "Col 3", "Icon"]), HLV := ogcListviewVLV.hwnd ; add -LV0x20 on Win XP
+   Gui, Margin, 20, 20
+   Gui, Add, Button, ym gOrder123, Order 1, 2, 3, 4
+   Gui, Add, Button, ym gOrder321, Order 3, 2, 1, 4
+   Gui, Add, Button, ym gRemoveImage, Remove BkImage
+   Gui, Add, Button, ym gNewImage, New BkImage
+   Gui, Add, Text, xm Section h20, First visible row:
+   Gui, Add, Text, hp y+0, Is row 20 visible?
+   Gui, Add, Text, hp y+0, Number of visible rows:
+   Gui, Add, Text, ys hp vFVR, 00
+   Gui, Add, Text, hp y+0 vIRV, 00
+   Gui, Add, Text, hp y+0 vNOVR, 00
+   Gui, Add, Button, ys gCheck, New Check
+   Gui, Add, Listview, xm w500 r10 Grid cWhite hwndHLV vVLV, Col 1|Col 2|Col 3|Icon ; add -LV0x20 on Win XP
 
 
 ;################################################################################
@@ -441,53 +440,53 @@ retStr := RegExReplace(retStr, "(?m)^((?:(?>`"[^`"\v]*`"|[^`"\v;]*)*)*)(;.*)+", 
 getTens(str)
 {
 
-	tens := {ten:10,twenty:20,thirty:30,forty:40,fifty:50,sixty:60,seventy:70,eighty:80,ninety:90,eleven:11
-			,twelve:12,thirteen:13,fourteen:14,fifteen:15,sixteen:16,seventeen:17,eighteen:18,nineteen:19}
+	tens := {"ten":10,"twenty":20,"thirty":30,"forty":40,"fifty":50,"sixty":60,"seventy":70,"eighty":80,"ninety":90,"eleven":11
+			,"twelve":12,"thirteen":13,"fourteen":14,"fifteen":15,"sixteen":16,"seventeen":17,"eighteen":18,"nineteen":19}
 	return tens[str]
 }
 
 ;################################################################################
 
 
-frogs?"":frogs:=maxfrogs
+frogs?:frogs:=maxfrogs
 
 a := ""
   , b
   ? c
-  :""
+  :
 
 a := ""
-  , b ? c : ""
+  , b ? c :
 
-var ? "": "false"
+var ? : "false"
 
-(var) ? "": "false"
+(var) ? : "false"
 
 var1 := (var2)
-	?""
+	?
 	: "false"
 
 var3 := (var4)
 	? "true"
-	:""
+	:
 
 ;################################################################################
 	
-rList.push({BPP:BPP, Width:W, Height:H, Freq:Freq, ToString:curStr})
+rList.push({"BPP":BPP, "Width":W, "Height":H, "Freq":Freq, "ToString":curStr})
 
 ;#####################################
 
-obj := {keyA: "valueA", keyB : "valueB", keyC : "ValC"}
-MsgBox(obj.keyA)
-MsgBox(obj.keyB)
-MsgBox(obj.keyC)
+obj := {"keyA": "valueA", "key" . "B" : "valueB", "keyC" : "ValC"}
+MsgBox % obj.keyA
+MsgBox % obj.keyB
+MsgBox % obj.keyC
 
 ;################################################################################
 
 ; Send6.ahk - F3:: DISAPPEARS (THIS IS V2)
 
 F3:: {
- MouseGetPos(&mx, &my)
+ MouseGetPos &mx, &my
  If PixelSearch(&x, &y, mx - within, my - within, mx + within, my + within, find)
   Click(x, y), SoundBeep(1500)
 }
@@ -498,49 +497,45 @@ F3:: {
 ; 123299
 $*s::
 {
-	ToolTip()
-	ErrorLevel := !KeyWait("LShift", "d, T0.2")		; THIS LINE HAS SPACE ISSUE
+	ToolTip
+	KeyWait, LShift, d, T0.2		; THIS LINE HAS SPACE ISSUE
 	if (ErrorLevel == 1)
 		return
 
 	StartTime := A_TickCount
-	ErrorLevel := !KeyWait("c", "d, T0.25")
+	KeyWait, c, d, T0.25
     ElapsedTime := A_TickCount - StartTime ; Calculate the elapsed time
 	if(GetKeyState("c"))
 	{
-		ToolTip("here")
+		ToolTip % "here"
 		if (ElapsedTime < 250)
 		{
-			Send("{c up}")
-			Sleep(250 - ElapsedTime)
-			Send("{c down}")
+			Send, {c up}
+			Sleep,  250 - ElapsedTime
+			Send, {c down}
 		}
-		Send("{LShift up}{s up}{c up}")
+		Send, {LShift up}{s up}{c up}
 	}
 }
-V1toV2_GblCode_001:
 return
 
 
-V1toV2_GblCode_002:
 ; formatComments.ahk - SEEMS TO CONVERT CORRECTLY WITH MY CHANGES
 
-linesObj.push({code:code,comment:comment})	; should become linesObj.push({code:code,comment:comment})
+linesObj.push({"code":code,"comment":comment})	; should become linesObj.push({code:code,comment:comment})
 
 
 ; GetDisplaySettings.ahk - SEEMS TO CONVERT CORRECTLY WITH MY CHANGES
 
-	Return {Width:w,Height:h,Qual:q,Freq:f} ;Out_1 "/" Out_2 "/" Out_3 "/" Out_4
+	Return {"Width":w,"Height":h,"Qual":q,"Freq":f} ;Out_1 "/" Out_2 "/" Out_3 "/" Out_4
 	
-	V1toV2_GblCode_003:
-Return {W: (ErrorLevel & 0xFFFF), H: (ErrorLevel >> 16) & 0xFFFF}
+	Return {W: (ErrorLevel & 0xFFFF), H: (ErrorLevel >> 16) & 0xFFFF}
 
 
 
-V1toV2_GblCode_004:
 ; imagesearch 101814.ahk
 
-			Click(FoundX ", " FoundY)
+			Click, %FoundX%, %FoundY%
 			
 			
 			
@@ -561,8 +556,8 @@ V1toV2_GblCode_004:
 */
 
 #SingleInstance force
-CoordMode("pixel", "screen")
-CoordMode("mouse", "screen")
+CoordMode, pixel, screen
+CoordMode, mouse, screen
 lock := false
 return
 ;################################################################################
@@ -570,13 +565,13 @@ F11::	; lock to horz axis movement only
 F12::	; lock to vert axis movement only
 {
 	lock :=! lock
-	MouseGetPos(&mX, &mY)
+	MouseGetPos, mX, mY
 	((A_ThisHotkey="F11") ? LockAxis(lock, 0, mY, A_ScreenWidth, mY) : LockAxis(lock, mX, 0, mX, A_ScreenHeight))
 	return
 }
 ;esc::ExitApp
 ;################################################################################
-LockAxis(lock:=false, x1:=0 , y1:=0, x2:=1, y2:=1) {
-	R := Buffer(16, 0),NumPut("UPtr", x1, R.Ptr+0),NumPut("UPtr", y1, R.Ptr+4),NumPut("UPtr", x2, R.Ptr+8),NumPut("UPtr", y2, R.Ptr+12) ; V1toV2: if 'R' is a UTF-16 string, use 'VarSetStrCapacity(&R, 16)' and replace all instances of 'R.Ptr' with 'StrPtr(R)'
-	return (lock) ? DllCall("ClipCursor", "UInt", R.Ptr) : DllCall("ClipCursor")
+LockAxis(lock=false, x1:=0 , y1:=0, x2:=1, y2:=1) {
+	VarSetCapacity(R,16,0),NumPut(x1,&R+0),NumPut(y1,&R+4),NumPut(x2,&R+8),NumPut(y2,&R+12)
+	return (lock) ? DllCall( "ClipCursor", UInt,&R ) : DllCall("ClipCursor")
 }

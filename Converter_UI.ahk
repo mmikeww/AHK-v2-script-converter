@@ -89,9 +89,10 @@ class clsUserUI {																					; Gui handling
 		this.rdoGuiAuto	:= this.oGui.AddRadio('yp vAuto', 'Auto'								)	; Radio	- Gui Conversion - Auto
 		lblGuiName		:= this.oGui.AddText( 'x' tabX ' y+15 w' wlbl, 'Gui Name:'				)	; label	- GuiName preference
 		this.edtGuiName	:= this.oGui.AddEdit( 'yp w' wEdit ' vGName', 'GuiName'					)	; Edit	- GuiName preference
+		SendMessage(0x1501, 1, StrPtr("myGui"),, "ahk_id " this.edtGuiName.hwnd                 )   ;       - Set placeholder text for default option
 		lblCtrlPfx		:= this.oGui.AddText( 'x' tabX ' y+5 w' wlbl, 'Ctrl Prefix:'			)	; label	- GuiCtrl Prefix preference
 		this.edtCtrlName:= this.oGui.AddEdit( 'yp w' wEdit ' vCName', 'ControlPrefix'			)	; Edit	- GuiCtrl Prefix preference
-		this.txtEx		:= this.oGui.AddText( 'cBlue x' tabX ' y+5 h45 w' wTab-40, ''			)	; label - show example of code output
+		this.txtEx		:= this.oGui.AddText( 'cBlue x' tabX ' y+5 h45 w' wTab-40, ''		   )   ; label - show example of code output
 		this.rdoGuiStd.OnEvent('Click', this.evGui.bind(this) 									)	; event handler for Radio - Simple (pass entire obj)
 		this.rdoGuiDyn.OnEvent('Click', this.evGui.bind(this) 									)	; event handler for Radio - Dynamic	 (pass entire obj)
 		this.rdoGuiAuto.OnEvent('Click', this.evGui.bind(this) 									)	; event handler for Radio - Auto	 (pass entire obj)
@@ -219,6 +220,8 @@ class clsUserUI {																					; Gui handling
 	;############################################################################
 	_updateExample() {																				; updates example string on Gui tab
 		g		:= this.edtGuiName.Value															; get GuiName text
+		if (g = "")
+			g := "myGui"                                                                            ; cant have no gui name, use default
 		c		:= this.edtCtrlName.Value															; get CtrlPrefix text
 		exStr 	:= 'Example:`n' c 'ButtonButton1 := ' g '.Add("Button",,"Button 1")'				; example string
 		this.txtEx.Value := exStr																	; apply changes to example string

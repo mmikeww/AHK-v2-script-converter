@@ -197,7 +197,7 @@ class clsUserUI {																					; Gui handling
 			IniWrite(this.edtGuiName.value,	iniFile, Section, 'GuiStdName'		)					; ... save setting for simple gui name
 			IniWrite(this.edtCtrlName.value,iniFile, Section, 'CtrlStdName'		)					; ... save setting for simple ctrl prefix
 		}
-		else if (mode = 2) {																		; if dynamic mode...
+		else if (this.GuiMode = 2) {																		; if dynamic mode...
 		;	this.edtGuiName.value := IniRead(iniFile, Section, 'GuiDynName', gName)					; ... get dynamic guiName
 		;	this.edtCtrlName.value:= IniRead(iniFile, Section, 'CtrlDynName',cName)					; ... get dynamic ctrl prefix
 			this.txtEx.Visible:= true                                                               ; ... make example visible

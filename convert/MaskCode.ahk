@@ -27,10 +27,10 @@
 	2025-12-13,24			- UPDATED, see comments in code
 	2026-01-01,13,17,24		- UPDATED, see comments in code
 	2026-02-07				- UPDATED, see comments in code
+	2026-03-11				- UPDATED, see comments in code
 
 	TODO
 		Finish support for Continuation sections
-		Add interctive component to prompt user for decisions?
 		Refactor for separate support for v1.0 -> v1.1, and v1.1 -> v2
 
 		GENERAL TODO -
@@ -102,6 +102,23 @@ global	  gTagChar		:= chr(0x2605) ; '★'															; unique char to ensure 
 		, gHotStrList	:= ''
 		, gMLContList	:= []
 
+;################################################################################
+															   hasTernary(srcStr)
+;################################################################################
+{
+; 2026-03-11 AMB, ADDED - returns whether srcStr has a ternary expression
+;	should be accurate detection, will update as needed otherwise
+;	does NOT extract/manipulate components of ternary expression (maybe later)
+	saveStr := srcStr																					; for debug inspection
+	Mask_T(&srcStr,'C&S'), Mask_T(&srcStr,'FC'), Mask_T(&srcStr,'KV')									; mask comments, strings, func calls, key/val pairs
+	if (!InStr(srcStr, '?')																				; if str has no ? ...
+	|| !(srcStr ~= gPtn_Colon)																			; OR str has no : ...
+	|| !(srcStr ~= gPtn_Ternary)) {																		; OR str has no Ternary pattern...
+		return false																					; ... exit - no ternary is present
+	}
+	;MsgBox "[" saveStr "]`n`n[" srcStr "]"																; debug inspect
+	return true																							; should have ternary exp
+}
 ;################################################################################
 															   getTagType(srcStr)
 ;################################################################################

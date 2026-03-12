@@ -1,5 +1,5 @@
-# Config INI
-QuickConvertorV2.ini
+# Config INI's
+*.ini
 
 # Script being converted
 tests/TempScript.ah1

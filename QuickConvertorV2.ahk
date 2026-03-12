@@ -88,7 +88,7 @@
     TreeViewWidth       := IniRead(IniFile, Section, "TreeViewWidth", 280)
     ViewExpectedCode    := IniRead(IniFile, Section, "ViewExpectedCode", 0)
     UIDarkMode          := IniRead(IniFile, Section, "UIDarkMode", 0)
-    GuiPath             := 0 ;IniRead("Converter.ini",  "Settings", "GuiMode", 0)
+    GuiPath             := IniRead("Converter.ini",  "Settings", "GuiMode", 1)
  ;   OnExit(ExitFunc)
     ;WRITE BACK VARIABLES SO THAT DEFAULTS ARE SAVED TO INI (Seems like this should be moved to exit routine SEE Esc::)
 
@@ -107,13 +107,18 @@
       {
         arg := A_Args[1]
         if (arg = 'QCT') {
-          TestMode := 1, IniWrite(TestMode, IniFile, Section, "TestMode")
+          TestMode       := 1, IniWrite(TestMode,   IniFile, Section, "TestMode")                                   ; start in test mode
+          TestFailing    := 0, IniWrite(TestFailing,IniFile, Section, "TestFailing")                                ; DONT display failing tests
+          FileTempScript := A_IsCompiled ? A_ScriptDir "\TempScript.ah1" : A_ScriptDir "\Tests\TempScript.ah1"
+        } else if (arg = 'QCTF') {
+          TestMode       := 1, IniWrite(TestMode,   IniFile, Section, "TestMode")                                   ; start in test mode
+          TestFailing    := 1, IniWrite(TestFailing,IniFile, Section, "TestFailing")                                ; DO display failing tests
           FileTempScript := A_IsCompiled ? A_ScriptDir "\TempScript.ah1" : A_ScriptDir "\Tests\TempScript.ah1"
         } else if (arg = 'QCC') {
-          TestMode := 0, IniWrite(TestMode, IniFile, Section, "TestMode")
+          TestMode       := 0, IniWrite(TestMode,   IniFile, Section, "TestMode")                                   ; DONT start in test mode
           FileTempScript := A_IsCompiled ? A_ScriptDir "\TempScript.ah1" : A_ScriptDir "\Tests\TempScript.ah1"
         } else {
-          FileTempScript := A_Args[1]
+          FileTempScript := A_Args[1]                                                                               ; arg is script file
         }
       }
       default: ;INCORRECT NUMBER OF ARGUMENTS SUPPLIED -> ERROR

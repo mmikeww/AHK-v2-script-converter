@@ -265,7 +265,7 @@ else if (nt == "'*'") {
 	_HelperClip(){
 		local ClipList 
 		
-		
+		out := ogc% PopUpWindow.EditHwnd.Value
 		
 		ClipList := 		{ 	__New: 					" := New PopUpWindow( { AutoShow: 1 , X: 0 , Y: 0 , W: A_ScreenWidth , H: A_ScreenHeight , Options: `" -DPIScale +AlwaysOnTop `" } )"
 							,	UpdateSettings:			".UpdateSettings( { X: `"`" , Y: `"`" , W: `"`" , H: `"`" } , UpdateGraphics := 0 )"

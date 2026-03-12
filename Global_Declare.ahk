@@ -11,10 +11,13 @@ global	  gmAhkKeywdsToRename,	gmAhkLoopRegKeywds
 		, gmAhkCmdsToConvertV1, gmAhkCmdsToConvertV2
 		, gmAhkFuncsToConvert,	gmAhkMethsToConvert, gmAhkArrMethsToConvert
 global	gINIFile			:= 'Converter.ini'					; 2026-01-26 - AMB, ADDED to support user interactive settings
+global	gDynDefGuiNm		:= (IsSet(gDynDefGuiNm))			; 2026-03-11 if not already set...
+							?  gDynDefGuiNm : 'nnGui'			; ... set as needed
 getINISettings()												; 2026-01-26 - AMB, ADDED to support user interactive settings
 ;################################################################################
 #Include lib/ClassOrderedMap.ahk
 #Include lib/dbg.ahk
+#Include <v2DynGui>												; 2026-03-11 - support for dynamic gui handling
 #Include GuiProg.ahk											; 2026-01-24 - support for new progress-gui
 #Include Convert/MaskCode.ahk									; 2024-06-26 - support for masking
 #Include Convert/Scope.ahk										; 2025-11-01 - support for scope
@@ -32,6 +35,7 @@ getINISettings()												; 2026-01-26 - AMB, ADDED to support user interactiv
 #Include Convert/SplitConv/PseudoHandling.ahk					; 2025-07-01 - temp while separating dual conversion
 #Include Convert/SplitConv/LabelAndFunc.ahk						; 2025-07-06
 #Include Convert/SplitConv/GuiAndMenu.ahk						; 2025-07-06
+#Include Convert/SplitConv/GuiAlt.ahk							; 2026-03-11 - support for simple/dynamic gui handling
 ;################################################################################
 setGlobals() {													; for globals that are reset with each new conversion
 	Global
@@ -84,17 +88,24 @@ setGlobals() {													; for globals that are reset with each new conversion
 	gmVarSetCapacityMap		:= Map_I()							; list of VarSetCapacity variables, with definition type
 	gfLockGlbVars			:= False							; flag used to prevent global vars from being changed
 
-	gLVNameDefault			:= 'LV'
+	gfHasDynamicGui			:= false							; 2026-03-11
+	gfHasDynamicGLabel		:= false							; 2026-03-11
+	gLVNameDefault			:= (gDynGuiNaming)					; 2026-03-11 AMB - UPDATED to support dynamic naming option
+							? "%gV2CurLV%"
+							: "LV"								; orig option
+	gLVNameDefault			:= (gDynGuiNaming)
+							? Trim(gLVNameDefault, '%')
+							: gLVNameDefault
 	gTVNameDefault			:= 'TV'
 	gSBNameDefault			:= 'SB'
 	gaFileOpenVars			:= []								; 2025-10-12 - callection of FileOpen object names
 	gaZipTagIDs				:= []								; 2025-11-30 - TagID list for line compression (Zip,Unzip)
 
-	; reset Static vars in multiple classes						; required for Scope support and unit testing
 	clsMask.Reset()												; 2025-11-01 - ADDED as part of Scope support, unit testing
 	clsNodeMap.Reset()											; 2025-11-01 - ADDED as part of Scope support, unit testing
 	clsSection.Reset()											; 2025-11-01 - ADDED as part of Scope support, unit testing
 	clsScopeSect.Reset()										; 2025-11-01 - ADDED as part of Scope support, unit testing
+	clsGuiObj.Reset()											; 2026-03-11 - ADDED for unit testing
 }
 ;################################################################################
 getIniSettings() {
@@ -104,8 +115,10 @@ getIniSettings() {
 	guiMode	:= IniRead(iniFile, Section, 'GuiMode',		''	)
 	guiName	:= IniRead(iniFile, Section, 'GuiStdName',	''	)
 	ctrlPfx	:= IniRead(iniFile, Section, 'CtrlStdName',	''	)
-	global	gNewGuiNaming	:= !!(guiMode=2)
-	global	gGuiNameDefault	:= (gNewGuiNaming) ? 'nnGui'
+	global	gUseGuiAlt		:= !(guiMode=0)						; whether user wants to use updated routines for orig-gui-naming
+	global	gDynGuiNaming	:= gUseGuiAlt && !!(guiMode=2)		; whether user wants to force dynamic-gui-naming
+	global	gAutoGuiNaming	:= gUseGuiAlt && !!(guiMode=3)		; whether user allows script to choose the appropriate gui-naming
+	global	gGuiNameDefault	:= (gDynGuiNaming) ? gDynDefGuiNm
 							:  (guiName) ? guiName
 							:  'myGui'
 	global gCtrlPfx			:= (ctrlPfx) ? ctrlPfx
@@ -118,7 +131,7 @@ getUserDefGuiName() {
 	iniFile	:= gINIFile, Section := 'Settings'
 	guiMode	:= IniRead(iniFile, Section, 'GuiMode',		''	)
 	guiName	:= IniRead(iniFile, Section, 'GuiStdName',	''	)
-	defName := (guiMode=2) 	? 'nnGui'
+	defName := (guiMode=2) 	? gDynDefGuiNm
 			:  ((guiName)	? guiName : 'myGui')
 	return defName
 }

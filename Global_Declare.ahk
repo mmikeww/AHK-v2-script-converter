@@ -110,27 +110,30 @@ setGlobals() {													; for globals that are reset with each new conversion
 ;################################################################################
 getIniSettings() {
 ; 2026-01-26 AMB, ADDED as part of support for user settings
+; 2026-03-14 AMB, UPDATED settings/names, added gCopyIncl
 ;	reads user settings from disk, transfers settings to script vars
 	iniFile	:= gINIFile, Section := 'Settings'
 	guiMode	:= IniRead(iniFile, Section, 'GuiMode',		''	)
-	guiName	:= IniRead(iniFile, Section, 'GuiStdName',	''	)
-	ctrlPfx	:= IniRead(iniFile, Section, 'CtrlStdName',	''	)
+	guiName	:= IniRead(iniFile, Section, 'StdGuiName',	''	)
+	ctrlPfx	:= IniRead(iniFile, Section, 'StdCtrlPfx',	''	)	; can be empty/blank
+	copyIncl:= IniRead(iniFile, Section, 'CopyIncl',	''	)
+	global	gCtrlPfx		:= ctrlPfx							; used as default gui ctrl prefix for non-dynamic modes, can be empty/blank
+	global	gCopyIncl		:= copyIncl							; whether user wants to include file to be copied to library automatically
 	global	gUseGuiAlt		:= !(guiMode=0)						; whether user wants to use updated routines for orig-gui-naming
 	global	gDynGuiNaming	:= gUseGuiAlt && !!(guiMode=2)		; whether user wants to force dynamic-gui-naming
 	global	gAutoGuiNaming	:= gUseGuiAlt && !!(guiMode=3)		; whether user allows script to choose the appropriate gui-naming
 	global	gGuiNameDefault	:= (gDynGuiNaming) ? gDynDefGuiNm
 							:  (guiName) ? guiName
 							:  'myGui'
-	global gCtrlPfx			:= (ctrlPfx) ? ctrlPfx
-							:  'ogc'
 }
 ;################################################################################
 getUserDefGuiName() {
 ; 2026-01-26 AMB, ADDED as part of support for user settings
+; 2026-03-14 AMB, UPDATED ini setting name - StdGuiName
 ;	returns user-preferred gui name from ini file
 	iniFile	:= gINIFile, Section := 'Settings'
 	guiMode	:= IniRead(iniFile, Section, 'GuiMode',		''	)
-	guiName	:= IniRead(iniFile, Section, 'GuiStdName',	''	)
+	guiName	:= IniRead(iniFile, Section, 'StdGuiName',	''	)
 	defName := (guiMode=2) 	? gDynDefGuiNm
 			:  ((guiName)	? guiName : 'myGui')
 	return defName

@@ -1490,6 +1490,7 @@ class clsExtract
 detectDynamicGuiState(srcLine)
 {
 ; 2026-03-11 AMB, ADDED - to detect whether dynamic naming should be enabled
+; 2026-03-14 AMB, UPDATED: added return value
 
 	global gDynGuiNaming, gfHasDynamicGui ;, gAutoGuiNaming, gfHasDynamicGLabel
 
@@ -1510,7 +1511,7 @@ detectDynamicGuiState(srcLine)
 			gfHasDynamicGui := gDynGuiNaming ; true											; ... set flag to true
 		}
 	}
-	return
+	return gfHasDynamicGui
 }
 ;################################################################################
 hasDynamicGuiNaming(srcStr)
@@ -1631,4 +1632,62 @@ isClassNN(id)
 		return InStr(ClassNNList, m[1] '|')													; return whether id appears to be a ClassNN
 	}
 	return false																			; does not appear to be a ClassNN
+}
+;################################################################################
+dynIncludeToLib()
+{
+; 2026-03-14 AMB, ADDED: copies dynamic include file to global library, as needed
+
+	if (!gCopyIncl) {	; see Global_Declare.ahk											; if auto-copy is disabled...
+		return false																		; ... do not copy include file to library
+	}
+
+	; ini include-file paths
+	dynGuiFN	:= 'v2DynGui.ahk'															; include-file name
+	sFile		:= A_ScriptDir '\Lib\'				dynGuiFN								; include-file source folder
+	dFile		:= A_MyDocuments '\AutoHotkey\Lib\'	dynGuiFN								; include-file destination folder (global library)
+	; is include-file found in source folder?
+	if (!dynIncludeExist(sFile)) {															; if src include-file missing...
+		return false																		; ... exit (will terminate instead)
+	}
+	; is include-file found in global library folder?
+	if (!FileExist(dFile)) {																; if include-file not found in destination folder...
+		FileCopy(sFile, dFile)																; ... copy src file to destination
+		return !!(FileExist(dFile))															; ... return whether dest file now exists
+	}
+	; src and dest files found - compare contents between files
+	if (FileRead(sFile) == FileRead(dFile)) {												; if src and dest contents match...
+		return true																			; ... return success
+	}
+
+	; src file is different than dest file...
+	; rename current dest file, copy src to dest
+	SplitPath(dFile, &FName, &dir, &ext, &FnNoExt, &drv)									; extract path parts for orig dest file
+	dFile2	:= dir '\' FnNoExt '_BKUP_' A_Now '.' ext										; append current date-time to dest filename
+	FileMove(dFile, dFile2)																	; rename orig dest file
+	FileCopy(sFile, dFile)																	; copy src file to dest
+	return !!(FileExist(dFile))																; return whether dest file exists
+}
+;################################################################################
+dynIncludeExist(srcPath:='',showMsg:=true,terminate:=true)
+{
+; 2026-03-14 AMB, ADDED
+;	determines whether include-file exists, can show msg and terminate, if requested
+
+	dPath	:= A_ScriptDir '\Lib\v2DynGui.ahk'												; default src path/file
+	srcPath	:= (srcPath!='') ? srcPath : dPath												; [Include file path]
+	if (FileExist(srcPath))																	; if file exists...
+		return srcPath																		; ... return path as success flag
+	; file does not exist
+	if (showMsg) {																			; if msg display is requested (default)...
+		SplitPath(srcPath, &FName)															; get #Include file name
+		msg := 'Dynamic Gui Handling requires a special #Include file...'
+		msg .= '`n`nThe following file is missing!`n' srcPath
+		msg .= '`n`nPlease ensure ' FName ' is placed in the proper path, '
+		msg .= 'or choose a mode that does not use Dynamic Gui Handling.'
+		msg .= (terminate) ? '`n`nThe converter will now terminate.' : ''
+		MsgBox(msg,'V1toV2 Converter - Missing #Include file')								; ... show msg
+	}
+	(terminate) && ExitApp																	; terminate if requested
+	return false																			; otherwise, return 'file missing' flag
 }

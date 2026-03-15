@@ -142,6 +142,7 @@ PreProcessLines(&code)
 {
 ; 2025-11-23 AMB, ADDED - part of fix for #413
 ; 2026-03-11 AMB, UPDATED to detect dynamic naming requirements for Gui/GuiControls
+; 2026-03-14 AMB, UPDATED to ensure dynamic include file is found, for dynamic naming mode
 ; pre-processing of certain commands via single-iteration of script lines
 
    global gDynGuiNaming, gfHasDynamicGui ;, gAutoGuiNaming
@@ -167,7 +168,10 @@ PreProcessLines(&code)
       }
       ; GUI related
       else if (line ~= '(?i)GUI') {                                                     ; if line has 'GUI' string
-         detectDynamicGuiState(line)
+         if (detectDynamicGuiState(line)                                                ; if line has dynamic gui content...
+         &&  !dynIncludeExist()) {                                                      ; ... BUT dynamic Include file is missing...
+			ExitApp                                                                     ; ... terminate conversion (reduntant - terminates as part of call)
+         }
       }
       outStr  .= line '`r`n'                                                            ; add line to output str
    }
@@ -291,6 +295,7 @@ FinalizeConvert(&code)
 ; 2024-06-27 ADDED, 2025-06-12, 2025-10-05, 2026-01-01 UPDATED
 ; 2026-01-24 AMB, UPDATED to support progress-gui
 ; 2026-03-08 AMB, UPDATED to add static kywd to methods as needed
+; 2026-03-14 AMB, UPDATED to copy dynamic include file to global library, as needed
 ; Performs tasks that finalize overall conversion
 
    Prog.ULog(,  'Post Process - Restore Classes/Funcs...', A_ThisFunc       )           ; update UI - current operation, debug
@@ -331,6 +336,7 @@ FinalizeConvert(&code)
       ; https://www.autohotkey.com/docs/v2/Scripts.htm#lib
       msg   := '`; V1toV2: Must place v2DynGui.ahk in library folder`r`n'
       code  := msg . '#Include <v2DynGui>`r`n' . code                                   ; add #Include for dynamic gui handling
+      dynIncludeToLib()                                                                 ; copy dynamic include file to global library, as needed
    }
    Prog.ULog(,  'Post Process - Restore Continuation Sections...'           )           ; update UI - current operation
       Mask_R(&code, 'CSect')                                                            ; restore remaining cont sects (returned as v2 converted)

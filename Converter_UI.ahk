@@ -1,10 +1,16 @@
 /*
-	2026-01-26 AMB, ADDED
-	2026-03-11 AMB, UPDATED to enable selection of simple/dynamic/auto gui handling
-
 	Provides user interface supporting the following:
 	 * User conversion-settings
 	 * convenient launch pad for QCV2/v2Converter, after changing settings
+
+	Change Log:
+	2026-01-26 AMB, ADDED
+	2026-03-11 AMB, UPDATED: to enable selection of simple/dynamic/auto gui handling
+	2026-03-14 AMB, UPDATED:
+					added validation for guiName/ctrlPfx formatting
+					added #Include-file auto-copy option (but mandatory for now)
+					changed some var/func/settings names
+
 */
 
 #SingleInstance force
@@ -82,25 +88,28 @@ class clsUserUI {																					; Gui handling
 
 		; Gui Tab
 		this.T3.UseTab(2)																			; target Gui settings tab
-		lblMode			:= this.oGui.AddText( 'x' tabX ' y+30 w' wlbl, 'Mode:'					)	; label	- Gui Conversion Mode
+		lblMode			:= this.oGui.AddText( 'x' tabX ' y+25 w' wlbl-25, 'Mode:'				)	; label	- Gui Conversion Mode
 		this.rdoGuiOrig	:= this.oGui.AddRadio('yp vOrig', 'Orig'								)	; Radio	- Gui Conversion - Orig
-		this.rdoGuiStd	:= this.oGui.AddRadio('yp checked vStd', 'Simple'						)	; Radio	- Gui Conversion - Simple
+		this.rdoGuiSmpl	:= this.oGui.AddRadio('yp checked vSmpl', 'Simple'						)	; Radio	- Gui Conversion - Simple
 		this.rdoGuiDyn	:= this.oGui.AddRadio('yp vDyn', 'Dynamic'								)	; Radio	- Gui Conversion - Dynamic
 		this.rdoGuiAuto	:= this.oGui.AddRadio('yp vAuto', 'Auto'								)	; Radio	- Gui Conversion - Auto
-		lblGuiName		:= this.oGui.AddText( 'x' tabX ' y+15 w' wlbl, 'Gui Name:'				)	; label	- GuiName preference
-		this.edtGuiName	:= this.oGui.AddEdit( 'yp w' wEdit ' vGName', 'GuiName'					)	; Edit	- GuiName preference
-		SendMessage(0x1501, 1, StrPtr("myGui"),, "ahk_id " this.edtGuiName.hwnd                 )   ;       - Set placeholder text for default option
-		lblCtrlPfx		:= this.oGui.AddText( 'x' tabX ' y+5 w' wlbl, 'Ctrl Prefix:'			)	; label	- GuiCtrl Prefix preference
-		this.edtCtrlName:= this.oGui.AddEdit( 'yp w' wEdit ' vCName', 'ControlPrefix'			)	; Edit	- GuiCtrl Prefix preference
-		this.txtEx		:= this.oGui.AddText( 'cBlue x' tabX ' y+5 h45 w' wTab-40, ''		   )   ; label - show example of code output
-		this.rdoGuiStd.OnEvent('Click', this.evGui.bind(this) 									)	; event handler for Radio - Simple (pass entire obj)
+		lblCtrlPfx		:= this.oGui.AddText( 'x' tabX ' y+13 w' wlbl, 'Ctrl Prefix:'			)	; label	- GuiCtrl Prefix preference
+		lblGuiName		:= this.oGui.AddText( 'xp+125 w' wlbl, 'Gui Name:'						)	; label	- GuiName preference
+		this.edtCtrlPfx	:= this.oGui.AddEdit( 'x' tabX ' y+3 w' wEdit ' vCPfx', 'CtrlPfx'		)	; Edit	- GuiCtrl Prefix preference
+		this.edtGuiName	:= this.oGui.AddEdit( 'xp+125 w' wEdit ' vGName', 'GuiName'				)	; Edit	- GuiName preference
+		this.txtEx		:= this.oGui.AddText( 'cBlue x' tabX ' y+5 h45 w' wTab-40, ''			)	; label - show example of code output
+		inclCap			:= 'Auto-Copy #Include file to global Library (if absent)'
+		this.chkInclude	:= this.oGui.AddCheckBox('x' tabX ' y+1 checked', inclCap				)	; label - show example of code output
+		this.chkInclude.Opt('+hidden +disabled')													; disable for now
+		this.rdoGuiOrig.OnEvent('Click', this.evGui.bind(this) 									)	; event handler for Radio - Orig	 (pass entire obj)
+		this.rdoGuiSmpl.OnEvent('Click', this.evGui.bind(this) 									)	; event handler for Radio - Simple	 (pass entire obj)
 		this.rdoGuiDyn.OnEvent('Click', this.evGui.bind(this) 									)	; event handler for Radio - Dynamic	 (pass entire obj)
 		this.rdoGuiAuto.OnEvent('Click', this.evGui.bind(this) 									)	; event handler for Radio - Auto	 (pass entire obj)
-		this.rdoGuiOrig.OnEvent('Click', this.evGui.bind(this) 									)	; event handler for Radio - Orig	 (pass entire obj)
+		this.chkInclude.OnEvent('Click', this.evGui.bind(this) 									)	; event handler for Chk   - Include	 (pass entire obj)
 		this.edtGuiName.OnEvent('Change', this.evNmChg.bind(this) 								)	; event handler for Edit  - GuiName	 (pass entire obj)
-		this.edtCtrlName.OnEvent('Change', this.evNmChg.bind(this) 								)	; event handler for Edit  - CtrlName (pass entire obj)
+		this.edtCtrlPfx.OnEvent('Change', this.evNmChg.bind(this) 								)	; event handler for Edit  - CtrlName (pass entire obj)
 		this.edtGuiName.OnEvent('LoseFocus', this.evGui.bind(this) 								)	; event handler for Edit  - GuiName	 (pass entire obj)
-		this.edtCtrlName.OnEvent('LoseFocus', this.evGui.bind(this) 							)	; event handler for Edit  - CtrlName (pass entire obj)
+		this.edtCtrlPfx.OnEvent('LoseFocus', this.evGui.bind(this) 								)	; event handler for Edit  - CtrlName (pass entire obj)
 
 		; General tab
 		this.T3.UseTab(4)																			; target General settings tab
@@ -108,10 +117,10 @@ class clsUserUI {																					; Gui handling
 						, ' Include Message Comments'											)
 		this.chkMsgs.OnEvent('Click', this.evGen.bind(this)										)	; event handler for ChkBox - (pass entire obj
 
-		; update settings, set title and show gui
-		this._getSettings(), this._updateSettings()													; update gui with user settings from file
-		this.oGui.Title := 'AHK V1toV2 Converter'													; gui Title
-		this.oGui.Show('w' wGui ' h' hGui ' NA')													; Show gui
+		; ini UI settings, set title and show gui
+		this._iniUI()																				; get settings from file, ini UI
+		this.oGui.Title := 'AHK V1toV2 Converter'													; set UI title
+		this.oGui.Show('w' wGui ' h' hGui ' NA')													; Show UI
 	}
 	;############################################################################
 	evClose(*) {			; also receives hidden 'this' obj										; event handler for gui close
@@ -127,7 +136,7 @@ class clsUserUI {																					; Gui handling
 		saveGuiMode := this.GuiMode, newGuiMode := saveGuiMode										; track guiMode changes
 		switch ctrl.name, 0 {
 			case 'Orig':	newGuiMode := 0															; track guiMode changes
-			case 'Std':		newGuiMode := 1															; track guiMode changes
+			case 'Smpl':	newGuiMode := 1															; track guiMode changes
 			case 'Dyn':		newGuiMode := 2															; track guiMode changes
 			case 'Auto':	newGuiMode := 3															; track guiMode changes
 		}
@@ -143,7 +152,7 @@ class clsUserUI {																					; Gui handling
 	}
 	;############################################################################
 	evNmChg(ctrl:='', *) {	; also receives hidden 'this' obj										; event handler for name changes on Gui tab
-		this._updateExample()																		; update example string as user types
+		this._updateVarName(ctrl)																	; verify proper format and update example
 	}
 	;############################################################################
 	evRun(ctrl:='', *) {	; also receives hidden 'this' obj										; event handler for handle Run buttons
@@ -168,92 +177,116 @@ class clsUserUI {																					; Gui handling
 		}
 	}
 	;############################################################################
-	_getSettings() {																				; reads/gets settings from disk
-		iniFile := this.iniFile, Section := 'Settings'
-		; save tab
-		this.autoSave		:= IniRead(iniFile, Section, 'AutoSave',	1	)						; get setting for auto-save
-		; gui tab
-		this.GuiMode		:= IniRead(iniFile, Section, 'GuiMode',		1	)						; get setting for guiMode
-		this._updateGuiModeNames(this.GuiMode)														; update gui/ctrl names on gui tab
-		; general tab
-		this.chkMsgs.value	:= IniRead(iniFile, Section, 'ConvMsgs',	1	)						; get setting for conv-msgs
-	}
-	;############################################################################
 	_guiDefaults(mode) {																			; default strings to use for GuiName and CtrlPfx
 		switch mode, 0 {
-			case 0,1:	return {gName:'myGui',cName:'ogc'}											; for orig or simple	guiMode
-			;case 2:	return {gName:'v2Gui',cName:'v2GC'}											; for dynamic	guiMode (NOT USED)
-			;case 3:	return {gName:'v2Gui',cName:'v2GC'}											; for auto		guiMode (NOT USED)
+			case 0,1:	return {gName:'myGui', cPfx:'ogc'}											; for orig or simple guiMode
+			default:	return {gName:'',	   cPfx:''	 }											; should not be used, but just in case
 		}
+	}
+	;############################################################################
+	_iniUI() {																						; reads settings from disk, initializes UI
+		iniFile := this.iniFile, Section := 'Settings'
+		; save tab
+		this.autoSave			:= IniRead(iniFile, Section, 'AutoSave', 1)							; get setting for auto-save
+		this.chkSave.value		:= this.autoSave													; keep track of auto-save setting
+		; gui tab
+		this.GuiMode			:= IniRead(iniFile, Section, 'GuiMode',	 1)							; get setting for guiMode
+		this.chkInclude.value	:= IniRead(iniFile, Section, 'CopyIncl', 1)							; get setting for copyInclude
+		this._setGuiModeButton(this.GuiMode)														; set proper mode button on gui tab
+		this._updateGuiModeNames(this.GuiMode)														; update gui/ctrl names  on gui tab
+		; general tab
+		this.chkMsgs.value		:= IniRead(iniFile, Section, 'ConvMsgs', 1)							; get setting for conv-msgs
 	}
 	;############################################################################
 	_saveSettings() {																				; saves settings to disk
 		iniFile := this.iniFile, Section := 'Settings'
-		;  save tab
-		IniWrite(this.autoSave,				iniFile, Section, 'AutoSave'		)					; save setting for auto-save
+		; save tab
+		IniWrite(this.autoSave, iniFile, Section, 'AutoSave')										; save setting for auto-save
 		; gui tab
-		IniWrite(this.GuiMode,				iniFile, Section, 'GuiMode'			)					; save setting for guiMode
+		IniWrite(this.GuiMode, iniFile, Section,  'GuiMode')										; save setting for guiMode
 		if (this.GuiMode <= 1) {																	; if orig or simple mode...
-			IniWrite(this.edtGuiName.value,	iniFile, Section, 'GuiStdName'		)					; ... save setting for simple gui name
-			IniWrite(this.edtCtrlName.value,iniFile, Section, 'CtrlStdName'		)					; ... save setting for simple ctrl prefix
-		}
-		else if (this.GuiMode = 2) {																		; if dynamic mode...
-		;	this.edtGuiName.value := IniRead(iniFile, Section, 'GuiDynName', gName)					; ... get dynamic guiName
-		;	this.edtCtrlName.value:= IniRead(iniFile, Section, 'CtrlDynName',cName)					; ... get dynamic ctrl prefix
-			this.txtEx.Visible:= true                                                               ; ... make example visible
-			ex := 'Example: mV2GC[["1","Button1"]] := mV2Gui["1"].Add("Button",,"Button 1")'
-			this.txtEx.Value := ex                                                                  ; ... set dynamic example string
+			gn := Trim(this.edtGuiName.Text), cp := Trim(this.edtCtrlPfx.Text)						; ... get trimmed text for gui name, ctrl pfx
+			gn := (this._validateVarName(gn))	? gn : unset										; ... verify that gui name is valid format
+			cp := (this._validateVarName(cp,1))	? cp : unset										; ... verify that ctrl pfx is valid format
+			(IsSet(gn)) && IniWrite(gn, iniFile, Section, 'StdGuiName')								; ... if valid, save setting for gui name
+			(IsSet(cp)) && IniWrite(cp, iniFile, Section, 'StdCtrlPfx')								; ... if valid, save setting for ctrl pfx
+		} else if (this.GuiMode > 1) {																; if dynamic or auto mode...
+			IniWrite(this.chkInclude.value, iniFile, Section, 'CopyIncl')							; ... save setting for copyInclude
 		}
 		; general tab
-		IniWrite(this.chkMsgs.value,		iniFile, Section, 'ConvMsgs'		)					; save setting for conv msgs
+		IniWrite(this.chkMsgs.value, iniFile, Section, 'ConvMsgs')									; save setting for conv msgs
 	}
 	;############################################################################
-	_setGuiModeButtons() {																			; update controls related to guiMode
+	_setGuiModeButton(mode) {																		; set gui mode button on gui tab
 		; deselect all radio buttons
-		this.rdoGuiStd.Value:=this.rdoGuiDyn.Value:=0
-		this.rdoGuiAuto.Value:=this.rdoGuiOrig.Value:=0
-		switch this.GuiMode {
-			case 0: this.rdoGuiOrig.Value	:= 1													; set orig		guiMode
-			case 1: this.rdoGuiStd.Value	:= 1													; set simple	guiMode
-			case 2: this.rdoGuiDyn.Value	:= 1													; set dynamic	guiMode
-			case 3: this.rdoGuiAuto.Value	:= 1													; set auto		guiMode
+		this.rdoGuiOrig.value:=this.rdoGuiSmpl.value:=0												; deselect orig, simple
+		this.rdoGuiDyn.value:=this.rdoGuiAuto.value:=0												; deselect dynamic, auto
+		; select proper radio button for mode
+		switch mode {
+			case 0: this.rdoGuiOrig.value	:= 1													; set orig		guiMode
+			case 1: this.rdoGuiSmpl.value	:= 1													; set simple	guiMode
+			case 2: this.rdoGuiDyn.value	:= 1													; set dynamic	guiMode
+			case 3: this.rdoGuiAuto.value	:= 1													; set auto		guiMode
 		}
 	}
 	;############################################################################
 	_updateExample() {																				; updates example string on Gui tab
-		g		:= this.edtGuiName.Value															; get GuiName text
-		if (g = "")
-			g := "myGui"                                                                            ; cant have no gui name, use default
-		c		:= this.edtCtrlName.Value															; get CtrlPrefix text
-		exStr 	:= 'Example:`n' c 'ButtonButton1 := ' g '.Add("Button",,"Button 1")'				; example string
-		this.txtEx.Value := exStr																	; apply changes to example string
+		ex := '', invalid := false																	; ini
+		if (this.GuiMode <= 1) {																	; if orig or simple mode...
+			gn		:= Trim(this.edtGuiName.value), cp := Trim(this.edtCtrlPfx.value)				; ... get text for gui name and ctrl pfx
+			invalid := (invalid) ? invalid : !(this._validateVarName(gn))							; ... validate gui name as properly formatted
+			invalid := (invalid) ? invalid : !(this._validateVarName(cp,1))							; ... validate ctrl pfx as properly formatted
+			ex 		:= 'Example:`n' cp 'ButtonButton1 := ' gn '.Add("Button",,"Button 1")'			; ... set example string
+		} else if (this.GuiMode = 2) {																; if dynamic mode...
+			ex := 'Example:`nmV2GC[["1","Button1"]] := mV2Gui["1"].Add("Button",,"Button 1")'		; ... set example string
+		}
+		fClr := ((invalid) ? 'cRed' : 'cBlue'), this.txtEx.Opt(fClr)								; set font color for example text
+		this.txtEx.visible	:= !!(this.GuiMode < 3)													; set visibility for example text (hide for Auto mode)
+		this.txtEx.value	:= ex																	; apply changes  to	 example text
 	}
 	;############################################################################
 	_updateGuiModeNames(mode) {																		; gets guiName/ctrlPfx from disk, sets tab controls
 		iniFile := this.iniFile, Section := 'Settings'
 		; set enablement and name text based on passed gui mode
 		en := (mode <= 1) ? 1 : 0																	; disable editing for dynamic and auto mode (for now)
-		this.edtGuiName.enabled:=this.edtCtrlName.enabled:=this.txtEx.Visible:= en					; set enablement/visibility of other controls
-		(!en) && this.edtGuiName.value := this.edtCtrlName.value:= ''								; remove name-text for dynamic and auto mode
-		; update details related to sandard-mode, as needed
+		this.edtGuiName.enabled:=this.edtCtrlPfx.enabled:=en										; set enablement of edit boxes
+		(!en) && this.edtGuiName.value := this.edtCtrlPfx.value:= ''								; remove name-text for dynamic and auto mode
+		; update details related to current mode
 		if (mode <= 1) {																			; if orig or simple mode...
-			guiDefaults				:= this._guiDefaults(mode)										; ... get default names
-			gName					:= guiDefaults.gName											; ... default guiName
-			cName					:= guiDefaults.cName											; ... default ctrl prefix
-			this.edtGuiName.value 	:= IniRead(iniFile, Section, 'GuiStdName', gName)				; ... get current guiName
-			this.edtCtrlName.value	:= IniRead(iniFile, Section, 'CtrlStdName',cName)				; ... get current ctrl prefix
-			this._updateExample()																	; ... update example string
+			guiDefaults	:= this._guiDefaults(mode)													; ... get default names
+			gName		:= guiDefaults.gName														; ... default gui name
+			cPfx		:= guiDefaults.cPfx															; ... default ctrl pfx
+			gn			:= Trim(IniRead(iniFile, Section, 'StdGuiName', gName))						; ... get gui name from file
+			cp			:= Trim(IniRead(iniFile, Section, 'StdCtrlPfx',cPfx))						; ... get ctrl pfx from file
+			if (!this._validateVarName(gn))															; ... if gui name formatting is invalid...
+				gn := gName, IniWrite(gn, iniFile, Section, 'StdGuiName')							; ...	set gui name to default and save to file
+			if (!this._validateVarName(cp,1))														; ... if ctrl pfx formatting is invalid...
+				cp := cPfx,  IniWrite(cp, iniFile, Section, 'StdCtrlPfx')							; ...	set ctrl pfx to default and save to file
+			this.edtGuiName.value	:= gn, this._updateVarName(this.edtGuiName,0)					; ... set gui name text and example (do not beep)
+			this.edtCtrlPfx.value	:= cp, this._updateVarName(this.edtCtrlPfx,0)					; ... set ctrl pfx text and example (do not beep)
+			this.chkInclude.visible	:= false														; ... hide copyIncl chkbx
 		}
-		;; NOT UTILIZED (for now)
-		;else if (mode = 2) {																		; if dynamic mode...
-		;	this.edtGuiName.value := IniRead(iniFile, Section, 'GuiDynName', gName)					; ... get dynamic guiName
-		;	this.edtCtrlName.value:= IniRead(iniFile, Section, 'CtrlDynName',cName)					; ... get dynamic ctrl prefix
-		;}
+		else {	; 2,3																				; if dynamic or Auto mode...
+			this.chkInclude.visible	:= true															; ... show copyIncl chkbx
+			this._updateExample()																	; ... update example text
+		}
 	}
 	;############################################################################
-	_updateSettings() {																				; updates controls/settings for all tabs
-		this.chkSave.value := this.autoSave															; keep track of auto-save setting
-		this._setGuiModeButtons()																	; update controls for gui tab
+	_updateVarName(ctrl,audio:=1,setClr:=1,updateEx:=1) {											; update gui name or ctrl pfx
+		name				:= Trim(ctrl.Text)														; get text (var name) from src ctrl
+		emptyOk				:= (ctrl.name='CPfx')													; ctrl pfx will allow empty/blank text
+		isValid				:= this._validateVarName(name,emptyOK)									; verify that var name is properly formatted
+		fClr				:= (isValid) ? 'cBlack' : 'cRed'										; set font color based on validity of formatting
+		(setClr)			&& ctrl.Opt(fClr)														; update ctrl with font color
+		(updateEx)			&& this._updateExample()												; update example text
+		(audio && !isValid) && SoundBeep(250,200)													; beep if invalid
+	}
+	;############################################################################
+	_validateVarName(name,emptyOK:=false) {															; validates that var name is properly formatted
+		if (emptyOK && Trim(name)='')																; if empty/blank is allowed, and name is blank...
+			return true																				; ... return as valid
+		nValid := '(?i)^(?<!``)[_a-z]\w*+$' ; basic for now (edit as needed)						; starts with letter/underscore, has no invalid chars
+		return (name ~= nValid)																		; return validity result
 	}
 	;############################################################################
 	OnMouseMove(*) { ;wParam, lParam, msg, hwnd) {
@@ -273,5 +306,4 @@ class clsUserUI {																					; Gui handling
 			(hCtrl != this.QCT.hwnd) && (this.fTTActive := false)									; set tt flag to false only after mouse has moved away from button
 		}
 	}
-
 }

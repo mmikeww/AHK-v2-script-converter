@@ -399,6 +399,7 @@ GuiControlConv(p) {
 ; 2026-01-01 AMB, UPDATED - changed global gEarlyLine to gV1Line, Type to CtrlType
 ; 2026-02-22 AMB, UPDATED - parse for param 1
 ; 2026-03-11 AMB, UPDATED - to support simple/dynamic handling
+; 2026-03-14 AMB, UPDATED - changed 'ogc' to gCtrlPfx
 ; TODO
 ;	ADD SUPPORT FOR V1 EXPRESSION STRINGS, for SubCommand and ControlID
 ;	ADD SUPPORT FOR TERNANY IFS, for SubCommand and ControlID
@@ -420,7 +421,7 @@ GuiControlConv(p) {
 		_getCtrlDetails(GuiName, ControlID, Trim(p[2]), &ControlObject:='', &ctrlType:='')				; ... get ControlObject and ctrlType
 	}
 	else {	; for orig naming																			; if using orig naming method...
-		ControlObject	:= gmGuiCtrlObj.Has(ControlID) ? gmGuiCtrlObj[ControlID] : 'ogc' ControlID		; ... set ControlObject
+		ControlObject	:= gmGuiCtrlObj.Has(ControlID) ? gmGuiCtrlObj[ControlID] : gCtrlPfx ControlID	; ... set ControlObject
 		ctrlType		:= gmGuiCtrlType.Has(ControlObject) ? gmGuiCtrlType[ControlObject] : ''			; ... set ctrlType
 	}
 
@@ -585,6 +586,7 @@ GuiControlGetConv(p) {
 ; 2025-10-05 AMB, MOVED to GuiAndMenu.ahk
 ; 2026-01-01 AMB, UPDATED - changed global gEarlyLine to gV1Line, Type to CtrlType
 ; 2026-03-11 AMB, UPDATED - to support simple/dynamic handling
+; 2026-03-14 AMB, UPDATED - changed 'ogc' to gCtrlPfx
 
 	; GuiControlGet, OutputVar , SubCommand, ControlID, Value
 	global gGuiNameDefault, gEOLComment_Func
@@ -606,7 +608,7 @@ GuiControlGetConv(p) {
 	}
 	else {	; for orig naming																			; if using orig naming method...
 		GuiName			:= (GuiName) ? GuiName : gGuiNameDefault										; if GuiName is missing, use default name (not really accurate)
-		ControlObject	:= gmGuiCtrlObj.Has(ControlID) ? gmGuiCtrlObj[ControlID] : "ogc" ControlID		; ... set ControlObject
+		ControlObject	:= gmGuiCtrlObj.Has(ControlID) ? gmGuiCtrlObj[ControlID] : gCtrlPfx ControlID	; ... set ControlObject
 		ctrlType		:= gmGuiCtrlType.Has(ControlObject) ? gmGuiCtrlType[ControlObject] : ""			; ... set ctrlType
 	}
 
@@ -640,6 +642,7 @@ GuiControlGetConv(p) {
 _splitParam(prm) {
 ; 2026-02-22 AMB, ADDED to split/parse/format param containing guiName/subCmd
 ; 2026-03-11 AMB, UPDATED func and param names
+; 2026-03-14 AMB, UPDATED, fixed issue with % added to guiName by mistake, in some cases
 
 	; prep/split param 1
 	prm := Trim(prm), perc := '', gn := ''																; ini
@@ -650,7 +653,7 @@ _splitParam(prm) {
 	; format guiName
 	gn .= (gn~='^"\w+$') ? '"' : ''																		; add  trailing DQ to guiName,	 as needed
 	gn := (gn~='^[\w\h.]+"\h*') ? RTrim(gn,' "') : gn													; trim trailing DQ from guiName, as needed
-	gn := perc gn																						; add  leading  %  to guiName,	 as needed
+	gn := (gn='') ? '' : perc gn																		; add  leading  %  to guiName,	 as needed
 	; separate/format strings/vars in subcmd
 	sc := Trim(prm), ss := StrSplit(sc,' '), usc := ''													; ini, mask strs, split subcmd at ws
 	Mask_T(&sc, 'STR')																					; mask strs - must be done AFTER StrSplit()

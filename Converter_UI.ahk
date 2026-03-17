@@ -55,18 +55,18 @@ class clsUserUI {																					; Gui handling
 		this.oGui.SetFont('bold')																	; set font weight to Bold (initially)
 		this.btnGB	:= this.oGui.AddGroupBox('x10 y5 w' wGB ' h' hPnl ' cGray'					)	; buttons groupbox
 		txtRun		:= this.oGui.AddText(tbClr ctr 'x11 y12 w' wGB-2 ' h18', 'RUN'				)	; buttons groupbox header
-		this.QCT	:= this.oGui.AddButton(bdr 'x20 y+10' btnWH ' vQCT', 'QC`nUnit Tests'		)	; QC Unit test button
-		this.QCC	:= this.oGui.AddButton(btnWH bdr 'vQCC','QC`nV1 --> V2'						)	; QC code converter button
-		this.CVS	:= this.oGui.AddButton(btnWH bdr 'vCVS','Convert`nV1 Script'				)	; v2Converter button
+		this.CVS	:= this.oGui.AddButton(btnWH bdr 'vCVS x20 y+10','Convert v1`nScript File'	)	; v2Converter button
+		this.QCC	:= this.oGui.AddButton(btnWH bdr 'vQCC','Convert v1`nCode'					)	; QC code converter button
+		this.QCT	:= this.oGui.AddButton(btnWH bdr 'vQCT','Run QC`nUnit Tests'				)	; QC Unit test button
 		tabs		:= ['','  Gui  ', '  HK  ', '  General  ']										; Tab names
 		iFile		:= A_WinDir '\system32\shell32.dll'												; file to pull icons from
 		picGear		:= this.oGui.Add('Pic', tbClr ' x' tabX+15 ' y13 w16 h16 icon315',iFile		) 	; place gear icon on tab 1 (easier than the sendmessage method)
 		tbXYWH		:= ' x' tabX ' y10 h' hTab ' w' wTab ' '										; tab-dimensions string
 		this.T3		:= this.oGui.AddTab3(tbClr bdr 'buttons' tbXYWH ' vTab3',tabs				)	; create tab control
 		this.T3.OnEvent('Change', this.evTab.bind(this) 										)	; event handler for Tab control		(pass entire obj)
-		this.QCT.OnEvent('Click', this.evRun.bind(this) 										)	; event handler for QC Unit tests	(pass entire obj)
-		this.QCC.OnEvent('Click', this.evRun.bind(this) 										)	; event handler for QC code convert	(pass entire obj)
 		this.CVS.OnEvent('Click', this.evRun.bind(this) 										)	; event handler for v2Converter		(pass entire obj)
+		this.QCC.OnEvent('Click', this.evRun.bind(this) 										)	; event handler for QC code convert	(pass entire obj)
+		this.QCT.OnEvent('Click', this.evRun.bind(this) 										)	; event handler for QC Unit tests	(pass entire obj)
 
 		; save tab
 		this.T3.UseTab(1)																			; target tab 1
@@ -158,11 +158,11 @@ class clsUserUI {																					; Gui handling
 	evRun(ctrl:='', *) {	; also receives hidden 'this' obj										; event handler for handle Run buttons
 		this._toolTip()																				; ensure tooltip is hidden
 		switch ctrl.name {
-			case 'QCT':
+			case 'CVS':		Run('v2Converter.ahk')													; run V2Converter for script conversions
+			case 'QCC':		Run('QuickConvertorV2.ahk "QCC"')										; run QuickConverter in normal convert mode
+			case 'QCT':																				; 	  QuickConverter in unit-test mode
 				mode := (GetKeyState("shift")) ? '"QCTF"' : '"QCT"'									; set whether failed tests are included or not
 				Run('QuickConvertorV2.ahk ' mode)													; run QuickConverter in unit-test mode
-			case 'QCC':		Run('QuickConvertorV2.ahk "QCC"')										; run QuickConverter in normal convert mode
-			case 'CVS':		Run('v2Converter.ahk')													; run V2Converter for script conversions
 		}
 	}
 	;############################################################################

@@ -10,7 +10,7 @@ However, this project is way more ambitious that I originally thought, and __it 
 # Usage
 ## Usage 1
 1. [Download](https://github.com/mmikeww/AHK-v2-script-converter/archive/master.zip) the full repo. Then run the included `QuickConvertorV2.ahk` file with AHK V2
-2. Select a string in another program and press XButton1 to convert it, or paste it in the first Edit and press the convert button (Green arrow).
+2. Select a string in another program and press XButton1 to convert it, or paste it in the first Edit and press the convert button (orange arrow).
 3. When the cursor is on a function in the edit field, press F1 to search the function in the documentation.
 4. You can run and close the V1 and V2 code with the play buttons.
 5. There are also compare buttons to see better the difference between the scripts.
@@ -28,22 +28,22 @@ However, this project is way more ambitious that I originally thought, and __it 
 
 ## Usage 3 (Converter UI)
 1. [Download](https://github.com/mmikeww/AHK-v2-script-converter/archive/master.zip) the full repo. Then run the included `Converter_UI.ahk` script with AHK v2
-2. Buttons are provided on the left to run # 1 or # 2 above.
-   * QC Unit Tests: Opens QuickConvertorV2 in Test Mode - See Usage 1:6 above. Shift-Click this button to also show failed tests.
-   * QC V1 -> V2: Opens QuickConvertorV2 in Code Fragment mode. See Usage 1:4 above. Paste v1 code fragment in left pane, convert to v2 using convert button (bottom/center). 
-   * Convert V1 Script: Runs v2converter for selecting/converting a script file. See Usage 2 above.
-3. You can also adjust certain settings on tab pages in UI (settings are still a work in progress).
-   * Tab 1: Provides a Save button used to save settings edited on the other tabs. When auto-save is enabled (recommended), settings are saved immediately/automatically.
-   * Gui Tab: Provides a choice of Gui conversion modes. Also allows preference edit for GuiName and control prefix (for Orig/Simple modes).
-   * HK Tab: Not yet used. Will eventually provide hotkey filtering support to improve conversion performance.
+2. Use buttons on the left as shortcuts to run # 2 or # 1 above.
+   * Convert V1 Script File: Runs v2converter to select/convert a script file. See Usage 2 above.
+   * Convert V1 Code Fragment: Runs QuickConvertorV2 for v1 code paste. See Usage 1:4 above. Paste v1 code fragment in left pane, convert using orange arrow button (bottom/center). 
+   * Run QC Unit Tests: Runs QuickConvertorV2 in Unit-Test Mode (for project contributors) - See Usage 1:6 above. Shift-Click this button to show failed unit-tests (also).
+3. Some conversion settings can be adjusted from UI tabs [settings are still a work in progress].
+   * Tab 1: Save all settings from other tabs (Manual/Auto). Auto-save is recommended.
+   * Gui Tab: Provides several modes for Gui/GuiControl conversion. Also allows user to define the default GuiName and control prefix for v2 variable names (for Orig/Simple modes).
+   * HK Tab: Will eventually provide hotkey filtering to improve conversion performance.
    * General Tab: Provides general conversion settings.
-   * Note: More settings may (will) be added to UI in the future.
 4. Gui Conversion Modes:
-   * Orig mode: Provides gui conversion using original routines utilized for the past several years. This mode considered legacy and will eventually be removed/replaced by the updated modes below.
-   * Simple mode: Updated version of original mode. Designed to mimic the same output as Orig (currently), but provide improvements to the conversion quality of Orig. This mode is recommended for converting simple v1 gui syntax that does not include any dynamic/changing variables or attributes that are difficult to convert from v1 to v2. Such as those found in loops, using concat operations, spanning multiple scopes/functions/parameters, etc.
-   * Dynamic mode: Designed to provide some support (but limited) for Gui/GuiControl commands that may have dynamic attributes. Such as within loops, function parameters, use of ClassNN names, dynamically changing properties, etc. This mode can also be used in place of Simple mode, but the syntax is very different (use of maps as variables). This mode also requires use of an #include file. The #include file provides the necessary code to track guis/controls in real time for cross-reference purposes, similar to how v1 gui handling behaves.
-   * Auto mode: Will analyze the v1 source code and automatically choose the most appropriate mode (Simple or Dynamic).
-![screenshot](https://github.com/mmikeww/AHK-v2-script-converter/blob/master/images/Converter_UI.jpg)
+   * Orig mode: Provides Gui conversion using original routines. This is being phased out for updated modes below.
+   * Simple mode: Updated version of Orig mode. Provides similar (but improved) output, compared to Orig mode. Recommended for converting simple (non-dynamic) v1 Gui syntax.
+   * Dynamic mode: Provides the best Gui conversion support, including limited support for dynamic attributes. Such as within loops, func params, ClassNN names, and spanning multiple scopes. The trade off? The v2 syntax is much different than Simple/Orig mode. It also requires an #include file [before and AFTER conversion]. The file monitors changes to gui/control code and objects in real time... similar to behavior for v1 Gui handling.
+   * Auto mode: Analyzes the v1 source code and selects the 'best mode' automatically (Simple or Dynamic).
+
+![screenshot](https://github.com/mmikeww/AHK-v2-script-converter/blob/master/images/Converter_UI.png)
 
 ## Post conversion
 If you find that the script does not work, please go through the troubleshooting steps below

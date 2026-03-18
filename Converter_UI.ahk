@@ -300,20 +300,6 @@ class clsUserUI {																					; Gui handling
 		return		prevResult																		; return result of validation
 	}
 	;############################################################################
-	_vIsValidVarSyntax(name) {																		; must not begin with number, allows ascii/unicode chars
-		return	(Trim(name) ~= '(?i)^([_a-z]|([[:^ascii:]]))(\w|(?2))*$')
-	}
-	;############################################################################
-	_vIsReserved(name) {				; 2026-03-17 magic... THANK YOU @ntepa !					; determines whether name is ahk reserved
-		if (name ~= '[[:^ascii:]]')																	; if name has any chars that are NOT ascii...
-			return false																			; ... is not a AHK reserved word
-		shell := ComObject('WScript.Shell')
-		exec := shell.Exec('AutoHotkey.exe /ErrorStdOut *')											; will execute a var assignment (dynamically) and report errors
-		exec.StdIn.Write(Format('FileAppend({} := 1, "*")', name))									; create dynamic var assignment, write to std in
-		exec.StdIn.Close()																			; clode std in stream
-		return !exec.StdOut.ReadAll()																; return whether error occurred during var creation
-	}
-	;############################################################################
 	OnMouseMove(*) { ;wParam, lParam, msg, hwnd) {
 		MouseGetPos(,,, &hCtrl, 2)																	; get ctrl (hwnd) under mouse
 		if ((hCtrl = this.QCT.hwnd))																; if ctrl under mouse is QCT button...

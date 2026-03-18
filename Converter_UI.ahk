@@ -55,18 +55,18 @@ class clsUserUI {																					; Gui handling
 		this.oGui.SetFont('bold')																	; set font weight to Bold (initially)
 		this.btnGB	:= this.oGui.AddGroupBox('x10 y5 w' wGB ' h' hPnl ' cGray'					)	; buttons groupbox
 		txtRun		:= this.oGui.AddText(tbClr ctr 'x11 y12 w' wGB-2 ' h18', 'RUN'				)	; buttons groupbox header
-		this.QCT	:= this.oGui.AddButton(bdr 'x20 y+10' btnWH ' vQCT', 'QC`nUnit Tests'		)	; QC Unit test button
-		this.QCC	:= this.oGui.AddButton(btnWH bdr 'vQCC','QC`nV1 --> V2'						)	; QC code converter button
-		this.CVS	:= this.oGui.AddButton(btnWH bdr 'vCVS','Convert`nV1 Script'				)	; v2Converter button
+		this.CVS	:= this.oGui.AddButton(btnWH bdr 'vCVS x20 y+10','Convert v1`nScript File'	)	; v2Converter button
+		this.QCC	:= this.oGui.AddButton(btnWH bdr 'vQCC','Convert v1`nCode'					)	; QC code converter button
+		this.QCT	:= this.oGui.AddButton(btnWH bdr 'vQCT','Run QC`nUnit Tests'				)	; QC Unit test button
 		tabs		:= ['','  Gui  ', '  HK  ', '  General  ']										; Tab names
 		iFile		:= A_WinDir '\system32\shell32.dll'												; file to pull icons from
 		picGear		:= this.oGui.Add('Pic', tbClr ' x' tabX+15 ' y13 w16 h16 icon315',iFile		) 	; place gear icon on tab 1 (easier than the sendmessage method)
 		tbXYWH		:= ' x' tabX ' y10 h' hTab ' w' wTab ' '										; tab-dimensions string
 		this.T3		:= this.oGui.AddTab3(tbClr bdr 'buttons' tbXYWH ' vTab3',tabs				)	; create tab control
 		this.T3.OnEvent('Change', this.evTab.bind(this) 										)	; event handler for Tab control		(pass entire obj)
-		this.QCT.OnEvent('Click', this.evRun.bind(this) 										)	; event handler for QC Unit tests	(pass entire obj)
-		this.QCC.OnEvent('Click', this.evRun.bind(this) 										)	; event handler for QC code convert	(pass entire obj)
 		this.CVS.OnEvent('Click', this.evRun.bind(this) 										)	; event handler for v2Converter		(pass entire obj)
+		this.QCC.OnEvent('Click', this.evRun.bind(this) 										)	; event handler for QC code convert	(pass entire obj)
+		this.QCT.OnEvent('Click', this.evRun.bind(this) 										)	; event handler for QC Unit tests	(pass entire obj)
 
 		; save tab
 		this.T3.UseTab(1)																			; target tab 1
@@ -158,11 +158,11 @@ class clsUserUI {																					; Gui handling
 	evRun(ctrl:='', *) {	; also receives hidden 'this' obj										; event handler for handle Run buttons
 		this._toolTip()																				; ensure tooltip is hidden
 		switch ctrl.name {
-			case 'QCT':
+			case 'CVS':		Run('v2Converter.ahk')													; run V2Converter for script conversions
+			case 'QCC':		Run('QuickConvertorV2.ahk "QCC"')										; run QuickConverter in normal convert mode
+			case 'QCT':																				; 	  QuickConverter in unit-test mode
 				mode := (GetKeyState("shift")) ? '"QCTF"' : '"QCT"'									; set whether failed tests are included or not
 				Run('QuickConvertorV2.ahk ' mode)													; run QuickConverter in unit-test mode
-			case 'QCC':		Run('QuickConvertorV2.ahk "QCC"')										; run QuickConverter in normal convert mode
-			case 'CVS':		Run('v2Converter.ahk')													; run V2Converter for script conversions
 		}
 	}
 	;############################################################################
@@ -207,7 +207,7 @@ class clsUserUI {																					; Gui handling
 		if (this.GuiMode <= 1) {																	; if orig or simple mode...
 			gn := Trim(this.edtGuiName.Text), cp := Trim(this.edtCtrlPfx.Text)						; ... get trimmed text for gui name, ctrl pfx
 			gn := (this._validateVarName(gn))	? gn : unset										; ... verify that gui name is valid format
-			cp := (this._validateVarName(cp,1))	? cp : unset										; ... verify that ctrl pfx is valid format
+			cp := (this._validateVarName(cp,1,1))	? cp : unset									; ... verify that ctrl pfx is valid format
 			(IsSet(gn)) && IniWrite(gn, iniFile, Section, 'StdGuiName')								; ... if valid, save setting for gui name
 			(IsSet(cp)) && IniWrite(cp, iniFile, Section, 'StdCtrlPfx')								; ... if valid, save setting for ctrl pfx
 		} else if (this.GuiMode > 1) {																; if dynamic or auto mode...
@@ -235,7 +235,7 @@ class clsUserUI {																					; Gui handling
 		if (this.GuiMode <= 1) {																	; if orig or simple mode...
 			gn		:= Trim(this.edtGuiName.value), cp := Trim(this.edtCtrlPfx.value)				; ... get text for gui name and ctrl pfx
 			invalid := (invalid) ? invalid : !(this._validateVarName(gn))							; ... validate gui name as properly formatted
-			invalid := (invalid) ? invalid : !(this._validateVarName(cp,1))							; ... validate ctrl pfx as properly formatted
+			invalid := (invalid) ? invalid : !(this._validateVarName(cp,1,1))						; ... validate ctrl pfx as properly formatted
 			ex 		:= 'Example:`n' cp 'ButtonButton1 := ' gn '.Add("Button",,"Button 1")'			; ... set example string
 		} else if (this.GuiMode = 2) {																; if dynamic mode...
 			ex := 'Example:`nmV2GC[["1","Button1"]] := mV2Gui["1"].Add("Button",,"Button 1")'		; ... set example string
@@ -260,7 +260,7 @@ class clsUserUI {																					; Gui handling
 			cp			:= Trim(IniRead(iniFile, Section, 'StdCtrlPfx',cPfx))						; ... get ctrl pfx from file
 			if (!this._validateVarName(gn))															; ... if gui name formatting is invalid...
 				gn := gName, IniWrite(gn, iniFile, Section, 'StdGuiName')							; ...	set gui name to default and save to file
-			if (!this._validateVarName(cp,1))														; ... if ctrl pfx formatting is invalid...
+			if (!this._validateVarName(cp,1,1))														; ... if ctrl pfx formatting is invalid...
 				cp := cPfx,  IniWrite(cp, iniFile, Section, 'StdCtrlPfx')							; ...	set ctrl pfx to default and save to file
 			this.edtGuiName.value	:= gn, this._updateVarName(this.edtGuiName,0)					; ... set gui name text and example (do not beep)
 			this.edtCtrlPfx.value	:= cp, this._updateVarName(this.edtCtrlPfx,0)					; ... set ctrl pfx text and example (do not beep)
@@ -274,19 +274,35 @@ class clsUserUI {																					; Gui handling
 	;############################################################################
 	_updateVarName(ctrl,audio:=1,setClr:=1,updateEx:=1) {											; update gui name or ctrl pfx
 		name				:= Trim(ctrl.Text)														; get text (var name) from src ctrl
-		emptyOk				:= (ctrl.name='CPfx')													; ctrl pfx will allow empty/blank text
-		isValid				:= this._validateVarName(name,emptyOK)									; verify that var name is properly formatted
+		isCPfx				:= (ctrl.name='CPfx')													; ctrl pfx will allow empty/blank text
+		isValid				:= this._validateVarName(name,isCPfx,isCPfx)							; verify that var name is properly formatted
 		fClr				:= (isValid) ? 'cBlack' : 'cRed'										; set font color based on validity of formatting
 		(setClr)			&& ctrl.Opt(fClr)														; update ctrl with font color
 		(updateEx)			&& this._updateExample()												; update example text
 		(audio && !isValid) && SoundBeep(250,200)													; beep if invalid
 	}
 	;############################################################################
-	_validateVarName(name,emptyOK:=false) {															; validates that var name is properly formatted
-		if (emptyOK && Trim(name)='')																; if empty/blank is allowed, and name is blank...
+	_validateVarName(name,emptyOK:=false,resvOK:=false) {											; validates that var name is properly formatted
+	; 2026-03-17 AMB, UPDATED to allow unicode and prevent AHK reserved words
+		name := Trim(name)																			; trim name
+		if (emptyOK && name='')																		; if empty/blank is allowed, and name is blank...
 			return true																				; ... return as valid
-		nValid := '(?i)^(?<!``)[_a-z]\w*+$' ; basic for now (edit as needed)						; starts with letter/underscore, has no invalid chars
-		return (name ~= nValid)																		; return validity result
+		nUC		:= '\x80-\x{D7FF}\x{E000}-\x{10FFFF}'												; unicode chars - Thanks @SevenKeyboard
+		nChar1	:= '[_a-z' nUC ']', nChars := '[\w' nUC ']*'										; full variable name
+		nVarName:= '(?i)\A' nChar1 nChars '\z'														; final needle (add anchors)
+		if (!(name ~= nVarName))																	; if not valid varName syntax...
+			return false																			; ... return as invalid
+		if (!resvOK && this._vIsReserved(name))														; if name is gui field and is a reserved term...
+			return false																			; ... return as invalid
+		return true																					;  return as valid
+	}
+	;############################################################################
+	_vIsReserved(name) {				; 2026-03-17 magic... THANK YOU @ntepa !					; determines whether name is ahk reserved
+		shell := ComObject('WScript.Shell')
+		exec := shell.Exec('AutoHotkey.exe /ErrorStdOut *')
+		exec.StdIn.Write(Format('FileAppend({} := 1, "*")', name))									; attempts to create a variable with name
+		exec.StdIn.Close()
+		return !exec.StdOut.ReadAll()																; returns whether error occurred during var creation
 	}
 	;############################################################################
 	OnMouseMove(*) { ;wParam, lParam, msg, hwnd) {

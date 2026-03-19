@@ -10,6 +10,7 @@
 					added validation for guiName/ctrlPfx formatting
 					added #Include-file auto-copy option (but mandatory for now)
 					changed some var/func/settings names
+	2026-03-18 AMB, UPDATED: validation to allow unicode and dis-allow AHK reserved words (for guiname)
 
 */
 
@@ -206,8 +207,8 @@ class clsUserUI {																					; Gui handling
 		IniWrite(this.GuiMode, iniFile, Section,  'GuiMode')										; save setting for guiMode
 		if (this.GuiMode <= 1) {																	; if orig or simple mode...
 			gn := Trim(this.edtGuiName.Text), cp := Trim(this.edtCtrlPfx.Text)						; ... get trimmed text for gui name, ctrl pfx
-			gn := (this._validateVarName(gn))	? gn : unset										; ... verify that gui name is valid format
-			cp := (this._validateVarName(cp,1,1))	? cp : unset									; ... verify that ctrl pfx is valid format
+			gn := (this._validateGuiName(gn))	? gn : unset										; ... verify that gui name is valid
+			cp := (this._validateCtrlPfx(cp))	? cp : unset										; ... verify that ctrl pfx is valid
 			(IsSet(gn)) && IniWrite(gn, iniFile, Section, 'StdGuiName')								; ... if valid, save setting for gui name
 			(IsSet(cp)) && IniWrite(cp, iniFile, Section, 'StdCtrlPfx')								; ... if valid, save setting for ctrl pfx
 		} else if (this.GuiMode > 1) {																; if dynamic or auto mode...
@@ -234,8 +235,8 @@ class clsUserUI {																					; Gui handling
 		ex := '', invalid := false																	; ini
 		if (this.GuiMode <= 1) {																	; if orig or simple mode...
 			gn		:= Trim(this.edtGuiName.value), cp := Trim(this.edtCtrlPfx.value)				; ... get text for gui name and ctrl pfx
-			invalid := (invalid) ? invalid : !(this._validateVarName(gn))							; ... validate gui name as properly formatted
-			invalid := (invalid) ? invalid : !(this._validateVarName(cp,1,1))						; ... validate ctrl pfx as properly formatted
+			invalid := (invalid) ? invalid : !(this._validateGuiName(gn))							; ... validate gui name is valid
+			invalid := (invalid) ? invalid : !(this._validateCtrlPfx(cp))							; ... validate ctrl pfx is valid
 			ex 		:= 'Example:`n' cp 'ButtonButton1 := ' gn '.Add("Button",,"Button 1")'			; ... set example string
 		} else if (this.GuiMode = 2) {																; if dynamic mode...
 			ex := 'Example:`nmV2GC[["1","Button1"]] := mV2Gui["1"].Add("Button",,"Button 1")'		; ... set example string
@@ -258,9 +259,9 @@ class clsUserUI {																					; Gui handling
 			cPfx		:= guiDefaults.cPfx															; ... default ctrl pfx
 			gn			:= Trim(IniRead(iniFile, Section, 'StdGuiName', gName))						; ... get gui name from file
 			cp			:= Trim(IniRead(iniFile, Section, 'StdCtrlPfx',cPfx))						; ... get ctrl pfx from file
-			if (!this._validateVarName(gn))															; ... if gui name formatting is invalid...
+			if (!this._validateGuiName(gn))															; ... if gui name is invalid...
 				gn := gName, IniWrite(gn, iniFile, Section, 'StdGuiName')							; ...	set gui name to default and save to file
-			if (!this._validateVarName(cp,1,1))														; ... if ctrl pfx formatting is invalid...
+			if (!this._validateCtrlPfx(cp))															; ... if ctrl pfx is invalid...
 				cp := cPfx,  IniWrite(cp, iniFile, Section, 'StdCtrlPfx')							; ...	set ctrl pfx to default and save to file
 			this.edtGuiName.value	:= gn, this._updateVarName(this.edtGuiName,0)					; ... set gui name text and example (do not beep)
 			this.edtCtrlPfx.value	:= cp, this._updateVarName(this.edtCtrlPfx,0)					; ... set ctrl pfx text and example (do not beep)
@@ -274,35 +275,29 @@ class clsUserUI {																					; Gui handling
 	;############################################################################
 	_updateVarName(ctrl,audio:=1,setClr:=1,updateEx:=1) {											; update gui name or ctrl pfx
 		name				:= Trim(ctrl.Text)														; get text (var name) from src ctrl
-		isCPfx				:= (ctrl.name='CPfx')													; ctrl pfx will allow empty/blank text
-		isValid				:= this._validateVarName(name,isCPfx,isCPfx)							; verify that var name is properly formatted
-		fClr				:= (isValid) ? 'cBlack' : 'cRed'										; set font color based on validity of formatting
+		isGuiName			:= (ctrl.name='GName')													; is gui name being updated ?
+		(isGuiName )		&& isValid := this._validateGuiName(name)								; validate gui name (if being updated)
+		(!isGuiName)		&& isValid := this._validateCtrlPfx(name)								; validate ctrl pfx (if being updated)
+		fClr				:= (isValid) ? 'cBlack' : 'cRed'										; set font color based on validity of name
 		(setClr)			&& ctrl.Opt(fClr)														; update ctrl with font color
 		(updateEx)			&& this._updateExample()												; update example text
 		(audio && !isValid) && SoundBeep(250,200)													; beep if invalid
 	}
 	;############################################################################
-	_validateVarName(name,emptyOK:=false,resvOK:=false) {											; validates that var name is properly formatted
-	; 2026-03-17 AMB, UPDATED to allow unicode and prevent AHK reserved words
-		name := Trim(name)																			; trim name
-		if (emptyOK && name='')																		; if empty/blank is allowed, and name is blank...
-			return true																				; ... return as valid
-		nUC		:= '\x80-\x{D7FF}\x{E000}-\x{10FFFF}'												; unicode chars - Thanks @SevenKeyboard
-		nChar1	:= '[_a-z' nUC ']', nChars := '[\w' nUC ']*'										; full variable name
-		nVarName:= '(?i)\A' nChar1 nChars '\z'														; final needle (add anchors)
-		if (!(name ~= nVarName))																	; if not valid varName syntax...
-			return false																			; ... return as invalid
-		if (!resvOK && this._vIsReserved(name))														; if name is gui field and is a reserved term...
-			return false																			; ... return as invalid
-		return true																					;  return as valid
+	_validateCtrlPfx(name) {																		; determines whether ctrl prefix is valid
+	; 2026-03-18 AMB, allows empty string and unicode
+		return clsVarValidation.Validate(Trim(name),1,1)
 	}
 	;############################################################################
-	_vIsReserved(name) {				; 2026-03-17 magic... THANK YOU @ntepa !					; determines whether name is ahk reserved
-		shell := ComObject('WScript.Shell')
-		exec := shell.Exec('AutoHotkey.exe /ErrorStdOut *')
-		exec.StdIn.Write(Format('FileAppend({} := 1, "*")', name))									; attempts to create a variable with name
-		exec.StdIn.Close()
-		return !exec.StdOut.ReadAll()																; returns whether error occurred during var creation
+	_validateGuiName(name) {																		; determines whether guiname is valid
+	; 2026-03-18 AMB, UPDATED to allow unicode and dis-allow AHK reserved words
+		static prevName := -1, prevResult := -1														; prevents unnecessary validation processsing
+		name := Trim(name)																			; trim name of whitspace
+		if (prevResult >= 0 && name = prevName)														; if name has not changed since last visit...
+			return prevResult																		; ... return the previous result
+		prevName	:= name																			; save name for comparison, next visit
+		prevResult	:= clsVarValidation.Validate(name)												; save result of validation for next visit
+		return		prevResult																		; return result of validation
 	}
 	;############################################################################
 	OnMouseMove(*) { ;wParam, lParam, msg, hwnd) {
@@ -321,5 +316,33 @@ class clsUserUI {																					; Gui handling
 			ToolTip(), MouseGetPos(,,, &hCtrl, 2)													; ... clear the tooltip (manual call), get ctrl under mouse
 			(hCtrl != this.QCT.hwnd) && (this.fTTActive := false)									; set tt flag to false only after mouse has moved away from button
 		}
+	}
+}
+;################################################################################
+class clsVarValidation
+{
+	Static Validate(name,emptyOK:=false,resvOK:=false) {											; main validation
+		; name must be trimmed of whitespace, to be valid
+		if (emptyOK && name='')																		; if empty string is allowed, and name is empty...
+			return true																				; ... return VALID
+		if (!this._IsValidVarSyntax(name))															; if name syntax is invalid
+			return false																			; ... return INVALID
+		return !(!resvOK && this._IsReserved(name))													; if resv not ok, but name is resv word, return false, otherwise true
+	}
+	;############################################################################
+	Static _IsReserved(name) {			; 2026-03-17 magic... THANK YOU @ntepa !					; determines whether name is ahk reserved
+		; name must be trimmed of whitespace, to be valid
+		if (name ~= '[[:^ascii:]]')																	; if name has any chars that are NOT ascii...
+			return false																			; ... is not a AHK reserved word
+		shell := ComObject('WScript.Shell')
+		exec := shell.Exec('AutoHotkey.exe /ErrorStdOut *')											; will execute a var assignment (dynamically) and report errors
+		exec.StdIn.Write(Format('FileAppend({} := 1, "*")', name))									; create dynamic var assignment, write to std in
+		exec.StdIn.Close()																			; close std in stream
+		return !exec.StdOut.ReadAll()																; return whether error occurred during var creation
+	}
+	;############################################################################
+	Static _IsValidVarSyntax(name) {																; must not begin with number, allows ascii/unicode chars
+		; name must be trimmed of whitespace, to be valid
+		return	(name ~= '(?i)^([_a-z]|([[:^ascii:]]))(\w|(?2))*$')
 	}
 }

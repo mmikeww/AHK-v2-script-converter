@@ -9,7 +9,7 @@ return
 
 ;###############  V1toV2 FUNCS  ###############
 WatchCaret() { ; V1toV2: Lbl->Func
-global
+    global
     CaretGetPos(&A_CaretX, &A_CaretY), ToolTip("X" A_CaretX " Y" A_CaretY, A_CaretX, A_CaretY - 20)
 return
 }

@@ -1,5 +1,4 @@
-﻿; V1toV2: Must place v2DynGui.ahk in library folder
-#Include <v2DynGui>
+﻿#Include <v2DynGui> ; V1toV2: v2DynGui.ahk in library folder
 #Warn Unreachable, Off
 #SingleInstance force
 Tab1 := Menu()
@@ -110,19 +109,19 @@ Tray.Add("Custom option in tray", MenuHandler)
 
 A_IconTip := "Menu Conversion Stress Test Tooltip"
 
-If (!HasV2Gui("1")) {
-    mV2Gui["1"] := NewV2Gui("1")
+If (!HasV2Gui("")) {
+    mV2Gui[""] := NewV2Gui("")
 }
-mV2Gui["1"].MenuBar := MyMenuBar
-mV2Gui["1"].Add("Text",,"Menu Convertor Stress Test")
-mV2Gui["1"].Add("Text",,"Contains most menu sub-commands")
-mV2GC[["1","Exit"]] := mV2Gui["1"].Add("Button",,"Exit")
-mV2GC[["1","Exit"]].OnEvent("Click",Exit.Bind("Normal"))
-mV2GC[["1","DeleteAll"]] := mV2Gui["1"].Add("Button",,"Delete All")
-mV2GC[["1","DeleteAll"]].OnEvent("Click",Delete.Bind("Normal"))
-mV2Gui["1"].Opt("+Resize")
-mV2Gui["1"].Title := "Menu Convertor Stress Test"
-mV2Gui["1"].Show("w640")
+mV2Gui[""].MenuBar := MyMenuBar
+mV2Gui[""].Add("Text",,"Menu Convertor Stress Test")
+mV2Gui[""].Add("Text",,"Contains most menu sub-commands")
+mV2GC[["","Exit"]] := mV2Gui[""].Add("Button",,"Exit")
+mV2GC[["","Exit"]].OnEvent("Click",Exit.Bind("Normal"))
+mV2GC[["","DeleteAll"]] := mV2Gui[""].Add("Button",,"Delete All")
+mV2GC[["","DeleteAll"]].OnEvent("Click",Delete.Bind("Normal"))
+mV2Gui[""].Opt("+Resize")
+mV2Gui[""].Title := "Menu Convertor Stress Test"
+mV2Gui[""].Show("w640")
 Return
 
 MenuHandler:
@@ -140,12 +139,14 @@ ExitApp()
 ;###############  V1toV2 FUNCS  ###############
 MenuHandler(A_ThisMenuItem:="", A_ThisMenuItemPos:="", MyMenu:="", *) { ; V1toV2: Lbl->Func
 global
+(IsSet(A_GuiControl)) && SetDefaultGui(A_GuiControl)
 MsgBox("You selected `"" A_ThisMenuItem "`".")
 Return
 }
 ;##############################################
 Delete(A_GuiEvent:="", A_GuiControl:="", Info:="", *) { ; V1toV2: Lbl->Func
 global
+(IsSet(A_GuiControl)) && SetDefaultGui(A_GuiControl)
 MyMenuBar.Delete()
 ;Menu, Tab1, Delete
 ;Menu, Tab2, Delete
@@ -159,5 +160,6 @@ Return
 ;##############################################
 Exit(A_GuiEvent:="", A_GuiControl:="", Info:="", *) { ; V1toV2: Lbl->Func
 global
+(IsSet(A_GuiControl)) && SetDefaultGui(A_GuiControl)
 ExitApp()
 }

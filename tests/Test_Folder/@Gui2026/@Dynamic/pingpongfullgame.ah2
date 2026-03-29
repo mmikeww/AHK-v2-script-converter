@@ -1,5 +1,4 @@
-﻿; V1toV2: Must place v2DynGui.ahk in library folder
-#Include <v2DynGui>
+﻿#Include <v2DynGui> ; V1toV2: v2DynGui.ahk in library folder
 #Warn Unreachable, Off
 #SingleInstance force
 SetControlDelay(-1)
@@ -12,31 +11,30 @@ DllCall("SystemParametersInfo", "UInt", 0x17, "UInt", 0, "UIntP", 0, "UInt", 0) 
 
 Your_Score := 0, PC_Score := 0
 
-mV2Gui["ping"] := NewV2Gui("ping")
+mV2Gui["ping"] := NewV2Gui("ping",1)
 mV2Gui["ping"].OnEvent("Close",PingGuiClose)
 mV2Gui["ping"].OnEvent("Escape",PingGuiEscape)
-;gui, ping: Default ; V1toV2: removed, but applied
-V1toV2_LineFill := true ; remove me after inspection
-mV2Gui["ping"].BackColor := "Black"
-mV2Gui["ping"].SetFont("cWhite s12 bold")
-mV2GC[["ping","PC_Ping"]] := mV2Gui["ping"].Add("Button","ReadOnly x5 y5 h10 w100 0x10 vPC_Ping")
-mV2GC[["ping","User_Ping"]] := mV2Gui["ping"].Add("Button","ReadOnly x5 y485 h10 w100 0x10 vUser_Ping")
-mV2GC[["ping","Pong"]] := mV2Gui["ping"].Add("Button","ReadOnly x240 y240 h10 w10 0x10 vPong")
+SetDefaultGui("ping")
+mV2Gui[""].BackColor := "Black"
+mV2Gui[""].SetFont("cWhite s12 bold")
+mV2GC[["","PC_Ping"]] := mV2Gui[""].Add("Button","ReadOnly x5 y5 h10 w100 0x10 vPC_Ping")
+mV2GC[["","User_Ping"]] := mV2Gui[""].Add("Button","ReadOnly x5 y485 h10 w100 0x10 vUser_Ping")
+mV2GC[["","Pong"]] := mV2Gui[""].Add("Button","ReadOnly x240 y240 h10 w10 0x10 vPong")
 mV2GC[["ping","Pong"]].Visible := false
 
-mV2Gui["ping"].SetFont("cWhite s100 bold")
-mV2GC[["ping","T1"]] := mV2Gui["ping"].add("text","x200 y170 vT1","3")
-mV2GC[["ping","T2"]] := mV2Gui["ping"].add("text","x200 y170 vT2","2")
-mV2GC[["ping","T3"]] := mV2Gui["ping"].add("text","x200 y170 vT3","1")
-mV2GC[["ping","T4"]] := mV2Gui["ping"].add("text","x130 y170 vT4","GO!")
+mV2Gui[""].SetFont("cWhite s100 bold")
+mV2GC[["","T1"]] := mV2Gui[""].add("text","x200 y170 vT1","3")
+mV2GC[["","T2"]] := mV2Gui[""].add("text","x200 y170 vT2","2")
+mV2GC[["","T3"]] := mV2Gui[""].add("text","x200 y170 vT3","1")
+mV2GC[["","T4"]] := mV2Gui[""].add("text","x130 y170 vT4","GO!")
 
 Loop 4
   fcV2GC("ping","T" . A_Index).Visible := false ; V1toV2: Verify that control [T%A_Index%] is accurate
 
-mV2Gui["ping"].SetFont("cBlack s8","Verdana")
-mV2GC[["ping","@STATUSBAR1"]] := mV2Gui["ping"].Add("StatusBar")
-mV2Gui["ping"].Title := "PingPong"
-mV2Gui["ping"].show("w500 h520")
+mV2Gui[""].SetFont("cBlack s8","Verdana")
+mV2GC[["","@STATUSBAR1"]] := mV2Gui[""].Add("StatusBar")
+mV2Gui[""].Title := "PingPong"
+mV2Gui[""].show("w500 h520")
 
 HotIfWinActive("PingPong")
 Hotkey("Right", PingPong_Right)
@@ -71,7 +69,7 @@ return
 Start_Game()
 {
   global
-  mV2GC[["ping","@STATUSBAR1"]].SetText("")
+  mV2GC[["","@STATUSBAR1"]].SetText("")
   Loop 4
   {
     Sleep(100)
@@ -117,16 +115,19 @@ Rand( a:=0.0, b:=1 ) {
 ;###############  V1toV2 FUNCS  ###############
 PingGuiEscape(*) { ; V1toV2: Lbl->Func
 global
+(IsSet(A_GuiControl)) && SetDefaultGui(A_GuiControl)
 PingGuiClose()
 }
 ;##############################################
 PingGuiClose(*) { ; V1toV2: Lbl->Func
 global
+(IsSet(A_GuiControl)) && SetDefaultGui(A_GuiControl)
 ExitApp()
 }
 ;##############################################
 PingPong_Right(ThisHotkey:="") { ; V1toV2: Lbl->Func
 global
+(IsSet(A_GuiControl)) && SetDefaultGui(A_GuiControl)
 mV2GC[["ping","User_Ping"]].GetPos(&User_PingX, &User_PingY, &User_PingW, &User_PingH)
 if (User_PingX <= 400)
   mV2GC[["ping","User_Ping"]].Move(User_PingX+15)
@@ -135,6 +136,7 @@ return
 ;##############################################
 PingPong_Left(ThisHotkey:="") { ; V1toV2: Lbl->Func
 global
+(IsSet(A_GuiControl)) && SetDefaultGui(A_GuiControl)
 mV2GC[["ping","User_Ping"]].GetPos(&User_PingX, &User_PingY, &User_PingW, &User_PingH)
 if (User_PingX >= 0)
   mV2GC[["ping","User_Ping"]].Move(User_PingX-15)
@@ -143,6 +145,7 @@ return
 ;##############################################
 Pong_Moves() { ; V1toV2: Lbl->Func
 global
+(IsSet(A_GuiControl)) && SetDefaultGui(A_GuiControl)
 if (First_Game = true)
 {
   Loop
@@ -175,7 +178,7 @@ if (First_Game = true)
         MsgBox("You have lost! Your score is " Your_Score " vs PC score " PC_Score)
         return
       }
-      mV2GC[["ping","@STATUSBAR1"]].SetText("You have lost! Your score " . Your_Score . " vs PC score " . PC_Score)
+      mV2GC[["","@STATUSBAR1"]].SetText("You have lost! Your score " . Your_Score . " vs PC score " . PC_Score)
       Sleep(2000)
       Start_Game()
       return
@@ -232,7 +235,7 @@ if (First_Game = false)
         MsgBox("You have lost! Your score is " Your_Score " vs PC score " PC_Score)
         return
       }
-      mV2GC[["ping","@STATUSBAR1"]].SetText("You have lost! Your score " . Your_Score . " vs PC score " . PC_Score)
+      mV2GC[["","@STATUSBAR1"]].SetText("You have lost! Your score " . Your_Score . " vs PC score " . PC_Score)
       Sleep(2000)
       Start_Game()
       return
@@ -244,6 +247,7 @@ return
 ;##############################################
 Pong_Moves_UP() { ; V1toV2: Lbl->Func
 global
+(IsSet(A_GuiControl)) && SetDefaultGui(A_GuiControl)
 First_Game := false
 Loop
 {
@@ -301,7 +305,7 @@ Loop
         MsgBox("You have lost! Your score is " Your_Score " vs PC score " PC_Score)
         return
       }
-    mV2GC[["ping","@STATUSBAR1"]].SetText("PC have lost! Your score " . Your_Score . " vs PC score " . PC_Score)
+    mV2GC[["","@STATUSBAR1"]].SetText("PC have lost! Your score " . Your_Score . " vs PC score " . PC_Score)
     Sleep(2000)
     Start_Game()
     return

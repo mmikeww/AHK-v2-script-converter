@@ -1,5 +1,4 @@
-﻿; V1toV2: Must place v2DynGui.ahk in library folder
-#Include <v2DynGui>
+﻿#Include <v2DynGui> ; V1toV2: v2DynGui.ahk in library folder
 #Warn Unreachable, Off
 
 delay := 1000
@@ -20,16 +19,16 @@ mV2Gui["1"].Title := "B2"
 mV2Gui["1"].Show("w400 h400")
 
 Sleep(delay)
-mV2Gui["nnGui2"] := NewV2Gui("nnGui2")
-mV2Gui["nnGui2"].OnEvent("Close",guiClose)
-mV2GC[["nnGui2","B3"]] := mV2Gui["nnGui2"].Add("Button",,"B3")
-mV2Gui["nnGui2"].Title := "B3"
-mV2Gui["nnGui2"].Show("w300 h300")
+mV2Gui[""] := NewV2Gui("",1)
+mV2Gui[""].OnEvent("Close",guiClose)
+mV2GC[["","B3"]] := mV2Gui[""].Add("Button",,"B3")
+mV2Gui[""].Title := "B3"
+mV2Gui[""].Show("w300 h300")
 
 Sleep(delay)
-mV2GC[["nnGui2","B4"]] := mV2Gui["nnGui2"].Add("Button",,"B4")
-mV2Gui["nnGui2"].Title := "B4"
-mV2Gui["nnGui2"].Show("w200 h200")
+mV2GC[["","B4"]] := mV2Gui[""].Add("Button",,"B4")
+mV2Gui[""].Title := "B4"
+mV2Gui[""].Show("w200 h200")
 
 return
 guiClose:
@@ -39,6 +38,7 @@ ExitApp()
 ;###############  V1toV2 FUNCS  ###############
 guiClose(*) { ; V1toV2: Lbl->Func
 global
+(IsSet(A_GuiControl)) && SetDefaultGui(A_GuiControl)
 MsgBox("closing")
 ExitApp()
 }

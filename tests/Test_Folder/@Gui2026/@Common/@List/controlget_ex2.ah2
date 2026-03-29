@@ -1,10 +1,9 @@
-﻿; V1toV2: Must place v2DynGui.ahk in library folder
-#Include <v2DynGui>
-If (!HasV2Gui("1")) {
-    mV2Gui["1"] := NewV2Gui("1")
+﻿#Include <v2DynGui> ; V1toV2: v2DynGui.ahk in library folder
+If (!HasV2Gui("")) {
+    mV2Gui[""] := NewV2Gui("")
 }
-mV2Gui["1"].Add("Tab3","Choose2",["General","View","Settings"])
-mV2Gui["1"].Title := "Some Window Title"
-mV2Gui["1"].Show()
+mV2Gui[""].Add("Tab3","Choose2",["General","View","Settings"])
+mV2Gui[""].Title := "Some Window Title"
+mV2Gui[""].Show()
 WhichTab := ControlGetIndex("SysTabControl321", "Some Window Title")
 MsgBox("Tab #" WhichTab " is active.")

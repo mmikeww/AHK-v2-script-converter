@@ -1,13 +1,12 @@
-﻿; V1toV2: Must place v2DynGui.ahk in library folder
-#Include <v2DynGui>
+﻿#Include <v2DynGui> ; V1toV2: v2DynGui.ahk in library folder
 #Warn Unreachable, Off
 Title := "MyTitle"
-mV2Gui["v1Gui:hwnd"] := NewV2Gui("v1Gui:hwnd","+LastFound")
-hwnd := mV2Gui["v1Gui:hwnd"].Hwnd
-mV2Gui["v1Gui:hwnd"].OnEvent("Close",guiClose)
-mV2Gui["v1Gui:hwnd"].OnEvent("Escape",guiEscape)
-mV2GC[["v1Gui:hwnd","test"]] := mV2Gui["v1Gui:hwnd"].add("button",,"test")
-mV2GC[["v1Gui:hwnd","test"]].OnEvent("Click",btnTest.Bind("Normal"))
+mV2Gui[""] := NewV2Gui("",1,"+LastFound")
+hwnd := mV2Gui[""].Hwnd
+mV2Gui[""].OnEvent("Close",guiClose)
+mV2Gui[""].OnEvent("Escape",guiEscape)
+mV2GC[["","test"]] := mV2Gui[""].add("button",,"test")
+mV2GC[["","test"]].OnEvent("Click",btnTest.Bind("Normal"))
 h := hwnd
 If (!HasV2Gui(h)) {
     mV2Gui[h] := NewV2Gui(h)
@@ -30,17 +29,20 @@ ExitApp()
 ;###############  V1toV2 FUNCS  ###############
 btnTest(A_GuiEvent:="", A_GuiControl:="", Info:="", *) { ; V1toV2: Lbl->Func
 global
+(IsSet(A_GuiControl)) && SetDefaultGui(A_GuiControl)
 MsgBox("tested")
 return
 }
 ;##############################################
 guiEscape(*) { ; V1toV2: Lbl->Func
 global
+(IsSet(A_GuiControl)) && SetDefaultGui(A_GuiControl)
 MsgBox("escape and close")
 guiClose()
 }
 ;##############################################
 guiClose(*) { ; V1toV2: Lbl->Func
 global
+(IsSet(A_GuiControl)) && SetDefaultGui(A_GuiControl)
 ExitApp()
 }

@@ -1,5 +1,4 @@
-﻿; V1toV2: Must place v2DynGui.ahk in library folder
-#Include <v2DynGui>
+﻿#Include <v2DynGui> ; V1toV2: v2DynGui.ahk in library folder
 #Warn Unreachable, Off
 
 If (!HasV2Gui("2")) {
@@ -20,15 +19,16 @@ ExitApp()
 ;###############  V1toV2 FUNCS  ###############
 Btn2Lbl(A_GuiEvent:="", A_GuiControl:="", Info:="", *) { ; V1toV2: Lbl->Func
 global
+(IsSet(A_GuiControl)) && SetDefaultGui(A_GuiControl)
 fcV2GC("2","Button1").Visible := false
 fcV2GC("2","Button2").Enabled := false
-mV2Gui["2"].SetFont("s10 Bold","Verdana")
+mV2Gui[""].SetFont("s10 Bold","Verdana")
 fcV2GC(A_Gui,"Button3").Text := "GroupBox is actually a `"Button`" Class"
 fcV2GC("2","Button3").SetFont("s10 Bold","Verdana")
 Sleep(3000)
 fcV2GC(A_Gui,"Button2").Text := "See ya!"
 fcV2GC("2","Button2").SetFont("s10 Bold","Verdana")
 Sleep(1500)
-Try mV2Gui[A_Gui].Destroy()
+DestroyGui(A_Gui)
 ExitApp()
 }

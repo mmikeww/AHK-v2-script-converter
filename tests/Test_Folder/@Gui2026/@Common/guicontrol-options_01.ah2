@@ -1,8 +1,14 @@
-﻿; V1toV2: Must place v2DynGui.ahk in library folder
-#Include <v2DynGui>
-If (!HasV2Gui("1")) {
-    mV2Gui["1"] := NewV2Gui("1")
+﻿#Include <v2DynGui> ; V1toV2: v2DynGui.ahk in library folder
+iniGuiCtrlVars() ; V1toV2: initialize gui ctrl vars
+If (!HasV2Gui("")) {
+    mV2Gui[""] := NewV2Gui("")
 }
-mV2GC[["1","MyListbox"]] := mV2Gui["1"].Add("Listbox","vMyListbox")
-mV2Gui["1"].Show()
-mV2GC[["1","MyListbox"]].Opt("+AltSubmit")
+mV2GC[["","MyListbox"]] := mV2Gui[""].Add("Listbox","vMyListbox")
+mV2Gui[""].Show()
+mV2GC[["","MyListbox"]].Opt("+AltSubmit")
+
+;##############################################
+iniGuiCtrlVars() { ; V1toV2: initializes gui control variables
+    global
+    MyListbox := ""
+}

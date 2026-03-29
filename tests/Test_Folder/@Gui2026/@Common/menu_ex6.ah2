@@ -1,5 +1,4 @@
-﻿; V1toV2: Must place v2DynGui.ahk in library folder
-#Include <v2DynGui>
+﻿#Include <v2DynGui> ; V1toV2: v2DynGui.ahk in library folder
 #Warn Unreachable, Off
 ; Menu Example #4
 FileMenu := Menu()
@@ -11,13 +10,13 @@ FileMenu.SetIcon("Suspend Icon", A_AhkPath, -206) ; Use icon with resource ident
 FileMenu.SetIcon("Pause Icon", A_AhkPath, -207) ; Use icon with resource identifier 207
 MyMenuBar := MenuBar()
 MyMenuBar.Add("&File", FileMenu)
-If (!HasV2Gui("1")) {
-    mV2Gui["1"] := NewV2Gui("1")
+If (!HasV2Gui("")) {
+    mV2Gui[""] := NewV2Gui("")
 }
-mV2Gui["1"].MenuBar := MyMenuBar
-mV2GC[["1","ExitThisExample"]] := mV2Gui["1"].Add("Button",,"Exit This Example")
-mV2GC[["1","ExitThisExample"]].OnEvent("Click",Exit.Bind("Normal"))
-mV2Gui["1"].Show()
+mV2Gui[""].MenuBar := MyMenuBar
+mV2GC[["","ExitThisExample"]] := mV2Gui[""].Add("Button",,"Exit This Example")
+mV2GC[["","ExitThisExample"]].OnEvent("Click",Exit.Bind("Normal"))
+mV2Gui[""].Show()
 return
 
 MenuHandler:
@@ -31,10 +30,12 @@ ExitApp()
 ;###############  V1toV2 FUNCS  ###############
 MenuHandler(A_ThisMenuItem:="", A_ThisMenuItemPos:="", MyMenu:="", *) { ; V1toV2: Lbl->Func
 global
+(IsSet(A_GuiControl)) && SetDefaultGui(A_GuiControl)
 return
 }
 ;##############################################
 Exit(A_GuiEvent:="", A_GuiControl:="", Info:="", *) { ; V1toV2: Lbl->Func
 global
+(IsSet(A_GuiControl)) && SetDefaultGui(A_GuiControl)
 ExitApp()
 }

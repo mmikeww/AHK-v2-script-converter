@@ -1,12 +1,12 @@
-﻿; V1toV2: Must place v2DynGui.ahk in library folder
-#Include <v2DynGui>
-mV2Gui["guiName"] := NewV2Gui("guiName")
-mV2GC[["guiName","PressMe"]] := mV2Gui["guiName"].Add("Button","w100","PressMe")
-mV2GC[["guiName","PressMe"]].OnEvent("Click",PressLabel.Bind("Normal"))
-mV2Gui["guiName"].Show()
+﻿#Include <v2DynGui> ; V1toV2: v2DynGui.ahk in library folder
+mV2Gui["guiName"] := NewV2Gui("guiName",1)
+mV2GC[["","PressMe"]] := mV2Gui[""].Add("Button","w100","PressMe")
+mV2GC[["","PressMe"]].OnEvent("Click",PressLabel.Bind("Normal"))
+mV2Gui[""].Show()
 
 return
 PressLabel(A_GuiEvent:="", A_GuiControl:="", Info:="", *) {
+  (IsSet(A_GuiControl)) && SetDefaultGui(A_GuiControl)
   ; v2 conversion will cross reference ctrl attributes
   static c := 0
   if (++c<2) {

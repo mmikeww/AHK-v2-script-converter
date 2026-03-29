@@ -1,12 +1,11 @@
-﻿; V1toV2: Must place v2DynGui.ahk in library folder
-#Include <v2DynGui>
+﻿#Include <v2DynGui> ; V1toV2: v2DynGui.ahk in library folder
 Persistent
 
-If (!HasV2Gui("1")) {
-    mV2Gui["1"] := NewV2Gui("1")
+If (!HasV2Gui("")) {
+    mV2Gui[""] := NewV2Gui("")
 }
-mV2Gui["1"].Add("Text","x15 y35","Left-click Me!")
-mV2Gui["1"].Show("w100 h100")
+mV2Gui[""].Add("Text","x15 y35","Left-click Me!")
+mV2Gui[""].Show("w100 h100")
 
 var := "WM_LBUTTONDOWN"
 OnMessage(0x201, %var%)

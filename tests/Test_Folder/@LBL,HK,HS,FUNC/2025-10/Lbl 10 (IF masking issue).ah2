@@ -13,14 +13,14 @@ Return
 
 ;###############  V1toV2 FUNCS  ###############
 LoadClipboardHistory() { ; V1toV2: Lbl->Func
-global
+	global
 	if !FileExist(A_ScriptDir "\clipboard-history.txt")
 		Return
 Return
 }
 ;##############################################
 LoadAutoTextList() { ; V1toV2: Lbl->Func
-global
+	global
 	if !FileExist(A_ScriptDir "\clipboard-autotext.txt")
 		Return
 Return

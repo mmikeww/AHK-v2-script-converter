@@ -1,14 +1,14 @@
-﻿; V1toV2: Must place v2DynGui.ahk in library folder
-#Include <v2DynGui>
+﻿#Include <v2DynGui> ; V1toV2: v2DynGui.ahk in library folder
+iniGuiCtrlVars() ; V1toV2: initialize gui ctrl vars
 #Warn Unreachable, Off
-If (!HasV2Gui("1")) {
-    mV2Gui["1"] := NewV2Gui("1")
+If (!HasV2Gui("")) {
+    mV2Gui[""] := NewV2Gui("")
 }
-mV2GC[["1","_Type"]] := mV2Gui["1"].Add("Radio","v_Type","Option 1")
-mV2Gui["1"].Add("Radio",,"Option 2")
-mV2GC[["1","CheckResponse"]] := mV2Gui["1"].Add("Button",,"Check Response")
-mV2GC[["1","CheckResponse"]].OnEvent("Click",CheckResponse.Bind("Normal"))
-mV2Gui["1"].Show()
+mV2GC[["","_Type"]] := mV2Gui[""].Add("Radio","v_Type","Option 1")
+mV2Gui[""].Add("Radio",,"Option 2")
+mV2GC[["","CheckResponse"]] := mV2Gui[""].Add("Button",,"Check Response")
+mV2GC[["","CheckResponse"]].OnEvent("Click",CheckResponse.Bind("Normal"))
+mV2Gui[""].Show()
 Return
 
 CheckResponse:
@@ -18,10 +18,16 @@ return
 ;###############  V1toV2 FUNCS  ###############
 CheckResponse(A_GuiEvent:="", A_GuiControl:="", Info:="", *) { ; V1toV2: Lbl->Func
 global
-_Type := mV2GC[["1","_Type"]].Value
+(IsSet(A_GuiControl)) && SetDefaultGui(A_GuiControl)
+_Type := mV2GC[["","_Type"]].Value
 If (_Type = 1) {
   MsgBox("You Selected Option 1")
 } else {
   MsgBox("You Selected Option 2")
 }
+}
+;##############################################
+iniGuiCtrlVars() { ; V1toV2: initializes gui control variables
+    global
+    _Type := ""
 }

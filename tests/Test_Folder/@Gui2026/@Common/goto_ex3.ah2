@@ -1,18 +1,17 @@
-﻿; V1toV2: Must place v2DynGui.ahk in library folder
-#Include <v2DynGui>
+﻿#Include <v2DynGui> ; V1toV2: v2DynGui.ahk in library folder
 #Warn Unreachable, Off
-If (!HasV2Gui("1")) {
-    mV2Gui["1"] := NewV2Gui("1")
+If (!HasV2Gui("")) {
+    mV2Gui[""] := NewV2Gui("")
 }
-mV2GC[["1","Test"]] := mV2Gui["1"].Add("Button",,"Test")
-mV2GC[["1","Test"]].OnEvent("Click",Tag.Bind("Normal"))
-mV2GC[["1","Test"]] := mV2Gui["1"].Add("Button",,"Test")
-mV2GC[["1","Test"]].OnEvent("Click",Test.Bind("Normal"))
-mV2GC[["1","Test"]] := mV2Gui["1"].Add("Button",,"Test")
-mV2GC[["1","Test"]].OnEvent("Click",Tag1.Bind("Normal"))
-mV2GC[["1","Test"]] := mV2Gui["1"].Add("Button",,"Test")
-mV2GC[["1","Test"]].OnEvent("Click",Test1.Bind("Normal"))
-mV2Gui["1"].Show()
+mV2GC[["","Test"]] := mV2Gui[""].Add("Button",,"Test")
+mV2GC[["","Test"]].OnEvent("Click",Tag.Bind("Normal"))
+mV2GC[["","Test"]] := mV2Gui[""].Add("Button",,"Test")
+mV2GC[["","Test"]].OnEvent("Click",Test.Bind("Normal"))
+mV2GC[["","Test"]] := mV2Gui[""].Add("Button",,"Test")
+mV2GC[["","Test"]].OnEvent("Click",Tag1.Bind("Normal"))
+mV2GC[["","Test"]] := mV2Gui[""].Add("Button",,"Test")
+mV2GC[["","Test"]].OnEvent("Click",Test1.Bind("Normal"))
+mV2Gui[""].Show()
 
 Goto("Somewhere")
 Return
@@ -40,30 +39,35 @@ return
 ;###############  V1toV2 FUNCS  ###############
 Somewhere() { ; V1toV2: Lbl->Func
 global
+(IsSet(A_GuiControl)) && SetDefaultGui(A_GuiControl)
 MsgBox("Test")
 Return
 }
 ;##############################################
 Tag(A_GuiEvent:="", A_GuiControl:="", Info:="", *) { ; V1toV2: Lbl->Func
 global
+(IsSet(A_GuiControl)) && SetDefaultGui(A_GuiControl)
 MsgBox("tag")
 return
 }
 ;##############################################
 Test(A_GuiEvent:="", A_GuiControl:="", Info:="", *) { ; V1toV2: Lbl->Func
 global
+(IsSet(A_GuiControl)) && SetDefaultGui(A_GuiControl)
 MsgBox("test")
 return
 }
 ;##############################################
 Tag1(A_GuiEvent:="", A_GuiControl:="", Info:="", *) { ; V1toV2: Lbl->Func
 global
+(IsSet(A_GuiControl)) && SetDefaultGui(A_GuiControl)
 MsgBox("tag1")
 return
 }
 ;##############################################
 Test1(A_GuiEvent:="", A_GuiControl:="", Info:="", *) { ; V1toV2: Lbl->Func
 global
+(IsSet(A_GuiControl)) && SetDefaultGui(A_GuiControl)
 MsgBox("test1")
 return
 }

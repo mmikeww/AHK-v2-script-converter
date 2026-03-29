@@ -1,5 +1,4 @@
-﻿; V1toV2: Must place v2DynGui.ahk in library folder
-#Include <v2DynGui>
+﻿#Include <v2DynGui> ; V1toV2: v2DynGui.ahk in library folder
 #Warn Unreachable, Off
 
 global ColorList := ["000000","7F7F7F","880015","ED1C24","FF7F27","FFF200","22B14C","00A2E8","3F48CC","A349A4","FFFFFF","C3C3C3","B97A57","FFAEC9","FFC90E","EFE4B0","B5E61D","99D9EA","7092BE","C8BFE7"]
@@ -60,6 +59,7 @@ return
 ;###############  V1toV2 FUNCS  ###############
 ChangeColor(A_GuiEvent:="", A_GuiControl:="", Info:="", *) { ; V1toV2: Lbl->Func
 global
+(IsSet(A_GuiControl)) && SetDefaultGui(A_GuiControl)
 A_GuiControl := (A_GuiControl.Name) ? A_GuiControl.Name : (HasProp(A_GuiControl, "Text") ? A_GuiControl.Text : A_GuiControl)
 ci := RegExReplace(A_GuiControl, "^.+_(\d+)$", "$1")
 MsgBox("color index := " ci "`ncolor value := [" ColorList[ci] "]")
@@ -68,6 +68,7 @@ return
 ;##############################################
 ChangeBrush(A_GuiEvent:="", A_GuiControl:="", Info:="", *) { ; V1toV2: Lbl->Func
 global
+(IsSet(A_GuiControl)) && SetDefaultGui(A_GuiControl)
 A_GuiControl := (A_GuiControl.Name) ? A_GuiControl.Name : (HasProp(A_GuiControl, "Text") ? A_GuiControl.Text : A_GuiControl)
 MsgBox("[" "Change Brush to " A_GuiControl "]")
 return
@@ -75,6 +76,7 @@ return
 ;##############################################
 handle_apply(A_GuiEvent:="", A_GuiControl:="", Info:="", *) { ; V1toV2: Lbl->Func
 global
+(IsSet(A_GuiControl)) && SetDefaultGui(A_GuiControl)
 A_GuiControl := (A_GuiControl.Name) ? A_GuiControl.Name : (HasProp(A_GuiControl, "Text") ? A_GuiControl.Text : A_GuiControl)
 MsgBox("[" "Apply" "]")
 return

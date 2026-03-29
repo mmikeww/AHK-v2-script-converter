@@ -1,11 +1,11 @@
-﻿; V1toV2: Must place v2DynGui.ahk in library folder
-#Include <v2DynGui>
-If (!HasV2Gui("1")) {
-    mV2Gui["1"] := NewV2Gui("1")
+﻿#Include <v2DynGui> ; V1toV2: v2DynGui.ahk in library folder
+iniGuiCtrlVars() ; V1toV2: initialize gui ctrl vars
+If (!HasV2Gui("")) {
+    mV2Gui[""] := NewV2Gui("")
 }
-mV2GC[["1","ColorChoice"]] := mV2Gui["1"].Add("ComboBox","vColorChoice",["Red","Green","Blue","Black","White"])
-mV2Gui["1"].Title := "WinTitle"
-mV2Gui["1"].Show()
+mV2GC[["","ColorChoice"]] := mV2Gui[""].Add("ComboBox","vColorChoice",["Red","Green","Blue","Black","White"])
+mV2Gui[""].Title := "WinTitle"
+mV2Gui[""].Show()
 oItems := ControlGetItems("ComboBox1", "WinTitle", , , )
 loop oItems.length
 {
@@ -14,3 +14,9 @@ loop oItems.length
 }
 Loop Parse, Items, "`n"
     MsgBox("Item number " A_Index " is " A_LoopField ".")
+
+;##############################################
+iniGuiCtrlVars() { ; V1toV2: initializes gui control variables
+    global
+    ColorChoice := ""
+}

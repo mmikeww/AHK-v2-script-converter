@@ -296,6 +296,7 @@ FinalizeConvert(&code)
 ; 2026-01-24 AMB, UPDATED to support progress-gui
 ; 2026-03-08 AMB, UPDATED to add static kywd to methods as needed
 ; 2026-03-14 AMB, UPDATED to copy dynamic include file to global library, as needed
+; 2026-03-29 AMB, UPDATED to move dynamic gui support to dedicated func
 ; Performs tasks that finalize overall conversion
 
    Prog.ULog(,  'Post Process - Restore Classes/Funcs...', A_ThisFunc       )           ; update UI - current operation, debug
@@ -332,12 +333,8 @@ FinalizeConvert(&code)
       addStaticKywdToMethod(&code)                                                      ; 2026-03-08, AMB - add static keyword to methods that require it
    Prog.ULog(,  'Post Process - Update FileOpen Properties...'              )           ; update UI - current operation
       updateFileOpenProps(&code)                                                        ; 2025-10-12, AMB - support for #358
-   if (gfHasDynamicGui) {                                                               ; 2026-03-11 AMB, Added to support Dynamic Gui handling
-      ; https://www.autohotkey.com/docs/v2/Scripts.htm#lib
-      msg   := '`; V1toV2: Must place v2DynGui.ahk in library folder`r`n'
-      code  := msg . '#Include <v2DynGui>`r`n' . code                                   ; add #Include for dynamic gui handling
-      dynIncludeToLib()                                                                 ; copy dynamic include file to global library, as needed
-   }
+   Prog.ULog(,  'Post Process - Add support for Dynamic Gui...'             )           ; update UI - current operation
+      addDynGuiSupport(&code)                                                           ; add support for dynamic Gui, as needed
    Prog.ULog(,  'Post Process - Restore Continuation Sections...'           )           ; update UI - current operation
       Mask_R(&code, 'CSect')                                                            ; restore remaining cont sects (returned as v2 converted)
    Prog.ULog(,  'Post Process - Restore Multi-line Parentheses Blocks...'   )           ; update UI - current operation
@@ -367,6 +364,22 @@ addToCode(code) {
                                                 , {NeedleRegEx: "im)^(.*?)\b\QA_EventInfo\E\b(.*+)$", Replacement: "$1dataType$2"})
    }
    return code
+}
+;################################################################################
+; 2026-03-29 AMB, ADDED - Adds final elements to support dynamic gui handling
+; https://www.autohotkey.com/docs/v2/Scripts.htm#lib
+addDynGuiSupport(&code) {                                                               ; Adds support for dynamic gui handling (if needed)
+   if (!gfHasDynamicGui)                                                                ; if script does not have dynamic gui elements...
+      return                                                                            ; ... do not add this support
+   cd := code, trail := '', funcStr := '', str := '', indent := '    '                  ; ini
+   if (funcStr := buildCtrlVarAssignFunc(indent))                                       ; if script has gui ctrl vars...
+      cd := separateTrailCWS(code, &trail,1)                                            ; ... separate trailing comments from main script code
+   str   .= '#Include <v2DynGui> `; V1toV2: v2DynGui.ahk in library folder`r`n'         ; add dynamic include (
+   str   .= (funcStr) ? gGuiCtrlVarAssignFN : ''                                        ; add ctrlvarIni func CALL as needed
+   str   .= (funcStr) ? ' `; V1toV2: initialize gui ctrl vars`r`n' : ''                 ; add msg for func call
+   trail := (funcStr) ? ('`r`n' funcStr trail) : trail                                  ; add ctrlvarIni FUNC      as needed
+   code  := str . cd . trail                                                            ; add dynamic strings to code
+   dynIncludeToLib()                                                                    ; copy dynamic include file to global library, as needed
 }
 ;################################################################################
 ; Function to debug

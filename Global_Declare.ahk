@@ -47,6 +47,8 @@ setGlobals() {													; for globals that are reset with each new conversion
 	gmList_LblsToFunc		:= Map_I()							; 2025-10-05 - replaces gaList_LblsToFuncO and gaList_LblsToFuncC
 	gmList_GosubToFunc		:= Map_I()							; 2025-10-05 - tracks gosubs that need to be converted to func calls
 	gmList_HKCmdToFunc		:= Map_I()							; 2025-10-12 - tracks funcs that should be called using 'hotkey' cmd
+	gHasV2Funcs				:= false							; 2026-03-29 - added as part of Gui Submit support
+	;gmList_MethToFunc		:= Map_I()							; 2026-03-29 - tracks class methods that will need adjs to params
 	gmByRefParamMap			:= Map_I()							; Map of FuncNames and ByRef params
 	gmAltLabel				:= Map_I()							; map of labels that point to same reference
 	gFuncParams				:= ''
@@ -65,6 +67,8 @@ setGlobals() {													; for globals that are reset with each new conversion
 	gGuiNameDefault			:= getUserDefGuiName()				; 2026-01-26 UPDATED - as part of support for user settings
 	gmGuiVList				:= Map_I()							; Used to list all variable names defined in a Gui
 	gUseLastName			:= False							; Keep track of if we use the last set name in gGuiList
+	gGuiCtrlVarAssignFunc	:= ''								; 2026-03-29 - func string for initializing gui ctrl varaibles
+	gGuiCtrlVarAssignFN		:= 'iniGuiCtrlVars()'				; 2026-03-29 - func name for gGuiCtrlVarAssignFunc
 
 	;gOScriptStr			:= []								; array of all the lines (prior to being an object)
 	gOScriptStr				:= Object()							; now a ScriptCode class object

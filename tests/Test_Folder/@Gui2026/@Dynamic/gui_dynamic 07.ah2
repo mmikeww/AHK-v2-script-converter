@@ -10,7 +10,7 @@ PressLabel(A_GuiEvent:="", A_GuiControl:="", Info:="", *) {
   ; v2 conversion will cross reference ctrl attributes
   static c := 0
   if (++c<2) {
-     mV2GC[["guiName","PressMe"]].Text := "Press Again!"
+     mV2GC[["","PressMe"]].Text := "Press Again!"
   } else {
     ; match dynamic button name
     val := (c>2) ? " " c-1 : ""

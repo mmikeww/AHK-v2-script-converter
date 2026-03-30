@@ -20,7 +20,7 @@ mV2Gui[""].SetFont("cWhite s12 bold")
 mV2GC[["","PC_Ping"]] := mV2Gui[""].Add("Button","ReadOnly x5 y5 h10 w100 0x10 vPC_Ping")
 mV2GC[["","User_Ping"]] := mV2Gui[""].Add("Button","ReadOnly x5 y485 h10 w100 0x10 vUser_Ping")
 mV2GC[["","Pong"]] := mV2Gui[""].Add("Button","ReadOnly x240 y240 h10 w10 0x10 vPong")
-mV2GC[["ping","Pong"]].Visible := false
+mV2GC[["","Pong"]].Visible := false
 
 mV2Gui[""].SetFont("cWhite s100 bold")
 mV2GC[["","T1"]] := mV2Gui[""].add("text","x200 y170 vT1","3")
@@ -77,8 +77,8 @@ Start_Game()
     Sleep(900)
     fcV2GC("ping","T" . A_Index).Visible := false ; V1toV2: Verify that control [T%A_Index%] is accurate
   }
-  mV2GC[["ping","Pong"]].Move(240, 240)
-  mV2GC[["ping","Pong"]].Visible := true
+  mV2GC[["","Pong"]].Move(240, 240)
+  mV2GC[["","Pong"]].Visible := true
   Sleep(400)
   First_Game := true
   Pong_Moves() ; V1toV2: Gosub
@@ -128,18 +128,18 @@ ExitApp()
 PingPong_Right(ThisHotkey:="") { ; V1toV2: Lbl->Func
 global
 (IsSet(A_GuiControl)) && SetDefaultGui(A_GuiControl)
-mV2GC[["ping","User_Ping"]].GetPos(&User_PingX, &User_PingY, &User_PingW, &User_PingH)
+mV2GC[["","User_Ping"]].GetPos(&User_PingX, &User_PingY, &User_PingW, &User_PingH)
 if (User_PingX <= 400)
-  mV2GC[["ping","User_Ping"]].Move(User_PingX+15)
+  mV2GC[["","User_Ping"]].Move(User_PingX+15)
 return
 }
 ;##############################################
 PingPong_Left(ThisHotkey:="") { ; V1toV2: Lbl->Func
 global
 (IsSet(A_GuiControl)) && SetDefaultGui(A_GuiControl)
-mV2GC[["ping","User_Ping"]].GetPos(&User_PingX, &User_PingY, &User_PingW, &User_PingH)
+mV2GC[["","User_Ping"]].GetPos(&User_PingX, &User_PingY, &User_PingW, &User_PingH)
 if (User_PingX >= 0)
-  mV2GC[["ping","User_Ping"]].Move(User_PingX-15)
+  mV2GC[["","User_Ping"]].Move(User_PingX-15)
 return
 }
 ;##############################################
@@ -150,9 +150,9 @@ if (First_Game = true)
 {
   Loop
   {
-    mV2GC[["ping","Pong"]].GetPos(&PongX, &PongY, &PongW, &PongH)
-    mV2GC[["ping","User_Ping"]].GetPos(&User_PingX, &User_PingY, &User_PingW, &User_PingH)
-    mV2GC[["ping","PC_Ping"]].GetPos(&PC_PingX, &PC_PingY, &PC_PingW, &PC_PingH)
+    mV2GC[["","Pong"]].GetPos(&PongX, &PongY, &PongW, &PongH)
+    mV2GC[["","User_Ping"]].GetPos(&User_PingX, &User_PingY, &User_PingW, &User_PingH)
+    mV2GC[["","PC_Ping"]].GetPos(&PC_PingX, &PC_PingY, &PC_PingW, &PC_PingH)
 
     User_Full_Ping_Start := User_PingX ; user ping width coordinates
     User_Full_Ping_End := User_PingX + 100
@@ -164,7 +164,7 @@ if (First_Game = true)
       return
     }
     else if (PongY < 490){
-      mV2GC[["ping","Pong"]].Move(, PongY+5)
+      mV2GC[["","Pong"]].Move(, PongY+5)
       Sleep(25)
     }
     if (PongY > 485){
@@ -190,9 +190,9 @@ if (First_Game = false)
 {
   Loop
   {
-    mV2GC[["ping","Pong"]].GetPos(&PongX, &PongY, &PongW, &PongH)
-    mV2GC[["ping","User_Ping"]].GetPos(&User_PingX, &User_PingY, &User_PingW, &User_PingH)
-    mV2GC[["ping","PC_Ping"]].GetPos(&PC_PingX, &PC_PingY, &PC_PingW, &PC_PingH)
+    mV2GC[["","Pong"]].GetPos(&PongX, &PongY, &PongW, &PongH)
+    mV2GC[["","User_Ping"]].GetPos(&User_PingX, &User_PingY, &User_PingW, &User_PingH)
+    mV2GC[["","PC_Ping"]].GetPos(&PC_PingX, &PC_PingY, &PC_PingW, &PC_PingH)
 
     User_Full_Ping_Start := User_PingX ; user ping width coordinates
     User_Full_Ping_End := User_PingX + 100
@@ -205,21 +205,21 @@ if (First_Game = false)
     }
     else if (PongY < 490){
       If (rotation = "Left" and PongX > 0){
-        mV2GC[["ping","Pong"]].Move(PongX-Rand(4, 6), PongY+5)
+        mV2GC[["","Pong"]].Move(PongX-Rand(4, 6), PongY+5)
         Sleep(20)
       }
       If (rotation = "Left" and PongX <= 0){
         rotation := "Right"
-        mV2GC[["ping","Pong"]].Move(PongX+Rand(4, 6), PongY+5)
+        mV2GC[["","Pong"]].Move(PongX+Rand(4, 6), PongY+5)
         Sleep(20)
       }
       If (rotation = "Right" and PongX < 490){
-        mV2GC[["ping","Pong"]].Move(PongX+Rand(4, 6), PongY+5)
+        mV2GC[["","Pong"]].Move(PongX+Rand(4, 6), PongY+5)
         Sleep(20)
       }
       If (rotation = "Right" and PongX >= 490){
         rotation := "Left"
-        mV2GC[["ping","Pong"]].Move(PongX-Rand(4, 6), PongY+5)
+        mV2GC[["","Pong"]].Move(PongX-Rand(4, 6), PongY+5)
         Sleep(20)
       }
 
@@ -251,9 +251,9 @@ global
 First_Game := false
 Loop
 {
-  mV2GC[["ping","Pong"]].GetPos(&PongX, &PongY, &PongW, &PongH)
-  mV2GC[["ping","User_Ping"]].GetPos(&User_PingX, &User_PingY, &User_PingW, &User_PingH)
-  mV2GC[["ping","PC_Ping"]].GetPos(&PC_PingX, &PC_PingY, &PC_PingW, &PC_PingH)
+  mV2GC[["","Pong"]].GetPos(&PongX, &PongY, &PongW, &PongH)
+  mV2GC[["","User_Ping"]].GetPos(&User_PingX, &User_PingY, &User_PingW, &User_PingH)
+  mV2GC[["","PC_Ping"]].GetPos(&PC_PingX, &PC_PingY, &PC_PingW, &PC_PingH)
 
   PC_Ping_Start := PC_PingX ; user ping width coordinates
   PC_Ping_Middle := PC_PingX + 50
@@ -267,29 +267,29 @@ Loop
   }
 
   if (PC_Ping_Middle < PongX){
-    mV2GC[["ping","PC_Ping"]].Move(PC_PingX+4)
+    mV2GC[["","PC_Ping"]].Move(PC_PingX+4)
   }
   if (PC_Ping_Middle > Pong_End){
-    mV2GC[["ping","PC_Ping"]].Move(PC_PingX-4)
+    mV2GC[["","PC_Ping"]].Move(PC_PingX-4)
   }
 
   if (PongY <= 485){
     If (rotation = "Left" and PongX > 0){
-      mV2GC[["ping","Pong"]].Move(PongX-Rand(4, 6), PongY-5)
+      mV2GC[["","Pong"]].Move(PongX-Rand(4, 6), PongY-5)
       Sleep(20)
     }
     If (rotation = "Left" and PongX <= 0){
       rotation := "Right"
-      mV2GC[["ping","Pong"]].Move(PongX+Rand(4, 6), PongY-5)
+      mV2GC[["","Pong"]].Move(PongX+Rand(4, 6), PongY-5)
       Sleep(20)
     }
     If (rotation = "Right" and PongX < 490){
-      mV2GC[["ping","Pong"]].Move(PongX+Rand(4, 6), PongY-5)
+      mV2GC[["","Pong"]].Move(PongX+Rand(4, 6), PongY-5)
       Sleep(20)
     }
     If (rotation = "Right" and PongX >= 490){
       rotation := "Left"
-      mV2GC[["ping","Pong"]].Move(PongX-Rand(4, 6), PongY-5)
+      mV2GC[["","Pong"]].Move(PongX-Rand(4, 6), PongY-5)
       Sleep(20)
     }
   }

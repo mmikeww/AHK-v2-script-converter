@@ -13,7 +13,6 @@ GuiAlt(p)
 	if (gV1GuiLine.PreProcessOK)															; if pre-processing was successful...
 		gV1GuiLine.ProcessParams()															; ... perform the rest of the processing
 	lineout		:= gV1GuiLine.LineOut														; save new v2 script line
-	gV1GuiLine	:= ''																		; reset global gui line var
 	return		lineout																		; return v2 converted line
 }
 ;################################################################################
@@ -1038,13 +1037,16 @@ class clsGuiCtrl
 		this._processCtrlType()																; process ctrl, based on type
 	}
 	;############################################################################
-	V2GCVar[inclGui:=1] {																	; returns string that acts as a variable for ctrl, in v2 script
+	V2GCVar[inclGui:=''] {																	; returns string that acts as a variable for ctrl, in v2 script
 		get {
 			if (!gDynGuiNaming)																; if using simple naming method...
 				return this._getNameParts(this.CtrlObjFmNm).CtrlName						; ... extract ctrl name and return it
 			; using dynamic naming method													; if using dynamic naming method...
 			dp		:= this.CtrlDynProps													;  get ctrl dynamic name properties
-			guiName := (inclGui) ? dp.guiName : '""'										;  gui name
+			inclGui := (inclGui!='')														;  if caller specified whether gui name should be included or not...
+					? inclGui																;  ... honor caller's request
+					: !(gDynGuiNaming && !gV1GuiLine.HasOrigName)							;  ... otherwise, include gui name ONLY IF v1 line specified a name
+			guiName := (inclGui) ? dp.guiName : '""'										;  gui name (included or not)
 			return	gDynMapGC '[[' guiName ',' dp.ctrlID ']]'								;  return formated dyn var string
 		}
 	}

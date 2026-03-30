@@ -63,7 +63,7 @@ _5ButtonOK()
 _5ButtonOK(A_GuiEvent:="", A_GuiControl:="", Info:="", *) { ; V1toV2: Lbl->Func
 global
 (IsSet(A_GuiControl)) && SetDefaultGui(A_GuiControl)
-MyListBox1 := mV2GC[["5","MyListBox1"]].Text
+MyListBox1 := mV2GC[["","MyListBox1"]].Text
 DestroyGui("")
 ErrorLevel := ProcessSetPriority(MyListBox1, active_pid)
 if ErrorLevel

@@ -5,7 +5,7 @@ mV2Gui[""].SetFont("cWhite s12 bold")
 mV2GC[["","PC_Ping"]] := mV2Gui[""].Add("Button","ReadOnly x5 y5 h10 w100 0x10 vPC_Ping")
 mV2GC[["","User_Ping"]] := mV2Gui[""].Add("Button","ReadOnly x5 y485 h10 w100 0x10 vUser_Ping")
 mV2GC[["","Pong"]] := mV2Gui[""].Add("Button","ReadOnly x240 y240 h10 w10 0x10 vPong")
-mV2GC[["ping","Pong"]].Visible := false
+mV2GC[["","Pong"]].Visible := false
 
 mV2Gui[""].SetFont("cWhite s100 bold")
 mV2GC[["","T1"]] := mV2Gui[""].add("text","x200 y170 vT1","3")
@@ -34,6 +34,6 @@ Start_Game()
     Sleep(900)
     fcV2GC("ping","T" . A_Index).Visible := false ; V1toV2: Verify that control [T%A_Index%] is accurate
   }
-  mV2GC[["ping","Pong"]].Move(240, 240)
-  mV2GC[["ping","Pong"]].Visible := true
+  mV2GC[["","Pong"]].Move(240, 240)
+  mV2GC[["","Pong"]].Visible := true
 }

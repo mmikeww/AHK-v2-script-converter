@@ -1,5 +1,4 @@
-﻿; V1toV2: Must place v2DynGui.ahk in library folder
-#Include <v2DynGui>
+﻿#Include <v2DynGui> ; V1toV2: v2DynGui.ahk in library folder
 
 Start()
 
@@ -19,10 +18,10 @@ ShowGui(id) {
 }
 
 CreateGui() {
-  mV2Gui["v1Gui:hGui"] := NewV2Gui("v1Gui:hGui","+AlwaysOnTop +LastFound +ToolWindow  -DPIScale")
-  hGui := mV2Gui["v1Gui:hGui"].Hwnd
+  mV2Gui[""] := NewV2Gui("",1,"+AlwaysOnTop +LastFound +ToolWindow  -DPIScale")
+  hGui := mV2Gui[""].Hwnd
   WinSetTransparent(130)
-  mV2Gui["v1Gui:hGui"].BackColor := "00C8C8"
+  mV2Gui[""].BackColor := "00C8C8"
   Return hGui
 }
 

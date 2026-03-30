@@ -1,8 +1,14 @@
-﻿; V1toV2: Must place v2DynGui.ahk in library folder
-#Include <v2DynGui>
-If (!HasV2Gui("1")) {
-    mV2Gui["1"] := NewV2Gui("1")
+﻿#Include <v2DynGui> ; V1toV2: v2DynGui.ahk in library folder
+iniGuiCtrlVars() ; V1toV2: initialize gui ctrl vars
+If (!HasV2Gui("")) {
+    mV2Gui[""] := NewV2Gui("")
 }
-mV2Gui["1"].Add("Text",,"Please enter your name:")
-mV2GC[["1","Name"]] := mV2Gui["1"].Add("Edit","vName")
-mV2Gui["1"].Show()
+mV2Gui[""].Add("Text",,"Please enter your name:")
+mV2GC[["","Name"]] := mV2Gui[""].Add("Edit","vName")
+mV2Gui[""].Show()
+
+;##############################################
+iniGuiCtrlVars() { ; V1toV2: initializes gui control variables
+    global
+    Name := ""
+}

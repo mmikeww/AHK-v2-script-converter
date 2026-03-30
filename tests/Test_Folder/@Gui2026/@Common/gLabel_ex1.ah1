@@ -1,4 +1,4 @@
-Gui, Add, Button, vThing gThing, Thing
+Gui, Add, Button, vThingVar gThing, Thing
 Gui, Show
 return
 

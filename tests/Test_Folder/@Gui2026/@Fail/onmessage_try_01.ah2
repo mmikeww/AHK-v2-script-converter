@@ -1,11 +1,10 @@
-﻿; V1toV2: Must place v2DynGui.ahk in library folder
-#Include <v2DynGui>
+﻿#Include <v2DynGui> ; V1toV2: v2DynGui.ahk in library folder
 #SingleInstance Force
 Persistent
-If (!HasV2Gui("1")) {
-    mV2Gui["1"] := NewV2Gui("1")
+If (!HasV2Gui("")) {
+    mV2Gui[""] := NewV2Gui("")
 }
-mV2Gui["1"].Opt("+LastFound")
+mV2Gui[""].Opt("+LastFound")
 hWnd := WinExist()
 
 DllCall("RegisterShellHookWindow", "UInt", WinExist())

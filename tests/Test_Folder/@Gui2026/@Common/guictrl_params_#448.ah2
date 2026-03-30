@@ -1,13 +1,13 @@
-﻿; V1toV2: Must place v2DynGui.ahk in library folder
-#Include <v2DynGui>
-If (!HasV2Gui("1")) {
-    mV2Gui["1"] := NewV2Gui("1")
+﻿#Include <v2DynGui> ; V1toV2: v2DynGui.ahk in library folder
+If (!HasV2Gui("")) {
+    mV2Gui[""] := NewV2Gui("")
 }
-mV2GC[["1","ClickMe"]] := mV2Gui["1"].Add("Button",,"Click Me")
-mV2GC[["1","ClickMe"]].OnEvent("Click",MyFunction.Bind("Normal"))
-mV2Gui["1"].Show()
+mV2GC[["","ClickMe"]] := mV2Gui[""].Add("Button",,"Click Me")
+mV2GC[["","ClickMe"]].OnEvent("Click",MyFunction.Bind("Normal"))
+mV2Gui[""].Show()
 return
 
 MyFunction(GuiEvent:="", CtrlHwnd:="", EventInfo:="", *) {
+    (IsSet(CtrlHwnd)) && SetDefaultGui(CtrlHwnd)
     MsgBox("CtrlHwnd:`t" CtrlHwnd.hwnd "`nEvent:`t" GuiEvent "`nInfo:`t" EventInfo)
 }

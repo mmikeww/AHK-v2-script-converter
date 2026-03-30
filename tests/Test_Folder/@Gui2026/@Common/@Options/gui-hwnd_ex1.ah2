@@ -1,21 +1,20 @@
-﻿; V1toV2: Must place v2DynGui.ahk in library folder
-#Include <v2DynGui>
-If (!HasV2Gui("1")) {
-    mV2Gui["1"] := NewV2Gui("1")
+﻿#Include <v2DynGui> ; V1toV2: v2DynGui.ahk in library folder
+If (!HasV2Gui("")) {
+    mV2Gui[""] := NewV2Gui("")
 }
-myVar := mV2Gui["1"].Hwnd
-mV2Gui["1"].Opt("+AlwaysOnTop -Caption +Owner +LastFound")
-myVar := mV2Gui["1"].Hwnd
-mV2Gui["1"].Opt("+AlwaysOnTop -Caption +Owner +LastFound")
-myVar := mV2Gui["1"].Hwnd
-mV2Gui["1"].Opt("+AlwaysOnTop -Caption +Owner +LastFound")
-myVar := mV2Gui["1"].Hwnd
+myVar := mV2Gui[""].Hwnd
+mV2Gui[""].Opt("+AlwaysOnTop -Caption +Owner +LastFound")
+myVar := mV2Gui[""].Hwnd
+mV2Gui[""].Opt("+AlwaysOnTop -Caption +Owner +LastFound")
+myVar := mV2Gui[""].Hwnd
+mV2Gui[""].Opt("+AlwaysOnTop -Caption +Owner +LastFound")
+myVar := mV2Gui[""].Hwnd
 
-var1 := mV2Gui["1"].Hwnd
-var2 := mV2Gui["1"].Hwnd
-mV2Gui["1"].Opt("-Caption")
-var1 := mV2Gui["1"].Hwnd
-var2 := mV2Gui["1"].Hwnd
-mV2Gui["1"].Opt("+AlwaysOnTop -Caption +Owner +LastFound")
-var1 := mV2Gui["1"].Hwnd
-var2 := mV2Gui["1"].Hwnd
+var1 := mV2Gui[""].Hwnd
+var2 := mV2Gui[""].Hwnd
+mV2Gui[""].Opt("-Caption")
+var1 := mV2Gui[""].Hwnd
+var2 := mV2Gui[""].Hwnd
+mV2Gui[""].Opt("+AlwaysOnTop -Caption +Owner +LastFound")
+var1 := mV2Gui[""].Hwnd
+var2 := mV2Gui[""].Hwnd

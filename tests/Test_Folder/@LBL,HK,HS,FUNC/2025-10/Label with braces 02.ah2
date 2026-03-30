@@ -32,7 +32,7 @@ return
 
 ;###############  V1toV2 FUNCS  ###############
 HK2_lbutton() { ; V1toV2: HK->Func
-global
+	global
 
 	label_with_braces() ; V1toV2: Gosub
 
@@ -41,7 +41,7 @@ return
 ;##############################################
 label_with_braces()
 { ; V1toV2: Lbl->Func
-;global
+	;global
 	MsgBox("label with braces")
 	; return
 
@@ -64,7 +64,7 @@ exit()
 }
 ;##############################################
 exit() { ; V1toV2: Lbl->Func
-global
+	global
 	MsgBox("exiting")
 	ExitApp()
 }

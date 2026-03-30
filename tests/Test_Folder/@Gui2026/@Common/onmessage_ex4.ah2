@@ -1,13 +1,13 @@
-﻿; V1toV2: Must place v2DynGui.ahk in library folder
-#Include <v2DynGui>
+﻿#Include <v2DynGui> ; V1toV2: v2DynGui.ahk in library folder
+iniGuiCtrlVars() ; V1toV2: initialize gui ctrl vars
 #Warn Unreachable, Off
-If (!HasV2Gui("1")) {
-    mV2Gui["1"] := NewV2Gui("1")
-    mV2Gui["1"].OnEvent("Close",GuiClose)
+If (!HasV2Gui("")) {
+    mV2Gui[""] := NewV2Gui("")
+    mV2Gui[""].OnEvent("Close",GuiClose)
 }
-mV2Gui["1"].Add("Text",,"Click anywhere in this window.")
-mV2GC[["1","MyEdit"]] := mV2Gui["1"].Add("Edit","w200 vMyEdit")
-mV2Gui["1"].Show()
+mV2Gui[""].Add("Text",,"Click anywhere in this window.")
+mV2GC[["","MyEdit"]] := mV2Gui[""].Add("Edit","w200 vMyEdit")
+mV2Gui[""].Show()
 On()
 return
 
@@ -37,5 +37,11 @@ On() {
 ;###############  V1toV2 FUNCS  ###############
 GuiClose(*) { ; V1toV2: Lbl->Func
 global
+(IsSet(A_GuiControl)) && SetDefaultGui(A_GuiControl)
 ExitApp()
+}
+;##############################################
+iniGuiCtrlVars() { ; V1toV2: initializes gui control variables
+    global
+    MyEdit := ""
 }

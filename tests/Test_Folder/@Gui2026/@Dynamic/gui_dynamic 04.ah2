@@ -1,5 +1,4 @@
-﻿; V1toV2: Must place v2DynGui.ahk in library folder
-#Include <v2DynGui>
+﻿#Include <v2DynGui> ; V1toV2: v2DynGui.ahk in library folder
 ; https://www.autohotkey.com/boards/viewtopic.php?p=581354#p581354
 
 Margin := 20

@@ -14,7 +14,7 @@ Return
 
 ;###############  V1toV2 FUNCS  ###############
 MouseClickHandler() { ; V1toV2: Lbl->Func
-global
+    global
     MsgBox("MouseClickHandler")
     return
 }

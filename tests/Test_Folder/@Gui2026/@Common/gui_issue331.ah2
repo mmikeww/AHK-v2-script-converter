@@ -1,8 +1,7 @@
-﻿; V1toV2: Must place v2DynGui.ahk in library folder
-#Include <v2DynGui>
+﻿#Include <v2DynGui> ; V1toV2: v2DynGui.ahk in library folder
 v := "test gui"
-If (!HasV2Gui("1")) {
-    mV2Gui["1"] := NewV2Gui("1")
+If (!HasV2Gui("")) {
+    mV2Gui[""] := NewV2Gui("")
 }
-mV2Gui["1"].Title := v
-mV2Gui["1"].Show("w250 h100")
+mV2Gui[""].Title := v
+mV2Gui[""].Show("w250 h100")

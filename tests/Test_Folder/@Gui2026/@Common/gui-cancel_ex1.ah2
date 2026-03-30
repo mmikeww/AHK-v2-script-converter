@@ -1,12 +1,11 @@
-﻿; V1toV2: Must place v2DynGui.ahk in library folder
-#Include <v2DynGui>
+﻿#Include <v2DynGui> ; V1toV2: v2DynGui.ahk in library folder
 #Warn Unreachable, Off
-If (!HasV2Gui("1")) {
-    mV2Gui["1"] := NewV2Gui("1")
+If (!HasV2Gui("")) {
+    mV2Gui[""] := NewV2Gui("")
 }
-mV2GC[["1","OK"]] := mV2Gui["1"].Add("Button",,"OK")
-mV2GC[["1","OK"]].OnEvent("Click",ButtonOK.Bind("Normal"))
-mV2Gui["1"].Show()
+mV2GC[["","OK"]] := mV2Gui[""].Add("Button",,"OK")
+mV2GC[["","OK"]].OnEvent("Click",ButtonOK.Bind("Normal"))
+mV2Gui[""].Show()
 Return
 
 ButtonOK:
@@ -16,5 +15,6 @@ return
 ;###############  V1toV2 FUNCS  ###############
 ButtonOK(A_GuiEvent:="", A_GuiControl:="", Info:="", *) { ; V1toV2: Lbl->Func
 global
-mV2Gui["1"].Hide()
+(IsSet(A_GuiControl)) && SetDefaultGui(A_GuiControl)
+mV2Gui[""].Hide()
 }

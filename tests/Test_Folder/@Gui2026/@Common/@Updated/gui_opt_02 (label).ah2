@@ -1,5 +1,4 @@
-﻿; V1toV2: Must place v2DynGui.ahk in library folder
-#Include <v2DynGui>
+﻿#Include <v2DynGui> ; V1toV2: v2DynGui.ahk in library folder
 #Warn Unreachable, Off
 If (!HasV2Gui("MyGui")) {
     mV2Gui["MyGui"] := NewV2Gui("MyGui")
@@ -22,12 +21,14 @@ ExitApp()
 ;###############  V1toV2 FUNCS  ###############
 MainEscape(*) { ; V1toV2: Lbl->Func
 global
+(IsSet(A_GuiControl)) && SetDefaultGui(A_GuiControl)
 MsgBox("Escape")
 return
 }
 ;##############################################
 MainClose(*) { ; V1toV2: Lbl->Func
 global
+(IsSet(A_GuiControl)) && SetDefaultGui(A_GuiControl)
 MsgBox("Closing")
 ExitApp()
 }

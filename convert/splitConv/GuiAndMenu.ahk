@@ -676,6 +676,8 @@ _splitParam(prm) {
 ;################################################################################
 _getCtrlDetails(guiName, ctrlID, oCtrlID, &cObj:='', &cType:='') {
 ; 2026-03-11 AMB, ADDED - to get ctrlObj and ctrlType for dynamic handling
+; 2026-03-29 AMB, UPDATED
+; THIS FUNC ONLY APPLIES WHEN using dynamic gui naming
 
 	global gEOLComment_Func
 
@@ -693,9 +695,10 @@ _getCtrlDetails(guiName, ctrlID, oCtrlID, &cObj:='', &cType:='') {
 		dynLC := true, badCtrlID := !!(oCtrlID)															; ...	set flags to process below
 	}
 
+	gn := (guiName) ? ToExp(guiName,1,1) : '""'															; gui name (formatted)
 	; process results of previous checks
 	if (dynLC) {																						; if dynamic lookup should be performed...
-		cObj	 := gDynFncGC '(' ToExp(guiName,1,1) ',' ToExp(ctrlID,1,1) ')'							; ... create a dynamic lookup call
+		cObj	 := gDynFncGC '(' gn ',' ToExp(ctrlID,1,1) ')'											; ... create a dynamic lookup call
 		cTypeKey := guiName '_' ccid																	; ... BUILD mapKey used to id the ctrlType
 	}
 	if (badCtrlID) {																					; if ctrlID not identified...
@@ -729,15 +732,20 @@ isV2Params(params) {									; 2026-03-08 AMB, ADDED
 	return (params ~= nV2Params)
 }
 ;################################################################################
-updateGuiCBPrms(params, &v2PStr:='', &v1P1:='') {		; 2026-03-08 AMB, ADDED							; handles v1 to v2 param conversion for addGuiCBArgs()
+updateGuiCBPrms(params, &v2PStr:='', &v1P1:='',&P2Name:='') {											; handles v1 to v2 param conversion for addGuiCBArgs()
+; 2026-03-08 AMB, ADDED: handles v1 to v2 param conversion for addGuiCBArgs()
+; 2026-03-29 AMB, UPDATED: to return param 1 as param 2
+
 	v1Parr	:= V1ParamSplit(params)																		; extract current v1 params into array
 	v2Parr	:= ['A_GuiControl:=""','A_GuiEvent:=""','Info:=""']											; intended v2 params, (p1/p2 are intentionally swapped)
+	P1Name	:= 'A_GuiControl'																			; ini, incase v1 param 1
 	; preserve v1 param names when possible
 	for idx, val in v2Parr {																			; for each param in v2 array...
 		if (v1Parr.Has(idx) && v1Parr[idx]) {															; ... if an orig v1 param was provided
 			v1Name		:= (Trim(v1Parr[idx],' :="'))													; ...	grab the v1 param name
 			v2Parr[idx]	:= v1Name . ':=""'																; ...	replace  v2 param name with v1 name (preserve empty val)
-			(idx=1) &&  v1P1 := v1Name																	; ...	save v1 param name for param 1 only
+			(idx=1)				&& v1P1	 := v1Name														; ...	save v1 param name for param 1 only
+			(idx=1  && v1Name)	&& P1Name:= v1Name														; ...	record param 1 name
 		}
 	}
 	p1 := v2Parr[1], v2Parr[1] := v2Parr[2], v2Parr[2] := p1											; swap p1/p2, so they are in correct v2 order
@@ -745,7 +753,36 @@ updateGuiCBPrms(params, &v2PStr:='', &v1P1:='') {		; 2026-03-08 AMB, ADDED						
 	for idx, val in v2Parr																				; for each v2 param...
 		v2PStr .= val ', '																				; ... add  v2 param to v2 param str
 	v2PStr	:= LTrim(v2PStr)																			; trim leading ws
+	P2Name	:= P1Name																					; set return value
 	return	; vars by reference
+}
+;################################################################################
+addDynGuiTracking(brcBlk, param) {																		; adds dynamic gui tracking to brace block
+; 2026-03-29 AMB, ADDED: adds dynamic gui tracking to passed function block
+; ONLY APPLIES when using dynamic gui naming and v1 code has dynamic gui attributes
+
+	if (!(gDynGuiNaming && gfHasDynamicGui))															; if v1 script does not have dynamic gui attributes...
+		return brcBlk																					; ... return src code (do not add dynamic gui tracking)
+	if (!param)																							; if param is empty...
+		return brcBlk																					; ... return src code (do not add dynamic gui tracking)
+	nBrcBlk := '(?s)^(\{(?<LWS>\s*)(?<guts>(?>[^{}]++|(?-3))*+)\})$'									; custom needle to include LWS extraction
+	if (!RegExMatch(brcBlk, nBrcBlk, &m))																; if src is not a properly formatted brace block...
+		return brcBlk																					; ... return src code (do not add dynamic gui tracking)
+	LWS		:= m.LWS, blkGuts := m.guts																	; grab lead ws and block contents
+	lead	:= '{' . LWS, nl := '`r`n', indent := ''													; ini
+	if (RegExMatch(LWS, '^\h*\v+(\h+)', &mIndent)) {													; if block has leading indent...
+		indent := mIndent[1]																			; ... capture indent
+	} else {																							; otherwise...
+		nGuts := '^(?is)^(?<lead>.+?global.*?\s+)(?<blk>.+)$'											; ... [needle for block that has global declaration]
+		if (RegExMatch(blkGuts, nGuts, &guts)) {														; ... if block has 'global landmark'...
+			lead	.= guts.lead, blkGuts := guts.blk													; ...	split block using 'global' as delimiter
+			indent	:= Trim(RegExReplace(lead, '(?s)^.+?(\h*)$', '$1'),'`r`n')							; ...	capture indent
+		}
+	}
+	nl		.= indent																					; add indent to CRLF
+	trakStr	:= '(IsSet(' param ')) && SetDefaultGui(' param ')'	nl										; v2 cmd to pass param for DefaultGui tracking in real-time
+	out		:= '{' . LWS . trakStr . blkGuts . '}'														; assemble final block
+	return	out																							; return updated block contents
 }
 ;################################################################################
 addGuiCBArgs(&code) {
@@ -753,6 +790,7 @@ addGuiCBArgs(&code) {
 ; 2026-02-07 AMB, UPDATED needle to prevent false positive with [`r`n`t]
 ; 2026-02-22 AMB, UPDATED to provide better support for existing/missing params (again)
 ; 2026-03-08 AMB, UPDATED to provide better support for existing/missing params (again)
+; 2026-03-29 AMB, UPDATED to add dynamic gui tracking to function blocks
 
 	; add Gui params to callback functions, as needed
 	nCommon		:= '^\h*(?<fName>(?<!``)[_a-z]\w*+)(?<fArgG>\((?<Args>(?>[^()]|\((?&Args)\))*+)'
@@ -778,10 +816,11 @@ addGuiCBArgs(&code) {
 		if (isV2Params(v1Prms))																			; if v1 params are already in v2 format...
 			continue																					; ... skip - no update required
 		; param updates are required
-		updateGuiCBPrms(v1Prms, &v2PStr:='', &v1P1:='')													; convert v1 params to v2 format, but preserve v1 names
+		updateGuiCBPrms(v1Prms, &v2PStr:='', &v1P1:='', &P2Name:='')									; convert v1 params to v2 format, but preserve v1 names
 		; update any references to v1P1 within func block (add .hwnd)
 		brcBlk	:= oBrcBlk := m.brcBlk																	; extract func brace-block
 		brcBlk	:= (v1P1) ? RegExReplace(oBrcBlk,'\b' v1P1 '\b',v1P1 '.hwnd') : brcBlk					; add .hwnd to v1P1 references within brace-block
+		brcBlk	:= addDynGuiTracking(brcBlk, P2Name)													; add dynamic gui tracking, as needed
 		; update code with changes
 		newArgs	:= '(' LWS v2PStr '*' TWS ')'															; assemble final param string, preserving lead/trail ws
 		newFunc	:= RegExReplace(m[], 	'\Q' argList '\E',	newArgs,,1	 )								; replace func params

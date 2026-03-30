@@ -1,16 +1,16 @@
-﻿; V1toV2: Must place v2DynGui.ahk in library folder
-#Include <v2DynGui>
+﻿#Include <v2DynGui> ; V1toV2: v2DynGui.ahk in library folder
+iniGuiCtrlVars() ; V1toV2: initialize gui ctrl vars
 #Warn Unreachable, Off
-If (!HasV2Gui("1")) {
-    mV2Gui["1"] := NewV2Gui("1")
-    mV2Gui["1"].OnEvent("Close",GuiClose)
-    mV2Gui["1"].OnEvent("Escape",GuiEscape)
+If (!HasV2Gui("")) {
+    mV2Gui[""] := NewV2Gui("")
+    mV2Gui[""].OnEvent("Close",GuiClose)
+    mV2Gui[""].OnEvent("Escape",GuiEscape)
 }
-mV2Gui["1"].Add("Text",,"Type a key name and click Convert.")
-mV2GC[["1","KeyName"]] := mV2Gui["1"].Add("Edit","vKeyName w50","vk4C")
-mV2GC[["1","Convert"]] := mV2Gui["1"].Add("Button","Default","Convert")
-mV2GC[["1","Convert"]].OnEvent("Click",ButtonConvert.Bind("Normal"))
-mV2Gui["1"].Show()
+mV2Gui[""].Add("Text",,"Type a key name and click Convert.")
+mV2GC[["","KeyName"]] := mV2Gui[""].Add("Edit","vKeyName w50","vk4C")
+mV2GC[["","Convert"]] := mV2Gui[""].Add("Button","Default","Convert")
+mV2GC[["","Convert"]].OnEvent("Click",ButtonConvert.Bind("Normal"))
+mV2Gui[""].Show()
 return
 ButtonConvert:
 ButtonConvert()
@@ -38,8 +38,8 @@ GetKeyChar(Key, WinTitle:=0)
 ;###############  V1toV2 FUNCS  ###############
 ButtonConvert(A_GuiEvent:="", A_GuiControl:="", Info:="", *) { ; V1toV2: Lbl->Func
 global
-oSaved := mV2Gui[gCurGuiID].Submit(0)
-Try KeyName := oSaved.KeyName
+(IsSet(A_GuiControl)) && SetDefaultGui(A_GuiControl)
+V2DSResult := V2DynSubmit(mV2Gui[A_DefaultGui],0)
 MsgBox("GetKeyName: " GetKeyName(KeyName)
     .  "`nGetKeyChar: " GetKeyChar(KeyName))
 return
@@ -47,10 +47,17 @@ return
 ;##############################################
 GuiClose(*) { ; V1toV2: Lbl->Func
 global
+(IsSet(A_GuiControl)) && SetDefaultGui(A_GuiControl)
 GuiEscape()
 }
 ;##############################################
 GuiEscape(*) { ; V1toV2: Lbl->Func
 global
+(IsSet(A_GuiControl)) && SetDefaultGui(A_GuiControl)
 ExitApp()
+}
+;##############################################
+iniGuiCtrlVars() { ; V1toV2: initializes gui control variables
+    global
+    KeyName := ""
 }

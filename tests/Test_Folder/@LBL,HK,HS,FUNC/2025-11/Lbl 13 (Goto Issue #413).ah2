@@ -11,7 +11,7 @@ return
 
 ;###############  V1toV2 FUNCS  ###############
 lbl1() { ; V1toV2: Lbl->Func
-global
+ global
  n := 1
  if n
  {

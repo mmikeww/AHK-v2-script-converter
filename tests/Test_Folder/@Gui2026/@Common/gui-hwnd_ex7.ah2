@@ -1,8 +1,7 @@
-﻿; V1toV2: Must place v2DynGui.ahk in library folder
-#Include <v2DynGui>
-If (!HasV2Gui("1")) {
-    mV2Gui["1"] := NewV2Gui("1")
+﻿#Include <v2DynGui> ; V1toV2: v2DynGui.ahk in library folder
+If (!HasV2Gui("")) {
+    mV2Gui[""] := NewV2Gui("")
 }
-mV2GC[["1","Var"]] := mV2Gui["1"].Add("Text",,"Text")
-Var := mV2GC[["1","Var"]].hwnd
-mV2Gui["1"].Show("w200 h200")
+mV2GC[["","Var"]] := mV2Gui[""].Add("Text",,"Text")
+Var := mV2GC[["","Var"]].hwnd
+mV2Gui[""].Show("w200 h200")

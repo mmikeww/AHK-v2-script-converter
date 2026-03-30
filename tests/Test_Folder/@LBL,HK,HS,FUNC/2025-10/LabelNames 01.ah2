@@ -82,61 +82,61 @@ IThoughtIWasAFunc_param1______()
 
 ;###############  V1toV2 FUNCS  ###############
 __notACommentAnymore() { ; V1toV2: Lbl->Func
-global
+	global
 	MsgBox("`;notACommentAnymore")
 	return
 }
 ;##############################################
 _A_Desktop__List_txt() { ; V1toV2: Lbl->Func
-global
+	global
 	MsgBox("%A_Desktop%\List.txt")
 	return
 }
 ;##############################################
 _Persistent() { ; V1toV2: Lbl->Func
-global
+	global
 	MsgBox("#Persistent")
 	return
 }
 ;##############################################
 MYLABEL() { ; V1toV2: Lbl->Func
-global
+	global
 	MsgBox("MYLABEL")
 	return
 }
 ;##############################################
 _1★a★b★c() { ; V1toV2: Lbl->Func
-global
+	global
 	MsgBox("1★a★b★c")
 	return
 }
 ;##############################################
 _a() { ; V1toV2: Lbl->Func
-global
+	global
 	MsgBox(":a")
 	return
 }
 ;##############################################
 c__user_desktop_List_txt() { ; V1toV2: Lbl->Func
-global
+	global
 	MsgBox("c:\user\desktop\List.txt")
 	return
 }
 ;##############################################
 _w________() { ; V1toV2: Lbl->Func
-global
+	global
 	MsgBox("\w+\(.*?\)")
 	return
 }
 ;##############################################
 _3_14_2() { ; V1toV2: Lbl->Func
-global
+	global
 	MsgBox("3.14")
 	return
 }
 ;##############################################
 _3_14_3() { ; V1toV2: Lbl->Func
-global
+	global
 	MsgBox("3-14")
 	return
 }
@@ -149,13 +149,13 @@ return
 }
 ;##############################################
 ★a★b★c() { ; V1toV2: Lbl->Func
-global
+	global
 	MsgBox("★a★b★c")
 	return
 }
 ;##############################################
 IThoughtIWasAFunc_param1______() { ; V1toV2: Lbl->Func
-global
+	global
 	MsgBox("IThoughtIWasAFunc(param1:=`"){")
 	return
 }

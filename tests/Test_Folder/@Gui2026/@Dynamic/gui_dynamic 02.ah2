@@ -1,5 +1,4 @@
-﻿; V1toV2: Must place v2DynGui.ahk in library folder
-#Include <v2DynGui>
+﻿#Include <v2DynGui> ; V1toV2: v2DynGui.ahk in library folder
 g := guiTest()
 g._show()
 
@@ -7,11 +6,11 @@ Class guiTest
 {
   __new()
   {
-    mV2Gui["v1Gui:hwnd"] := NewV2Gui("v1Gui:hwnd")
-    hwnd := mV2Gui["v1Gui:hwnd"].Hwnd
+    mV2Gui[""] := NewV2Gui("",1)
+    hwnd := mV2Gui[""].Hwnd
     this.hwnd := hwnd
-    mV2GC[["v1Gui:hwnd","hwndB1"]] := mV2Gui["v1Gui:hwnd"].Add("Button",,hwnd " (B1)")
-    mV2Gui["v1Gui:hwnd"].Show("w400 h300")
+    mV2GC[["","hwndB1"]] := mV2Gui[""].Add("Button",,hwnd " (B1)")
+    mV2Gui[""].Show("w400 h300")
   }
 
   _show()

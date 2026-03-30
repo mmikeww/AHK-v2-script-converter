@@ -10,6 +10,7 @@ Gui add, button,,button 3
 Gui, Default
 Gui add, button,,button 4
 
+; NOTE: button 5 is incorrectly added to gui 1 during conversion, but to gui 2 at execution (correctly)
 guiName := "2"
 Gui, %guiName%:Default
 Gui add, button,,button 5

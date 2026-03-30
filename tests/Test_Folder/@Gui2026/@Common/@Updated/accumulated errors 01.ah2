@@ -1,5 +1,5 @@
-﻿; V1toV2: Must place v2DynGui.ahk in library folder
-#Include <v2DynGui>
+﻿#Include <v2DynGui> ; V1toV2: v2DynGui.ahk in library folder
+iniGuiCtrlVars() ; V1toV2: initialize gui ctrl vars
 
 is_arr := { (tree): 1 }
 
@@ -422,24 +422,24 @@ retStr := RegExReplace(retStr, "(?m)^((?:(?>`"[^`"\v]*`"|[^`"\v;]*)*)*)(;.*)+", 
 
 ;################################################################################
 
-   If (!HasV2Gui("1")) {
-   	mV2Gui["1"] := NewV2Gui("1")
+   If (!HasV2Gui("")) {
+   	mV2Gui[""] := NewV2Gui("")
    }
-   mV2Gui["1"].MarginX := 20, mV2Gui["1"].MarginY := 20
-   mV2GC[["1","Order1234"]] := mV2Gui["1"].Add("Button","ym","Order 1, 2, 3, 4")
-   mV2GC[["1","Order3214"]] := mV2Gui["1"].Add("Button","ym","Order 3, 2, 1, 4")
-   mV2GC[["1","RemoveBkImage"]] := mV2Gui["1"].Add("Button","ym","Remove BkImage")
-   mV2GC[["1","NewBkImage"]] := mV2Gui["1"].Add("Button","ym","New BkImage")
-   mV2Gui["1"].Add("Text","xm Section h20","First visible row:")
-   mV2Gui["1"].Add("Text","hp y+0","Is row 20 visible?")
-   mV2Gui["1"].Add("Text","hp y+0","Number of visible rows:")
-   mV2GC[["1","FVR"]] := mV2Gui["1"].Add("Text","ys hp vFVR","00")
-   mV2GC[["1","IRV"]] := mV2Gui["1"].Add("Text","hp y+0 vIRV","00")
-   mV2GC[["1","NOVR"]] := mV2Gui["1"].Add("Text","hp y+0 vNOVR","00")
-   mV2GC[["1","NewCheck"]] := mV2Gui["1"].Add("Button","ys","New Check")
-   mV2GC[["1","VLV"]] := mV2Gui["1"].Add("Listview","xm w500 r10 Grid cWhite vVLV",["Col 1","Col 2","Col 3","Icon"])
-   HLV := mV2GC[["1","VLV"]].hwnd
-   global gV2CurLV := mV2GC[["1","VLV"]] ; add -LV0x20 on Win XP
+   mV2Gui[""].MarginX := 20, mV2Gui[""].MarginY := 20
+   mV2GC[["","Order1234"]] := mV2Gui[""].Add("Button","ym","Order 1, 2, 3, 4")
+   mV2GC[["","Order3214"]] := mV2Gui[""].Add("Button","ym","Order 3, 2, 1, 4")
+   mV2GC[["","RemoveBkImage"]] := mV2Gui[""].Add("Button","ym","Remove BkImage")
+   mV2GC[["","NewBkImage"]] := mV2Gui[""].Add("Button","ym","New BkImage")
+   mV2Gui[""].Add("Text","xm Section h20","First visible row:")
+   mV2Gui[""].Add("Text","hp y+0","Is row 20 visible?")
+   mV2Gui[""].Add("Text","hp y+0","Number of visible rows:")
+   mV2GC[["","FVR"]] := mV2Gui[""].Add("Text","ys hp vFVR","00")
+   mV2GC[["","IRV"]] := mV2Gui[""].Add("Text","hp y+0 vIRV","00")
+   mV2GC[["","NOVR"]] := mV2Gui[""].Add("Text","hp y+0 vNOVR","00")
+   mV2GC[["","NewCheck"]] := mV2Gui[""].Add("Button","ys","New Check")
+   mV2GC[["","VLV"]] := mV2Gui[""].Add("Listview","xm w500 r10 Grid cWhite vVLV",["Col 1","Col 2","Col 3","Icon"])
+   HLV := mV2GC[["","VLV"]].hwnd
+   global gV2CurLV := mV2GC[["","VLV"]] ; add -LV0x20 on Win XP
 
 
 ;################################################################################
@@ -585,4 +585,10 @@ F12::	; lock to vert axis movement only
 LockAxis(lock:=false, x1:=0 , y1:=0, x2:=1, y2:=1) {
 	R := Buffer(16, 0),NumPut("UPtr", x1, R.Ptr+0),NumPut("UPtr", y1, R.Ptr+4),NumPut("UPtr", x2, R.Ptr+8),NumPut("UPtr", y2, R.Ptr+12) ; V1toV2: if 'R' is a UTF-16 string, use 'VarSetStrCapacity(&R, 16)' and replace all instances of 'R.Ptr' with 'StrPtr(R)'
 	return (lock) ? DllCall("ClipCursor", "UInt", R.Ptr) : DllCall("ClipCursor")
+}
+
+;##############################################
+iniGuiCtrlVars() { ; V1toV2: initializes gui control variables
+    global
+    VLV := ""
 }

@@ -344,6 +344,7 @@ class clsSection
 		return srcStr
 	}
 	;################################################################################
+	; 2026-03-29 AMB, UPDATED to add global gHasV2Funcs
 	Static _buildFuncsList()																; gathers all new funcs into single string
 	{
 		if (!funcListStr := this._makeFuncsStr()) {											; if funcListStr creation is NOT successful...
@@ -351,6 +352,7 @@ class clsSection
 		}
 		div			:= StrReplace(Format('{:15}',''),' ','#')								; generic divider
 		divline		:= '`r`n`r`n`;' div '  V1toV2 FUNCS  ' div								; mark very top of func list
+		global		gHasV2Funcs := true														; 2026-03-29 ADDED
 		return		divLine . funcListStr													; return func list string
 	}
 	;################################################################################
@@ -674,6 +676,8 @@ class clsSection
 	;################################################################################
 	Static _makeFuncHK(&obj)																; creates BrcBlk/func (and funcCall) from HK code, as needed
 	{
+	; 2026-03-29 AMB, UPDATED: to fix missing indent
+
 		if (obj._tType != 'HK'																; if not a HK...
 		||  obj.L1.cmd) {																	; ... OR HK has cmd on its own line...
 			return ''																		; ... no processing req here
@@ -693,8 +697,9 @@ class clsSection
 		; does HK block/body already have braces?
 		if (bbObj := isBraceBlock(blk)) {													; if body already has braces...
 			blk			:= bbObj.bbc														; extract just the guts of that body (without braces)
-			blk			:= '`;global' blk													; add global keyword, but comment out (will be used as landmark later)
-			funcName	:= getV2Name(lblName)
+			indent		:= RegExReplace(Trim(blk,'`r`n'), '(?s)^(\h*).*', '$1')				; get block indent
+			blk			:= indent '`;global' blk											; add global keyword, but comment out (will be used as landmark later)
+			funcName	:= getV2Name(lblName)												; v2 func name
 			func_DnC	:= funcName '()'													; create func declaration/call, with no params
 			obj.Line1	:= obj.L1.LWS obj.L1.decl func_DnC obj.L1.TC						; add any ws and trailing comments to func call for HK line
 			outFunc		:= func_DnC bbObj.TCT '{' convMsg '`r`n' blk '}'					; create entire func
@@ -705,8 +710,9 @@ class clsSection
 		}
 
 		; body does not (already) have braces
-		blk	:= this._gotoToFC_new(blk)														; convert any Goto within HK code-block to funcCall
-		blk	:= 'global' blk																	; add global keyword to beginning of body/blk
+		blk		:= this._gotoToFC_new(blk)													; convert any Goto within HK code-block to funcCall
+		indent	:= RegExReplace(Trim(blk,'`r`n'), '(?s)^(\h*).*', '$1')						; get block indent
+		blk		:= indent 'global' blk														; add global keyword to beginning of body/blk
 		if (nextLink && !obj._xCmd) {														; if there is a next-logic-link, and no exit command...
 			if (nxSect := this.SectionObj[nextLink]) {										; ... get the section obj for the next link
 				blk .= '`r`n' nxSect.sect.FuncName '()'										; ... create funcCall for next-link, append call to body
@@ -726,6 +732,8 @@ class clsSection
 	; 2025-10-26 AMB, UPDATED
 	Static _makeFuncLBL(&obj)																; creates BrcBlk/func (and funcCall) from LBL code, as needed
 	{
+	; 2026-03-29 AMB, UPDATED: to add SetDefaultGui() and fix missing indent
+
 		if (obj._tType != 'LBL') {															; process for labels only
 			return ''
 		}
@@ -740,11 +748,16 @@ class clsSection
 		lblName	 := obj.LabelName															; get label name
 		convMsg	 := ' `; V1toV2: Lbl->Func'													; msg to user about new func creation
 		nextLink := this._nextLogicLink(lblName)											; get next link in logic-chain after this one (if present)
+		defGui	 := (gDynGuiNaming && gfHasDynamicGui)										; if using dynamic gui naming and script has dynamic attributes ...
+				 ?  '(IsSet(A_GuiControl)) && SetDefaultGui(A_GuiControl)'					; ... will apply SetDefaultGui() call, as needed
+				 :  ''																		; ... otherwise, set to empty
 
 		; does lbl block/body already have braces?
 		if (bbObj := isBraceBlock(blk)) {													; if body already has braces...
-			blk	:= bbObj.bbc																; extract just the guts of that body (without braces)
-			blk	:= '`;global' blk															; add global keyword, but comment out (will be used as landmark later)
+			blk		:= bbObj.bbc															; extract just the guts of that body (without braces)
+			indent	:= RegExReplace(Trim(blk,'`r`n'), '(?s)^(\h*).*', '$1')					; get block indent
+			defGui	:= (defGui) ? '`r`n' indent defGui : defGui								; apply SetDefaultGui() call, as needed
+			blk		:= indent '`;global' defGui blk											; update block with changes
 			if (nextLink && !obj._xCmd) {													; if there is a next-logic-link, and no exit command...
 				if (nxSect := this.SectionObj[nextLink]) {									; ... get the section obj for the next link
 					blk .= '`r`n' nxSect.sect.FuncName '()`r`n'								; ... create funcCall for next-link, append call to body
@@ -762,8 +775,10 @@ class clsSection
 		}
 
 		; body does not (already) have braces
-		blk	:= this._gotoToFC_new(blk)														; convert any Goto within LBL code-block to funcCall
-		blk	:= 'global' blk																	; add global keyword to beginning of body/blk
+		blk		:= this._gotoToFC_new(blk)													; convert any Goto within LBL code-block to funcCall
+		indent	:= RegExReplace(Trim(blk,'`r`n'), '(?s)^(\h*).*', '$1')						; get block indent
+		defGui	:= (defGui) ? '`r`n' indent defGui : defGui									; apply SetDefaultGui() call, as needed
+		blk		:= indent 'global' defGui blk												; update block with changes
 		if (nextLink && !obj._xCmd) {														; if there is a next-logic-link, and no exit command...
 			if (nxSect := this.SectionObj[nextLink]) {										; ... get the section obj for the next link
 				blk .= '`r`n' nxSect.sect.FuncName '()'										; ... create/add func call for next link
@@ -964,10 +979,50 @@ class clsSection
 		return {Line1:L1,Blk:blk,TCWS:TCWS}													; return separated parts
 	}
 	;################################################################################
+	Static _updateLblBlock(brcBlk, declare)													; updates block with A_GuiControl attributes
+	{
+	; 2026-03-29 AMB, ADDED
+
+		; TODO - MIGHT NEED TO REMOVE THIS VALIDATION ?
+		if (!InStr(declare,'A_GuiControl'))													; if func params do not contain A_GuiControl...
+			return brcBlk																	; ... do not update func block
+
+		nSetDef	:= '(?im)^\h*;?\(IsSet\(.+?SetDefaultGui\(.+\v+'							; needle for SetDefaultGui() calls
+		brcBlk	:= RegExReplace(brcBlk,nSetDef)												; remove SetDefaultGui() calls from block
+		nBrcBlk	:= '(?s)^(\{(?<LWS>\s*)(?<guts>(?>[^{}]++|(?-3))*+)\})$'					; needle to parse brace-block
+		if (!RegExMatch(brcBlk, nBrcBlk, &m))												; if srcStr is not a properly formatted brace block...
+			return brcBlk																	; ... return orig str
+
+		; split block into top/bottom section
+		LWS		:= m.LWS, blkGuts := m.guts													; grab lead ws and block contents
+		GCStr	:= '', setDef := '', lead := '{' . LWS, nl := '`r`n', indent := ''			; ini
+		if (RegExMatch(LWS, '^\h*\v+(\h+)', &mIndent)) {									; if block has leading indent...
+			indent := mIndent[1]															; ... capture indent
+		} else {																			; otherwise...
+			nGuts := '^(?is)^(?<lead>.+?global.*?\s+)(?<blk>.+)$'							; ... [needle for block that has global declaration]
+			if (RegExMatch(blkGuts, nGuts, &guts)) {										; ... if block has 'global landmark'...
+				lead	.= guts.lead, blkGuts := guts.blk									; ...	split block using 'global' as delimiter
+				indent	:= Trim(RegExReplace(lead, '(?s)^.+?(\h*)$', '$1'),'`r`n')			; ...	capture indent
+			}
+		}
+		nl .= indent																		; add indent to CRLF
+		if (gDynGuiNaming && gfHasDynamicGui) {												; if using dynamic namng and v1 script has dynamic gui attributes
+			param	:= 'A_GuiControl'														; ... set common param
+			setDef	:= '(IsSet(' param ')) && SetDefaultGui(' param ')' nl					; ... set SetDefaultGui() call (string)
+		}
+		if (InStr(declare,'A_GuiControl') && gaScriptStrsUsed.A_GuiControl) {				; if add A_GuiControl vars to block (as needed)
+			GCStr	:= 'A_GuiControl := (A_GuiControl.Name) '								; A_GuiControl replacement
+					. '? A_GuiControl.Name : (HasProp(A_GuiControl, "Text") '
+					. '? A_GuiControl.Text : A_GuiControl)'	nl
+		}
+		return lead . setDef . GCStr . blkGuts . '}'										; return updated block contents
+	}
+	;################################################################################
 	Static _updateLblToFuncs(code)															; applies A_GuiEvent/A_GuiControl params/vars, Regex replacements
 	{
 	; 2025-11-01 AMB, UPDATED key case-sensitivity for gmList_LblsToFunc
 	; 2026-02-22 AMB, UPDATED guiContStr
+	; 2026-03-29 AMB, UPDATED to move A_GuiControl addition to dedicted func
 
 		While(pos := RegexMatch(code,gPtn_Blk_FUNC, &mFunc, pos??1))						; for each func found in code...
 		{
@@ -982,13 +1037,8 @@ class clsSection
 			TCT		:= mFunc.TCT															; get code found between func declaration and brace-blk
 			L2F_Obj	:= gmList_LblsToFunc[funcName]											; get L2F object
 			declare	:= L2F_Obj.funcName '(' L2F_Obj.params ')'								; add any associated params to func declaration
-			if (InStr(declare,'A_GuiControl') && gaScriptStrsUsed.A_GuiControl) {			; add A_GuiControl vars to block (as needed)
-				guiContStr := 'A_GuiControl := (A_GuiControl.Name) '						; A_GuiControl replacement
-							. '? A_GuiControl.Name : (HasProp(A_GuiControl, "Text") '		; ...
-							. '? A_GuiControl.Text : A_GuiControl)'							; ...
-				brcBlk := RegExReplace(brcBlk, '(?im)^(`;?global)$', '$1`r`n' guiContStr)	; use 'global' keyword to determine placement of new vars
-			}
-			funcStr := declare . TCT . brcBlk												; rebuild func
+			brcBlk	:= this._updateLblBlock(brcBlk, declare)								; add A_GuiControl manipulations to brace block contents
+			funcStr	:= declare . TCT . brcBlk												; rebuild func
 			for idx, reObj in L2F_Obj.RegExList {											; apply regexs as needed
 				funcStr := this._applyRegex(funcStr, L2f_Obj.RegExList)						; perform ALL occurences of ALL needles
 			}
@@ -1167,22 +1217,25 @@ class ConvLabel
 ;################################################################################
 {
 ; 2025-11-01 AMB, ADDED - determines whether v1 script has specified label
-	return (gAllV1LabelNames ~= '(?i)\b' labelName ',')
+; 2026-03-29 AMB, UPDATED to mask regex special chars in needle
+	return (gAllV1LabelNames ~= '(?i)\b' escRegexChars(labelName) ',')
 }
 ;################################################################################
 														  scriptHasFunc(funcName)
 ;################################################################################
 {
 ; 2025-11-01 AMB, ADDED - determines whether v1 script has specified function
+; 2026-03-29 AMB, UPDATED to mask regex special chars in needle
 ; TODO - add support for detecting class methods as legit funcs
-	return (gAllFuncNames ~= '(?i)\b' funcName ',')
+	return (gAllFuncNames ~= '(?i)\b' escRegexChars(funcName) ',')
 }
 ;################################################################################
 														scriptHasClass(className)
 ;################################################################################
 {
 ; 2025-11-01 AMB, ADDED - determines whether v1 script has specified class
-	return (gAllClassNames ~= '(?i)\b' className ',')
+; 2026-03-29 AMB, UPDATED to mask regex special chars in needle
+	return (gAllClassNames ~= '(?i)\b' escRegexChars(className) ',')
 }
 ;################################################################################
 														  scriptHasMethod(srcStr)

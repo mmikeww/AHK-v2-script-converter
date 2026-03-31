@@ -285,7 +285,7 @@ class clsUserUI {																					; Gui handling
 		fClr				:= (isValid) ? 'cBlack' : 'cRed'										; set font color based on validity of name
 		(setClr)			&& ctrl.Opt(fClr)														; update ctrl with font color
 		(updateEx)			&& this._updateExample()												; update example text
-		(audio && !isValid) && DllCall("Kernel32.dll\Beep","UInt",350,"UInt",50)					; play sound if invalid (dllcall is faster than SoundBeep)
+		(audio && !isValid) && Soundbeep(350,25)													; play sound if invalid
 	}
 	;############################################################################
 	_validateCtrlPfx(name) {																		; determines whether ctrl prefix is valid

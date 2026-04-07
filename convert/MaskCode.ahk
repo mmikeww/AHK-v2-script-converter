@@ -28,6 +28,7 @@
 	2026-01-01,13,17,24		- UPDATED, see comments in code
 	2026-02-07				- UPDATED, see comments in code
 	2026-03-11,29			- UPDATED, see comments in code
+	2026-04-06				- moved validation class/funcs to validation.ahk
 
 	TODO
 		Finish support for Continuation sections
@@ -763,47 +764,6 @@ global	  gTagChar		:= chr(0x2605) ; '★'															; unique char to ensure 
 		;################################################################################
 	}
 	return
-}
-;################################################################################
-														   isValidVarName(srcStr)
-;################################################################################
-{
-; 2026-03-29 AMB, ADDED: returns whether srcStr can be used as a valid v2 variable name
-
-	return clsVarValidation.Validate(srcStr)
-}
-;################################################################################
-class clsVarValidation
-{
-; 2026-03-29 AMB, ADDED
-; use .Validate to determines whether a string can be used as a variable name
-; supports unicode strings
-
-	Static Validate(name,emptyOK:=false,resvOK:=false) {									; main validation
-		; name must be trimmed of whitespace, to be valid
-		if (emptyOK && name='')																; if empty string is allowed, and name is empty...
-			return true																		; ... return VALID
-		if (!this._IsValidVarSyntax(name))													; if name syntax is invalid
-			return false																	; ... return INVALID
-		return !(!resvOK && this._IsReserved(name))											; if resv not ok, but name is resv word, return false, otherwise true
-	}
-	;############################################################################
-	Static _IsReserved(name) {			; 2026-03-17 magic... THANK YOU @ntepa !			; determines whether name is ahk reserved word
-		; name must be trimmed of whitespace, to be valid
-		if (name ~= '[[:^ascii:]]')															; if name has any chars that are NOT ascii...
-			return false																	; ... is not a AHK reserved word
-		shell := ComObject('WScript.Shell')
-		exec := shell.Exec('AutoHotkey.exe /ErrorStdOut *')									; will execute a var assignment (dynamically) and report errors
-		exec.StdIn.Write(Format('FileAppend({} := 1, "*")', name))							; create dynamic var assignment, write to std in
-		exec.StdIn.Close()																	; close std in stream
-		return !exec.StdOut.ReadAll()														; return whether error occurred during var creation
-	}
-	;############################################################################
-	Static _IsValidVarSyntax(name) {														; must not begin with number, allows ascii/unicode chars
-		; name must be trimmed of whitespace, to be valid
-		; '(?i)^(?<c1>[_a-z]|([[:^ascii:]]))(?<c2>(?|\w|(?2))*)$'							; wth capture of 1st and remaining chars
-		return	(name ~= '(?i)^([_a-z]|([[:^ascii:]]))(\w|(?2))*$')
-	}
 }
 ;################################################################################
 Class IWTLFS

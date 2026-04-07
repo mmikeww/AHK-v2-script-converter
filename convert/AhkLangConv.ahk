@@ -142,26 +142,26 @@ _Drive(p) {
 ;################################################################################
 ; 2025-10-05 AMB, UPDATED - changed var name gfNoSideEffect to gfLockGlbVars
 ; 2025-11-28 AMB, UPDATED - prevent ampersand from being added to numbers
+; 2026-04-06 AMB, UPDATED - to fix #370
 _DllCall(p) {
 	ParBuffer := ""
-	global gfLockGlbVars
+	global gfLockGlbVars, gEOLComment_Func
 	loop p.Length {
-		if (p[A_Index] ~= "i)^U?(Str|AStr|WStr|Int64|Int|Short|Char|Float|Double|Ptr)P?\*?$") {
+		nPType := "i)^U?(Str|AStr|WStr|Int64|Int|Short|Char|Float|Double|Ptr)P?\*?$"
+		if (p[A_Index] ~= nPType) {
 			; Correction of old v1 DllCalls who forget to quote the types
 			p[A_Index] := '"' p[A_Index] '"'
 		}
-		NeedleRegEx := "(\*\s*0\s*\+\s*)(&)(\w*)"							; *0+&var split into 3 groups (*0+), (&), and (var)
-		;if (p[A_Index] ~= "^&") {											; Remove the & parameter
-		;p[A_Index] := SubStr(p[A_Index], 2)
-		;} else
-		if (RegExMatch(p[A_Index], NeedleRegEx)) {							; even if it's behind a *0 var assignment preceding it
-			gfLockGlbVars := 1												; lock global vars (no changes allowed)
-				V1toV2_Functions(ScriptString:=p[A_Index], Line:=p[A_Index], &v2:="", &gotFunc:=False)
-			gfLockGlbVars := 0												; unlock global vars (changes allowed)
+		NeedleRegEx := "(\*\s*0\s*\+\s*)(&)(\w*)"											; *0+&var split into 3 groups (*0+), (&), and (var)
+		if (RegExMatch(p[A_Index], NeedleRegEx)) {											; even if it's behind a *0 var assignment preceding it
+			gfLockGlbVars := 1																; lock global vars (no changes allowed)
+			 V1toV2_Functions(ScriptString:=p[A_Index], Line:=p[A_Index]
+											 , &v2:="", &gotFunc:=False)
+			gfLockGlbVars := 0																; unlock global vars (changes allowed)
 			if (commentPos:=InStr(v2,"`;")) {
 				v2 := SubStr(v2, 1, commentPos-1)
 			}
-			if (RegExMatch(v2, "VarSetStrCapacity\(&")) {					; guard var in StrPtr if UTF-16 passed as "Ptr"
+			if (RegExMatch(v2, "VarSetStrCapacity\(&")) {									; guard var in StrPtr if UTF-16 passed as "Ptr"
 				if (p.Has(A_Index-1) && (p[A_Index-1] = '"Ptr"')) {
 					p[A_Index] := RegExReplace(p[A_Index], NeedleRegEx,"$1StrPtr($3)")
 					dbgTT(3, "@DllCall: 1StrPtr", Time:=3,id:=9)
@@ -169,7 +169,7 @@ _DllCall(p) {
 					p[A_Index] := RegExReplace(p[A_Index], NeedleRegEx,"$1$3")
 					dbgTT(3, "@DllCall: 2NotPtr", Time:=3,id:=9)
 				}
-			} else if (RegExMatch(v2, "Buffer\(")) {						; leave only the variable,	_VarSetCapacity(p) should place the rest on a new line before this
+			} else if (RegExMatch(v2, "Buffer\(")) {										; leave only the variable,	_VarSetCapacity(p) should place the rest on a new line before this
 				p[A_Index] := RegExReplace(p[A_Index], ".*" NeedleRegEx,"$3")
 				dbgTT(3, "@DllCall: 3Buff", Time:=3,id:=9)
 			} else {
@@ -178,14 +178,24 @@ _DllCall(p) {
 			}
 		}
 		if (((A_Index !=1) && (mod(A_Index, 2) = 1)) && (InStr(p[A_Index - 1], "*`"")
-		|| InStr(p[A_Index - 1], "*`'") || InStr(p[A_Index - 1], "P`"") || InStr(p[A_Index - 1], "P`'"))) {
+		|| InStr(p[A_Index - 1], "*`'")
+		|| InStr(p[A_Index - 1], "P`"")
+		|| InStr(p[A_Index - 1], "P`'"))) {
 			; 2025-11-28 AMB, UPDATED - prevent ampersand from being added to numbers
-			if (!IsNumber(p[A_index])) {
-				p[A_Index] := "&" p[A_Index]
-			}
-			if (!InStr(p[A_Index], ":=")) {
-				; Disabled for now because of issue #54, but this can result in undefined variables...
-				; p[A_Index] .= " := 0"
+			; 2026-04-06 AMB, UPDATED - to fix #370
+			curVar := Trim(p[A_Index])														; get full param
+			if (!IsNumber(curVar)) {														; if var is not a number...
+				if (RegExMatch(curVar, '(.+?):=(.+)', &m))									; if param is an assignment...
+					curVar := Trim(m[1])													; ... grab just the var name
+				if (clsVarValidation.IsValidVarSyntax(curVar)) {							; if var is proper syntax...
+					if (clsVarValidation.IsV2Reserved(curVar)) {							; ... if var is a reserved v2 term...
+						userMsg := ' V1toV2: Variable name invalid '						; ... 	add msg FOR NOW
+						gEOLComment_Func .= userMsg . '[' curVar ']'						; ... 	add msg to line comment
+						p[A_Index] := "&" p[A_Index]										; ... 	TODO - ADD AMPERSAND ANYWAY - FOR NOW
+					} else {																; ... IS valid
+						p[A_Index] := "&" p[A_Index]										; ... 	add ampersand to beginning of var name
+					}
+				}
 			}
 		}
 		ParBuffer .= A_Index=1 ? p[A_Index] : ", " p[A_Index]

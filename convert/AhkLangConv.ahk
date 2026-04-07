@@ -60,12 +60,22 @@ _Control(p) {
 ; V1: ControlGet, OutputVar, SubCommand, Value, Control, WinTitle, WinText, ExcludeTitle, ExcludeText
 ; unfinished
 ; 2026-01-03 AMB, UPDATED - fixed indent issue
+; 2026-04-06 AMB, UPDATED - fix for #323 AND empty trailing params
 _ControlGet(p) {
 	if (p[2] = "Tab" || p[2] = "FindString") {
 		p[2] := "Index"
 	}
-	if (p[2] = "Checked" || p[2] = "Enabled" || p[2] = "Visible" || p[2] = "Index" || p[2] = "Choice" || p[2] = "Style" || p[2] = "ExStyle") {
+	if (p[2] = "Enabled" || p[2] = "Visible" || p[2] = "Index" || p[2] = "Choice" || p[2] = "Style" || p[2] = "ExStyle") {
 		Out := format("{1} := ControlGet{2}({4}, {5}, {6}, {7}, {8})", p*)
+	} else if (p[2] = "Checked") {
+		; 2026-04-06 AMB, ADDED Fix for issue #323
+		if (gDynGuiNaming && p[4]='') {
+			winTitle := p[5], p[4] := 'GetTopCtrl(' winTitle ')'
+			Out		 := p[1] ' := ""`r`n'	; in case ControlGetChecked() causes error
+			Out		 .= gIndent 'Try ' format("{1} := ControlGet{2}({4}, {5}, {6}, {7}, {8})", p*)
+		} else {	; normal handling, but can cause errors
+			Out := format("{1} := ControlGet{2}({4}, {5}, {6}, {7}, {8})", p*)
+		}
 	} else if (p[2] = "LineCount") {
 		Out := format("{1} := EditGetLineCount({4}, {5}, {6}, {7}, {8})", p*)
 	} else if (p[2] = "CurrentLine") {
@@ -97,7 +107,7 @@ _ControlGet(p) {
 			Out .= gIndent "}"
 		}
 	}
-	out		:= RegExReplace(Out, "[\s\,]*\)$", ")")
+	out		:= RegExReplace(Out, "[\s\,]*\)", ")")
 	out		:= Zip(out, 'CTRLGET')		; 2025-11-30 AMB - compress to single-line tag, as needed
 	Return	out
 }

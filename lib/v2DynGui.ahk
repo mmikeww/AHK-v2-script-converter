@@ -47,6 +47,13 @@ fcV2GC(guiID, ctrlID) {								; used by converted v2 script		; finds/returns ct
 	return	ctrl																		; return ctrl obj
 }
 ;################################################################################
+GetTopCtrl(win:='') {								; used by converted v2 script		; gets top-level control of window
+; 2026-04-06 AMB, ADDED as part of fix for #323
+	curWin	 := (win!='') ? win : WinExist('A')											; get active window if window not specified by caller
+	ctrlList := WinGetControlsHwnd(win)													; get list of all controls (hwnds) in target window
+	return ctrlList[1]																	; return the first control in the list
+}
+;################################################################################
 HasV2Gui(id) {										; used by converted v2 script		; determines whether ID has already been recorded or not
 	if (mV2Gui.Has(id))																	; if ID has been recorded in gui list...
 		return _guiExists(id)															; ... return the gui object if it exists

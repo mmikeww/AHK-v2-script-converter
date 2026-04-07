@@ -6,7 +6,7 @@ If (!HasV2Gui("")) {
 mV2GC[["","ColorChoice"]] := mV2Gui[""].Add("ComboBox","vColorChoice",["Red","Green","Blue","Black","White"])
 mV2Gui[""].Title := "WinTitle"
 mV2Gui[""].Show()
-oItems := ControlGetItems("ComboBox1", "WinTitle", , , )
+oItems := ControlGetItems("ComboBox1", "WinTitle")
 loop oItems.length
 {
     Items .= A_index=1 ? "" : "`n"

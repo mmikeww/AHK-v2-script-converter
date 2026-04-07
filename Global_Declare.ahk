@@ -27,6 +27,7 @@ getINISettings()																			; 2026-01-26 - AMB, ADDED to support user int
 #Include Convert/4ArrayMethods.ahk
 #Include Convert/5Keywords.ahk
 #Include Convert/Conversion_CLS.ahk															; 2025-06-12 - future support of Class version
+#Include Convert/Validation.ahk																; 2026-04-06 - support for variable vaidation
 #Include Convert/ContSections.ahk															; 2025-06-22 - support for continuation sections
 #Include Convert/SplitConv/ConvV1_Funcs.ahk													; 2025-07-01 - support for separated conversion
 #Include Convert/SplitConv/ConvV2_Funcs.ahk													; 2025-07-01 - support for separated conversion

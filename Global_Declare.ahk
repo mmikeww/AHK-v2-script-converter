@@ -1,131 +1,132 @@
 ; 2025-12-10 AMB ADDED - to provide organization for global definitions
-; 2026-01-26 AMB UPDATED - as part of support for user settings
 
 ; these require declaration prior to Includes
 global	dbg					:= 0
-global	gV2Conv				:= true								; for testing separate V1,V2 conversions
-global	gFilePath			:= ''								; TEMP, for testing
-global	gLineFillMsg		:= 'V1toV2_LineFill := true `; remove me after inspection'	; 2025-12-10 ADDED
+global	gV2Conv				:= true															; for testing separate V1,V2 conversions
+global	gFilePath			:= ''															; TEMP, for testing
+global	gLineFillMsg		:= 'V1toV2_LineFill := true `; remove me after inspection'		; 2025-12-10 ADDED
 global	  gmAhkKeywdsToRename,	gmAhkLoopRegKeywds
 		, gAhkCmdsToRemoveV1,	gAhkCmdsToRemoveV2
 		, gmAhkCmdsToConvertV1, gmAhkCmdsToConvertV2
 		, gmAhkFuncsToConvert,	gmAhkMethsToConvert, gmAhkArrMethsToConvert
-global	gINIFile			:= 'Converter.ini'					; 2026-01-26 - AMB, ADDED to support user interactive settings
-global	gDynDefGuiNm		:= (IsSet(gDynDefGuiNm))			; 2026-03-11 if not already set...
-							?  gDynDefGuiNm : 'nnGui'			; ... set as needed
-getINISettings()												; 2026-01-26 - AMB, ADDED to support user interactive settings
+global	gINIFile			:= 'Converter.ini'												; 2026-01-26 - AMB, ADDED to support user interactive settings
+global	gDynDefGuiNm		:= (IsSet(gDynDefGuiNm))										; 2026-03-11 if not already set...
+							?  gDynDefGuiNm : 'nnGui'										; ... set as needed
+getINISettings()																			; 2026-01-26 - AMB, ADDED to support user interactive settings
 ;################################################################################
 #Include lib/ClassOrderedMap.ahk
 #Include lib/dbg.ahk
-#Include <v2DynGui>												; 2026-03-11 - support for dynamic gui handling
-#Include GuiProg.ahk											; 2026-01-24 - support for new progress-gui
-#Include Convert/MaskCode.ahk									; 2024-06-26 - support for masking
-#Include Convert/Scope.ahk										; 2025-11-01 - support for scope
-#Include Convert/AhkLangConv.ahk								; 2025-12-24 - to organize v1 to v2 cmd/func convert funcs
+#Include <v2DynGui>																			; 2026-03-11 - support for dynamic gui handling
+#Include GuiProg.ahk																		; 2026-01-24 - support for new progress-gui
+#Include Convert/MaskCode.ahk																; 2024-06-26 - support for masking
+#Include Convert/Scope.ahk																	; 2025-11-01 - support for scope
+#Include Convert/AhkLangConv.ahk															; 2025-12-24 - to organize v1 to v2 cmd/func convert funcs
 #Include Convert/1Commands.ahk
 #Include Convert/2Functions.ahk
 #Include Convert/3Methods.ahk
 #Include Convert/4ArrayMethods.ahk
 #Include Convert/5Keywords.ahk
-#Include Convert/Conversion_CLS.ahk								; 2025-06-12 - future support of Class version
-#Include Convert/ContSections.ahk								; 2025-06-22 - support for continuation sections
-#Include Convert/SplitConv/ConvV1_Funcs.ahk						; 2025-07-01 - support for separated conversion
-#Include Convert/SplitConv/ConvV2_Funcs.ahk						; 2025-07-01 - support for separated conversion
-#Include Convert/SplitConv/SharedCode.ahk						; 2025-07-01 - code shared for v1 or v2 conversion
-#Include Convert/SplitConv/PseudoHandling.ahk					; 2025-07-01 - temp while separating dual conversion
-#Include Convert/SplitConv/LabelAndFunc.ahk						; 2025-07-06
-#Include Convert/SplitConv/GuiAndMenu.ahk						; 2025-07-06
-#Include Convert/SplitConv/GuiAlt.ahk							; 2026-03-11 - support for simple/dynamic gui handling
+#Include Convert/Conversion_CLS.ahk															; 2025-06-12 - future support of Class version
+#Include Convert/ContSections.ahk															; 2025-06-22 - support for continuation sections
+#Include Convert/SplitConv/ConvV1_Funcs.ahk													; 2025-07-01 - support for separated conversion
+#Include Convert/SplitConv/ConvV2_Funcs.ahk													; 2025-07-01 - support for separated conversion
+#Include Convert/SplitConv/SharedCode.ahk													; 2025-07-01 - code shared for v1 or v2 conversion
+#Include Convert/SplitConv/PseudoHandling.ahk												; 2025-07-01 - temp while separating dual conversion
+#Include Convert/SplitConv/LabelAndFunc.ahk													; 2025-07-06
+#Include Convert/SplitConv/GuiAndMenu.ahk													; 2025-07-06
+#Include Convert/SplitConv/GuiAlt.ahk														; 2026-03-11 - support for simple/dynamic gui handling
 ;################################################################################
-setGlobals() {													; for globals that are reset with each new conversion
+setGlobals() {																				; for globals that are reset with each new conversion
 	Global
 	; func and label
-	gAllFuncNames			:= ''								; 2024-07-07 - comma-deliminated string holding the names of all functions
-	gAllClassNames			:= ''								; 2024-10-08 - comma-deliminated string holding the names of all classes
-	gAllV1LabelNames		:= ''								; 2024-07-09 - comma-deliminated string holding the names of all v1 labels
-	gmAllV2LablNames		:= Map_I()							; 2024-07-07 - map holding v1 labelNames (key) and their new v2 label/FuncName (value)
-	gmList_LblsToFunc		:= Map_I()							; 2025-10-05 - replaces gaList_LblsToFuncO and gaList_LblsToFuncC
-	gmList_GosubToFunc		:= Map_I()							; 2025-10-05 - tracks gosubs that need to be converted to func calls
-	gmList_HKCmdToFunc		:= Map_I()							; 2025-10-12 - tracks funcs that should be called using 'hotkey' cmd
-	gHasV2Funcs				:= false							; 2026-03-29 - added as part of Gui Submit support
-	;gmList_MethToFunc		:= Map_I()							; 2026-03-29 - tracks class methods that will need adjs to params
-	gmByRefParamMap			:= Map_I()							; Map of FuncNames and ByRef params
-	gmAltLabel				:= Map_I()							; map of labels that point to same reference
+	gAllFuncNames			:= ''															; 2024-07-07 - comma-deliminated string holding the names of all functions
+	gAllClassNames			:= ''															; 2024-10-08 - comma-deliminated string holding the names of all classes
+	gAllV1LabelNames		:= ''															; 2024-07-09 - comma-deliminated string holding the names of all v1 labels
+	gmAllV2LablNames		:= Map_I()														; 2024-07-07 - map holding v1 labelNames (key) and their new v2 label/FuncName (value)
+	gmList_LblsToFunc		:= Map_I()														; 2025-10-05 - replaces gaList_LblsToFuncO and gaList_LblsToFuncC
+	gmList_GosubToFunc		:= Map_I()														; 2025-10-05 - tracks gosubs that need to be converted to func calls
+	gmList_HKCmdToFunc		:= Map_I()														; 2025-10-12 - tracks funcs that should be called using 'hotkey' cmd
+	gHasV2Funcs				:= false														; 2026-03-29 - added as part of Gui Submit support
+	;gmList_MethToFunc		:= Map_I()														; 2026-03-29 - tracks class methods that will need adjs to params
+	gmByRefParamMap			:= Map_I()														; Map of FuncNames and ByRef params
+	gmAltLabel				:= Map_I()														; map of labels that point to same reference
 	gFuncParams				:= ''
 	gmList_GotoLabel		:= Map_I()
 	; gui and menu
-	gMenuBarName			:= ''								; 2024-07-02 - holds the name of the main gui menubar
+	gMenuBarName			:= ''															; 2024-07-02 - holds the name of the main gui menubar
 	gMenuList				:= '|'
-	gmMenuCBChecks			:= Map_I()							; 2024-06-26 - for fix #131
+	gmMenuCBChecks			:= Map_I()														; 2024-06-26 - for fix #131
 	gGuiActiveFont			:= ''
 	gGuiControlCount		:= 0
-	gmGuiCtrlObj			:= Map_I()							; Create a map to return the object of a control
-	gmGuiCtrlType			:= Map_I()							; Create a map to return the type of control
-	gmGuiFuncCBChecks		:= Map_I()							; for gui funcs
-	gmMethodsToStatic		:= Map_I()							; 2026-03-08 - list of methods that require static kywd
+	gmGuiCtrlObj			:= Map_I()														; Create a map to return the object of a control
+	gmGuiCtrlType			:= Map_I()														; Create a map to return the type of control
+	gmGuiFuncCBChecks		:= Map_I()														; for gui funcs
+	gmMethodsToStatic		:= Map_I()														; 2026-03-08 - list of methods that require static kywd
 	gGuiList				:= '|'
-	gGuiNameDefault			:= getUserDefGuiName()				; 2026-01-26 UPDATED - as part of support for user settings
-	gmGuiVList				:= Map_I()							; Used to list all variable names defined in a Gui
-	gUseLastName			:= False							; Keep track of if we use the last set name in gGuiList
-	gGuiCtrlVarAssignFunc	:= ''								; 2026-03-29 - func string for initializing gui ctrl varaibles
-	gGuiCtrlVarAssignFN		:= 'iniGuiCtrlVars()'				; 2026-03-29 - func name for gGuiCtrlVarAssignFunc
+	gGuiNameDefault			:= getUserDefGuiName()											; 2026-01-26 UPDATED - as part of support for user settings
+	gmGuiVList				:= Map_I()														; Used to list all variable names defined in a Gui
+	gUseLastName			:= False														; Keep track of if we use the last set name in gGuiList
+	gGuiCtrlVarAssignFunc	:= ''															; 2026-03-29 - func string for initializing gui ctrl varaibles
+	gGuiCtrlVarAssignFN		:= 'iniGuiCtrlVars()'											; 2026-03-29 - func name for gGuiCtrlVarAssignFunc
 
-	;gOScriptStr			:= []								; array of all the lines (prior to being an object)
-	gOScriptStr				:= Object()							; now a ScriptCode class object
-	gaScriptStrsUsed		:= Array()							; Keeps an array of interesting strings used in the script
-	gV1Line					:= ''								; portion of line to process, prior to processing, will not include trailing comment (2026-01-01 changed Name)
-	gO_Index				:= 0								; current index of the lines
+	;gOScriptStr			:= []															; array of all the lines (prior to being an object)
+	gOScriptStr				:= Object()														; now a ScriptCode class object
+	gaScriptStrsUsed		:= Array()														; Keeps an array of interesting strings used in the script
+	gV1Line					:= ''															; portion of line to process, prior to processing, will not include trailing comment (2026-01-01 changed Name)
+	gO_Index				:= 0															; current index of the lines
 	gIndent					:= ''
 	gSingleIndent			:= ''
-	gfNewScope				:= 0								; 2025-12-24 - tracks scope
+	gfNewScope				:= 0															; 2025-12-24 - tracks scope
 
-	gEOLComment_Cont		:= []								; 2025-05-24 - fix for #296 - comments for continuation sections
-	gEOLComment_Func		:= ''								; _Funcs can use this to add comments at EOL
-	gNL_Func				:= ''								; _Funcs can use this to add New Previous Line
-	gfrePostFuncMatch		:= False							; _Funcs can use this to know their regex matched
+	gEOLComment_Cont		:= []															; 2025-05-24 - fix for #296 - comments for continuation sections
+	gEOLComment_Func		:= ''															; _Funcs can use this to add comments at EOL
+	gNL_Func				:= ''															; _Funcs can use this to add New Previous Line
+	gfrePostFuncMatch		:= False														; _Funcs can use this to know their regex matched
 
-	goWarnings				:= Object()							; global object [with props] to keep track of warnings to add, see FinalizeConvert()
-	gaList_PseudoArr		:= Array()							; list of strings that should be converted from pseudoArray to Array
-	gaList_MatchObj			:= Array()							; list of strings that should be converted from v1 Match Object to v2 Match Object
+	goWarnings				:= Object()														; global object [with props] to keep track of warnings to add, see FinalizeConvert()
+	gaList_PseudoArr		:= Array()														; list of strings that should be converted from pseudoArray to Array
+	gaList_MatchObj			:= Array()														; list of strings that should be converted from v1 Match Object to v2 Match Object
 
-	gmOnMessageMap			:= Map_I()							; list of OnMessage listeners
-	gmVarSetCapacityMap		:= Map_I()							; list of VarSetCapacity variables, with definition type
-	gfLockGlbVars			:= False							; flag used to prevent global vars from being changed
+	gmOnMessageMap			:= Map_I()														; list of OnMessage listeners
+	gmVarSetCapacityMap		:= Map_I()														; list of VarSetCapacity variables, with definition type
+	gfLockGlbVars			:= False														; flag used to prevent global vars from being changed
 
-	gfHasDynamicGui			:= false							; 2026-03-11
-	gfHasDynamicGLabel		:= false							; 2026-03-11
-	gLVNameDefault			:= (gDynGuiNaming)					; 2026-03-11 AMB - UPDATED to support dynamic naming option
+	gfHasDynamicGui			:= false														; 2026-03-11
+	gfHasDynamicGLabel		:= false														; 2026-03-11
+	gLVNameDefault			:= (gDynGuiNaming)												; 2026-03-11 AMB - UPDATED to support dynamic naming option
 							? "%gV2CurLV%"
-							: "LV"								; orig option
+							: "LV"															; orig option
 	gLVNameDefault			:= (gDynGuiNaming)
 							? Trim(gLVNameDefault, '%')
 							: gLVNameDefault
 	gTVNameDefault			:= 'TV'
 	gSBNameDefault			:= 'SB'
-	gaFileOpenVars			:= []								; 2025-10-12 - callection of FileOpen object names
-	gaZipTagIDs				:= []								; 2025-11-30 - TagID list for line compression (Zip,Unzip)
+	gaFileOpenVars			:= []															; 2025-10-12 - callection of FileOpen object names
+	gaZipTagIDs				:= []															; 2025-11-30 - TagID list for line compression (Zip,Unzip)
 
-	clsMask.Reset()												; 2025-11-01 - ADDED as part of Scope support, unit testing
-	clsNodeMap.Reset()											; 2025-11-01 - ADDED as part of Scope support, unit testing
-	clsSection.Reset()											; 2025-11-01 - ADDED as part of Scope support, unit testing
-	clsScopeSect.Reset()										; 2025-11-01 - ADDED as part of Scope support, unit testing
-	clsGuiObj.Reset()											; 2026-03-11 - ADDED for unit testing
+	clsMask.Reset()																			; 2025-11-01 - ADDED as part of Scope support, unit testing
+	clsNodeMap.Reset()																		; 2025-11-01 - ADDED as part of Scope support, unit testing
+	clsSection.Reset()																		; 2025-11-01 - ADDED as part of Scope support, unit testing
+	clsScopeSect.Reset()																	; 2025-11-01 - ADDED as part of Scope support, unit testing
+	clsGuiObj.Reset()																		; 2026-03-11 - ADDED for unit testing
 }
 ;################################################################################
 getIniSettings() {
 ; 2026-01-26 AMB, ADDED as part of support for user settings
 ; 2026-03-14 AMB, UPDATED settings/names, added gCopyIncl
+; 2026-04-06 AMB, UPDATED to ensure ini file exists
 ;	reads user settings from disk, transfers settings to script vars
+	verifyINIFile()																			; ensure ini file exists
 	iniFile	:= gINIFile, Section := 'Settings'
-	guiMode	:= IniRead(iniFile, Section, 'GuiMode',		''	)
-	guiName	:= IniRead(iniFile, Section, 'StdGuiName',	''	)
-	ctrlPfx	:= IniRead(iniFile, Section, 'StdCtrlPfx',	''	)	; can be empty/blank
-	copyIncl:= IniRead(iniFile, Section, 'CopyIncl',	''	)
-	global	gCtrlPfx		:= ctrlPfx							; used as default gui ctrl prefix for non-dynamic modes, can be empty/blank
-	global	gCopyIncl		:= copyIncl							; whether user wants to include file to be copied to library automatically
-	global	gUseGuiAlt		:= !(guiMode=0)						; whether user wants to use updated routines for orig-gui-naming
-	global	gDynGuiNaming	:= gUseGuiAlt && !!(guiMode=2)		; whether user wants to force dynamic-gui-naming
-	global	gAutoGuiNaming	:= gUseGuiAlt && !!(guiMode=3)		; whether user allows script to choose the appropriate gui-naming
+	guiMode	:= IniRead(iniFile, Section, 'GuiMode',		'1'	)
+	guiName	:= IniRead(iniFile, Section, 'StdGuiName',	'myGui'	)
+	ctrlPfx	:= IniRead(iniFile, Section, 'StdCtrlPfx',	''	)								; can be empty/blank
+	copyIncl:= IniRead(iniFile, Section, 'CopyIncl',	'1'	)
+	global	gCtrlPfx		:= ctrlPfx														; used as default gui ctrl prefix for non-dynamic modes, can be empty/blank
+	global	gCopyIncl		:= copyIncl														; whether user wants to include file to be copied to library automatically
+	global	gUseGuiAlt		:= !(guiMode=0)													; whether user wants to use updated routines for orig-gui-naming
+	global	gDynGuiNaming	:= gUseGuiAlt && !!(guiMode=2)									; whether user wants to force dynamic-gui-naming
+	global	gAutoGuiNaming	:= gUseGuiAlt && !!(guiMode=3)									; whether user allows script to choose the appropriate gui-naming
 	global	gGuiNameDefault	:= (gDynGuiNaming) ? gDynDefGuiNm
 							:  (guiName) ? guiName
 							:  'myGui'
@@ -134,13 +135,32 @@ getIniSettings() {
 getUserDefGuiName() {
 ; 2026-01-26 AMB, ADDED as part of support for user settings
 ; 2026-03-14 AMB, UPDATED ini setting name - StdGuiName
+; 2026-04-06 AMB, UPDATED to ensure ini file exists
 ;	returns user-preferred gui name from ini file
+	verifyINIFile()																			; ensure ini file exists
 	iniFile	:= gINIFile, Section := 'Settings'
-	guiMode	:= IniRead(iniFile, Section, 'GuiMode',		''	)
-	guiName	:= IniRead(iniFile, Section, 'StdGuiName',	''	)
+	guiMode	:= IniRead(iniFile, Section, 'GuiMode',		'1'		)
+	guiName	:= IniRead(iniFile, Section, 'StdGuiName',	'myGui'	)
 	defName := (guiMode=2) 	? gDynDefGuiNm
 			:  ((guiName)	? guiName : 'myGui')
 	return defName
+}
+;################################################################################
+verifyINIFile() {																			; ensures converter ini file exists, with intial settings
+; 2026-04-06 AMB, ADDED
+	if (FileExist(gINIFile))																; if ini file already exists...
+		return																				; ... don't create
+	; ini file does not exist, write it with initial settings
+	Section := 'Settings'
+	; save tab
+	IniWrite('1',		gINIFile, Section, 'AutoSave'	)
+	; gui tab
+	IniWrite('1',		gINIFile, Section, 'GuiMode'	)									; ini to Simple gui mode
+	IniWrite('myGui',	gINIFile, Section, 'StdGuiName'	)
+	IniWrite('ogc',		gINIFile, Section, 'StdCtrlPfx'	)
+	IniWrite('1',		gINIFile, Section, 'CopyIncl'	)
+	; general tab
+	IniWrite('1',		gINIFile, Section, 'ConvMsgs'	)
 }
 ;################################################################################
 class NL {
@@ -150,12 +170,12 @@ class NL {
 ;################################################################################
 Class Map_I extends Map {
 ; 2025-11-28 - custom Map with case-sensitivity disabled by default
-	caseSense		:= 0										; disable case-sensitivity by default
-	KeysToString	=> Map_I._Join(this		 	)				; return list of object keys
-	KeyValPairs		=> Map_I._Join(this,1		)				; return list of {key:val}	pairs
-	LabelMap		=> Map_I._Join(this,1,'=>'	)				; return list of {key=>val} pairs
+	caseSense		:= 0																	; disable case-sensitivity by default
+	KeysToString	=> Map_I._Join(this		 	)											; return list of object keys
+	KeyValPairs		=> Map_I._Join(this,1		)											; return list of {key:val}	pairs
+	LabelMap		=> Map_I._Join(this,1,'=>'	)											; return list of {key=>val} pairs
 	;#############################################################################
-	Static _Join(obj,kv:=0,d:=':',s:='') {						; 2025-11-30 - @rommmcek
+	Static _Join(obj,kv:=0,d:=':',s:='') {													; 2025-11-30 - @rommmcek
 	for k,v in obj
 		s .= ((kv) ? k d v : k) ', '
 	return (s:=Trim(s,', '))?((kv)?'{' s '}':s):''

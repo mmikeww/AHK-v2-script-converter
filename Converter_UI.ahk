@@ -11,9 +11,13 @@
 					added #Include-file auto-copy option (but mandatory for now)
 					changed some var/func/settings names
 	2026-03-18 AMB, UPDATED: validation to allow unicode and dis-allow AHK reserved words (for guiname)
+	2026-04-06 AMB, UPDATED:
+					to provide faster validation for gui name. Validation now uses a reserved-word list
+					also added faster audio response when variable name is invalid
 
 */
 
+#Include Convert\Validation.ahk																		; 2026-04-06 has gV2ReservedWords list
 #SingleInstance force
 CoordMode('Tooltip','Screen')
 clsUserUI()
@@ -281,7 +285,7 @@ class clsUserUI {																					; Gui handling
 		fClr				:= (isValid) ? 'cBlack' : 'cRed'										; set font color based on validity of name
 		(setClr)			&& ctrl.Opt(fClr)														; update ctrl with font color
 		(updateEx)			&& this._updateExample()												; update example text
-		(audio && !isValid) && SoundBeep(250,200)													; beep if invalid
+		(audio && !isValid) && Soundbeep(350,25)													; play sound if invalid
 	}
 	;############################################################################
 	_validateCtrlPfx(name) {																		; determines whether ctrl prefix is valid
@@ -291,12 +295,13 @@ class clsUserUI {																					; Gui handling
 	;############################################################################
 	_validateGuiName(name) {																		; determines whether guiname is valid
 	; 2026-03-18 AMB, UPDATED to allow unicode and dis-allow AHK reserved words
+	; 2026-04-06 AMB, UPDATED
 		static prevName := -1, prevResult := -1														; prevents unnecessary validation processsing
 		name := Trim(name)																			; trim name of whitspace
 		if (prevResult >= 0 && name = prevName)														; if name has not changed since last visit...
 			return prevResult																		; ... return the previous result
 		prevName	:= name																			; save name for comparison, next visit
-		prevResult	:= clsVarValidation.Validate(name)												; save result of validation for next visit
+		prevResult	:= isValidGuiName(name)															; save result of validation for next visit
 		return		prevResult																		; return result of validation
 	}
 	;############################################################################
@@ -316,33 +321,5 @@ class clsUserUI {																					; Gui handling
 			ToolTip(), MouseGetPos(,,, &hCtrl, 2)													; ... clear the tooltip (manual call), get ctrl under mouse
 			(hCtrl != this.QCT.hwnd) && (this.fTTActive := false)									; set tt flag to false only after mouse has moved away from button
 		}
-	}
-}
-;################################################################################
-class clsVarValidation
-{
-	Static Validate(name,emptyOK:=false,resvOK:=false) {											; main validation
-		; name must be trimmed of whitespace, to be valid
-		if (emptyOK && name='')																		; if empty string is allowed, and name is empty...
-			return true																				; ... return VALID
-		if (!this._IsValidVarSyntax(name))															; if name syntax is invalid
-			return false																			; ... return INVALID
-		return !(!resvOK && this._IsReserved(name))													; if resv not ok, but name is resv word, return false, otherwise true
-	}
-	;############################################################################
-	Static _IsReserved(name) {			; 2026-03-17 magic... THANK YOU @ntepa !					; determines whether name is ahk reserved
-		; name must be trimmed of whitespace, to be valid
-		if (name ~= '[[:^ascii:]]')																	; if name has any chars that are NOT ascii...
-			return false																			; ... is not a AHK reserved word
-		shell := ComObject('WScript.Shell')
-		exec := shell.Exec('AutoHotkey.exe /ErrorStdOut *')											; will execute a var assignment (dynamically) and report errors
-		exec.StdIn.Write(Format('FileAppend({} := 1, "*")', name))									; create dynamic var assignment, write to std in
-		exec.StdIn.Close()																			; close std in stream
-		return !exec.StdOut.ReadAll()																; return whether error occurred during var creation
-	}
-	;############################################################################
-	Static _IsValidVarSyntax(name) {																; must not begin with number, allows ascii/unicode chars
-		; name must be trimmed of whitespace, to be valid
-		return	(name ~= '(?i)^([_a-z]|([[:^ascii:]]))(\w|(?2))*$')
 	}
 }

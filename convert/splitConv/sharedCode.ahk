@@ -389,14 +389,24 @@
 ;	... better detection/conversion of legacy assignments
 ;	v1 does not support chained legacy assignments - this does not attempt to either
 ;	BUT... it will allow a string assignment to span multiple lines
-
-	nLegVar		:= '(?is)(\h*+,?\h*+[a-z_%](?|[\w%]++|\.(?=\w))*+\h*+)'		; new support for obj.property
-	nLegAssign	:= nLegVar . '``?=(?!=)(\h*)(.*)'
-	if (!(lineStr ~= nLegAssign)) {
-		return false
-	}
+; 2026-04-06 AMB, UPDATED to fix issue #437
 
 	origStr	:= lineStr														; save orig to flag whether change was made
+
+	; 2026-04-06 ADDED to fix issue #437
+	if (Tag := HasTag(lineStr, 'MLCSECTM2')) {								; if line has a continuation section tag...
+		if (Tag==lineStr) {													; ... AND that tag in the full line...
+			Mask_R(&lineStr, 'MLCSECTM2')									; ... restore the tag in case it is a legacy assignemnt
+		}
+	}
+
+	; ensure line is a legacy assignment before proceeding
+	nLegVar		:= '(?is)(\h*+,?\h*+[a-z_%](?|[\w%]++|\.(?=\w))*+\h*+)'		; new support for obj.property
+	nLegAssign	:= nLegVar . '``?=(?!=)(\h*)(.*)'							; [needle for legacy assignment]
+	if (!(lineStr ~= nLegAssign)) {											; if line is NOT a legacy assignmnt...
+		lineStr	:= origStr													; ... ensure MLCSECTM2 mask is reapplied (if restored above)
+		return	false														; ... exit, flag as not a legacy assignemnt
+	}
 
 	; pre-mask to avoid char detection interferrence
 	sess	:= clsMask.NewSession()											; create new masking session

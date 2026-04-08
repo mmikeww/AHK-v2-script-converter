@@ -390,6 +390,7 @@
 ;	v1 does not support chained legacy assignments - this does not attempt to either
 ;	BUT... it will allow a string assignment to span multiple lines
 ; 2026-04-06 AMB, UPDATED to fix issue #437
+; 2026-04-07 AMB, UPDATED to fix issue #461
 
 	origStr	:= lineStr														; save orig to flag whether change was made
 
@@ -402,8 +403,15 @@
 
 	; ensure line is a legacy assignment before proceeding
 	nLegVar		:= '(?is)(\h*+,?\h*+[a-z_%](?|[\w%]++|\.(?=\w))*+\h*+)'		; new support for obj.property
-	nLegAssign	:= nLegVar . '``?=(?!=)(\h*)(.*)'							; [needle for legacy assignment]
-	if (!(lineStr ~= nLegAssign)) {											; if line is NOT a legacy assignmnt...
+	nLegAssign	:= nLegVar . '``?(?<!\{)=(?!\})(?!=)(\h*)(.*)'				; [needle for legacy assignment]
+	if (!RegExMatch(lineStr,nLegAssign,&m)) {								; if line is NOT a legacy assignment...
+		lineStr	:= origStr													; ... ensure MLCSECTM2 mask is reapplied (if restored above)
+		return	false														; ... exit, flag as not a legacy assignemnt
+	}
+	; ensure line is NOT a SEND command
+	varName	:= Trim(m[1])													; get 'var name'
+	nSend	:= '(?i)SEND(INPUT|RAW)?'										; needle to detect SEND cmds [also see convV2_Func.ahk -> V1LineToProcess class]
+	if (varName ~= nSend) {													; if line is a SEND command
 		lineStr	:= origStr													; ... ensure MLCSECTM2 mask is reapplied (if restored above)
 		return	false														; ... exit, flag as not a legacy assignemnt
 	}

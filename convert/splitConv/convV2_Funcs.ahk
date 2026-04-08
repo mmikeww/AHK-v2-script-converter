@@ -810,6 +810,7 @@
 Class V1LineToProcess
 {
 ; 2025-06-12 AMB, ADDED
+; 2026-04-07 AMB, UPDATED to fix #461
 ; for detection v1 line commands/params that require conversion
 ; called from v2_AHKCommands()
 
@@ -862,8 +863,9 @@ Class V1LineToProcess
 		}
 		; check to see whether data collected above is...
 		;	a legit/target command/params that need to be processed? If not... exit
+		nSend	:= '(?i)SEND(INPUT|RAW)?'													; needle to detect SEND cmds [also see sharedCode.ahk -> v1v2_FixLegAssignments()]
 		if  (	!(cmd~='i)^#?[a-z]+$')														; if cmd string found is not a potential command... OR
-			||	(cLParams ~= '^[^"]=')														; if line param is actually an assignment...		OR
+			||	(cLParams ~= '^[^"](?<!\{)=(?!\})' && !(cmd ~= nSend))						; if line param is actually an assignment...		OR
 			||	(!defProfile := CommandDefProfile.GetProfile(cmd)))							; if line cmd is NOT found in definition list...
 			return false																	; ... exit
 		return {cmd:cmd,lineParams:cLParams,defProfile:defProfile}							; legit! - return extracted details and def profile

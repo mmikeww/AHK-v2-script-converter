@@ -500,9 +500,10 @@ _IfGreater(p) {
 		return format("if (StrCompare({1}, {2}) > 0)", p*)
 }
 ;################################################################################
+; 2026-04-13 AMB, UPDATED to add equal symbol for numbers
 _IfGreaterOrEqual(p) {
 	if (isNumber(p[2]) || InStr(p[2], "%"))
-		return format("if ({1} > {2})", p*)
+		return format("if ({1} >= {2})", p*)
 	else
 		return format("if (StrCompare({1}, {2}) >= 0)", p*)
 }
@@ -526,9 +527,10 @@ _IfLess(p) {
 		return format("if (StrCompare({1}, {2}) < 0)", p*)
 }
 ;################################################################################
+; 2026-04-13 AMB, UPDATED to add equal symbol for numbers
 _IfLessOrEqual(p) {
 	if (isNumber(p[2]) || InStr(p[2], "%"))
-		return format("if ({1} < {2})", p*)
+		return format("if ({1} <= {2})", p*)
 	else
 		return format("if (StrCompare({1}, {2}) <= 0)", p*)
 }

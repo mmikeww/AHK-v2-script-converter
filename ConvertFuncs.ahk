@@ -338,7 +338,7 @@ FinalizeConvert(&code)
    Prog.ULog(,  'Post Process - Restore Continuation Sections...'           )           ; update UI - current operation
       Mask_R(&code, 'CSect')                                                            ; restore remaining cont sects (returned as v2 converted)
    Prog.ULog(,  'Post Process - Restore Multi-line Parentheses Blocks...'   )           ; update UI - current operation
-      Mask_R(&code, 'MLPB')                                                             ; restore remaining ML parentheses blocks
+      Mask_R(&code, 'MLPBT')                                                             ; restore remaining ML parentheses blocks (with opt trailer)
    Prog.ULog(,  'Post Process - Restore V1 Multi-line String Blocks...'     )           ; update UI - current operation
       Mask_R(&code, 'V1MLS')                                                            ; restore remaining V1 ML strings
    Prog.ULog(90,'Post Process - Restore Comments/Strings...'                )           ; update UI - current operation - 90% complete

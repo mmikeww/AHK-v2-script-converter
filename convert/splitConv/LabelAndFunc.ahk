@@ -1122,7 +1122,8 @@ class codeChop	; responsible for marking script code with tags that separate sec
 	Static RestoreMasksAll(code)															; restores orig code for specified tags
 	{
 		;tagTypes := ['CLS&FUNC','HIF','HK','HS','LBL','V1MLS','IWTLFS','KVO','C&S']
-		tagTypes := ['CLS&FUNC','HIF','HK','HS','LBL','IWTLFS','KVO','C&S']					; 2026-01-17 - removed V1MLS
+		;tagTypes := ['CLS&FUNC','HIF','HK','HS','LBL','IWTLFS','KVO','C&S']				; 2026-01-17 - removed V1MLS
+		tagTypes := ['CLS&FUNC','HIF','HK','HS','LBL','IWTLFS','MLPBT','KVO','C&S']			; 2026-04-13 - added MLPBT
 		outStr := code
 		for idx, tag in tagTypes {
 			Mask_R(&outStr, tag)															; restore orig code for tags specified

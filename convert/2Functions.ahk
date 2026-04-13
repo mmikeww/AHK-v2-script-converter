@@ -450,7 +450,8 @@ V1toV2_Functions(ScriptString, Line, &retV2, &gotFunc) {
         ConvertList := gmAhkFuncsToConvert
         if (RegExMatch(oResult.Pre, "((?:\w+)|(?:\[.*\])|(?:{.*}))\.$", &Match)) {
             ObjectName := Match[1]
-            if (RegExMatch(ScriptString, "i)(?<!\w)(\Q" ObjectName "\E)\s*:=\s*(\[|(Array|StrSplit)\()")) {   ; Type Array().
+			; 2026-04-13 AMB, ADDED .Clone() for array detection
+            if (RegExMatch(ScriptString, "i)(?<!\w)(\Q" ObjectName "\E)\s*:=\s*(\[|(Array|StrSplit|.+?\.CLONE)\()")) {   ; Type Array().
                 ConvertList := gmAhkArrMethsToConvert
             } else if (RegExMatch(ScriptString, "i)(?<!\w)(\Q" ObjectName "\E)\s*:=\s*(\{|(Object)\()")) {    ; Type Object().
                 ConvertList := gmAhkMethsToConvert

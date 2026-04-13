@@ -1342,9 +1342,14 @@ _SendMessage(p) {
 	Return	RegExReplace(Out, "[\s\,]*\)$", ")")
 }
 ;################################################################################
+; 2026-04-13 AMB, UPDATED to fix stray trailing DQ in some cases
 _SendRaw(p) {
-	p[1]	:= FormatParam("keysT2E","{Raw}" p[1])
-	Return	"Send(" p[1] ")"
+	p1	:= FormatParam('keysT2E', p[1])													; format just the param itself
+	raw	:= '"{Raw}" '																	; ini default raw str
+	if (p1 ~= '^"') {																	; if formatted param begins with DQ...
+		p1	:= SubStr(p1,2), raw := RTrim(raw, '" ')									; ... remove lead DQ from param, and trail DQ/space from raw
+	}
+	Return	'Send(' raw p1 ')'															; return result
 }
 ;################################################################################
 ; 2025-10-05 AMB, UPDATED - changed gaList_LblsToFuncO to gmList_LblsToFunc

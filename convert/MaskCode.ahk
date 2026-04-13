@@ -28,7 +28,7 @@
 	2026-01-01,13,17,24		- UPDATED, see comments in code
 	2026-02-07				- UPDATED, see comments in code
 	2026-03-11,29			- UPDATED, see comments in code
-	2026-04-06				- moved validation class/funcs to validation.ahk
+	2026-04-06,12			- UPDATED, see comments in code
 
 	TODO
 		Finish support for Continuation sections
@@ -79,7 +79,8 @@ global	  gTagChar		:= chr(0x2605) ; '★'															; unique char to ensure 
 		, gPtn_Blk_LBLD	:= buildPtn_Label().NT															; UPDATED - Label declaration only
 		, gPtn_Blk_LBLP	:= buildPtn_Label().WT															; UPDATED - label declaration plus possible comment
 		, gPtn_Blk_LBL	:= buildPtn_Label().FB															; UPDATED - label block with braces
-		, gPth_Blk_MLP	:= buildPtn_MLBlock().ParBlk													; ADDED	  - Multi-line Parentheses block
+		;, gPth_Blk_MLP	:= buildPtn_MLBlock().ParBlk													; ADDED	  -  Multi-line Parentheses block (WITHOUT trailer)
+		, gPth_Blk_MLPT	:= buildPtn_MLBlock().FullT														; 2026-04-13 Multi-line Parentheses block (with optional trailer)
 		, gPtn_HOTSTR	:= '^\h*+:(?<Opts>[^:\v]++)*+:(?<Trig>[^:\v]++)::'			; single line only	; UPDATED - hotstrings
 		, gPtn_HS_LWS	:= '^\s*+:(?<Opts>[^:\v]++)*+:(?<Trig>[^:\v]++)::'			; single line only	; UPDATED - hotstrings (supports leading blank lines)
 		, gPtn_HOTKEY	:= buildPtn_Hotkey().noLWS									; single line only	; UPDATED - hotkeys
@@ -132,21 +133,31 @@ global	  gTagChar		:= chr(0x2605) ; '★'															; unique char to ensure 
 ;################################################################################
 {
 ; 2025-06-12 AMB, ADDED
+; 2026-04-13 AMB, UPDATED
 ; Purpose: To determine whether srcStr has...
 ;	A. a very specific tag		(tagType := exact tag to search for)
-;		if srcStr is specified, this will only return a positive result if tag is found within srcStr
-;		leave srcStr blank to guarantee a return of orig sub-string from maskList, (even if tag is not found in srcStr)
+;		if srcStr is specified, this will only return a positive result...
+;		... if tag is found within srcStr
+;		leave srcStr blank to guarantee a return of orig sub-string from...
+;		... maskList, (even if tag is not found in srcStr)
 ;	B. a specific tag type		(tagtype := string identifier for a tag category)
 ;	C. any mask tag in general	(tagType := leave empty)
 
 	; make sure tagType is a valid tag
 
-	; A: find very specific mask-tag - return orig sub-string if found in maplist, false otherwise
-	; (note: if srcStr is specified (not blank), will only return orig sub-string if tag is ALSO found in srcStr)
+	; A: find very specific mask-tag - return orig sub-string if found in maplist,
+	;	... false otherwise
+	; (note: if srcStr is specified (not blank), will only return orig sub-string...
+	;	... if tag is ALSO found in srcStr)
 	;	leave srcStr blank to return orig sub-String regardless
 	validTag	:= '(?i)' uniqueTag('\w+')
-	if ((tagType ~= validTag) && clsMask.HasTag[tagType]) {							; if tag found in masklist...
-		oCode	:= clsMask.GetOrig[tagType]											; ... get orig sub-string
+	if (tagType ~= validTag) {
+		oCode := ''
+		if (tagType ~= '(?i)(BLKCLS|BLKFUNC)' && clsNodeMap.HasTag[tagType]) {
+			oCode := clsNodeMap.GetOrig[tagType]
+		} else if (clsMask.HasTag[tagType]) {															; if tag found in masklist...
+			oCode := clsMask.GetOrig[tagType]															; ... get orig sub-string
+		}
 		; if srcStr specified...
 		;	... only return orig sub-string when tag is found in srcStr
 		; if srcStr NOT specified, return orig sub-string in any case
@@ -155,15 +166,15 @@ global	  gTagChar		:= chr(0x2605) ; '★'															; unique char to ensure 
 	}
 
 	; setup for B: or C:
-	tagType		:= (tagType) ? (RegExReplace(tagType, '_$') . '_') : tagType		; ensure its last char is underscore
-	nTagType	:= '(?i)' uniqueTag(tagType '\w+')									; build tagType needle
+	tagType	 := (tagType) ? (RegExReplace(tagType, '_$') . '_') : tagType								; ensure its last char is underscore
+	nTagType := '(?i)' uniqueTag(tagType '\w+')															; build tagType needle
 
 	; B: find specific type of mask-tag
 	; C: find any mask-tag in general
 	; return first matching tag found, false otherwise
-	retval		:= (srcStr) ? (RegExMatch(srcStr, nTagType, &mTag) ? mTag[] : false) : false
-	return		retVal
-;	return !!(srcStr ~= tagType)		; T or F
+	retval := (srcStr) ? (RegExMatch(srcStr,nTagType,&mTag) ? mTag[] : false) : false
+	return retVal
+	;return !!(srcStr ~= tagType)	; T or F
 }
 ;################################################################################
 															 uniqueTag(uniqueStr)
@@ -190,6 +201,7 @@ global	  gTagChar		:= chr(0x2605) ; '★'															; unique char to ensure 
 	TODO - might just set exclusive strings and a popup in Default when 'targ' is unknown
 2025-10-05 AMB, UPDATED
 2025-11-30 AMB, UPDATED restore option for Switch, when labels are masked (to fix masking bug)
+2026-04-13 AMB, UPDATED
 
  CODE param		- source-code/haystack that will be searched (for target sub-string type)
 					2025-07-06 - CANNOT BE A TRULY GLOABAL VAR - will result in errors during recursion calls (see notes)
@@ -227,263 +239,266 @@ global	  gTagChar		:= chr(0x2605) ; '★'															; unique char to ensure 
 	switch targ,false	; case-insensitive
 	{
 		;################################################################################
-		case	'C&S':										; COMMENTS AND STRINGS...
-				Mask_T(&code,	 'BC',	 ,sessID?)			; 	recursion call - mask block comments
-				Mask_T(&code,	 'LC',	 ,sessID?)			; 	recursion call - mask line  comments
-				Mask_T(&code,	 'QS',	 ,sessID?)			; 	recursion call - mask quoted-strings (1line)
-				if (IsSet(option) && (option & 1))			; default = DONT mask, 1 = mask
-					Mask_T(&code, 'MLQS',,sessID?)			; 	recursion call - mask quoted-strings (ML)
+		case	'C&S':																					; COMMENTS AND STRINGS...
+				Mask_T(&code,	 'BC',	 ,sessID?)														; 	recursion call - mask block comments
+				Mask_T(&code,	 'LC',	 ,sessID?)														; 	recursion call - mask line  comments
+				Mask_T(&code,	 'QS',	 ,sessID?)														; 	recursion call - mask quoted-strings (1line)
+				if (IsSet(option) && (option & 1))														; default = DONT mask, 1 = mask
+					Mask_T(&code, 'MLQS',,sessID?)														; 	recursion call - mask quoted-strings (ML)
 		;################################################################################
-		case	'BC':										; BLOCK COMMENTS
+		case	'BC':																					; BLOCK COMMENTS
 				clsMask.MaskAll(&code, 'BC'
 					, gPtn_BC, sessID?)
 		;################################################################################
-		case	'LC':										; LINE COMMENTS
+		case	'LC':																					; LINE COMMENTS
 				clsMask.MaskAll(&code, 'LC'
 					, gPtn_LC, sessID?)
 		;################################################################################
-		case	'HK','HOTKEY':								; HOT KEYS (declaration)
+		case	'HK':																					; HOT KEYS (declaration)
 				if (!IsSet(sessID)) {
-					sessID := clsMask.NewSession()			; create session as needed
+					sessID := clsMask.NewSession()														; create session as needed
 				}
-				if (!IsSet(option) || (option & 1)) {		; premask by default, or if bit 1 is set
-					Mask_T(&code,	'C&S',	1,sessID?)		; 	recursion call - mask comments/strings				(INCLUDE MLQS)
-					Mask_T(&code,	'V1MLS',0,sessID?)		; 	recursion call - mask legacy ML strings				(do not premask or restore)
-					Mask_T(&code,	'MLPB',	0,sessID?)		; 	recursion call - mask multi-line parentheses blocks	(do not premask or restore)
+				if (!IsSet(option) || (option & 1)) {													; premask by default, or if bit 1 is set
+					Mask_T(&code,	'C&S',	1,sessID?)													; 	recursion call - mask comments/strings		(INCLUDE MLQS)
+					Mask_T(&code,	'V1MLS',0,sessID?)													; 	recursion call - mask legacy ML strings		(do not premask or restore)
+					Mask_T(&code,	'MLPBT',0,sessID?)													; 	recursion call - mask ML parentheses blks	(do not premask or restore)
 				}
-				nGblHK := '(?im)' gPtn_HOTKEY				; support searching script globally
-				clsMask.MaskAll(&code,'HK'					; mask hotkeys
+				nGblHK := '(?im)' gPtn_HOTKEY															; support searching script globally
+				clsMask.MaskAll(&code,'HK'																; mask hotkeys
 					, nGblHK, sessID?)
-				if (!IsSet(option) || (option & 2)) {		; restore by default, or if bit 2 is set
-					Mask_R(&code,	'MLPB',	,sessID?)		; 	restore multi-line parentheses blocks
-					;Mask_R(&code,	'V1MLS',,sessID?)		; 	2026-01-17 - removed - restore legacy ML strings
-					Mask_R(&code,	'C&S',	,sessID?)		; 	restore comments/strings
+				if (!IsSet(option) || (option & 2)) {													; restore by default, or if bit 2 is set
+					Mask_R(&code,	'MLPBT',,sessID?)													; 	restore ML parentheses blks
+					;Mask_R(&code,	'V1MLS',,sessID?)													; 	2026-01-17 - removed - restore legacy ML strings
+					Mask_R(&code,	'C&S',	,sessID?)													; 	restore comments/strings
 				}
 		;################################################################################
-		case	'HS','HOTSTR':								; HOT STRINGS (declaration)
+		case	'HS','HOTSTR':																			; HOT STRINGS (declaration)
 				if (!IsSet(sessID)) {
-					sessID := clsMask.NewSession()			; create session as needed
+					sessID := clsMask.NewSession()														; create session as needed
 				}
-				if (!IsSet(option) || (option & 1)) {		; premask by default, or if bit 1 is set
-					Mask_T(&code,	'C&S',	1,sessID?)		; 	recursion call - mask comments/strings				(INCLUDE MLQS)
-					Mask_T(&code,	'V1MLS',0,sessID?)		; 	recursion call - mask legacy ML strings				(do not premask or restore)
-					Mask_T(&code,	'MLPB',	0,sessID?)		; 	recursion call - mask multi-line parentheses blocks	(do not premask or restore)
+				if (!IsSet(option) || (option & 1)) {													; premask by default, or if bit 1 is set
+					Mask_T(&code,	'C&S',	1,sessID?)													; 	recursion call - mask comments/strings		(INCLUDE MLQS)
+					Mask_T(&code,	'V1MLS',0,sessID?)													; 	recursion call - mask legacy ML strings		(do not premask or restore)
+					Mask_T(&code,	'MLPBT',0,sessID?)													; 	recursion call - mask ML parentheses blks	(do not premask or restore)
 				}
-				nGblHS := '(?im)' gPtn_HOTSTR				; support searching script globally
-				clsMask.MaskAll(&code, 'HS'					; mask hotstrings
+				nGblHS := '(?im)' gPtn_HOTSTR															; support searching script globally
+				clsMask.MaskAll(&code, 'HS'																; mask hotstrings
 					, nGblHS, sessID?)
-				if (!IsSet(option) || (option & 2)) {		; restore by default, or if bit 2 is set
-					Mask_R(&code,	'MLPB',	,sessID?)		; 	restore multi-line parentheses blocks
-					;Mask_R(&code,	'V1MLS',,sessID?)		; 	2026-01-17 - removed - restore legacy ML strings
-					Mask_R(&code,	'C&S',	,sessID?)		; 	restore comments/strings
+				if (!IsSet(option) || (option & 2)) {													; restore by default, or if bit 2 is set
+					Mask_R(&code,	'MLPBT',,sessID?)													; 	restore ML parentheses blks
+					;Mask_R(&code,	'V1MLS',,sessID?)													; 	2026-01-17 - removed - restore legacy ML strings
+					Mask_R(&code,	'C&S',	,sessID?)													; 	restore comments/strings
 				}
 		;################################################################################
-		case	'LBL','LABELS':								; LABELS (declaration)
-				if (!(code~='(?m)^[\h{}]*\S+?:(?=\h|$)')) {	; make sure there is a possible label within code
-					return									; label should not be within code
+		case	'LBL','LABELS':																			; LABELS (declaration)
+				if (!(code~='(?m)^[\h{}]*\S+?:(?=\h|$)')) {												; make sure there is a possible label within code
+					return																				; label should not be within code
 				}
 				; lots of things can interfere with label detection
 				; mask potential false positives
 				if (!IsSet(sessID)) {
-					sessID := clsMask.NewSession()			; create session as needed
+					sessID := clsMask.NewSession()														; create session as needed
 				}
-				if (!IsSet(option) || (option & 1)) {		; premask by default, or if bit 1 is set
-					Mask_T(&code,	'C&S',	1,sessID?)		; 	recursion call - mask comments/strings				(INCLUDE MLQS)
-					Mask_T(&code,	'V1MLS',0,sessID?)		; 	recursion call - mask legacy ML strings				(do not premask or restore)
-					Mask_T(&code,	'MLPB',	0,sessID?)		; 	recursion call - mask multi-line parentheses blocks (do not premask or restore)
-					Mask_T(&code,	'HK',	0,sessID?)		; 	recursion call - mask hotkey declarations			(do not premask or restore)
-					Mask_T(&code,	'HS',	0,sessID?)		; 	recursion call - mask hotstring declarations		(do not premask or restore)
-					Mask_T(&code,	'KV',	0,sessID?)		; 	recursion call - mask key/vals						(do not premask or restore)
-					;Mask_T(&code,	'SW',	2,sessID?)		; 	recursion call - mask switch blocks					(do not premask or restore)
-					Mask_T(&code,	'SW',	0,sessID?)		; 	2025-11-30 AMB, changed restore option to prevent HK's from being restored too soon
+				if (!IsSet(option) || (option & 1)) {													; premask by default, or if bit 1 is set
+					Mask_T(&code,	'C&S',	1,sessID?)													; 	recursion call - mask comments/strings		(INCLUDE MLQS)
+					Mask_T(&code,	'V1MLS',0,sessID?)													; 	recursion call - mask legacy ML strings		(do not premask or restore)
+					Mask_T(&code,	'MLPBT',0,sessID?)													; 	recursion call - ML parentheses blks		(do not premask or restore)
+					Mask_T(&code,	'HK',	0,sessID?)													; 	recursion call - mask hotkey declarations	(do not premask or restore)
+					Mask_T(&code,	'HS',	0,sessID?)													; 	recursion call - mask HS declarations		(do not premask or restore)
+					Mask_T(&code,	'KV',	0,sessID?)													; 	recursion call - mask key/vals				(do not premask or restore)
+					;Mask_T(&code,	'SW',	2,sessID?)													; 	recursion call - mask switch blocks			(do not premask or restore)
+					Mask_T(&code,	'SW',	0,sessID?)													; 	2025-11-30 AMB, changed restore option to prevent HK's from being restored too soon
 				}
-;				clsMask.MaskAll(&code, 'LBLBLK'				; mask label blocks (that have braces)
-;					, gPtn_Blk_LBL, sessID?)					; currently already supports (?im)
-				clsMask.MaskAll(&code, 'LBL'				; mask label declaration only
-					, gPtn_Blk_LBLP, sessID?)				; currently already supports (?im)
-				if (!IsSet(option) || (option & 2)) {		; restore by default, or if bit 2 is set
-					Mask_R(&code,	'SW',	,sessID?)		; 	restore switch blocks
-					Mask_R(&code,	'KV',	,sessID?)		; 	restore key/vals
-					Mask_R(&code,	'HS',	,sessID?)		; 	restore hotstring declarations
-					Mask_R(&code,	'HK',	,sessID?)		; 	restore hotkey declarations
-					Mask_R(&code,	'MLPB',	,sessID?)		; 	restore multi-line parentheses blocks
-					;Mask_R(&code,	'V1MLS',,sessID?)		; 	2026-01-17 - removed - restore legacy ML strings
-					Mask_R(&code,	'C&S',	,sessID?)		; 	restore comments/strings
-				}
-		;################################################################################
-		case	'MLPB':										; MULTI-LINE PARENTHESES BLOCKS
-				; premask/restore - OFF BY DEFAULT
-				; set option to (3) to do both of these
-				if (IsSet(option) && (option & 1)) {		; premask only when bit 1 is set
-					Mask_T(&code,	'C&S',	1,sessID?)		; 	recursion call - mask comments/strings				(INCLUDE MLQS)
-				}
-				clsMask.MaskAll(&code, 'MLPB'				; mask multi-line parentheses blocks
-					, gPth_Blk_MLP, sessID?)
-				if (IsSet(option) && (option & 2)) {		; restore only when bit 2 is set
-					Mask_R(&code,	'C&S',	,sessID?)		; 	restore comments/strings
+				;clsMask.MaskAll(&code, 'LBLBLK'														; mask label blocks (that have braces)
+				;	, gPtn_Blk_LBL, sessID?)															; currently already supports (?im)
+				clsMask.MaskAll(&code, 'LBL'															; mask label declaration only
+					, gPtn_Blk_LBLP, sessID?)															; currently already supports (?im)
+				if (!IsSet(option) || (option & 2)) {													; restore by default, or if bit 2 is set
+					Mask_R(&code,	'SW',	,sessID?)													; 	restore switch blocks
+					Mask_R(&code,	'KV',	,sessID?)													; 	restore key/vals
+					Mask_R(&code,	'HS',	,sessID?)													; 	restore hotstring declarations
+					Mask_R(&code,	'HK',	,sessID?)													; 	restore hotkey declarations
+					Mask_R(&code,	'MLPBT',,sessID?)													; 	restore ML parentheses blks
+					;Mask_R(&code,	'V1MLS',,sessID?)													; 	2026-01-17 - removed - restore legacy ML strings
+					Mask_R(&code,	'C&S',	,sessID?)													; 	restore comments/strings
 				}
 		;################################################################################
-		case	'KV','KVO','KVP','KEYVAL':					; KEY/VAL pair/objects
+		case	'MLPBT':																				; MULTI-LINE PARENTHESES BLOCKS (with optional trailer)
 				; premask/restore - OFF BY DEFAULT
 				; set option to (3) to do both of these
-				if (IsSet(option) && (option & 1)) {		; premask only when bit 1 is set
-					Mask_T(&code,	'C&S',	1,sessID?)		; 	recursion call - mask comments/strings				(INCLUDE MLQS)
+				if (IsSet(option) && (option & 1)) {													; premask only when bit 1 is set
+					Mask_T(&code,	'C&S',	1,sessID?)													; 	recursion call - mask comments/strings		(INCLUDE MLQS)
 				}
-				clsMask.MaskAll(&code, 'KVO'				; mask key/val pairs/objects
+				clsMask.MaskAll(&code, 'MLPBT'															; mask ML parentheses blks
+					, gPth_Blk_MLPT, sessID?)
+				if (IsSet(option) && (option & 2)) {													; restore only when bit 2 is set
+					Mask_R(&code,	'C&S',	,sessID?)													; 	restore comments/strings
+				}
+		;################################################################################
+		case	'KV','KVO','KVP','KEYVAL':																; KEY/VAL pair/objects
+				; premask/restore - OFF BY DEFAULT
+				; set option to (3) to do both of these
+				if (IsSet(option) && (option & 1)) {													; premask only when bit 1 is set
+					Mask_T(&code,	'C&S',	1,sessID?)													; 	recursion call - mask comments/strings		(INCLUDE MLQS)
+				}
+				clsMask.MaskAll(&code, 'KVO'															; mask key/val pairs/objects
 					, gPtn_KVO, sessID?)
-				if (IsSet(option) && (option & 2)) {		; restore only when bit 2 is set
-					Mask_R(&code,	'C&S',	,sessID?)		; 	restore comments/strings
+				if (IsSet(option) && (option & 2)) {													; restore only when bit 2 is set
+					Mask_R(&code,	'C&S',	,sessID?)													; 	restore comments/strings
 				}
 		;################################################################################
-		case	'ARRSQ':									; Array literal with square brackets
+		case	'ARRSQ':																				; Array literal with square brackets
 				; premask/restore - OFF BY DEFAULT
 				; set option to (3) to do both of these
-				if (IsSet(option) && (option & 1)) {		; premask only when bit 1 is set
-					Mask_T(&code,	'C&S',	1,sessID?)		; 	recursion call - mask comments/strings				(INCLUDE MLQS)
+				if (IsSet(option) && (option & 1)) {													; premask only when bit 1 is set
+					Mask_T(&code,	'C&S',	1,sessID?)													; 	recursion call - mask comments/strings		(INCLUDE MLQS)
 				}
-				clsMask.MaskAll(&code, 'ARRSQ'				; mask array literal list
+				clsMask.MaskAll(&code, 'ARRSQ'															; mask array literal list
 					, gPtn_SqrBkts, sessID?)
-				if (IsSet(option) && (option & 2)) {		; restore only when bit 2 is set
-					Mask_R(&code,	'C&S',	,sessID?)		; 	restore comments/strings
+				if (IsSet(option) && (option & 2)) {													; restore only when bit 2 is set
+					Mask_R(&code,	'C&S',	,sessID?)													; 	restore comments/strings
 				}
 		;################################################################################
-		case	'V1MLS','V1LEGMLS':							; V1 LEGACY (non-expression) MULTI-LINE STRING
+		case	'V1MLS','V1LEGMLS':																		; V1 LEGACY (non-expression) MULTI-LINE STRING
 				; premask/restore - OFF BY DEFAULT
 				; set option to (3) to do both of these
-				if (IsSet(option) && (option & 1)) {		; premask only when bit 1 is set
-					Mask_T(&code,	'C&S',	1,sessID?)		; 	recursion call - mask comments/strings (INCLUDE MLQS)
+				if (IsSet(option) && (option & 1)) {													; premask only when bit 1 is set
+					Mask_T(&code,	'C&S',	1,sessID?)													; 	recursion call - mask comments/strings 		(INCLUDE MLQS)
 				}
-				clsMask.MaskAll(&code, 'V1LEGMLS'			; mask v1 legacy ML strings
+				clsMask.MaskAll(&code, 'V1LEGMLS'														; mask v1 legacy ML strings
 					, gPtn_V1L_MLSV, sessID?)
-				if (IsSet(option) && (option & 2)) {		; restore only when bit 2 is set
-					Mask_R(&code,	'C&S',	,sessID?)		; 	restore comments/strings
+				if (IsSet(option) && (option & 2)) {													; restore only when bit 2 is set
+					Mask_R(&code,	'C&S',	,sessID?)													; 	restore comments/strings
 				}
 		;################################################################################
-		case	'DQ','DQSTR':								; QUOTED-STRINGS (1line, "" only)
+		case	'DQ','DQSTR':																			; QUOTED-STRINGS (1line, "" only)
 				clsMask.MaskAll(&code, 'DQ'
 					, gPtn_DQ_1L, sessID?)
 		;################################################################################
-		case	'SQ','SQSTR':								; QUOTED-STRINGS (1line, '' only)
+		case	'SQ','SQSTR':																			; QUOTED-STRINGS (1line, '' only)
 				clsMask.MaskAll(&code, 'SQ'
 					, gPtn_SQ_1L, sessID?)
 		;################################################################################
-		case	'QS','QSTR':								; QUOTED-STRINGS (1line, "" and/or '')
+		case	'QS','QSTR':																			; QUOTED-STRINGS (1line, "" and/or '')
 				clsMask.MaskAll(&code, 'QS'
 					, gPtn_QS_1L, sessID?)
 		;################################################################################
-		case	'MLQS','MLSTR':								; QUOTED-STRINGS (multi-line)
+		case	'MLQS','MLSTR':																			; QUOTED-STRINGS (multi-line)
 				clsMask.MaskAll(&code, 'MLQS'
 					, gPtn_QS_MLPth, sessID?)
 		;################################################################################
-		case	'STR','STRINGS':							; STRINGS (1line and ML)
-				Mask_T(&code,	 'QS',	,sessID?)			; 	recursion call - mask quoted-strings (1line)
-				Mask_T(&code,	 'MLQS',,sessID?)			; 	recursion call - mask quoted-strings (ML)
+		case	'STR','STRINGS':																		; STRINGS (1line and ML)
+				Mask_T(&code,	 'QS',	,sessID?)														; 	recursion call - mask quoted-strings (1line)
+				Mask_T(&code,	 'MLQS',,sessID?)														; 	recursion call - mask quoted-strings (ML)
 		;################################################################################
-		case	'CS','CSECT':								; CONTINUATION SECTIONS (ANY)
+		case	'CS','CSECT':																			; CONTINUATION SECTIONS (ANY)
 				; 2025-06-22 - DONT MERGE THIS IDEA YET
-				;Mask_T(&code,	'CS1',	,sessID?)			; 	recursion call - mask 'method 1' Cont Sects
-				Mask_T(&code, 	'CS2',	,sessID?)			; 	recursion call - mask 'method 2' Cont Sects
+				;Mask_T(&code,	'CS1',	,sessID?)														; 	recursion call - mask 'method 1' Cont Sects
+				Mask_T(&code, 	'CS2',	,sessID?)														; 	recursion call - mask 'method 2' Cont Sects
 		;################################################################################
-		case	'CS1','CSECT1':								; CONTINUATION SECTIONS (METHOD 1)
+		case	'CS1','CSECT1':																			; CONTINUATION SECTIONS (METHOD 1)
 				if (!IsSet(sessID)) {
-					sessID := clsMask.NewSession()			; create session as needed
+					sessID := clsMask.NewSession()														; 	create session as needed
 				}
 				; lots of premasks are done in next step
-				Mask_T(&code,	'LBL',	1,sessID?)			; 	recursion call - mask label declarations (premask, but do not restore)
-				clsMask.MaskAll(&code,	'MLCSECTM1'			; 	mask all METHOD 1 continuation sections
+				Mask_T(&code,	'LBL',	1,sessID?)														; recursion call - mask label declarations (premask, but do not restore)
+				clsMask.MaskAll(&code,	'MLCSECTM1'														; mask all METHOD 1 continuation sections
 					, gPtn_CSectM1, sessID?)
-				Mask_T(&code,	'LBL',	2,sessID?)			; 	recursion call - THIS IS ACTUALLY DOING RESTORE OF PREMASKS
-				Mask_R(&code,	'LBL',	,sessID?)			; 	restore label declarations (restore by default)
+				Mask_T(&code,	'LBL',	2,sessID?)														; recursion call - THIS IS ACTUALLY DOING RESTORE OF PREMASKS
+				Mask_R(&code,	'LBL',	,sessID?)														; restore label declarations (restore by default)
 		;################################################################################
-		case	'CS2','CSECT2':								; CONTINUATION SECTIONS (METHOD 2)
+		case	'CS2','CSECT2':																			; CONTINUATION SECTIONS (METHOD 2)
 				if (!IsSet(sessID)) {
-					sessID := clsMask.NewSession()			; create session as needed
+					sessID := clsMask.NewSession()														; 	create session as needed
 				}
-				Mask_T(&code,	'C&S',	,sessID?)			; 	recursion call - mask comments/strings (NOT ML strings!)
-				clsMask.MaskAll(&code,	'MLCSECTM2'			; 	mask all METHOD 2 continuation sections
+				Mask_T(&code,	'C&S',	,sessID?)														; recursion call - mask comments/strings		 (NOT ML strings!)
+				clsMask.MaskAll(&code,	'MLCSECTM2'														; mask all METHOD 2 continuation sections
 					, gPtn_CSectM2, sessID?)
-				Mask_R(&code,	'C&S',	,sessID?)			; 	restore comments/strings
+				Mask_R(&code,	'C&S',	,sessID?)														; restore comments/strings
 		;################################################################################
-		case	'FC','FCALL':								; FUNCTION CALLS
+		case	'FC','FCALL':																			; FUNCTION CALLS
 				if (!IsSet(sessID)) {
-					sessID := clsMask.NewSession()			; create session as needed
+					sessID := clsMask.NewSession()														; 	create session as needed
 				}
-				Mask_T(&code,	'STR',	,sessID?)			; 	recursion call - mask strings
-				clsMask.MaskAll(&code, 'FC'					; mask function calls
+				Mask_T(&code,	'STR',	,sessID?)														; recursion call - mask strings
+				clsMask.MaskAll(&code, 'FC'																; mask function calls
 					, gPtn_FuncCall, sessID?)
-				if (IsSet(option) && (option & 2)) {		; restore only when bit 2 is set
-					Mask_R(&code, 'STR',,sessID?)			;	restore all strings [FROM TEMP SESSION]
+				if (IsSet(option) && (option & 2)) {													; restore only when bit 2 is set
+					Mask_R(&code, 'STR',,sessID?)														;	restore all strings [FROM TEMP SESSION]
 				}
 		;################################################################################
-		case	'FUNC':										; FUNCTIONS
+		case	'FUNC':																					; FUNCTIONS
 				if (!IsSet(sessID)) {
-					sessID := clsMask.NewSession()			; create session as needed
+					sessID := clsMask.NewSession()														; 	create session as needed
 				}
 				; premask/restore - OFF BY DEFAULT
 				; set option to (3) to do both of these
-				if (IsSet(option) && (option & 1)) {		; premask only when bit 1 is set
-					Mask_T(&code,	'C&S',	 ,sessID?)		; 	recursion call - mask comments/strings
-					Mask_T(&code,	'V1MLS',0,sessID?)		; 	recursion call - mask legacy ML strings
-					Mask_T(&code,	'MLPB',	0,sessID?)		; 	recursion call - mask multi-line parentheses blocks
+				if (IsSet(option) && (option & 1)) {													; premask only when bit 1 is set
+					Mask_T(&code,	'C&S',	 ,sessID?)													; 	recursion call - mask comments/strings
+					Mask_T(&code,	'V1MLS',0,sessID?)													; 	recursion call - mask legacy ML strings
+					Mask_T(&code,	'MLPBT',0,sessID?)													; 	recursion call - mask ML parentheses blks
 				}
-				clsMask.MaskAll(&code, 'FUNC'				; mask functon blocks
+				clsMask.MaskAll(&code, 'FUNC'															; mask functon blocks
 					, gPtn_Blk_FUNC, sessID?)
-				if (IsSet(option) && (option & 2)) {		; restore only when bit 2 is set
-					Mask_R(&code, 'MLPB',	,sessID?)		; 	restore multi-line parentheses blocks
-					;Mask_R(&code, 'V1MLS',	,sessID?)		; 	2026-01-17 - removed - restore legacy ML strings
-					Mask_R(&code, 'C&S',	,sessID?)		;	restore comments/strings [FROM TEMP SESSION]
+				if (IsSet(option) && (option & 2)) {													; restore only when bit 2 is set
+					Mask_R(&code, 'MLPBT',	,sessID?)													; 	restore ML parentheses blks
+					;Mask_R(&code, 'V1MLS',	,sessID?)													; 	2026-01-17 - removed - restore legacy ML strings
+					Mask_R(&code, 'C&S',	,sessID?)													;	restore comments/strings [FROM TEMP SESSION]
 				}
 		;################################################################################
 		case	'CLS':
 				if (!IsSet(sessID)) {
-					sessID := clsMask.NewSession()			; create session as needed
+					sessID := clsMask.NewSession()														; 	create session as needed
 				}
 				; premask/restore - OFF BY DEFAULT
 				; set option to (3) to do both of these
-				if (IsSet(option) && (option & 1)) {		; premask only when bit 1 is set
-					Mask_T(&code,	'C&S',	 ,sessID?)		; 	recursion call - mask comments/strings
-					Mask_T(&code,	'V1MLS',0,sessID?)		; 	recursion call - mask legacy ML strings
-					Mask_T(&code,	'MLPB',	0,sessID?)		; 	recursion call - mask multi-line parentheses blocks
+				if (IsSet(option) && (option & 1)) {													; premask only when bit 1 is set
+					Mask_T(&code,	'C&S',	 ,sessID?)													; 	recursion call - mask comments/strings
+					Mask_T(&code,	'V1MLS',0,sessID?)													; 	recursion call - mask legacy ML strings
+					Mask_T(&code,	'MLPBT',0,sessID?)													; 	recursion call - ML parentheses blks
 				}
-				clsMask.MaskAll(&code, 'CLS'				; mask class blocks
+				clsMask.MaskAll(&code, 'CLS'															; mask class blocks
 					, gPtn_Blk_CLS, sessID?)
-				if (IsSet(option) && (option & 2)) {		; restore only when bit 2 is set
-					Mask_R(&code, 'MLPB',	,sessID?)		; 	restore multi-line parentheses blocks
-					;Mask_R(&code, 'V1MLS',	,sessID?)		; 	2026-01-17 - removed - restore legacy ML strings
-					Mask_R(&code, 'C&S',	,sessID?)		;	restore comments/strings [FROM TEMP SESSION]
+				if (IsSet(option) && (option & 2)) {													; restore only when bit 2 is set
+					Mask_R(&code, 'MLPBT',	,sessID?)													; 	restore ML parentheses blks
+					;Mask_R(&code, 'V1MLS',	,sessID?)													; 	2026-01-17 - removed - restore legacy ML strings
+					Mask_R(&code, 'C&S',	,sessID?)													;	restore comments/strings [FROM TEMP SESSION]
 				}
 		;################################################################################
-		case	'BLOCKS', 'CLS&FUNC', 'FUNC&CLS':			; CLASSES and FUNCTION
+		case	'BLOCKS', 'CLS&FUNC', 'FUNC&CLS':														; CLASSES and FUNCTION
 				clsNodeMap.Mask_Blocks(&code,sessID?, convert)
 		;################################################################################
-		case	'IWTLFS':									; IWTLFS BLOCKS
+		case	'IWTLFS':																				; IWTLFS BLOCKS
 				blkTypes:=['FOR','IF','LP','SW','TRY','WH']
 				Loop blkTypes.Length {
 					Mask_T(&code, blkTypes[A_Index], 0)
 				}
 		;################################################################################
-		case	'FOR':										; FOR BLOCKS
+		case	'FOR':																					; FOR BLOCKS
 				code := IWTLFS.Mask(code, 'FOR', option?)
 		;################################################################################
-		case	'IF':										; IF BLOCKS - v1 and v2
-				IFs := ['IF','IFEXIST','IFNOTEXIST']
+		case	'IF':																					; IF BLOCKS - v1 and v2
+				IFs := ['IF','IFEXIST','IFNOTEXIST','IFWINEXIST','IFWINNOTEXIST'						; 2026-04-13 AMB, UPDATED
+					,'IFWINACTIVE','IFWINNOTACTIVE','IFINSTRING','IFNOTINSTRING'
+					,'IFEQUAL','IFNOTEQUAL','IFLESS','IFLESSOREQUAL','IFGREATER'
+					,'IFGREATEROREQUAL','IFMSGBOX']
 				Loop IFs.Length {
-					IWTLFS.Mask(code, IFs[A_Index], option?)
+					IWTLFS.Mask(code, IFs[A_Index], option?)											;	mask each
 				}
 		;################################################################################
-		case	'LP', 'LOOP':								; LOOP BLOCKS
+		case	'LP', 'LOOP':																			; LOOP BLOCKS
 				code := IWTLFS.Mask(code, 'LOOP', option?)
 		;################################################################################
-		case	'SW','SWITCH':								; SWITCH block
+		case	'SW','SWITCH':																			; SWITCH block
 				code := IWTLFS.Mask(code, 'SWITCH', option?)
 		;################################################################################
-		case	'TRY':										; TRY BLOCKS
+		case	'TRY':																					; TRY BLOCKS
 				code := IWTLFS.Mask(code, 'TRY', option?)
 		;################################################################################
-		case	'WH', 'WHILE':								; WHILE BLOCKS
+		case	'WH', 'WHILE':																			; WHILE BLOCKS
 				code := IWTLFS.Mask(code, 'WHILE', option?)
 		;################################################################################
-		case	'HIF', 'HOTIF':								; HOTIF
+		case	'HIF', 'HOTIF':																			; HOTIF
 				clsMask.MaskAll(&code, 'HIF'
 					, gPtn_HotIf, sessID?)
 		;################################################################################
@@ -492,8 +507,8 @@ global	  gTagChar		:= chr(0x2605) ; '★'															; unique char to ensure 
 				; ... so it may be a custom target for custom masking...
 				; submit it as custom masking, not covered above
 				; NOTE: needle should be provided thru OPTION param
-				customNeedle := option						; making it clear
-				clsMask.MaskAll(&code, targ					; mask custom
+				customNeedle := option																	; making it clear
+				clsMask.MaskAll(&code, targ																; mask custom
 					, customNeedle, sessID?)
 		;################################################################################
 	}
@@ -561,160 +576,167 @@ global	  gTagChar		:= chr(0x2605) ; '★'															; unique char to ensure 
 	switch targ,false	; case-insensitive
 	{
 		;################################################################################
-		case	'C&S','S&C':								; COMMENTS AND STRINGS...
+		case	'C&S','S&C':																			; COMMENTS AND STRINGS...
 				; ORDER MATTERS - reverse order of Mask_T
 				ntMLQS	:= gTagPfx . 'MLQS_', 	ntQS := gTagPfx . 'QS_'
 				ntLC	:= gTagPfx . 'LC_', 	ntBC := gTagPfx . 'BC_'
 				hasTags := ((code ~= ntMLQS) || (code ~= ntQS) || (code ~= ntLC) || (code ~= ntBC))
 				pass := 0
 				While(hasTags) {
-					Mask_R(&code, 'MLQS',delTag, sessID?)	; 	recursion call - restore quoted-strings (ML)
-					Mask_R(&code, 'QS',	 delTag, sessID?)	; 	recursion call - restore quoted-strings (1line)
-					Mask_R(&code, 'LC',	 delTag, sessID?)	; 	recursion call - restore line  comments
-					Mask_R(&code, 'BC',	 delTag, sessID?)	; 	recursion call - restore block comments
-					hasTags := (((code ~= ntMLQS) || (code ~= ntQS) || (code ~= ntLC) || (code ~= ntBC)) && !IsSet(sessID))
+					Mask_R(&code, 'MLQS',delTag, sessID?)												; recursion call - restore quoted-strings (ML)
+					Mask_R(&code, 'QS',	 delTag, sessID?)												; recursion call - restore quoted-strings (1line)
+					Mask_R(&code, 'LC',	 delTag, sessID?)												; recursion call - restore line  comments
+					Mask_R(&code, 'BC',	 delTag, sessID?)												; recursion call - restore block comments
+					hasTags := (((code ~= ntMLQS)
+							||	 (code ~= ntQS)
+							||	 (code ~= ntLC)
+							||	 (code ~= ntBC))
+							&&	 !IsSet(sessID))
 				}
 		;################################################################################
-		case	'BC':										; BLOCK COMMENTS
+		case	'BC':																					; BLOCK COMMENTS
 				clsMask.RestoreAll(&code, 'BC'
 					, delTag, sessID?)
 		;################################################################################
-		case	'LC':										; LINE COMMENTS
+		case	'LC':																					; LINE COMMENTS
 				clsMask.RestoreAll(&code, 'LC'
 					, delTag, sessID?)
 		;################################################################################
-		case	'HK','HOTKEY':								; HOT KEYS (declaration)
+		case	'HK':																					; HOT KEYS (declaration)
 				clsMask.RestoreAll(&code, 'HK'
 					, delTag, sessID?)
 		;################################################################################
-		case	'HS','HOTSTR':								; HOT STRINGS (declaration)
+		case	'HS','HOTSTR':																			; HOT STRINGS (declaration)
 				clsMask.RestoreAll(&code, 'HS'
 					, delTag, sessID?)
 		;################################################################################
-		case	'LBL','LABELS':								; LABELS (declaration)
+		case	'LBL','LABELS':																			; LABELS (declaration)
 				clsMask.RestoreAll(&code, 'LBL'
 					, delTag, sessID?)
-				clsMask.RestoreAll(&code, 'LBLBLK'			; label blocks (has braces)
+				clsMask.RestoreAll(&code, 'LBLBLK'														; label blocks (has braces)
 					, delTag, sessID?)
 		;################################################################################
-		case	'MLPB':										; MULTI-LINE PARENTHESES BLOCKS
-				clsMask.RestoreAll(&code, 'MLPB'
+		case	'MLPBT':																				; MULTI-LINE PARENTHESES BLOCKS (with optional trailer)
+				clsMask.RestoreAll(&code, 'MLPBT'
 					, delTag, sessID?)
 		;################################################################################
-		case	'KV','KVO','KVP','KEYVAL':					; KEY/VAL pair/objects
+		case	'KV','KVO','KVP','KEYVAL':																; KEY/VAL pair/objects
 				clsMask.RestoreAll(&code, 'KVO'
 					, delTag, sessID?)
 		;################################################################################
-		case	'ARRSQ':									; Array literal with sqaure brackets
+		case	'ARRSQ':																				; Array literal with sqaure brackets
 				clsMask.RestoreAll(&code, 'ARRSQ'
 					, delTag, sessID?)
 		;################################################################################
-		case	'V1MLS','V1LEGMLS':							; V1 LEGACY (non-expression) MULTI-LINE STRING
-				clsMLLineCont.RestoreAll(&code, 'V1LEGMLS'	; 2026-01-17 - UPDATED to support proper conversion
-					, delTag, sessID?, convert)				; will convert as part of restore, unless convert is set to 0
+		case	'V1MLS','V1LEGMLS':																		; V1 LEGACY (non-expression) MULTI-LINE STRING
+				clsMLLineCont.RestoreAll(&code, 'V1LEGMLS'												; 2026-01-17 - UPDATED to support proper conversion
+					, delTag, sessID?, convert)															; will convert as part of restore, unless convert is set to 0
 				;clsMask.RestoreAll(&code, 'V1LEGMLS'
 				;	, delTag, sessID?)
 		;################################################################################
-		case	'DQ','DQSTR':								; QUOTED-STRINGS (1line, "" only)
+		case	'DQ','DQSTR':																			; QUOTED-STRINGS (1line, "" only)
 				clsMask.RestoreAll(&code, 'DQ'
 					, delTag, sessID?)
 		;################################################################################
-		case	'SQ','SQSTR':								; QUOTED-STRINGS (1line, '' only)
+		case	'SQ','SQSTR':																			; QUOTED-STRINGS (1line, '' only)
 				clsMask.RestoreAll(&code, 'SQ'
 					, delTag, sessID?)
 		;################################################################################
-		case	'QS', 'QSTR':								; QUOTED-STRINGS (1line, "" and/or '')
+		case	'QS', 'QSTR':																			; QUOTED-STRINGS (1line, "" and/or '')
 				clsMask.RestoreAll(&code, 'QS'
 					, delTag, sessID?)
 		;################################################################################
-		case	'MLQS','MLSTR':								; QUOTED-STRINGS (multi-line)
+		case	'MLQS','MLSTR':																			; QUOTED-STRINGS (multi-line)
 				clsMask.RestoreAll(&code, 'MLQS'
 					, delTag, sessID?)
 		;################################################################################
-		case	'STR', 'STRINGS':							; STRINGS (1line and ML)
+		case	'STR', 'STRINGS':																		; STRINGS (1line and ML)
 				; ORDER MATTERS - reverse order of Mask_T
-				Mask_R(&code, 'MLQS',delTag, sessID?)		; 	recursion call - restore quoted-strings (ML)
-				Mask_R(&code, 'QS',  delTag, sessID?)		; 	recursion call - restore quoted-strings (1line)
+				Mask_R(&code, 'MLQS',delTag, sessID?)													; 	recursion call - restore quoted-strings (ML)
+				Mask_R(&code, 'QS',  delTag, sessID?)													; 	recursion call - restore quoted-strings (1line)
 		;################################################################################
-		case	'CS','CSECT':								; CONTINUATION SECTIONS (ANY)
+		case	'CS','CSECT':																			; CONTINUATION SECTIONS (ANY)
 				; reverse order of Mask_T
-				Mask_R(&code, 'CS2', delTag, sessID?)		; 	recursion call - restore method 2 cont sects
-;				Mask_R(&code, 'CS1', delTag, sessID?)		; 	recursion call - restore method 1 cont sects
+				Mask_R(&code, 'CS2', delTag, sessID?)													; 	recursion call - restore method 2 cont sects
+;				Mask_R(&code, 'CS1', delTag, sessID?)													; 	recursion call - restore method 1 cont sects
 		;################################################################################
-		case	'CS1','CSECT1':								; CONTINUATION SECTIONS (METHOD 1)
+		case	'CS1','CSECT1':																			; CONTINUATION SECTIONS (METHOD 1)
 				; Subclass providing custom restore
 				clsMLLineCont.RestoreAll(&code, 'MLCSECTM1'
-					, delTag, sessID?, convert)				; will convert as part of restore, unless convert is set to 0
+					, delTag, sessID?, convert)															; will convert as part of restore, unless convert is set to 0
 		;################################################################################
-		case	'CS2','CSECT2':								; CONTINUATION SECTIONS (METHOD 2)
+		case	'CS2','CSECT2':																			; CONTINUATION SECTIONS (METHOD 2)
 				; Subclass providing custom restore
 				clsMLLineCont.RestoreAll(&code, 'MLCSECTM2'
-					, delTag, sessID?, convert)				; will convert as part of restore, unless convert is set to 0
+					, delTag, sessID?, convert)															; will convert as part of restore, unless convert is set to 0
 		;################################################################################
-		case	'FC','FCALL':								; FUNCTION CALLS
+		case	'FC','FCALL':																			; FUNCTION CALLS
 				clsMask.RestoreAll(&code, 'FC'
 					, delTag, sessID?)
-				Mask_R(&code, 'STR', delTag,sessID?)		;	recursion call - restore quoted strings
+				Mask_R(&code, 'STR', delTag,sessID?)													; recursion call - restore quoted strings
 		;################################################################################
-		case	'FUNC':										; FUNCTION BLOCKS
+		case	'FUNC':																					; FUNCTION BLOCKS
 				clsMask.RestoreAll(&code, 'FUNC'
 					, delTag, sessID?)
-				clsNodeMap.RestoreAll(&code, 'BLKFUNC'		; 2025-10-27 AMB
+				clsNodeMap.RestoreAll(&code, 'BLKFUNC'													; 2025-10-27 AMB
 					, delTag, sessID?, convert)
 		;################################################################################
-		case	'CLS':										; CLASS BLOCKS
+		case	'CLS':																					; CLASS BLOCKS
 				clsMask.RestoreAll(&code, 'CLS'
 					, delTag, sessID?)
-				clsNodeMap.RestoreAll(&code, 'BLKCLS'		; 2025-10-27 AMB
+				clsNodeMap.RestoreAll(&code, 'BLKCLS'													; 2025-10-27 AMB
 					, delTag, sessID?, convert)
 		;################################################################################
-		case	'BLOCKS', 'CLS&FUNC', 'FUNC&CLS':			; CLASS and FUNCTION BLOCKS
-				clsNodeMap.RestoreAll(&code, 'BLKCLS'		; 2025-10-27 AMB
+		case	'BLOCKS', 'CLS&FUNC', 'FUNC&CLS':														; CLASS and FUNCTION BLOCKS
+				clsNodeMap.RestoreAll(&code, 'BLKCLS'													; 2025-10-27 AMB
 					, delTag, sessID?, convert)
-				clsNodeMap.RestoreAll(&code, 'BLKFUNC'		; 2025-10-27 AMB
+				clsNodeMap.RestoreAll(&code, 'BLKFUNC'													; 2025-10-27 AMB
 					, delTag, sessID?, convert)
 				;clsNodeMap.Restore_Blocks(&code,convert)
 		;################################################################################
-		case	'IWTLFS':									; IWTLFS BLOCKS
+		case	'IWTLFS':																				; IWTLFS BLOCKS
 				nFILSTW := '(?im)' UniqueTag('(?:FOR|IF|LOOP|SWITCH|TRY|WHILE)\w++')
 				while(code ~= nFILSTW) {
 					blkTypes:=['FOR','IF','LP','SW','TRY','WH']
 					Loop blkTypes.Length {
-						Mask_R(&code, blkTypes[-A_Index]	; reverse order
+						Mask_R(&code, blkTypes[-A_Index]												; reverse order
 							, delTag, sessID?)
 					}
 				}
 				code := RegExReplace(code, '(?i) ★TRY_CRLF_\d+★\r\n')
 		;################################################################################
-		case	'FOR':										; FOR BLOCKS
+		case	'FOR':																					; FOR BLOCKS
 				clsMask.RestoreAll(&code, 'FOR'
 					, delTag, sessID?)
 		;################################################################################
-		case	'IF':										; IF BLOCKS - v1 and v2
-				IFs := ['IF','IFEXIST','IFNOTEXIST','IFMSGBOX']								; 2025-11-23 AMB, UPDATED
+		case	'IF':																					; IF BLOCKS - v1 and v2
+				IFs := ['IF','IFEXIST','IFNOTEXIST','IFWINEXIST','IFWINNOTEXIST'						; 2026-04-13 AMB, UPDATED
+					,'IFWINACTIVE','IFWINNOTACTIVE','IFINSTRING','IFNOTINSTRING'
+					,'IFEQUAL','IFNOTEQUAL','IFLESS','IFLESSOREQUAL','IFGREATER'
+					,'IFGREATEROREQUAL','IFMSGBOX']
 				Loop IFs.Length {
 				clsMask.RestoreAll(&code, IFs[-A_Index]
 					, delTag, sessID?)
 				}
 		;################################################################################
-		case	'LP', 'LOOP':								; LOOP BLOCKS
+		case	'LP', 'LOOP':																			; LOOP BLOCKS
 				clsMask.RestoreAll(&code, 'LOOP'
 					, delTag, sessID?)
 		;################################################################################
-		case	'SW','SWITCH':								; SWITCH block
+		case	'SW','SWITCH':																			; SWITCH block
 				clsMask.RestoreAll(&code, 'SWITCH'
 					, delTag, sessID?)
 		;################################################################################
-		case	'TRY':										; TRY BLOCKS
+		case	'TRY':																					; TRY BLOCKS
 				clsMask.RestoreAll(&code, 'TRY'
 					, delTag, sessID?)
 ;				code := RegExReplace(code, '(?i) ★TRY_CRLF_\d+★\r\n')
 		;################################################################################
-		case	'WH', 'WHILE':								; WHILE BLOCKS
+		case	'WH', 'WHILE':																			; WHILE BLOCKS
 				clsMask.RestoreAll(&code, 'WHILE'
 					, delTag, sessID?)
 		;################################################################################
-		case	'HIF', 'HOTIF':								; HOTIF
+		case	'HIF', 'HOTIF':																			; HOTIF
 				clsMask.RestoreAll(&code, 'HIF'
 					, delTag, sessID?)
 		;################################################################################
@@ -722,7 +744,7 @@ global	  gTagChar		:= chr(0x2605) ; '★'															; unique char to ensure 
 				; targ not found in case-list above...
 				; ... so it may be a custom target...
 				; submit is as custom restore, not covered above
-				clsMask.RestoreAll(&code, targ				; restore custom
+				clsMask.RestoreAll(&code, targ															; restore custom
 					, delTag, sessID?)
 		;################################################################################
 	}
@@ -740,22 +762,22 @@ global	  gTagChar		:= chr(0x2605) ; '★'															; unique char to ensure 
 	{
 		;################################################################################
 		case 'BC':
-			return RegExReplace(code, gPtn_BC)				; remove block comments
+			return RegExReplace(code, gPtn_BC)															; remove block comments
 		;################################################################################
 		case 'LC':
 			; Mask strings first to prevent interference
-			sess := clsMask.NewSession()					; temp masking session
-			Mask_T(&code, 'STR',, sess)						; mask strings, within isolated session
+			sess := clsMask.NewSession()																; temp masking session
+			Mask_T(&code, 'STR',, sess)																	; mask strings, within isolated session
 				code := separateComment(code, &comment:='')
-			Mask_R(&code, 'STR',, sess)						; restore strings, within isolated session
+			Mask_R(&code, 'STR',, sess)																	; restore strings, within isolated session
 			return code
 		;################################################################################
 		case 'C', 'COM', 'LC&BC', 'COMMENTS':
-			code := RemovePtn(code, 'BC')					; remove block comments
-			return	RemovePtn(code, 'LC')					; remove line  comments
+			code := RemovePtn(code, 'BC')																; remove block comments
+			return	RemovePtn(code, 'LC')																; remove line  comments
 		;################################################################################
 		case 'V1LEGMLS':
-			return RegExReplace(code, gPtn_V1L_MLSV)		; remove v1 legacy (non-expression) ML string assignments
+			return RegExReplace(code, gPtn_V1L_MLSV)													; remove v1 legacy (non-expression) ML string assignments
 		;################################################################################
 		default:
 			return RegExReplace(code, targ)
@@ -769,22 +791,35 @@ global	  gTagChar		:= chr(0x2605) ; '★'															; unique char to ensure 
 Class IWTLFS
 {
 ; 2025-10-05 AMB, ADDED
+; 2026-04-13 AMB, UPDATED
 ; IWTLFS - these letters are arranged this way for a reason, can you tell me why?
 ; Supports masking nested-blocks of FOR, IF, LOOP, SWITCH, TRY, WHILE
 ; Supports single/multi-line/intermixed blocks of mentioned types
 ; TODO - ADD SUPPORT FOR MASKING OF MULTIPLE TYPES WITH SINGLE CALL
 
 	;############################################################################
-	Static _needles	:= Map(	'FOR'			,gPtn_Blk_FOR									; full needles for each node type
-						,	'IF'			,gPtn_Blk_IF
-						,	'IFEXIST'		,gPtn_Blk_IF									; may add more legacy IF types later
-						,	'IFNOTEXIST'	,gPtn_Blk_IF									; have tested these If's briefly
-						,	'IFMSGBOX'		,gPtn_Blk_IF									; 2025-11-23 AMB, ADDED
-						,	'LOOP'			,gPtn_Blk_LP
-						,	'SWITCH'		,gPtn_Blk_SW
-						,	'TRY'			,gPtn_Blk_TRY
-						,	'WHILE'			,gPtn_BLK_WH )
-
+;	Static _needles	:= this._getNeedleMap()
+	Static _needles := Map(	'FOR'				,gPtn_Blk_FOR											; full needles for each node type
+					,		'IF'				,gPtn_Blk_IF
+					,		'IFEXIST'			,gPtn_Blk_IF											; may add more legacy IF types later
+					,		'IFNOTEXIST'		,gPtn_Blk_IF											; have tested these If's briefly
+					,		'IFWINEXIST'		,gPtn_Blk_IF											; 2026-04-13
+					,		'IFWINNOTEXIST'		,gPtn_Blk_IF											; 2026-04-13
+					,		'IFWINACTIVE'		,gPtn_Blk_IF											; 2026-04-13
+					,		'IFWINNOTACTIVE'	,gPtn_Blk_IF											; 2026-04-13
+					,		'IFINSTRING'		,gPtn_Blk_IF											; 2026-04-13
+					,		'IFNOTINSTRING'		,gPtn_Blk_IF											; 2026-04-13
+					,		'IFEQUAL'			,gPtn_Blk_IF											; 2026-04-13
+					,		'IFNOTEQUAL'		,gPtn_Blk_IF											; 2026-04-13
+					,		'IFLESS'			,gPtn_Blk_IF											; 2026-04-13
+					,		'IFLESSOREQUAL'		,gPtn_Blk_IF											; 2026-04-13
+					,		'IFGREATER'			,gPtn_Blk_IF											; 2026-04-13
+					,		'IFGREATEROREQUAL'	,gPtn_Blk_IF											; 2026-04-13
+					,		'IFMSGBOX'			,gPtn_Blk_IF											; 2025-11-23 AMB, ADDED
+					,		'LOOP'				,gPtn_Blk_LP
+					,		'SWITCH'			,gPtn_Blk_SW
+					,		'TRY'				,gPtn_Blk_TRY
+					,		'WHILE'				,gPtn_BLK_WH )
 	Static _sessID	:= ''
 	;############################################################################
 	; 2025-11-23 AMB, ADDED as part of fix for $413
@@ -792,179 +827,185 @@ Class IWTLFS
 	;	also returns code byRef - after premask and Trys isolation takes place
 	;	this returned code must be used by caller so that positions remain intact
 	; TODO - this may need to be changed to an obj rather than static to avoid conflicts
+	;############################################################################
 	Static GetRevPositions(&code)
 	{
-		this._preMask_T(&code)																; premask comments, strings, v1 ML strings
-		this._isolateTry(&code)																; place Trys on their own line
-		return this._getPositions(code)														; return node positions in reverse order
+		this._preMask_T(&code)																			; premask comments, strings, v1 ML strings
+		this._isolateTry(&code)																			; place Trys on their own line
+		return this._getPositions(code)																	; return node positions in reverse order
 	}
 	;############################################################################
 	; PUBLIC - call this method with each masking type, individually. But...
 	;	each pass will mask all supported types by default, from bottom to top...
 	;	then, if option is other than 0, will restore non-targ types
 	;############################################################################
-	Static Mask(code, targ:='', option:=0)													; Public entry point this class
+	Static Mask(code, targ:='', option:=0)																; Public entry point this class
 	{
-		if (!code)																			; if code is empty...
-			return ''																		; ... don't process further
+		if (!code)																						; if code is empty...
+			return ''																					; ... don't process further
 		; next 3 steps must be performed in ANY/ALL cases
-		this._preMask_T(&code)																; premask comments, strings, v1 ML strings
-		this._isolateTry(&code)																; place Trys on their own line
-		this._maskAllNodes(&code)															; mask FOR, IF, LOOP, SWITCH, TRY, WHILE
+		this._preMask_T(&code)																			; premask comments, strings, v1 ML strings
+		this._isolateTry(&code)																			; place Trys on their own line
+		this._maskAllNodes(&code)																		; mask FOR, IF, LOOP, SWITCH, TRY, WHILE
+
 		; should non-targ nodes be restored (limiting masking to targ only)?
-		if (option=0)	; non-targ restoration not important								; is usually set to 0
-			return code																		; will usually return now (all types masked)
-		else if (targ)	; set option to anything other than 0 to get here					; [NOTE: ._maskAllNodes MUST be performed in ANY/ALL cases]
-			this._maskTargOnly(&code, targ)													; limit masking to targ ONLY (remove mask from others)
+		if (option=0) { ; non-targ restoration not important											; is usually set to 0
+			return code																					; will usually return now (all types masked)
+		}
+		else if (targ) { ; set option to anything other than 0 to get here								; [NOTE: ._maskAllNodes MUST be performed in ANY/ALL cases]
+			this._maskTargOnly(&code, targ)																; limit masking to targ ONLY (remove mask from others)
+		}
 		return code
 	}
 	;############################################################################
-	Static _preMask_T(&code)																; premask to avoid conflicts
+	Static _preMask_T(&code)																			; premask to avoid conflicts
 	{
 		; TDDO - ADD PREMASKING FOR PARENTHESES ML BLOCKS ?
-		sessID		 := clsMask.NewSession()												; create masking session
-		this._sessID := sessID																; save sessID for restore later
-		Mask_T(&code, 'C&S'	 ,1,sessID)														; mask comments/strings
-		Mask_T(&code, 'V1MLS',, sessID)														; mask v1 ML strings
+		sessID		 := clsMask.NewSession()															; create masking session
+		this._sessID := sessID																			; save sessID for restore later
+		Mask_T(&code, 'C&S'	 ,1,sessID)																	; mask comments/strings
+		Mask_T(&code, 'V1MLS',, sessID)																	; mask v1 ML strings
+		Mask_T(&code, 'MLPBT',, sessID)		; 2026-04-13 AMB, ADDED										; mask ML parentheses blks (with opt trailer)
 	}
 	;############################################################################
 	Static _preMask_R(&code)
 	{
-		Mask_R(&code, 'C&S'	 ,,	this._sessID)												; restore comments and strings
-		;Mask_R(&code, 'V1MLS',,	this._sessID)											; 2026-01-17 - removed - restore v1 ML strings
+		;Mask_R(&code, 'MLPBT',, this._sessID)															; restore ML parentheses blks (with opt trailer)
+		;Mask_R(&code, 'V1MLS',, this._sessID)															; 2026-01-17 - removed - restore v1 ML strings
+		Mask_R(&code, 'C&S'	  ,, this._sessID)															; restore comments and strings
 	}
 	;############################################################################
-	Static _isolateTry(&code)																; place Try on it's own line
+	Static _isolateTry(&code)																			; place Try on it's own line
 	{
-		nTry	:= '(?im)^([\h{}]*+\bTRY\b)(.+)'											; target Try (full line)
-		While(pos := RegexMatch(code,nTry, &m, pos??1)) {									; for each Try line
-			line	:= m[]																	; full Try line
-			decl	:= m[1]																	; Try declaration
-			trail	:= m[2]																	; trailing portion after Try (open brace, LC, etc)
-			tag		:= ' ' gTagChar 'TRY_CRLF_' A_Index gTagChar							; unique tag for each occurrence
-			repl	:= decl tag '`r`n' trail												; replacement str
-			code	:= RegExReplace(code, escRegexChars(line), repl,,1,pos)					; replace Try line with tag
-			pos		+= StrLen(repl)															; prep for next search
+		nTry	:= '(?im)^([\h{}]*+\bTRY\b)(.+)'														; target Try (full line)
+		While(pos := RegexMatch(code,nTry, &m, pos??1)) {												; for each Try line
+			line	:= m[]																				; full Try line
+			decl	:= m[1]																				; Try declaration
+			trail	:= m[2]																				; trailing portion after Try (open brace, LC, etc)
+			tag		:= ' ' gTagChar 'TRY_CRLF_' A_Index gTagChar										; unique tag for each occurrence
+			repl	:= decl tag '`r`n' trail															; replacement str
+			code	:= RegExReplace(code, escRegexChars(line), repl,,1,pos)								; replace Try line with tag
+			pos		+= StrLen(repl)																		; prep for next search
 		}
 	}
 	;############################################################################
-	Static _getPositions(code)																; get positions of nodes, return in reverse order
+	Static _getPositions(code)																			; get positions of nodes, return in reverse order
 	{
 		; get position of these declarations
-		nodeTypes := ['FOR'																	; declarations we are looking for
-					,'IF'
-					,'IFEXIST'
-					,'IFNOTEXIST'
-					,'IFMSGBOX'																; 2025-11-23 AMB, ADDED
-					,'LOOP','SWITCH','TRY','WHILE']
-		posMap := map()
-		for idx, nType in nodeTypes {														; for each node type...
-			pos		:= 1																	; must be reset with each iteraion
+		nodeTypes := [	'IF','IFEXIST','IFNOTEXIST','IFWINEXIST','IFWINNOTEXIST'						; 2026-04-13 UPDATED IF
+					,	'IFWINACTIVE','IFWINNOTACTIVE','IFINSTRING','IFNOTINSTRING'
+					,	'IFEQUAL','IFNOTEQUAL','IFLESS','IFLESSOREQUAL'
+					,	'IFGREATER','IFGREATEROREQUAL','IFMSGBOX'
+					,	'FOR','LOOP','SWITCH','TRY','WHILE']
+		posMap		:= map()
+		for idx, nType in nodeTypes {																	; for each node type...
+			pos		:= 1																				; must be reset with each iteraion
 			nTrail	:= '\b.++'
-			nLead	:= '(?im)^[\h{}]*+(?:TRY\b\h*+)?' . nType
-			if (nType='LOOP'||nType='TRY') {
+			nLead	:= '(?im)^[\h{}]*+(?:TRY\b\h*+)?\b' nType
+			if (nType ~= '(?i)\b(LOOP|TRY|IFWIN(NOT)?(EXIST|ACTIVE))\b') {
 				nTrail := '\b.*+'
 			}
 			if (nType='TRY') {
-				nIf		:= 'IF(?:(?:(?:NOT)?EXIST)|MSGBOX)?'								; 2025-11-23 AMB, UPDATED
-				notOth	:= '(?!\h+(?:FOR|' nIf '|LOOP|SWITCH|WHILE))'
+				nLegIf	:= '(?:(?:(?:WIN)?(?:NOT)?(?:(?:EXIST|ACTIVE|INSTRING)))'						; 2026-04-13 AMB, ADDED rest of legacy
+						.  '|(?:(?:LESS|GREATER)?(?:(?:NOT|OR)?EQUAL)?)|MSGBOX)?'
+				notOth	:= '(?!\h+\b(?:FOR|LOOP|SWITCH|WHILE|IF' nLegIf ')\b)'
 				nLead	:= '(?im)^[\h{}]*+\bTRY\b' . notOth
 			}
-			needle	:= nLead . nTrail														; [detect declaration lines]
-			while(pos := RegExMatch(code, needle, &m, pos)) {								; for each occurence of node-type...
-				posMap[pos]	:= nType														; ... record position and type of node
-				pos			+= m.len														; prep for next search
+			needle	:= nLead . nTrail																	; [detect declaration lines]
+			while(pos := RegExMatch(code, needle, &m, pos)) {											; for each occurence of node-type...
+				posMap[pos]	:= nType																	; ... record position and type of node
+				pos			+= m.len																	; prep for next search
 			}
 		}
 		; flip/reverse order of nodes in list [flip bottom to top]
 		posStr := ''
-		for pos, nType in posMap {															; add each node to vert list
-			posStr .= ((posStr='') ? '' : '`n') . (pos ':' nType)							; update vert list
+		for pos, nType in posMap {																		; add each node to vert list
+			posStr .= ((posStr='') ? '' : '`n') . (pos ':' nType)										; update vert list
 		}
-		return Sort(posStr,'NR')															; return pos list in reverse order
+		return Sort(posStr,'NR')																		; return pos list in reverse order
 	}
 	;############################################################################
-	Static _maskAllNodes(&code)																; mask each node [from bottom to top]
-	{																						; 2026-01-13 AMB, UPDATED - fix regex bug
-		revPos := this._getPositions(code)													; get node positions in reverse order
-		Loop parse, revPos, '`n', '`r' {													; for each node in list...
+	Static _maskAllNodes(&code)																			; mask each node [from bottom to top]
+	{																									; 2026-01-13 AMB, UPDATED - fix regex bug
+		revPos := this._getPositions(code)																; get node positions in reverse order
+		Loop parse, revPos, '`n', '`r' {																; for each node in list...
 			ss	 := StrSplit(A_LoopField, ':')
-			pos	 := ss[1], nType := ss[2]													; ... extract block position and type (from list)
-			nCur := this._needles[nType]													; needle for current node type
-			if (RegExMatch(code, nCur, &m, pos)) {											; this should always succeed
-				oStr	:= m[]																; record original code/substring for current node
-				uid		:= clsMask.GenUniqueID()											; unique ID (this is a must to avoid issues!)
-				uStr	:= nType '_' uid '_P' pos '_L' m.Len								; unique str (must have unique ID !)
-				tag		:= uniqueTag(uStr)													; build a unique tag for current node
-				mObj	:= clsMask(oStr, tag, nType, nCur)									; create new clsMask object
-				clsMask.AddMask(tag, mObj)													; add object to shared maplist (using unique tag as key)
-				;ercStr	:= escRegexChars(oStr)												; escape special regex chars for orig subStr
-				;code	:= RegExReplace(code, ercStr, tag,,1,pos)							; replace orig subStr with a tag (will fault if needle length > 40K)
-				code	:= StrReplaceAt(code, oStr, tag,,pos,1)								; replace orig subStr with a tag
+			pos	 := ss[1], nType := ss[2]																; ... extract block position and type (from list)
+			nCur := this._needles[nType]																; needle for current node type
+			if (RegExMatch(code, nCur, &m, pos)) {														; this should always succeed
+				oStr	:= m[]																			; record original code/substring for current node
+				uid		:= clsMask.GenUniqueID()														; unique ID (this is a must to avoid issues!)
+				uStr	:= nType '_' uid '_P' pos '_L' m.Len											; unique str (must have unique ID !)
+				tag		:= uniqueTag(uStr)																; build a unique tag for current node
+				mObj	:= clsMask(oStr, tag, nType, nCur)												; create new clsMask object
+				clsMask.AddMask(tag, mObj)																; add object to shared maplist (using unique tag as key)
+				;ercStr	:= escRegexChars(oStr)															; escape special regex chars for orig subStr
+				;code	:= RegExReplace(code, ercStr, tag,,1,pos)										; replace orig subStr with a tag (will fault if needle length > 40K)
+				code	:= StrReplaceAt(code, oStr, tag,,pos,1)											; replace orig subStr with a tag
 			}
 		}
 	}
 	;############################################################################
-	Static _maskTargOnly(&code, targ)														; targ nodes will be masked, but other supported types will be restored
+	Static _maskTargOnly(&code, targ)																	; targ nodes will be masked, but other supported types will be restored
 	{
 	; 2025-11-30 AMB, UPDATED to fix masking bug
 
-		this._unMask(&code, targ)															; remove masks/tags from nodes that are NOT targeted
+		this._unMask(&code, targ)																		; remove masks/tags from nodes that are NOT targeted
 		; only targeted nodes are masked/tagged now
 		; get full orig subStrs for these, then remask
-		nTag	:= '(?i)' uniqueTag('([^_]+).+?_P(\d+)\w+')									; [detect tags] - 2025-11-30 UPDATED for masking bug
+		nTag	:= '(?i)' uniqueTag('([^_]+).+?_P(\d+)\w+')												; [detect tags] - 2025-11-30 UPDATED for masking bug
 		uniqStr := ''
-		While(pos	:= RegexMatch(code, nTag, &mTag, pos??1)) {								; for each remaining tag found...
+		While(pos	:= RegexMatch(code, nTag, &mTag, pos??1)) {											; for each remaining tag found...
 			tag		:= mTag[],  skipLen := 0
-			nType	:= mTag[1], oPos := mTag[2]												; extract tag type and orig position
-			if (clsMask.HasTag[tag]) {														; if this is not a targeted node, skip it
-				oStr	:= clsMask.GetOrig[tag]												; get orig substr for current tag
-				nTCRLF	:= '(?i) ★TRY_CRLF_\d+★\r\n'										; tags for Trys that were moved to their own line
-				oStr	:= RegExReplace(oStr, nTCRLF)										; remove any TRY prefix tag that was added earlier
-				um		:= this._unMask(&oStr, '')	; note: targ param is empty				; remove ALL masks of supported types, found within orig substr
-				newLen	:= StrLen(oStr)														; actual length, without temp masking
-				uniqStr	:= (uniqStr='')														; get new unique ID for new tag, if not already
+			nType	:= mTag[1], oPos := mTag[2]															; extract tag type and orig position
+			if (clsMask.HasTag[tag]) {																	; if this is not a targeted node, skip it
+				oStr	:= clsMask.GetOrig[tag]															; get orig substr for current tag
+				nTCRLF	:= '(?i) ★TRY_CRLF_\d+★\r\n'													; tags for Trys that were moved to their own line
+				oStr	:= RegExReplace(oStr, nTCRLF)													; remove any TRY prefix tag that was added earlier
+				um		:= this._unMask(&oStr, '')	; note: targ param is empty							; remove ALL masks of supported types, found within orig substr
+				newLen	:= StrLen(oStr)																	; actual length, without temp masking
+				uniqStr	:= (uniqStr='')																	; get new unique ID for new tag, if not already
 						? (ntype '_' clsMask.GenUniqueID() '_')
 						: uniqStr
-				uStr	:= uniqStr . A_Index												; add counter value
-				newTag	:= uniqueTag(uStr '_P' oPos '_L' newLen)							; now has accurate tag details
-				if (!this._needles.Has(nType)) {											; if current tag is NOT a IWTLFS tag...
-					skipLen := StrLen(tag)													; ... prep for next iteration
-					pos += skipLen +1														; ...
-					continue																; ... skip tag that is not a target
+				uStr	:= uniqStr . A_Index															; add counter value
+				newTag	:= uniqueTag(uStr '_P' oPos '_L' newLen)										; now has accurate tag details
+				if (!this._needles.Has(nType)) {														; if current tag is NOT a IWTLFS tag...
+					skipLen := StrLen(tag)																; ... prep for next iteration
+					pos += skipLen +1																	; ...
+					continue																			; ... skip tag that is not a target
 				}
-				pattern := this._needles[nType]												; get needle for targ node
-				mObj	:= clsMask(oStr, newTag, nType, pattern)							; create new clsMask object
-				clsMask.AddMask(newTag, mObj)												; add object to shared maplist (using unique tag as key)
-				code	:= StrReplaceAt(code, tag, newTag,,pos,1)	; don't use Regex!		; replace old/temp tag with accurate tag
-				;code	:= StrReplaceAt(code, tag, oStr,,pos,1)								; this will restore orig substrs for testing purpose
-				skipLen	:= InStr(oStr, nType)												; [will skip any leading ws when setting new search position]
+				pattern := this._needles[nType]															; get needle for targ node
+				mObj	:= clsMask(oStr, newTag, nType, pattern)										; create new clsMask object
+				clsMask.AddMask(newTag, mObj)															; add object to shared maplist (using unique tag as key)
+				code	:= StrReplaceAt(code, tag, newTag,,pos,1)	; don't use Regex!					; replace old/temp tag with accurate tag
+				;code	:= StrReplaceAt(code, tag, oStr,,pos,1)											; this will restore orig substrs for testing purpose
+				skipLen	:= InStr(oStr, nType)															; [will skip any leading ws when setting new search position]
 			}
 			pos += skipLen +1
 		}
 	}
 	;############################################################################
-	Static _unMask(&code, targ)	; when targ is empty, unmask ALL supported types			; removes masks from ALL supported types, EXCEPT targ (when specified)
+	Static _unMask(&code, targ)	; when targ is empty, unmask ALL supported types						; removes masks from ALL supported types, EXCEPT targ (when specified)
 	{
 	; 2025-11-30 AMB, UPDATED to fix masking bug
 
-		nTag	:= '(?i)' uniqueTag('([^_]+).+?_P(\d+)\w+')									; [detect tags] - 2025-11-29 UPDATED for restore bug
-		nType	:= targ																		; target type will not be restored
-		oStr	:= '', oPos := 0															; ini
-		While(pos	:= RegexMatch(code, nTag, &mTag, pos??1)) {								; for each tag found...
-			tag		:= mTag[]																; tag string
-			nType	:= mTag[1], oPos := mTag[2]												; tag type and orig pos
-			skipLen	:= 0																	; ini to minimal offset for next search
-			if ((nType != targ) && (clsMask.HasTag[tag])) {									; if cur tag is not a target, and orig str is avail...
-				oStr	:= clsMask.GetOrig[tag]												; get orig str for tag
-				oStr	:= RegExReplace(oStr, '(?i) ★TRY_CRLF_\d+★\r\n')					; remove any TRY prefix tag that was added earlier
-				skipLen	:= InStr(oStr, nType)												; next search will begin at min distance from last match
-				code	:= StrReplaceAt(code, tag, oStr,,pos,1)		; don't use Regex!		; 2025-11-30 - changed to StrReplace as part of bug fix
-				;code	:= RegExReplace(code, tag, oStr,,1,pos)								; 2025-11-30 - causes issues with $ char in oStr (endless loop)
+		nTag	:= '(?i)' uniqueTag('([^_]+).+?_P(\d+)\w+')												; [detect tags] - 2025-11-29 UPDATED for restore bug
+		nType	:= targ																					; target type will not be restored
+		oStr	:= '', oPos := 0																		; ini
+		While(pos	:= RegexMatch(code, nTag, &mTag, pos??1)) {											; for each tag found...
+			tag		:= mTag[]																			; tag string
+			nType	:= mTag[1], oPos := mTag[2]															; tag type and orig pos
+			skipLen	:= 0																				; ini to minimal offset for next search
+			if ((nType != targ) && (clsMask.HasTag[tag])) {												; if cur tag is not a target, and orig str is avail...
+				oStr	:= clsMask.GetOrig[tag]															; get orig str for tag
+				oStr	:= RegExReplace(oStr, '(?i) ★TRY_CRLF_\d+★\r\n')								; remove any TRY prefix tag that was added earlier
+				skipLen	:= InStr(oStr, nType)															; next search will begin at min distance from last match
+				code	:= StrReplaceAt(code, tag, oStr,,pos,1)		; don't use Regex!					; 2025-11-30 - changed to StrReplace as part of bug fix
+				;code	:= RegExReplace(code, tag, oStr,,1,pos)											; 2025-11-30 - causes issues with $ char in oStr (endless loop)
 			}
 			pos += skipLen +1
 		}
-		this._preMask_R(&code)																; restore comments, strings, v1 ML strings
+		this._preMask_R(&code)																			; restore comments, strings, v1 ML strings
 		return ; {nType:nType,oStr:oStr,oPos:oPos}
 	}
 }
@@ -1036,9 +1077,9 @@ class clsMask
 	; PUBLIC property - read only
 	; returns orig substr for passed tag (if available), 0 otherwise
 	Static GetOrig[tag] {
-		get => (this.masklist.Has(tag))
-			? (this.masklist[tag].origCode)
-			: (gTagChar 'TagNotFound' gTagChar)		; obvious flag for debugging
+		get =>	(this.masklist.Has(tag))
+			?	(this.masklist[tag].origCode)
+			:	(gTagChar 'TagNotFound' gTagChar)	; obvious flag for debugging
 	}
 	;############################################################################
 	; PRIVATE - removes tag record from maskList map
@@ -1311,6 +1352,22 @@ class clsNodeMap	; 'block map' might be better term
 	; PRIVATE - adds a node to maplist
 	static _add(node) {
 		this.mapList[node.pos] := node
+	}
+	;############################################################################
+	static HasTag[tagID] {																				; 2026-04-13 AMB, ADDED
+		get => this.masklist.Has(tagID)																	; does tag exist in mask list?
+	}
+	;############################################################################
+	static GetOrig[tag] {																				; 2026-04-13 AMB, ADDED
+		get	=>	(this.masklist.Has(tag))																; if tag exists in list...
+			?	this.masklist[tag].BlockCode															; ... return node.blockCode
+			:	''																						; ... return nothing, otherwise
+	}
+	;############################################################################
+	static GetName[tag] {																				; 2026-04-13 AMB, ADDED
+		get	=>	(this.masklist.Has(tag))																; if tag exists in list...
+			?	this.masklist[tag].Name																	; ... return node.Name
+			:	''																						; ... return nothing, otherwise
 	}
 	;############################################################################
 	; PUBLIC - provides details of all nodes in maplist
@@ -1723,19 +1780,20 @@ class clsNodeMap	; 'block map' might be better term
 {
 ; 2025-10-27 AMB, ADDED
 ; 2025-12-24 AMB, MOVED to MaskCode.ahk
+; 2026-04-13 AMB, UPDATED to fix separation issue
 ;	separates preceding comments and whitespace from srcStr
 
 	tags	:= 'LC|BC|QS'
 	tags	.= (incHIF) ? '|HIF' : ''
-	nTag	:= '(?<=^)\h*' uniqueTag('(?:' tags ')\w++') '.*'		; [tag for comments or quoted string]
-	nLC		:= '(?:(?<=^)|(?<=^)\h+)(?<!``);[^\v]*+'				; [line comment]
-	nSep	:= '^((?:\v+|' nTag '|' nLC ')++)'						; will separate relevant portion from preceding comments/tags/ws
-	trail	:= ''													; ini, in case nothing to separate
-	if (RegExMatch(srcStr, nSep, &m)) {								; separate preceding comments/tags/ws from srcStr
-		pre	:= m[1]													; returns preceding comments/tags/ws (via reference)
-		srcStr	:= RegExReplace(srcStr, '^' escRegexChars(pre))		; removes preceding comments/tags/ws from srcStr
+	nTag	:= '(?<=^)\h*' uniqueTag('(?:' tags ')\w++') '.*'											; [tag for comments or quoted string]
+	nLC		:= '(?:(?<=^)|(?<=^)\h+)(?<!``);[^\v]*'														; [line comment]
+	nSep	:= '^((?:\v+|' nTag '|' nLC ')+)'															; will separate relevant portion from preceding comments/tags/ws
+	trail	:= '', pre := ''																			; ini, in case nothing to separate
+	While(RegexMatch(srcStr,nSep, &m)) {																; for each preceding comment or ws...
+		pre		.= m[1]																					; ... add it to output str
+		srcStr	:= RegExReplace(srcStr, '^' escRegexChars(m[1]))										; ... remove last found
 	}
-	return srcStr													; return resulting srcStr, trimmed or not
+	return srcStr																						; return resulting srcStr, trimmed or not
 }
 ;################################################################################
 																buildPtn_Sep1LC()
@@ -1998,33 +2056,33 @@ class clsNodeMap	; 'block map' might be better term
 {
 ; 2025-10-05 AMB, ADDED - avoids repeating these common needles multiple times
 
-	LC		:= gnLineComment												; line comment (allows lead ws to be consumed already)
-	TG		:= uniqueTag('(?:LC|BC|QS)\w++')								; comment OR quoted string tags
-	CT		:= '(?<CT>(?|' . LC . '|' . TG . '))'							; line comment OR LC/BC/QS tag
-	CTM		:= CT . '*+'													; allowed to be optional or multiples
-	TCT		:= '(?<TCT>(?>\s*+' . CTM . ')*+)'								; optional trailing line comment or tag (MUST BE ATOMIC/POSSESIVE)
-	notTag	:= '(?:#(?!TAG))'												; # that is not beginning of tag
-	brc		:= '\{(?!\h*\v)(?!\h*' . '(?&CT))'								; { that is not at end of line or before comment
-	noHTBrc	:= '[^{;#\v]++'													; anything except for { or #
-	cond	:= '(?<cond>(?:' noHTBrc '|' brc '|' notTag '|' '(?&CT)' ')++)'	; anything that does not include opening brace at end of line
-	mcKywd	:= '(?<MCKW>(?|\s+(?|AND|OR|NOT)\h+|\s*(?|&&|\|\|)\h*))'		; kywds for multiple conditions	- supports multi-line
-	mCond	:= '(?<MC>' . cond . '(?:' . mcKywd . '(?&cond))*+)'			; allows multiple conditions 	- supports multi-line
-	bb		:= '(?<bb>\{(?>[^{}]++|(?-1))*+})'								; brace block					- supports multi-line
-	bbg		:= '(?<bb>\{(?<guts>(?>[^{}]++|(?-2))*+)})'						; brace block (with guts)		- supports multi-line
-	mlCont	:= '\s*[?:,.].+'												; allows multi-line continuatons without req brace blocks
-	lnAny	:= '(?:[^\v]++)'												; to capture anything not already covered
-	noBB	:= '(?<noBB>(?:' mlCont '|' lnAny ')*+)'						; no braces block - allow multi-line captures for certain situations
-	lead	:= '(?im)^[\h{}]*+(?:TRY\b\h*+)?\K'								; leading portion of needle
-	untl	:= '(?:(?&TCT)(?<untl>\s*+\bUNTIL\b.+))?'						; optional UNTIL - TODO - ADD SUPPORT FOR ML CONDITION
-	retObj	:=	{ bb		:bb												; brace block
-				, bbg		:bbg											; brace block (with guts)
-				, cond		:cond											; condition
-				, lead		:lead											; leading options, ws, try
-				, mc		:mCond											; muliple conditions, supports multi-line
-				, CT		:CT												; comment tag
-				, noBB		:noBB											; NO brace block, supports multi-line in some cases
-				, TCT		:TCT											; optional trailing line comment or LC tag, supports multi-line
-				, untl		:untl }											; optional UNTIL - TODO - ADD SUPPORT FOR ML CONDITION
+	LC		:= gnLineComment																			; line comment (allows lead ws to be consumed already)
+	TG		:= uniqueTag('(?:LC|BC|QS)\w++')															; comment OR quoted string tags
+	CT		:= '(?<CT>(?|' . LC . '|' . TG . '))'														; line comment OR LC/BC/QS tag
+	CTM		:= CT . '*+'																				; allowed to be optional or multiples
+	TCT		:= '(?<TCT>(?>\s*+' . CTM . ')*+)'															; optional trailing line comment or tag (MUST BE ATOMIC/POSSESIVE)
+	notTag	:= '(?:#(?!TAG))'																			; # that is not beginning of tag
+	brc		:= '\{(?!\h*\v)(?!\h*' . '(?&CT))'															; { that is not at end of line or before comment
+	noHTBrc	:= '[^{;#\v]++'																				; anything except for { or #
+	cond	:= '(?<cond>(?:' noHTBrc '|' brc '|' notTag '|' '(?&CT)' ')++)'								; anything that does not include opening brace at end of line
+	mcKywd	:= '(?<MCKW>(?|\s+(?|AND|OR|NOT)\h+|\s*(?|&&|\|\|)\h*))'									; kywds for multiple conditions	- supports multi-line
+	mCond	:= '(?<MC>' . cond . '(?:' . mcKywd . '(?&cond))*+)'										; allows multiple conditions 	- supports multi-line
+	bb		:= '(?<bb>\{(?>[^{}]++|(?-1))*+})'															; brace block					- supports multi-line
+	bbg		:= '(?<bb>\{(?<guts>(?>[^{}]++|(?-2))*+)})'													; brace block (with guts)		- supports multi-line
+	mlCont	:= '\s*[?:,.].+'																			; allows multi-line continuatons without req brace blocks
+	lnAny	:= '(?:[^\v]++)'																			; to capture anything not already covered
+	noBB	:= '(?<noBB>(?:' mlCont '|' lnAny ')*+)'													; no braces block - allow multi-line captures for certain situations
+	lead	:= '(?im)^[\h{}]*+(?:TRY\b\h*+)?\K'															; leading portion of needle
+	untl	:= '(?:(?&TCT)(?<untl>\s*+\bUNTIL\b.+))?'													; optional UNTIL - TODO - ADD SUPPORT FOR ML CONDITION
+	retObj	:=	{ bb		:bb																			; brace block
+				, bbg		:bbg																		; brace block (with guts)
+				, cond		:cond																		; condition
+				, lead		:lead																		; leading options, ws, try
+				, mc		:mCond																		; muliple conditions, supports multi-line
+				, CT		:CT																			; comment tag
+				, noBB		:noBB																		; NO brace block, supports multi-line in some cases
+				, TCT		:TCT																		; optional trailing line comment or LC tag, supports multi-line
+				, untl		:untl }																		; optional UNTIL - TODO - ADD SUPPORT FOR ML CONDITION
 	return	retObj
 }
 ;################################################################################
@@ -2034,48 +2092,59 @@ class clsNodeMap	; 'block map' might be better term
 ; 2024-08-06 AMB, ADDED - IF block
 ; 2025-10-05 AMB, UPDATED
 ; 2025-11-23 AMB, UPDATED as part of fix for #413
+; 2026-04-13 AMB, UPDATED to better support legacy IFs
 
-	cbn		:= commonBlockNeedles()												; get common needles
-	bb2		:= '(?&bb)'															; [avoid repeating chars within needle]
-	mc2		:= '(?&MC)'															; [avoid repeating chars within needle]
-	noBB2	:= '(?&noBB)'														; [avoid repeating chars within needle]
-	TCT		:= cbn.TCT															; optional trailing line comments or LC tags
-	TCT2	:= '(?&TCT)'														; [avoid repeating chars within needle]
+	cbn		:= commonBlockNeedles()																		; get common needles
+	bb2		:= '(?&bb)'																					; [avoid repeating chars within needle]
+	mc2		:= '(?&MC)'																					; [avoid repeating chars within needle]
+	noBB2	:= '(?&noBB)'																				; [avoid repeating chars within needle]
+	TCT		:= cbn.TCT																					; optional trailing line comments or LC tags
+	TCT2	:= '(?&TCT)'																				; [avoid repeating chars within needle]
 
+	; legacy If support
+	legIf1 := '(?|MSGBOX|(?:NOT)?(?:INSTRING|EXIST)|'													; REQUIRES ARGS
+			. '(?:LESS|GREATER)?(?:(?:NOT|OR)?(?<=T|F|OR)EQUAL)?)'
+	legIf2	:= '(?:WIN(?:NOT)?(?:EXIST|ACTIVE))'														; does NOT require args
+	; if declarationss
 	prefix	:= '(?im)^([\h{}]*+)'
-	ifDecl	:= prefix . '\bIF(?:(?:NOT)?EXIST)?\b.+'
+	ifDecl1	:= prefix . '\bIF' legIf1 '\b.+'															; REQUIRES ARGS
+	ifDecl2	:= prefix . '\bIF' legIf2 '\b.*'															; does NOT require args
 	efDecl	:= prefix . '\bELSE\h+IF\b.+'
 	elDecl	:= prefix . '\bELSE\b(?!\h+IF).*'
 	; IF portion
-	;ifStr	:= '[\h{}]*+\K(?<!ELSE\h)(?<ifStr>\bIF(?:(?:NOT)?EXIST)?\b)'		; ifStr	- IF delaration
-	legIf	:= '(?:(?:(?:NOT)?EXIST)|MSGBOX)?'									; legIf - legacy IF (add more as needed)
-	ifStr	:= '([\h{}]*+)(?<!ELSE\h)(?<ifStr>\bIF' legIf '\b(\h*,\h*)?)'		; ifStr	- IF delaration
-	ifArg	:= '(?<ifArg>(?:\h*+' . cbn.mc						. '))'			; ifArg	- all arguments (conditions and opt trail comments/tags)
-	ifBlk	:= '(?<ifBlk>\s*+(?:' . cbn.bb . '|' . cbn.noBB 	. '))'			; ifBlk	- block (either brace block or single line)
-	IFSect	:= ifStr . ifArg  . TCT  . ifBlk
+	ifStr1	:= '(?<ifStr1>\bIF' legIf1 '\b)'	; legacy1 REQUIRES ARGS									; ifStr1- IF declaration (2026-04-13 - removed brace from beginning)
+	ifStr2	:= '(?<ifStr2>\bIF' legIf2 '\b)'	; legacy2 does NOT req args								; ifStr2- IF declaration (2026-04-13 - removed brace from beginning)
+	ifArg1	:= '(?<ifArg>(?:\h*+' . cbn.mc						. '))'									; ifArg1- reqs arguments (conditions and opt trail comments/tags)
+	ifArg2	:= '(?&ifArg)?'																				; ifArg2- args are optional
+	ifStrA1	:= '(?:' ifStr1 . ifArg1 ')'																; requires arg
+	ifStrA2	:= '(?:' ifStr2 . ifArg2 ')'																; does not req arg
+	ifStr	:= '(\h*)(?<!ELSE\h)(?:' ifStrA1 '|' ifStrA2 ')(\h*,\h*)?'									; ifStr - assemble final If declartion (includes Legacy 1 and 2)
+	ifBlk	:= '(?<ifBlk>\s*+(?:' . cbn.bb . '|' . cbn.noBB 	. '))'									; ifBlk	- block (either brace block or single line)
+	IFSect	:= ifStr . 			TCT  . ifBlk															; assemble final IF block
 	; ELSEIF portion
-	efStr	:= '(?<efStr>\h*+\bELSE\h+IF\b)'									; efStr	- ELSEIF declaration
-	efArg1	:= '(?<efArg>(?:\h*+' . cbn.mc						. '))'			; efArg	- all arguments (conditions and opt trail comments/tags)
-	efBlk1	:= '(?<efBlk>\s*+(?:' . cbn.bb . '|' . cbn.noBB		. '))'			; efBlk	- block (either brace block or single line)
-	efArg2	:= '(?<efArg>(?:\h*+' . mc2							. '))'			; efArg	- all arguments (conditions and opt trail comments/tags)
-	efBlk2	:= '(?<efBlk>\s*+(?:' . bb2 .    '|' . noBB2		. '))'			; efBlk	- block (either brace block or single line)
+	efStr	:= '(?<efStr>\h*+\bELSE\h+IF\b)'															; efStr	- ELSEIF declaration
+	efArg1	:= '(?<efArg>(?:\h*+' . cbn.mc						. '))'									; efArg	- all arguments (conditions and opt trail comments/tags)
+	efBlk1	:= '(?<efBlk>\s*+(?:' . cbn.bb . '|' . cbn.noBB		. '))'									; efBlk	- block (either brace block or single line)
+	efArg2	:= '(?<efArg>(?:\h*+' . mc2							. '))'									; efArg	- all arguments (conditions and opt trail comments/tags)
+	efBlk2	:= '(?<efBlk>\s*+(?:' . bb2 .    '|' . noBB2		. '))'									; efBlk	- block (either brace block or single line)
 	EFSect1	:= efStr . efArg1 . TCT  . efBlk1
 	EFSect2	:= efStr . efArg2 . TCT2 . efBlk2
 	; ELSE portion
-	elStr	:= '(?<elStr>\h*+\bELSE\b(?!\h+IF))'								; elStr	- ELSE declaration
-	elBlk1	:= '(?<elBlk>\s*+(?:' . cbn.bb . '|' . cbn.noBB		. '))'			; elBlk	- block (either brace block or single line)
-	elBlk2	:= '(?<elBlk>\s*+(?:' . bb2    . '|' . noBB2		. '))'			; elBlk	- block (either brace block or single line)
+	elStr	:= '(?<elStr>\h*+\bELSE\b(?!\h+IF))'														; elStr	- ELSE declaration
+	elBlk1	:= '(?<elBlk>\s*+(?:' . cbn.bb . '|' . cbn.noBB		. '))'									; elBlk	- block (either brace block or single line)
+	elBlk2	:= '(?<elBlk>\s*+(?:' . bb2    . '|' . noBB2		. '))'									; elBlk	- block (either brace block or single line)
 	ELSect1	:= elStr .		    TCT  . elBlk1
 	ELSect2	:= elStr .		    TCT2 . elBlk2
 
-	fullIF	:= 	'(?im)^(?<fullIF>'	ifSect										; IF
-			. 	'(?:'	TCT2 .		efSect2  . ')*+'							; ELSE IF	(optional/multiple)
-			. 	'(?:'	TCT2 .		elSect2  . ')?)'							; ELSE		(optional)
+	fullIF	:= 	'(?im)(?<fullIF>'	ifSect																; IF (2026-04-13 - removed anchor from beginning)
+			. 	'(?:'	TCT2 .		efSect2  . ')*+'													; ELSE IF	(optional/multiple)
+			. 	'(?:'	TCT2 .		elSect2  . ')?)'													; ELSE		(optional)
 	retObj	:=	{ fullIF	:fullIF
 				, IFSect	:'(?im)' . IFSect
 				, EFSect	:'(?im)' . EFSect1
 				, ELSect	:'(?im)' . ELSect1
-				, IFDecl	:IFDecl
+				, IFDecl1	:IFDecl1
+				, IFDecl2	:IFDecl2
 				, EFDecl	:EFDecl
 				, ELDecl	:ELDecl }
 	return	retObj
@@ -2093,7 +2162,7 @@ TODO - MAKE SURE FUNC CALLS ARE COVERED
 	}
 */
 
-	cbn		:= commonBlockNeedles()											; get common needles
+	cbn		:= commonBlockNeedles()																		; get common needles
 	swSTr	:= '(?<swStr>\bSWITCH\b)'
 	swArg	:= '(?<swArg>(?:\h*+' . cbn.mc							. '))?'
 	swBlk	:= '\s*+(?<brcBlk>\{(?<BBC>(?>[^{}]++|(?-2))*+)})'
@@ -2107,10 +2176,10 @@ TODO - MAKE SURE FUNC CALLS ARE COVERED
 ; 2025-10-05 AMB, ADDED - WHILE-BLOCK
 ; TODO - ADD ELSE, UNTIL ?
 
-	cbn		:= commonBlockNeedles()											; get common needles
-	WStr	:= '(?<wStr>\bWHILE\b)'											; WStr	- WHILE declaration
-	WArg	:= '(?<wArg>(?:\h*+' . cbn.mc							. '))'	; WArg	- all arguments (conditions and opt trail comments/tags)
-	WBlk	:= '(?<WBlk>\s*+(?:' . cbn.bb .	'|'  . cbn.noBB			. '))'	; WBlk	- block (either brace block or single line)
+	cbn		:= commonBlockNeedles()																		; get common needles
+	WStr	:= '(?<wStr>\bWHILE\b)'																		; WStr	- WHILE declaration
+	WArg	:= '(?<wArg>(?:\h*+' . cbn.mc							. '))'								; WArg	- all arguments (conditions and opt trail comments/tags)
+	WBlk	:= '(?<WBlk>\s*+(?:' . cbn.bb .	'|'  . cbn.noBB			. '))'								; WBlk	- block (either brace block or single line)
 	pattern	:= '(?<fullWH>'		 . WStr	  . WArg . cbn.TCT . WBlk	. ')'
 	return	cbn.lead . pattern
 }
@@ -2121,10 +2190,10 @@ TODO - MAKE SURE FUNC CALLS ARE COVERED
 ; 2025-10-05 AMB, ADDED - LOOP-BLOCK
 ; TODO - ADD ELSE
 
-	cbn		:= commonBlockNeedles()											; get common needles
-	LPStr	:= '(?<LPStr>\bLOOP\b)(?:\h*,)?'								; LPStr	- LOOP declaration
-	LPArg	:= '(?<LPArg>(?:\h*+' . cbn.mc							. '))?'	; LPArg	- arguments (conditions and optional trailing comments/tags)
-	LPBlk	:= '(?<LPBlk>\s*+(?:' . cbn.bb . '|' . cbn.noBB			. '))'	; LPBlk	- block (either brace block or single line)
+	cbn		:= commonBlockNeedles()																		; get common needles
+	LPStr	:= '(?<LPStr>\bLOOP\b)(?:\h*,)?'															; LPStr	- LOOP declaration
+	LPArg	:= '(?<LPArg>(?:\h*+' . cbn.mc							. '))?'								; LPArg	- arguments (conditions and optional trailing comments/tags)
+	LPBlk	:= '(?<LPBlk>\s*+(?:' . cbn.bb . '|' . cbn.noBB			. '))'								; LPBlk	- block (either brace block or single line)
 	pattern	:= '(?<fullLP>' LPStr LPArg cbn.TCT LPBlk cbn.untl		. ')'
 	return	cbn.lead . pattern
 }
@@ -2135,10 +2204,10 @@ TODO - MAKE SURE FUNC CALLS ARE COVERED
 ; 2025-10-05 AMB, ADDED - FOR-BLOCK
 ; TODO - ADD ELSE
 
-	cbn		:= commonBlockNeedles()											; get common needles
-	fStr	:= '(?<fStr>\bFOR\b)'											; fStr	- FOR declaration
-	fArg	:= '(?<fArg>(?:\h*+' . cbn.mc							. '))'	; fArg	- all arguments (conditions and opt trail comments/tags)
-	fBlk	:= '(?<fBlk>\s*+(?:' . cbn.bb .	'|'  . cbn.noBB			. '))'	; fBlk	- block (either brace block or single line)
+	cbn		:= commonBlockNeedles()																		; get common needles
+	fStr	:= '(?<fStr>\bFOR\b)'																		; fStr	- FOR declaration
+	fArg	:= '(?<fArg>(?:\h*+' . cbn.mc							. '))'								; fArg	- all arguments (conditions and opt trail comments/tags)
+	fBlk	:= '(?<fBlk>\s*+(?:' . cbn.bb .	'|'  . cbn.noBB			. '))'								; fBlk	- block (either brace block or single line)
 	pattern	:= '(?<fullFor>' fStr fArg cbn.TCT fBlk cbn.untl		. ')'
 	return	cbn.lead . pattern
 }
@@ -2147,23 +2216,23 @@ TODO - MAKE SURE FUNC CALLS ARE COVERED
 ;################################################################################
 {
 ; 2025-10-05 AMB, ADDED - TRY-BLOCK
+; 2026-04-13 AMB, UPDATED to fix Catch not being detected
 ; TODO - ADD ELSE, FINALLY
 
-	cbn		:= commonBlockNeedles()											; get common needles
-	bb2		:= '(?&bb)'														; [avoid repeating chars within needle]
-	mc2		:= '(?&MC)'														; [avoid repeating chars within needle]
-	noBB2	:= '(?&noBB)'													; [avoid repeating chars within needle]
-	TCT		:= cbn.TCT														; optional trailing line comments or LC tags
-	TCT2	:= '(?&TCT)'													; [avoid repeating chars within needle]
-	tStr	:= '(?<tStr>[\h{}]*+\K\bTRY\b)' 								; tStr	- TRY declaration
-	tArg	:= '(?<tArg>(?:\h*+' . cbn.mc					. '))?'			; tArg	- arguments (conditions and optional trailing comments/tags)
-	tBlk	:= '(?<tBlk>\s*+(?:' . cbn.bb . '|' . cbn.noBB	. '))'			; tBlk	- block (either brace block or single line)
-	cStr	:= '(?<cStr>\h*+\bCATCH\b)			'							; cStr	- CATCH declaration
-	cArg	:= '(?<cArg>(?:\h*+' . mc2	. '))?'								; cArg	- arguments (conditions and optional trailing comments/tags)
-	cBlk	:= '(?<cBlk>\s*+(?:' . bb2 . '|' . noBB2 		. '))'			; cBlk	- block (either brace block or single line)
-	pattern := '(?<fullTry>'	tStr . tArg . TCT  . tBlk					; TRY
-;			.  '(?:'	TCT2 .	cStr . cArg . TCT2 . cBlk	. ')?)'			; CATCH	(optional)
-			.  '(?:'	TCT2 .	cStr . cArg . TCT2 . cBlk	. ')*+)'		; CATCH	(optional/multiple)
+	cbn		:= commonBlockNeedles()																		; get common needles
+	bb2		:= '(?&bb)'																					; [avoid repeating chars within needle]
+	mc2		:= '(?&MC)'																					; [avoid repeating chars within needle]
+	noBB2	:= '(?&noBB)'																				; [avoid repeating chars within needle]
+	TCT		:= cbn.TCT																					; optional trailing line comments or LC tags
+	TCT2	:= '(?&TCT)'																				; [avoid repeating chars within needle]
+	tStr	:= '(?<tStr>[\h{}]*+\K\bTRY\b)' 															; tStr	- TRY declaration
+	tArg	:= '(?<tArg>(?:\h*+' . cbn.mc					. '))?'										; tArg	- arguments (conditions and optional trailing comments/tags)
+	tBlk	:= '(?<tBlk>\s*+(?:' . cbn.bb . '|' . cbn.noBB	. '))'										; tBlk	- block (either brace block or single line)
+	cStr	:= '(?<cStr>\h*+\bCATCH\b)'																	; cStr	- CATCH declaration
+	cArg	:= '(?<cArg>(?:\h*+' . mc2	. '))?'															; cArg	- arguments (conditions and optional trailing comments/tags)
+	cBlk	:= '(?<cBlk>\s*+(?:' . bb2 . '|' . noBB2 		. '))'										; cBlk	- block (either brace block or single line)
+	pattern := '(?<fullTry>'	tStr . tArg . TCT  . tBlk												; TRY
+			.  '(?:'	TCT2 .	cStr . cArg . TCT2 . cBlk	. ')*+)'									; CATCH	(optional/multiple)
 	return	'(?im)^' . pattern
 }
 ;################################################################################
@@ -2180,77 +2249,77 @@ TODO - MAKE SURE FUNC CALLS ARE COVERED
 ; TODO - WORK IN PROGRESS
 
 	; verify code matches pattern
-	if (!RegExMatch(code, '(?im)' . buildPtn_MLBlock().ParBlk, &mML)) {		; if code does not match CS pattern...
-		return false														; ... return negatory!
+	if (!RegExMatch(code, '(?im)' . buildPtn_MLBlock().ParBlk, &mML)) {									; if code does not match CS pattern...
+		return false																					; ... return negatory!
 	}
 
-	body	:= code															; [parentheses block - working var]
-	oBdy	:= body															; orig block code - will need this later
+	body	:= code																						; [parentheses block - working var]
+	oBdy	:= body																						; orig block code - will need this later
 
 	; separate/tag leading and trailing ws
-	nSep := '(?is)\((?<LWS>[^\v]*\R\s*)(?<guts>.*?)(?<TWS>\h*\R\h*)\)'		; [separation needle]
-	RegExMatch(body, nSep, &mSep)											; fill vars - TODO - CHANGE TO VERIFICATION IF ?
-	oLWS	:= mSep.LWS														; save orig leading  WS for restore later
-	oTWS	:= mSep.TWS														; save orig trailing WS for restore later
-	oGuts	:= mSep.guts													; save orig guts contents (excluding lead/trail ws)
-	tLWS	:= gTagPfx 'LWS' gTagTrl										; create temp tag for leading  WS
-	tTWS	:= gTagPfx 'TWS' gTagTrl										; create temp tag for trailing WS
-	body	:= RegExReplace(body, '^\(' oLWS, '(' tLWS)						; replace orig lead  ws with a temp tag
-	body	:= RegExReplace(body, oTWS '\)$', tTWS ')')						; replace orig trail ws with a temp tag
+	nSep := '(?is)\((?<LWS>[^\v]*\R\s*)(?<guts>.*?)(?<TWS>\h*\R\h*)\)'									; [separation needle]
+	RegExMatch(body, nSep, &mSep)																		; fill vars - TODO - CHANGE TO VERIFICATION IF ?
+	oLWS	:= mSep.LWS																					; save orig leading  WS for restore later
+	oTWS	:= mSep.TWS																					; save orig trailing WS for restore later
+	oGuts	:= mSep.guts																				; save orig guts contents (excluding lead/trail ws)
+	tLWS	:= gTagPfx 'LWS' gTagTrl																	; create temp tag for leading  WS
+	tTWS	:= gTagPfx 'TWS' gTagTrl																	; create temp tag for trailing WS
+	body	:= RegExReplace(body, '^\(' oLWS, '(' tLWS)													; replace orig lead  ws with a temp tag
+	body	:= RegExReplace(body, oTWS '\)$', tTWS ')')													; replace orig trail ws with a temp tag
 
 	; work on guts of body
-	uGuts	:= oGuts														; updated/new guts - will be changed below
-	Mask_R(&uGuts, 'str')													; remove masking from strings within guts only
-	uGuts	:= '"' uGuts '"'												; add surounding double-quotes to guts (to prep for next step)
-	v2_DQ_Literals(&uGuts)													; change "" to `" within guts only
-	uGuts	:= RegExReplace(uGuts, '(?s)^"(.+)"$', '$1')					; remove surrounding DQs (to prep for next step)
-	uGuts	:= RegExReplace(uGuts, '(?<!``)"', '``"')						; replace " (single) with `"
-	uGuts	:= '"' uGuts '"'												; add surounding double-quotes to guts (again)
+	uGuts	:= oGuts																					; updated/new guts - will be changed below
+	Mask_R(&uGuts, 'str')																				; remove masking from strings within guts only
+	uGuts	:= '"' uGuts '"'																			; add surounding double-quotes to guts (to prep for next step)
+	v2_DQ_Literals(&uGuts)																				; change "" to `" within guts only
+	uGuts	:= RegExReplace(uGuts, '(?s)^"(.+)"$', '$1')												; remove surrounding DQs (to prep for next step)
+	uGuts	:= RegExReplace(uGuts, '(?<!``)"', '``"')													; replace " (single) with `"
+	uGuts	:= '"' uGuts '"'																			; add surounding double-quotes to guts (again)
 
 	; mask all %var% within guts
-	nV1Var := '(?<!``)%([^%]+)(?<!``)%'										; [identifies %var%]
-	clsMask.MaskAll(&uGuts, 'V1VAR', nV1Var)								; mask/hide all %var%s for now
+	nV1Var := '(?<!``)%([^%]+)(?<!``)%'																	; [identifies %var%]
+	clsMask.MaskAll(&uGuts, 'V1VAR', nV1Var)															; mask/hide all %var%s for now
 
 	; add quotes before and after v1 vars
-	nV1VarTag := gTagPfx 'V1VAR_\w+' gTagTrl								; [identifies V1Var tags]
+	nV1VarTag := gTagPfx 'V1VAR_\w+' gTagTrl															; [identifies V1Var tags]
 	pos := 1
-	While(pos := RegexMatch(uGuts, nV1VarTag, &mVarTag, pos)) {				; for each V1Var tag found...
-		oTag	:= mVarTag[]												; tag found (orig)
-		qTag	:= '" ' oTag ' "'											; ... add concat quotes around tag (INCLUDE CONCAT DOTS ALSO?)
-		uGuts	:= RegExReplace(uGuts, oTag, qTag,,1,pos)					; replace orig tag with quoted tag
-		pos		+= StrLen(qTag)												; prep for next loop iteration
+	While(pos := RegexMatch(uGuts, nV1VarTag, &mVarTag, pos)) {											; for each V1Var tag found...
+		oTag	:= mVarTag[]																			; tag found (orig)
+		qTag	:= '" ' oTag ' "'																		; ... add concat quotes around tag (INCLUDE CONCAT DOTS ALSO?)
+		uGuts	:= RegExReplace(uGuts, oTag, qTag,,1,pos)												; replace orig tag with quoted tag
+		pos		+= StrLen(qTag)																			; prep for next loop iteration
 	}
-	uGuts		:= RegExReplace(uGuts, '^""\h*')							; cleanup any leading  "" (un-needed)
-	uGuts		:= RegExReplace(uGuts, '\h*(?<!``)""$',,,1)					; cleanup any trailing "" (un-needed) (2025-11-29 AMB, only if not escaped)
-	body		:= StrReplace(body, oGuts, uGuts)							; replace orig guts with new guts
+	uGuts		:= RegExReplace(uGuts, '^""\h*')														; cleanup any leading  "" (un-needed)
+	uGuts		:= RegExReplace(uGuts, '\h*(?<!``)""$',,,1)												; cleanup any trailing "" (un-needed) (2025-11-29 AMB, only if not escaped)
+	body		:= StrReplace(body, oGuts, uGuts)														; replace orig guts with new guts
 
 	; restore original %VAR%s, then replace each with VAR (remove %)
-	clsMask.RestoreAll(&body, 'V1VAR')										; restore orig %VAR%s
+	clsMask.RestoreAll(&body, 'V1VAR')																	; restore orig %VAR%s
 	pos := 1
-	While(pos := RegexMatch(body, nV1Var, &mVar, pos)) {					; for each %VAR% found...
-		pVar	:= mVar[]													; %VAR%
-		eVar	:= mVar[1]													; extracted var [gets VAR from %VAR%]
-		body	:= RegExReplace(body, pVar, eVar,,1,pos)					; replace %VAR% with VAR
-		pos		+= StrLen(eVar)												; prep for next loop iteration
+	While(pos := RegexMatch(body, nV1Var, &mVar, pos)) {												; for each %VAR% found...
+		pVar	:= mVar[]																				; %VAR%
+		eVar	:= mVar[1]																				; extracted var [gets VAR from %VAR%]
+		body	:= RegExReplace(body, pVar, eVar,,1,pos)												; replace %VAR% with VAR
+		pos		+= StrLen(eVar)																			; prep for next loop iteration
 	}
 
 	; restore original lead/trail ws
-	body := RegExReplace(body, tLWS, oLWS)									; replace leadWS  tag with orig ws code
-	body := RegExReplace(body, tTWS, oTWS)									; replace trailWS tag with orig ws code
+	body := RegExReplace(body, tLWS, oLWS)																; replace leadWS  tag with orig ws code
+	body := RegExReplace(body, tTWS, oTWS)																; replace trailWS tag with orig ws code
 
-	; add leading empty lines to quoted text								; (simulate same output as v1)
-	RegExReplace(oLWS, '\R',, &cCRLF)										; count CRLFs - will tells us how many (leading) empty lines
-	if (cCRLF > 1) {	; first CRLF doesn't count							; if one or more empty lines...
-		nBlk := '(?s)(\([^\v]*)(\R)(\s+)"(.+?)(\))'							; [separates block anatomy]
-		body := RegExReplace(body, nBlk, '$1$2"$3$4$5')						; include those empty lines in quoted text (move leading DQ)
+	; add leading empty lines to quoted text															; (simulate same output as v1)
+	RegExReplace(oLWS, '\R',, &cCRLF)																	; count CRLFs - will tells us how many (leading) empty lines
+	if (cCRLF > 1) {	; first CRLF doesn't count														; if one or more empty lines...
+		nBlk := '(?s)(\([^\v]*)(\R)(\s+)"(.+?)(\))'														; [separates block anatomy]
+		body := RegExReplace(body, nBlk, '$1$2"$3$4$5')													; include those empty lines in quoted text (move leading DQ)
 	}
 
 	; if block is empty (it happens), add empty quotes
-	if (RegExReplace(body, '\s') = '()') {									; if body is empty...
-		body := RegExReplace(body, '(?s)(\(\R)', '$1""',,1)					; add empty string quotes below opening parenthesis
+	if (RegExReplace(body, '\s') = '()') {																; if body is empty...
+		body := RegExReplace(body, '(?s)(\(\R)', '$1""',,1)												; add empty string quotes below opening parenthesis
 	}
 
-	Mask_R(&body, 'C&S')													; restore comments/strings
+	Mask_R(&body, 'C&S')																				; restore comments/strings
 	return body
 }
 ;################################################################################
@@ -2265,19 +2334,19 @@ TODO - MAKE SURE FUNC CALLS ARE COVERED
 ; Purpose: convert double-quote literals from "" (v1) to `" (v2) format
 ;	handles all of them, whether in function call params or not
 
-	Mask_T(&lineStr, 'DQStr')									; tag any DQ strings, so they are easy to find
+	Mask_T(&lineStr, 'DQStr')																			; tag any DQ strings, so they are easy to find
 
 	; grab each string mask one at a time from lineStr
-	nDQTag		:= gTagPfx 'DQ_\w+' gTagTrl						; [regex for DQ string tags]
+	nDQTag		:= gTagPfx 'DQ_\w+' gTagTrl																; [regex for DQ string tags]
 	pos			:= 1
-	While (pos	:= RegexMatch(lineStr, nDQTag, &mTag, pos)) {	; find each DQ string tag (masked-string)
-		tagStr	:= mTag[]										; [temp var to handle tag and replacement]
-		Mask_R(&tagStr,'DQStr')									; get orig string for current tag
-		tagStr	:= SubStr(tagStr, 2, -1)						; strip outside DQ chars from each end of extracted string
-		tagStr	:= RegExReplace(tagStr, '""', '``"')			; replace all remaining "" with `"
-		tagStr	:= '"' tagStr '"'								; add DQ chars back to each end
-		lineStr	:= StrReplace(lineStr, mTag[], tagStr)			; replace tag within lineStr with newly converted string
-		pos		+= StrLen(tagStr)								; prep for next search
+	While (pos	:= RegexMatch(lineStr, nDQTag, &mTag, pos)) {											; find each DQ string tag (masked-string)
+		tagStr	:= mTag[]																				; [temp var to handle tag and replacement]
+		Mask_R(&tagStr,'DQStr')																			; get orig string for current tag
+		tagStr	:= SubStr(tagStr, 2, -1)																; strip outside DQ chars from each end of extracted string
+		tagStr	:= RegExReplace(tagStr, '""', '``"')													; replace all remaining "" with `"
+		tagStr	:= '"' tagStr '"'																		; add DQ chars back to each end
+		lineStr	:= StrReplace(lineStr, mTag[], tagStr)													; replace tag within lineStr with newly converted string
+		pos		+= StrLen(tagStr)																		; prep for next search
 	}
 	return
 }

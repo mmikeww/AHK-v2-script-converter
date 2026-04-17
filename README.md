@@ -8,30 +8,12 @@ I've also added essential unit tests using the [Yunit framework](https://github.
 However, this project is way more ambitious that I originally thought, and __it needs a lot of work__. See below for how you can [contribute](#contributing).
 
 # Usage
-## Usage 1
-1. [Download](https://github.com/mmikeww/AHK-v2-script-converter/archive/master.zip) the full repo. Then run the included `QuickConvertorV2.ahk` file with AHK V2
-2. Select a string in another program and press XButton1 to convert it, or paste it in the first Edit and press the convert button (orange arrow).
-3. When the cursor is on a function in the edit field, press F1 to search the function in the documentation.
-4. You can run and close the V1 and V2 code with the play buttons.
-5. There are also compare buttons to see better the difference between the scripts.
-6. When working on ConvertFuncs.ahk, please set TestMode on in the Gui Menu Settings, in this mode, all the confirmed tests will be checked if the result stays the same. In this mode you can also save tests easily.
-![screenshot](https://github.com/mmikeww/AHK-v2-script-converter/blob/master/images/Quick%20Convertor%20V2.png)
-
-## Usage 2 (alternative)
-1. [Download](https://github.com/mmikeww/AHK-v2-script-converter/archive/master.zip) the full repo. Then run the included `v2converter.ahk` script with AHK v2
-2. Choose your input `scriptfile.ahk` written for AHK v1.  
-   The converted script will be named `scriptfile_newV2.ahk` in the same directory
-   Use `v2converter.ahk -h` in cmd to use the CLI
-   You can modify parts of how the script behave from editing variables inside the script
-3. Look over the Visual Diff to manually inspect the changes
-![screenshot](https://github.com/mmikeww/AHK-v2-script-converter/blob/master/images/screenshot.jpg)
-
-## Usage 3 (Converter UI)
+## Usage 1 (Converter User Interface)
 1. [Download](https://github.com/mmikeww/AHK-v2-script-converter/archive/master.zip) the full repo. Then run the included `Converter_UI.ahk` script with AHK v2
 2. Conversion Buttons:
-   * $\color{cyan}\text{Convert V1 Script File:}$ Runs v2converter to select/convert a script file. See Usage 2 above.
-   * $\color{cyan}\text{Convert V1 Code Fragment:}$ Runs QuickConvertorV2 for v1 code paste. See Usage 1:4 above. Paste v1 code fragment in left pane, convert using orange arrow button [bottom/center]. 
-   * $\color{cyan}\text{Run QC Unit Tests:}$ Runs QuickConvertorV2 in Unit-Test Mode [for project contributors] - See Usage 1:6 above. Shift-Click this button to show failed unit-tests (also).
+   * $\color{cyan}\text{Convert V1 Script File:}$ Runs v2converter to select/convert a script file. See Usage 2:3 below for more details.
+   * $\color{cyan}\text{Convert V1 Code Fragment:}$ Runs QuickConvertorV2 for v1 code paste. See Usage 3:3 below. Paste v1 code fragment in left pane, convert using orange arrow button [bottom/center]. 
+   * $\color{cyan}\text{Run QC Unit Tests:}$ Runs QuickConvertorV2 in Unit-Test Mode [for project contributors] - See Usage 3:7 below. Shift-Click this button to show failed unit-tests (also).
 3. Conversion Settings:
    * $\color{cyan}\text{TAB1:}$ Save all settings from other tabs [Manual/Auto]. Auto-save is recommended.
    * $\color{cyan}\text{GUI:}$ Provides several modes for Gui/GuiControl conversion. Also allows user to define the default GuiName and Control Prefix for v2 variable names [for Orig/Simple modes].
@@ -44,6 +26,26 @@ However, this project is way more ambitious that I originally thought, and __it 
    * $\color{cyan}\text{AUTO:}$ Analyzes the v1 source code and selects the 'best mode' automatically [Simple or Dynamic].
 
 ![screenshot](https://github.com/mmikeww/AHK-v2-script-converter/blob/master/images/Converter_UI.png)
+
+## Usage 2 (Convert V1 Script File)
+1. [Download](https://github.com/mmikeww/AHK-v2-script-converter/archive/master.zip) the full repo.
+2. Run `Converter_UI.ahk`, then choose 'Convert v1 Script file' button. Or run the included `v2converter.ahk` directly.
+3. Choose your input `scriptfile.ahk` written for AHK v1.  
+   The converted script will be named `scriptfile_newV2.ahk` in the same directory
+   Use `v2converter.ahk -h` in cmd to use the CLI
+   You can modify parts of how the script behave from editing variables inside the script
+4. Look over the Visual Diff to manually inspect the changes
+![screenshot](https://github.com/mmikeww/AHK-v2-script-converter/blob/master/images/screenshot.jpg)
+
+## Usage 3 (Convert V1 Code Fragment, and Unit Testing)
+1. [Download](https://github.com/mmikeww/AHK-v2-script-converter/archive/master.zip) the full repo.
+2. Run `Converter_UI.ahk`, then choose 'Convert v1 Code' button. Or run the included `QuickConvertorV2.ahk` directly.
+3. Select a string in another program and press XButton1 to convert it, or paste it in the first Edit and press the convert button (orange arrow).
+4. When the cursor is on a function in the edit field, press F1 to search the function in the documentation.
+5. You can run and close the V1 and V2 code with the play buttons.
+6. There are also compare buttons to see better the difference between the scripts.
+7. When working on ConvertFuncs.ahk, please set TestMode on in the Gui Menu Settings, in this mode, all the confirmed tests will be checked if the result stays the same. In this mode you can also save tests easily.
+![screenshot](https://github.com/mmikeww/AHK-v2-script-converter/blob/master/images/Quick%20Convertor%20V2.png)
 
 ## Post conversion
 If you find that the script does not work, please go through the troubleshooting steps below

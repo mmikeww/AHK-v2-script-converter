@@ -163,11 +163,11 @@ class clsUserUI {																					; Gui handling
 	evRun(ctrl:='', *) {	; also receives hidden 'this' obj										; event handler for handle Run buttons
 		this._toolTip()																				; ensure tooltip is hidden
 		switch ctrl.name {
-			case 'CVS':		Run('v2Converter.ahk')													; run V2Converter for script conversions
-			case 'QCC':		Run('QuickConvertorV2.ahk "QCC"')										; run QuickConverter in normal convert mode
+			case 'CVS':		Run(this._getFilePath('v2Converter'))									; run V2Converter for script conversions
+			case 'QCC':		Run(this._getFilePath('QuickConvertorV2') ' "QCC"')						; run QuickConverter in normal convert mode
 			case 'QCT':																				; 	  QuickConverter in unit-test mode
 				mode := (GetKeyState("shift")) ? '"QCTF"' : '"QCT"'									; set whether failed tests are included or not
-				Run('QuickConvertorV2.ahk ' mode)													; run QuickConverter in unit-test mode
+				Run(this._getFilePath('QuickConvertorV2') ' ' mode)									; run QuickConverter in unit-test mode
 		}
 	}
 	;############################################################################
@@ -321,5 +321,17 @@ class clsUserUI {																					; Gui handling
 			ToolTip(), MouseGetPos(,,, &hCtrl, 2)													; ... clear the tooltip (manual call), get ctrl under mouse
 			(hCtrl != this.QCT.hwnd) && (this.fTTActive := false)									; set tt flag to false only after mouse has moved away from button
 		}
+	}
+	;############################################################################
+	_getFilePath(name) {																			; gets path of convert file based on compiled and if it exists
+		if (A_IsCompiled && FileExist(name '.exe'))													; not really a point of checking for exe if not compiled
+			return name '.exe'
+		else if (FileExist(name '.ahk'))
+			return name '.ahk'
+		else
+			MsgBox(A_IsCompiled																		; conditional error, easier to debug
+				? "Could not find " name ".exe, did you download from releases and put in the same path?"
+				: "Could not find " name ".ahk, is it deleted?", "Error running file converter", "Icon!")
+		return ''																					; returning empty string means no error in Run()
 	}
 }

@@ -164,10 +164,10 @@ class clsUserUI {																					; Gui handling
 		this._toolTip()																				; ensure tooltip is hidden
 		switch ctrl.name {
 			case 'CVS':		Run(this._getFilePath('v2Converter'))									; run V2Converter for script conversions
-			case 'QCC':		Run(this._getFilePath('QuickConvertorV2') ' "QCC"')						; run QuickConverter in normal convert mode
+			case 'QCC':		Run(this._getFilePath('QuickConvertorV2', '"QCC"'))						; run QuickConverter in normal convert mode
 			case 'QCT':																				; 	  QuickConverter in unit-test mode
 				mode := (GetKeyState("shift")) ? '"QCTF"' : '"QCT"'									; set whether failed tests are included or not
-				Run(this._getFilePath('QuickConvertorV2') ' ' mode)									; run QuickConverter in unit-test mode
+				Run(this._getFilePath('QuickConvertorV2', mode))									; run QuickConverter in unit-test mode
 		}
 	}
 	;############################################################################
@@ -323,11 +323,11 @@ class clsUserUI {																					; Gui handling
 		}
 	}
 	;############################################################################
-	_getFilePath(name) {																			; gets path of convert file based on compiled and if it exists
+	_getFilePath(name, args := '') {																			; gets path of convert file based on compiled and if it exists
 		if (A_IsCompiled && FileExist(name '.exe'))													; not really a point of checking for exe if not compiled
-			return name '.exe'
+			return name '.exe ' + args
 		else if (FileExist(name '.ahk'))
-			return name '.ahk'
+			return name '.ahk ' + args
 		else
 			MsgBox(A_IsCompiled																		; conditional error, easier to debug
 				? "Could not find " name ".exe, did you download from releases and put in the same path?"

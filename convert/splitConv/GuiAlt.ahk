@@ -1733,7 +1733,7 @@ dynIncludeToLib()
 	}
 	; is include-file found in global library folder?
 	if (!FileExist(dFile)) {																; if include-file not found in destination folder...
-		FileCopy(sFile, dFile)																; ... copy src file to destination
+		try FileCopy(sFile, dFile)															; ... copy src file to destination
 		return !!(FileExist(dFile))															; ... return whether dest file now exists
 	}
 	; src and dest files found - compare contents between files
@@ -1746,7 +1746,7 @@ dynIncludeToLib()
 	SplitPath(dFile, &FName, &dir, &ext, &FnNoExt, &drv)									; extract path parts for orig dest file
 	dFile2	:= dir '\' FnNoExt '_BKUP_' A_Now '.' ext										; append current date-time to dest filename
 	FileMove(dFile, dFile2)																	; rename orig dest file
-	FileCopy(sFile, dFile)																	; copy src file to dest
+	try FileCopy(sFile, dFile)																; copy src file to dest
 	return !!(FileExist(dFile))																; return whether dest file exists
 }
 ;################################################################################

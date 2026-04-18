@@ -20,6 +20,10 @@
 #Include Convert\Validation.ahk																		; 2026-04-06 has gV2ReservedWords list
 #SingleInstance force
 CoordMode('Tooltip','Screen')
+if !FileExist("lib/v2DynGui.ahk") {
+	DirCreate("lib")
+	FileInstall("lib/v2DynGui.ahk", "lib/v2DynGui.ahk")
+}
 clsUserUI()
 ;################################################################################
 class clsUserUI {																					; Gui handling
@@ -325,9 +329,9 @@ class clsUserUI {																					; Gui handling
 	;############################################################################
 	_getFilePath(name, args := '') {																			; gets path of convert file based on compiled and if it exists
 		if (A_IsCompiled && FileExist(name '.exe'))													; not really a point of checking for exe if not compiled
-			return name '.exe ' + args
+			return name '.exe ' args
 		else if (FileExist(name '.ahk'))
-			return name '.ahk ' + args
+			return name '.ahk ' args
 		else
 			MsgBox(A_IsCompiled																		; conditional error, easier to debug
 				? "Could not find " name ".exe, did you download from releases and put in the same path?"

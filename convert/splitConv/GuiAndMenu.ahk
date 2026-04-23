@@ -567,8 +567,12 @@ GuiControlConv(p) {
 	} else if (SubCommand = "Show") {
 		Return ControlObject ".Visible := true"
 	} else if (SubCommand = "Choose") {
+		if (SubStr(Value, 1, 1) = "|")
+			Return "ControlChooseIndex(" ToExp(LTrim(Value, "|")) ", " ControlObject ")"
 		Return ControlObject ".Choose(" ToExp(Value) ")"	; 2026-04-23 - Fix for #480
 	} else if (SubCommand = "ChooseString") {
+		if (SubStr(Value, 1, 1) = "|")
+			Return "ControlChooseString(" ToExp(LTrim(Value, "|")) ", " ControlObject ")"
 		Return ControlObject ".Choose(" ToExp(Value) ")"
 	} else if (SubCommand = "Font") {
 		if (gGuiActiveFont != "") {

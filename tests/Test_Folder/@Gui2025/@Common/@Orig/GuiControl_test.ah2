@@ -24,8 +24,8 @@ ogcMySlider := myGui.Add("Slider", "vMySlider", "50")
 ogcMyProgress := myGui.Add("Progress", "w200 h20 cBlue vMyProgress", "75")
 
 ogcMyGroupBox := myGui.Add("GroupBox", "w200 h50 vMyGroupBox", "Geographic Criteria")
-Tab := ogcMyTab3 := myGui.Add("Tab3", "h75 vMyTab3", ["General", "View", "Settings"])
-Tab.UseTab()
+V2TabCtrl := ogcMyTab3 := myGui.Add("Tab3", "h75 vMyTab3", ["General", "View", "Settings"])
+V2TabCtrl.UseTab()
 
 ogcMyStatusbar := myGui.Add("StatusBar", "vMyStatusbar", "Bar's starting text (omit to start off empty).")
 ; Gui Add, ActiveX, w600 h500 vWB, Shell.Explorer  ; The final parameter is the name of the ActiveX component.

@@ -29,8 +29,8 @@ mV2GC[["","MySlider"]] := mV2Gui[""].Add("Slider","vMySlider","50")
 mV2GC[["","MyProgress"]] := mV2Gui[""].Add("Progress","w200 h20 cBlue vMyProgress","75")
 
 mV2GC[["","MyGroupBox"]] := mV2Gui[""].Add("GroupBox","w200 h50 vMyGroupBox","Geographic Criteria")
-mV2GC[["","MyTab3"]] := mV2Gui[""].Add("Tab3","h75 vMyTab3",["General","View","Settings"])
-mV2GC[["","MyTab3"]].UseTab(0)
+V2TabCtrl := mV2GC[["","MyTab3"]] := mV2Gui[""].Add("Tab3","h75 vMyTab3",["General","View","Settings"])
+V2TabCtrl.UseTab(0)
 
 mV2GC[["","MyStatusbar"]] := mV2Gui[""].Add("StatusBar","vMyStatusbar","Bar's starting text (omit to start off empty).")
 ; Gui Add, ActiveX, w600 h500 vWB, Shell.Explorer  ; The final parameter is the name of the ActiveX component.

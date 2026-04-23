@@ -22,6 +22,9 @@ global
 (IsSet(A_GuiControl)) && SetDefaultGui(A_GuiControl)
 fcV2GC("2","Button1").Visible := false
 fcV2GC("2","Button2").Enabled := false
+If (!HasV2Gui("")) {
+    mV2Gui[""] := NewV2Gui("")
+}
 mV2Gui[""].SetFont("s10 Bold","Verdana")
 fcV2GC(A_Gui,"Button3").Text := "GroupBox is actually a `"Button`" Class"
 fcV2GC("2","Button3").SetFont("s10 Bold","Verdana")

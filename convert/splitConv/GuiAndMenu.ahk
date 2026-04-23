@@ -21,6 +21,7 @@ GuiConv(p) {
 ; 2025-11-30 AMB, UPDATED - output to compress multi-line output into single-line tag
 ; 2026-01-01 AMB, UPDATED - changed global gEarlyLine to gV1Line
 ; 2026-01-26 AMB, UPDATED - as part of support for user settings
+; 2026-04-22 AMB, UPDATED - as part of fix for #479
 
 	global gV1Line							; 2026-01-01 changed name from gEarlyLine
 	global gGuiNameDefault
@@ -241,6 +242,7 @@ GuiConv(p) {
 			Return LineResult curGuiName ".MarginX := " ToExp(OptCtrl,,1) ", " curGuiName ".MarginY := " ToExp(OptList,,1)
 		} else if (guiCmd = "Font") {
 			guiCmd := "SetFont"
+			OptCtrl := RegExReplace(OptCtrl,'(?i)(\bNORM)AL\b','$1')	; 2026-04-22 "Normal" -> "Norm" (part of fix for #479)
 			gGuiActiveFont := ToExp(OptCtrl,,1) ", " ToExp(OptList,,1)
 		} else if (guiCmd = "Cancel") {
 			guiCmd := "Hide"

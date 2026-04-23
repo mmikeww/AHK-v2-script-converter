@@ -105,6 +105,7 @@ class clsGuiLine
 	{
 	; separates gui name/number from subCommand
 	; preps clsGuiLine instance/object for handling subCommands later
+	; 2026-04-22 AMB, UPDATED as part of fix for #479
 
 		global gfNewScope																	; used to assist controlling of scope (not used yet)
 
@@ -112,7 +113,8 @@ class clsGuiLine
 		hwndVar	:= clsExtract.ExtHwndVar(&p2:=this._p2,false)								; extract gui hwnd variable (if present)
 
 		; do not allow new guis to be created with these
-		nException	:= '(?i)\b(CANCEL|DESTROY|FONT|HIDE|MENU|SUBMIT)\b'						; watch for these exceptions, for P1
+		;nException	:= '(?i)\b(CANCEL|DESTROY|FONT|HIDE|MENU|SUBMIT)\b'						; watch for these exceptions, for P1
+		nException	:= '(?i)\b(CANCEL|DESTROY|HIDE|MENU|SUBMIT)\b'							; watch for these exceptions, for P1 (2026-04-22 - remove FONT)
 
 		if (this._p1 = 'NEW') {																; if P1 has the NEW cmd...
 			this._guiObj := clsGuiObj.NewGuiObj(this.HasOrigName,hwndVar,force:=1)			; ... create new gui object
@@ -269,8 +271,10 @@ class clsGuiLine
 
 			;####################################################################
 			case 'FONT':
+			; 2026-04-22 AMB, UPDATED as part of fix for #479
 				comma			:= (gDynGuiNaming) ? ',' : ', '								; comma with/without trailing ws
-				p2				:= (this._p2 != '') ? toExp(this._p2,,1) : ''				; format param2
+				p2				:= RegExReplace(this._p2,'(?i)(\bNORM)AL\b','$1')			; "Normal" -> "Norm" (part of fix for #479)
+				p2				:= (p2		 != '')	? toExp(p2		,,1) : ''				; format param2
 				p3				:= (this._p3 != '') ? toExp(this._p3,,1) : ''				; format param3
 				params			:= Trim(p2 comma p3, comma)									; assemble, remove any trailing comma
 				gGuiActiveFont	:= params													; used in GuiControlConv()

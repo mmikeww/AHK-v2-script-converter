@@ -2,7 +2,7 @@
 If (!HasV2Gui("")) {
     mV2Gui[""] := NewV2Gui("")
 }
-mV2Gui[""].Add("Tab3","Choose2",["General","View","Settings"])
+V2TabCtrl := mV2Gui[""].Add("Tab3","Choose2",["General","View","Settings"])
 mV2Gui[""].Title := "Some Window Title"
 mV2Gui[""].Show()
 WhichTab := ControlGetIndex("SysTabControl321", "Some Window Title")

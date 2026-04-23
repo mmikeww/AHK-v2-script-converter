@@ -21,7 +21,7 @@ GuiConv(p) {
 ; 2025-11-30 AMB, UPDATED - output to compress multi-line output into single-line tag
 ; 2026-01-01 AMB, UPDATED - changed global gEarlyLine to gV1Line
 ; 2026-01-26 AMB, UPDATED - as part of support for user settings
-; 2026-04-22 AMB, UPDATED - as part of fix for #479
+; 2026-04-22 AMB, UPDATED - as part of fix for #479, and #480
 
 	global gV1Line							; 2026-01-01 changed name from gEarlyLine
 	global gGuiNameDefault
@@ -190,7 +190,7 @@ GuiConv(p) {
 		}
 
 		if (RegExMatch(guiCmd, "i)^tab[23]?$")) {
-			Return LineResult "Tab.UseTab(" OptCtrl ")"
+			Return LineResult "V2TabCtrl.UseTab(" OptCtrl ")"	; 2026-04-23 - Changed var name from 'Tab' (too common) to 'V2TabCtrl'
 		}
 		if (guiCmd = "Show") {
 			if (OptList != "") {
@@ -200,7 +200,7 @@ GuiConv(p) {
 		}
 
 		if (RegExMatch(OptCtrl, "i)^tab[23]?$")) {
-			LineResult .= "Tab := "
+			LineResult .= "V2TabCtrl := "						; 2026-04-23 - Changed var name from 'Tab' (too common) to 'V2TabCtrl'
 		}
 		if (guiCmd = "Submit") {
 			LineResult .= "oSaved := "
@@ -402,6 +402,7 @@ GuiControlConv(p) {
 ; 2026-02-22 AMB, UPDATED - parse for param 1
 ; 2026-03-11 AMB, UPDATED - to support simple/dynamic handling
 ; 2026-03-14 AMB, UPDATED - changed 'ogc' to gCtrlPfx
+; 2026-04-23 AMB, UPDATED - to fix #480
 ; TODO
 ;	ADD SUPPORT FOR V1 EXPRESSION STRINGS, for SubCommand and ControlID
 ;	ADD SUPPORT FOR TERNANY IFS, for SubCommand and ControlID
@@ -566,7 +567,7 @@ GuiControlConv(p) {
 	} else if (SubCommand = "Show") {
 		Return ControlObject ".Visible := true"
 	} else if (SubCommand = "Choose") {
-		Return ControlObject ".Choose(" Value ")"
+		Return ControlObject ".Choose(" ToExp(Value) ")"	; 2026-04-23 - Fix for #480
 	} else if (SubCommand = "ChooseString") {
 		Return ControlObject ".Choose(" ToExp(Value) ")"
 	} else if (SubCommand = "Font") {

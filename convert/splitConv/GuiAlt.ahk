@@ -271,7 +271,7 @@ class clsGuiLine
 
 			;####################################################################
 			case 'FONT':
-			; 2026-04-22 AMB, UPDATED as part of fix for #479
+			; 2026-04-22 AMB, UPDATED as part of fix for issue #479
 				comma			:= (gDynGuiNaming) ? ',' : ', '								; comma with/without trailing ws
 				p2				:= RegExReplace(this._p2,'(?i)(\bNORM)AL\b','$1')			; "Normal" -> "Norm" (part of fix for #479)
 				p2				:= (p2		 != '')	? toExp(p2		,,1) : ''				; format param2
@@ -348,22 +348,10 @@ class clsGuiLine
 
 			;####################################################################
 			case 'TAB','TAB2','TAB3':
-				if (!gDynGuiNaming) {														; if using simple naming method
-					tabPage			:= (this._p2) ? toExp(this._p2) : ''					; ... get/format tab page from P2
-					this._lineOut	:= 'Tab.UseTab(' tabPage ')'							; ... assemble final output
-					return
-				}
-				; using dynamic naming method...
-				tabPage			:= (this._p2) ? this._p2 : 0								; param2 is the tab page,	set to 0 if empty
-				tabCtrlIdx		:= (this._p3) ? this._p3 : 1								; param3 is the ctrl index,	set to 1 if empty
-				tabCtrlName		:= ''														; ini - in case Try fails
-				try {
-					tabCtrlName	:= this._guiObj.TabCtrlList[tabCtrlIdx].V2GCVar				; get current default Tab
-				}
-				catch as e {																; if error occurred...
-					MsgBox "TAB NAME ASSIGNEMENT FAILED`n" e.Message						; ... display a debug msg
-				}
-				this._lineOut := tabCtrlName . '.UseTab(' toExp(tabPage) ')'				; sets default Tab that future controls will be added to
+			; 2026-04-23 AMB, UPDATED as part of fix for issue #480
+				emptyVal		:= (gDynGuiNaming) ? 0 : ''									; val to use if param 2 is empty
+				tabPage			:= (this._p2) ? toExp(this._p2) : emptyVal					; tab page value
+				this._lineOut	:= 'V2TabCtrl.UseTab(' tabPage ')'							; ... assemble final output
 
 			;####################################################################
 			default:																		; this will catch OPTIONS (6% of cases)
@@ -377,6 +365,7 @@ class clsGuiLine
 		}
 	}
 	;############################################################################
+	; 2026-04-23 AMB, UPDATED as part of fix for issue #480
 	_processAddCmd()																		; processed ADD SubCommand
 	{
 		global gmGuiCtrlType																; used in GuiControlConv() and GuiControlGetConv()
@@ -423,8 +412,8 @@ class clsGuiLine
 		else {																				; any other situation...
 			declStr := decl																	; ... var declaration - NOT needed
 		}
-		declStr := (!gDynGuiNaming && ctrl ~= '(?i)\bTAB[23]?\b')							; if using simple naming method, and ctrl is a TAB
-				? 'Tab := ' declStr															; ... add 'Tab := ' (to match ORIG formatting)
+		declStr := (ctrl ~= '(?i)\bTAB[23]?\b')												; if ctrl is a TAB (2026-04-23 - now applies to all gui modes)
+				? 'V2TabCtrl := ' declStr													; ... allows tracking of current tab control
 				: declStr																	; ... otherwise, no changes to decl str
 		; finalize output
 		this._lineOut	:= declStr ctrlObj.V2CtrlMsg										; these can both be empty strings sometimes

@@ -378,6 +378,28 @@ _GetKeyState(p) {
 	out		.= ((p[3]) ? (', ' p[3]) : '') . ') ? "D" : "U"'
 	return	out
 }
+;################################################################################
+_Gosub(p) {
+; 2024-07-07 AMB, UPDATED - as part of label-to-function naming
+; 2025-10-05 AMB, UPDATED - to use new gmList_GosubToFunc, updated msg to user
+; 2025-11-01 AMB, UPDATED - key case-sensitivity for gmList_GosubToFunc
+; TODO - try to add support for %label%
+
+	; check for Gosub %label% - not yet supported
+	p[1] := RegExReplace(p[1], '%\h*([^%]+?)\h*$', '%$1%')
+	If (InStr(p[1], '%')) {
+		EOLComment	:= ' `; V1toV2: Gosub (Manual edit required)'
+		return 'Gosub ' . Trim(p[1]) . EOLComment
+	}
+
+	; should have legit label, but the labelname may change after calling Update_LBL_HK_HS()
+	; ... so, just record the Gosub call for now, with no chnages to script
+	; ... clsLabelSect._gosubUpdate() will make the final changes ass part of Update_LBL_HK_HS()
+	; ... this also provides support for isssue #322, and similar
+	v1LabelName := Trim(p[1])
+	gmList_GosubToFunc[v1LabelName] := true
+	return 'Gosub ' .  v1LabelName	; no changes here
+}
 ;;################################################################################
 ;_Goto() {
 ;	; SEE PreProcessLines()	in ConvertFuncs.ahk

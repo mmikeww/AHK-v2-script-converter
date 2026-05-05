@@ -29,6 +29,7 @@
 	2026-02-07				- UPDATED, see comments in code
 	2026-03-11,29			- UPDATED, see comments in code
 	2026-04-06,12			- UPDATED, see comments in code
+	2026-05-04				- UPDATED, see comments in code
 
 	TODO
 		Finish support for Continuation sections
@@ -202,6 +203,7 @@ global	  gTagChar		:= chr(0x2605) ; '★'															; unique char to ensure 
 2025-10-05 AMB, UPDATED
 2025-11-30 AMB, UPDATED restore option for Switch, when labels are masked (to fix masking bug)
 2026-04-13 AMB, UPDATED
+2026-05-04 AMB, UPDATED to allow processing of multiple targs using single call
 
  CODE param		- source-code/haystack that will be searched (for target sub-string type)
 					2025-07-06 - CANNOT BE A TRULY GLOABAL VAR - will result in errors during recursion calls (see notes)
@@ -236,6 +238,15 @@ global	  gTagChar		:= chr(0x2605) ; '★'															; unique char to ensure 
 
 */
 
+	;####################################################################################
+	; 2026-05-04 AMB, ADDED to allow multiple targets to be processed with single call
+	if (Type(targ) = 'array') {
+		for idx, tType in targ
+			Mask_T(&code, tType, option?, sessID?, convert)
+		return
+	}
+
+	;####################################################################################
 	switch targ,false	; case-insensitive
 	{
 		;################################################################################
@@ -533,6 +544,7 @@ global	  gTagChar		:= chr(0x2605) ; '★'															; unique char to ensure 
 	has no relevance with clsMask.RestoreAll() since this code is not converted
 	but sub-class (custom) RestoreAll()'s use it (clsMLLineCont.RestoreAll at the moment)
 2025-10-10 AMB, UPDATED to fix conflict between LC and STR restoration (chicken and egg delima)
+2026-05-04 AMB, UPDATED to allow processing of multiple targs using single call
 
  CODE param	- source-code/haystack that will be searched (for target TAGS), and ultimately converted (see CONVERT below)
 					2025-07-06 - CANNOT BE A TRULY GLOABAL VAR - will result in errors during recursion calls (see notes)
@@ -572,7 +584,14 @@ global	  gTagChar		:= chr(0x2605) ; '★'															; unique char to ensure 
 				or a local var within that function. In other words, the var cannot have just exclusive global scope (I think).
 
 */
-
+	;####################################################################################
+	; 2026-05-04 AMB, ADDED to allow multiple targets to be processed with single call
+	if (Type(targ) = 'array') {
+		for idx, tType in targ
+			Mask_R(&code, tType, delTag, sessID?, convert)
+		return
+	}
+	;####################################################################################
 	switch targ,false	; case-insensitive
 	{
 		;################################################################################
@@ -739,6 +758,12 @@ global	  gTagChar		:= chr(0x2605) ; '★'															; unique char to ensure 
 		case	'HIF', 'HOTIF':																			; HOTIF
 				clsMask.RestoreAll(&code, 'HIF'
 					, delTag, sessID?)
+		;################################################################################
+		case	'ALL':																					; Restore ALL masking
+		; 2026-05-04 AMB, ADDED to support restoring all masks with single call
+				tagTypes := ['CLS&FUNC','HIF','HK','HS','LBL'
+							,'IWTLFS','MLPBT','V1MLS','KVO','C&S']
+				Mask_R(&code, tagTypes)																	; recursive all ussing array
 		;################################################################################
 		default:
 				; targ not found in case-list above...

@@ -43,6 +43,8 @@ Convert(code)                    ; MAIN ENTRY POINT for conversion process
 convertLines_NoScope(code)
 {
 ; 2025-11-01 AMB, ADDED to provide option to NOT USE Macro Scope (for testing previous method)
+; 2026-05-04 AMB, ADDED RestoreMasksAll()
+   code := codeChop.RestoreMasksAll(code)           ; does not remove mask from V1MLS (see Scope.ahk)
    Mask_T(&code,'CSECT2'), Mask_T(&code,'FUNC&CLS') ; mask M2 continuation sections, funcs/classes
    return _convertLines(code)
 }

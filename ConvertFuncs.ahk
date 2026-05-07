@@ -1,71 +1,76 @@
 ﻿#Requires AutoHotKey v2.0
 #SingleInstance Force
-CoordMode("tooltip", "screen")          ; for debugging msgs
+CoordMode("tooltip", "screen")                                                          ; for debugging msgs
 
-; 2025-12-24 AMB    MOVED Dynamic Conversion Funcs to AhkLangConv.ahk
-#Include Global_Declare.ahk             ; global definitions, classes, etc
+; 2025-12-24 AMB, MOVED Dynamic Conversion Funcs to AhkLangConv.ahk
+#Include Global_Declare.ahk                                                             ; global definitions, classes, etc
 
 ; 2025-07-06 AMB, ERROR related to combination of recursion AND global scope
+; 2026-05-06 AMB, THIS ERROR SHOULD BE FIXED WITH AHK V2.0.25 PER LEXIKOS
+; https://www.autohotkey.com/boards/viewtopic.php?f=14&t=140561#p618103
 ; will cause error when called using a global var, AND performing recursion
 ; must call from inside a function that has a "copy" of the var (local scope)
 ; See Mask_T() and Mask_R() within MaskCode.ahk for more info
-;   globalVar := "This is a test"
+;   globalVar := '"This is a test" `; comment'
 ;   Mask_T(&globalVar, 'C&S') ; mask comments and strings (uses recursion)
+;   MsgBox "[" globalVar "]"
 
 ;################################################################################
-Convert(code)                    ; MAIN ENTRY POINT for conversion process
-;################################################################################
-{
 ; 2025-11-01 AMB, UPDATED as part of Scope support
 ; 2026-01-24 AMB, UPDATED to support progress-gui
-
+Convert(code)                                                                           ; MAIN ENTRY POINT for conversion process
+{
    ;####  PLEASE DO NOT PLACE ANY OF YOUR CODE IN THIS FUNCTION  #####
 
    ; Please place any code that must be performed BEFORE _convertLines()...
    ;  ... into the following function
    Before_LineConverts(&code)
-   Prog.ULog(10)                ; update UI - 10% complete
+   Prog.ULog(10)                                                                        ; update UI - 10% complete
 
    ; DO NOT PLACE YOUR CODE HERE
    ; perform line conversions
    ; [to test WITHOUT using Macro Scope, change fUseScope flag to 0 (below)]
-   code := (fUseScope:=1) ? convertLines_UseScope(code) : convertLines_NoScope(code)
-   Prog.ULog(60)                ; update UI - 60% complete
+   code := (fUseScope:=1) ? convertLines_UseScope(code,50)
+                          : convertLines_NoScope(code,40)
+   Prog.ULog(60)                                                                        ; update UI - 60% complete
 
    ; Please place any code that must be performed AFTER _convertLines()...
    ;  ... into the following function
    After_LineConverts(&code)
-   Prog.ULog(100)               ; update UI - 100% complete
+   Prog.ULog(100)                                                                       ; update UI - 100% complete
 
-   return code                  ; . 'fail for debugging'
+   return code                                                                          ; . 'fail for debugging'
 }
 ;################################################################################
-convertLines_NoScope(code)
+; 2025-11-01 AMB, ADDED to provide option for testing without using Macro Scope
+; 2026-05-06 AMB, UPDATED to provide progress tracking
+convertLines_NoScope(code,tProg:=0)
 {
-; 2025-11-01 AMB, ADDED to provide option to NOT USE Macro Scope (for testing previous method)
-; 2026-05-04 AMB, ADDED RestoreMasksAll()
-   code := codeChop.RestoreMasksAll(code)           ; does not remove mask from V1MLS (see Scope.ahk)
-   Mask_T(&code,'CSECT2'), Mask_T(&code,'FUNC&CLS') ; mask M2 continuation sections, funcs/classes
-   return _convertLines(code)
+   Prog.ULog(,'Restoring masks...'), Mask_R(&code,['MLPBT','IWTLFS','C&S'])             ; remove all masking except V1MLS
+   Prog.ULog(12,'Masking continuation sections...'), Mask_T(&code,'CSECT2')             ; mask all method-2 continuation sections
+   Prog.ULog(15,'Masking classes and functions...'), Mask_T(&code,'FUNC&CLS')           ; mask funcs/classes
+   Prog.ULog(20,'Converting lines...')
+   return _convertLines(code,tProg)                                                     ; convert lines from top to bottom
 }
 ;################################################################################
-convertLines_UseScope(code)
-{
 ; 2025-11-01 AMB, ADDED to support Scope
 ; 2026-01-24 AMB, UPDATED to support progress-gui
 ;   supports processing global-code first (by default)
 ;    change fGblOrder flag to 0 to test orig-order processing
-
+convertLines_UseScope(code,tProg)
+{
    curProg          := Prog.curProg                                                     ; get current progress percentage
    Prog.ULog(,'Getting Script Sections...')                                             ; update UI
    sects            := GetScopeSections(code)                                           ; get Macro-Scope sections
    Prog.ULog(,'Processing Script Sections...')                                          ; update UI
+
    if (fGblOrder    :=1) {                                                              ; if global code should be processed first...
       origOrder     := Map_I()                                                          ; [will keep track of orig section order]
       gblOrder      := StrSplit(clsScopeSect.OrderGbl, ',')                             ; get global-first index ordering
-      sectCount     := gblOrder.Length, progInc := (50/sectCount)                       ; calc average progress percent for each section
+      gfNewScope    := false                                                            ; ini
+      sectCount     := gblOrder.Length, progInc := (tProg/sectCount)                    ; calc average progress percent for each section
       for idx, index in gblOrder {                                                      ; for each order index...
-         Prog.ULog(,'Processing Section ' idx ' of ' sectCount)                         ; ... update UI
+         Prog.ULog(,'Processing Section ' idx ' of ' sectCount '...')                   ; ... update UI
          curSect        := sects[index].sectCode                                        ; ... grab section code for that index
          curType        := sects[index].sectType                                        ; ... grab section type for that index
          Mask_T(&curSect,'CSECT2'), Mask_T(&curSect,'FUNC&CLS')                         ; ... mask M2 continuation sections, funcs/classes
@@ -81,72 +86,70 @@ convertLines_UseScope(code)
    }
    else {   ; process sections in orig order (top to bottom)
       outStr    := ''                                                                   ; [will become reassembled/output script string]
-      sectCount := sects.Length, progInc := (65/sectCount)                              ; calc average progress percent for each section
-      for idx, curSect in sects {                                                       ; for each section (original order)...
-         Prog.ULog(,'Processing Section ' idx ' of ' sectCount)                         ; ... update UI
-         Mask_T(&curSect,'CSECT2'), Mask_T(&curSect,'FUNC&CLS')                         ; ... mask M2 continuation sections, funcs/classes
-         convSect   := _convertLines(curSect)                                           ; ... convert lines within section
-         outStr     .= convSect                                                         ; ... add converted sect to output, reassemble script string
-         curProg    += progInc, Prog.ULog(curProg)                                      ; ... update UI with progress percent
+      sectCount := sects.Length, progInc := (tProg/sectCount)                           ; calc average progress percent for each section
+      for idx, sect in sects {                                                          ; for each section (original order)...
+         sectStr := sect.sectCode                                                       ; ... grab sect code
+         Prog.ULog(,'Processing Section ' idx ' of ' sectCount '...')                   ; ... update UI
+         Mask_T(&sectStr,'CSECT2'), Mask_T(&sectStr,'FUNC&CLS')                         ; ... mask M2 continuation sections, funcs/classes
+         convSect := _convertLines(sectStr)                                             ; ... convert lines within section
+         outStr   .= convSect                                                           ; ... add converted sect to output, reassemble script string
+         curProg  += progInc, Prog.ULog(curProg)                                        ; ... update UI with progress percent
       }
    }
    Prog.ULog(,'Processing Sections - COMPLETE')                                         ; update UI - sections complete
    return outStr                                                                        ; return converted/output str
 }
 ;################################################################################
-Before_LineConverts(&code)
-{
 ; 2025-11-01 AMB, UPDATED as part of Scope support
 ; 2026-01-24 AMB, UPDATED to support progress-gui
-
+Before_LineConverts(&code)
+{
    ;####  Please place CALLS TO YOUR FUNCTIONS here - not boilerplate code  #####
 
-   Prog.UPath(gFilePath), Prog.ULog(,,A_ThisFunc ' [IN]')                               ; update UI - file path and debug
-   Prog.ULog(1, 'Pre Process - Set Globals...')                                         ; update UI - 1% complete
+   pp := 'Pre Process - '
+   Prog.UPath(gFilePath), Prog.ULog(,,A_ThisFunc ' [IN]'            )                   ; update UI - file path and debug
+   Prog.ULog(1, pp 'Set Globals...'                                 )                   ; update UI - 1% complete
       setGlobals()                                                                      ; initialize all global vars here so ALL code has access to them
-   Prog.ULog(,  'Pre Process - Isolated labels...')                                     ; update UI
+   Prog.ULog(,  pp 'Isolated labels...'                             )                   ; update UI
       code := isolateLabels(code)                                                       ; 2025-06-22 AMB, move labels to their own line as needed
-   Prog.ULog(,  'Pre Process - Get Func names...')                                      ; update UI
+   Prog.ULog(,  pp 'Get Func names...'                              )                   ; update UI
       global gAllFuncNames     := getFuncNames(code)                                    ; comma-delim stringList of all function names
-   Prog.ULog(2, 'Pre Process - Get Class names...')                                     ; update UI - 2% complete
+   Prog.ULog(2, pp 'Get Class names...'                             )                   ; update UI - 2% complete
       global gAllClassNames    := getClassNames(code)                                   ; comma-delim stringList of all class names (2025-10-08)
-   Prog.ULog(4, 'Pre Process - Get V1 Label names..')                                   ; update UI - 4% complete
+   Prog.ULog(4, pp 'Get V1 Label names...'                          )                   ; update UI - 4% complete
       global gAllV1LabelNames  := getV1LabelNames(code)                                 ; comma-delim stringList of all orig v1 label names
-   Prog.ULog(6, 'Pre Process - Get V2 Label names...')                                  ; update UI - 6% complete
+   Prog.ULog(6, pp 'Get V2 Label names...'                          )                   ; update UI - 6% complete
       global gmAllV2LablNames  := getV2LabelNames(gAllV1LabelNames)                     ; map of v1 label names converted to V2 label/funcNames
-   Prog.ULog(7, 'Pre Process - Get MenuBar name...')                                    ; update UI - 7% complete
+   Prog.ULog(7, pp 'Get MenuBar name...'                            )                   ; update UI - 7% complete
       global gMenuBarName      := getMenuBarName(code)                                  ; name of GUI main menubar
       ;global gmAltLabel        := GetAltLabelsMap(code)                                ; 2025-11-28 AMB - no longer needed, causes gLabel routing issues
-   Prog.ULog(8, 'Pre Process - Goto/Gui/HK/Ternary...')                                 ; update UI - 8% complete
+   Prog.ULog(8, pp 'Goto/Gui/HK/Ternary...'                         )                   ; update UI - 8% complete
       PreProcessLines(&code)   ; changes orig code                                      ; 2025-11-23 AMB, ADDED as part of fix for #413
       global gOrigScript       := code                                                  ; 2025-11-01 AMB, ADDED as part of Scope support
-   Prog.ULog(9, 'Pre Process - Get V1 Flags...')                                        ; update UI - 9% complete
+   Prog.ULog(9, pp 'Get V1 Flags...'                                )                   ; update UI - 9% complete
       getScriptStringsUsed(code)                                                        ; 2025-11-01 AMB, ADDED as part of Scope support
-   Prog.ULog(,  '',A_ThisFunc ' [OUT]')                                                 ; update UI - debug
+   Prog.ULog(,  '',A_ThisFunc ' [OUT]'                              )                   ; update UI - debug
    return                                                                               ; code by reference
 }
 ;################################################################################
+; 2025-11-01 AMB, UPDATED as part of Scope support
 After_LineConverts(&code)
 {
-; 2025-11-01 AMB, UPDATED as part of Scope support
-
    ;####  Please place CALLS TO YOUR FUNCTIONS here - not boilerplate code  #####
 
    ; operations that must be performed last
    ; inspect to see whether your code is best placed here or in the following
-   FinalizeConvert(&code)                   ; perform all final operations
+   FinalizeConvert(&code)                                                               ; perform all final operations
 
    return    ; code by reference
 }
 ;################################################################################
-PreProcessLines(&code)
-;################################################################################
-{
 ; 2025-11-23 AMB, ADDED - part of fix for #413
 ; 2026-03-11 AMB, UPDATED to detect dynamic naming requirements for Gui/GuiControls
-; 2026-03-14 AMB, UPDATED to ensure dynamic include file is found, for dynamic naming mode
+; 2026-03-14 AMB, UPDATED to ensure dynamic include file is found
 ; pre-processing of certain commands via single-iteration of script lines
-
+PreProcessLines(&code)
+{
    global gDynGuiNaming, gfHasDynamicGui ;, gAutoGuiNaming
 
    gfHasDynamicGui  := false
@@ -159,8 +162,10 @@ PreProcessLines(&code)
    lines       := StrSplit(code, '`n', '`r')                                            ; separate all lines within Code
    outStr      := ''                                                                    ; ini output
    ternaryList := ''
+   TagQS       := UniqueTag('QS\w+')
+   boundQSL    := '(?<!^|\h|,|:|\(|\{|\[|<|=)' TagQS
+   boundQSR    := TagQS '(?!\h|,|:|\.|\)|\}|\]|>|$)'
    for idx, line in lines {                                                             ; for each line in script...
-      ; GOTO
       if (line ~= nGoto) {                                                              ; if line has a Goto command...
          line := convertGoto(line, idx, &lines)                                         ; ... convert Goto
       }
@@ -171,7 +176,7 @@ PreProcessLines(&code)
       ; GUI related
       else if (line ~= '(?i)GUI') {                                                     ; if line has 'GUI' string
          if (detectDynamicGuiState(line)                                                ; if line has dynamic gui content...
-         &&  !dynIncludeExist()) {                                                      ; ... BUT dynamic Include file is missing...
+         &&  !dynIncludeExist()) {  ; see GuiAlt.ahk                                    ; ... BUT dynamic Include file is missing...
 			ExitApp                                                                     ; ... terminate conversion (reduntant - terminates as part of call)
          }
       }
@@ -183,14 +188,16 @@ PreProcessLines(&code)
    return                                                                               ; return Code by reference
 }
 ;################################################################################
+; 2025-11-01 AMB, ADDED as part of Scope support
+; scopeCode - can be entire script string, or a limited portion of code
+; when term is NOT specified...
+;   sets global flags as needed (scopeCode param should be entire script)
+; when term is specified...
+;   scopeCode param should be set to code of limited scope
+;   sets flag for term (output-option one)
+;   also returns whether term was found in scopeCode
 getScriptStringsUsed(scopeCode, term:='')
 {
-; 2025-11-01 AMB, ADDED as part of Scope support
-; scopeCode - can be entire script string, or a limited portion of code (to control scope)
-; when term is NOT specified, sets global flags as needed (scopeCode param should be entire script)
-; when term is specified... scopeCode param should be set to code of limited scope
-;   sets flag for term (output-option one), also returns whether term was found in scopeCode
-
    global gaScriptStrsUsed
 
    ; First, remove false positives hiding in commments and strings
@@ -209,9 +216,6 @@ getScriptStringsUsed(scopeCode, term:='')
 }
 ;################################################################################
 ; MAIN CONVERSION LOOP - handles each line separately
-_convertLines(ScriptString)
-;################################################################################
-{
 ; 2025-06-12 AMB, UPDATED
 ;   moved most operations to external funcs for modular design (SEE ConvLoopFuncs.ahk)
 ;   removed finalize parameter and optional step at bottom of function
@@ -221,27 +225,35 @@ _convertLines(ScriptString)
 ; 2025-11-01 AMB, UPDATED as part of Scope support
 ; 2026-01-01 AMB, UPDATED - changed global gEarlyLine to gV1Line
 ; 2026-01-24 AMB, UPDATED to support progress-gui
+; 2025-05-06 AMB, UPDATED with optional progress update
+_convertLines(ScriptString,tProg:=0)
+{
+   Mask_T(&ScriptString, 'BC')                                                          ; 2025-06-12 AMB, mask all block-comments globally
 
-   ;Prog.ULog(,,A_ThisFunc)          ; update UI - debug
-
-   Mask_T(&ScriptString, 'BC')      ; 2025-06-12 AMB, mask all block-comments globally
-
-   global gOrig_ScriptStr           := ScriptString
-   global gaList_PseudoArr          := []                                  ; 2025-11-01 AMB, ADDED here as part of Scope support
-   global gV1Line                   := ''                                  ; 2026-01-01 changed name from gEarlyLine
-;   global gOScriptStr               := StrSplit(ScriptString, '`n', '`r') ; array for all the lines
-   global gOScriptStr               := ScriptCode(ScriptString)            ; now a class object, for future use
-   global gO_Index                  := 0                                   ; current index of the lines
-   global gIndent                   := ''
-   global gSingleIndent             := (RegExMatch(ScriptString, '(^|[\r\n])( +|\t)', &ws)) ? ws[2] : '    ' ; First spaces or single tab found
-          gSingleIndent             := StrLen(gSingleIndent) > 4 ? '    ' : gSingleIndent                    ; in case of unusual LWS
-   global gNL_Func                  := ''                                  ; _Funcs can use this to add New Previous Line
-   global gEOLComment_Func          := ''                                  ; _Funcs can use this to add comments at EOL
-   global gEOLComment_Cont          := []                                  ; 2025-05-24 Banaanae, ADDED for fix #296
+   global gOrig_ScriptStr   := ScriptString
+   global gaList_PseudoArr  := []                                                       ; 2025-11-01 AMB, ADDED here as part of Scope support
+   global gV1Line           := ''                                                       ; 2026-01-01 changed name from gEarlyLine
+;   global gOScriptStr       := StrSplit(ScriptString, '`n', '`r')                      ; array for all the lines
+   global gOScriptStr       := ScriptCode(ScriptString)                                 ; now a class object, for future use
+   global gO_Index          := 0                                                        ; current index of the lines
+   global gIndent           := ''
+   global gSingleIndent     := (RegExMatch(ScriptString, '(^|[\r\n])( +|\t)', &ws))     ; first spaces or single tab found
+                            ?  ws[2]
+                            : '    '
+          gSingleIndent     := StrLen(gSingleIndent) > 4 ? '    ' : gSingleIndent       ; in case of unusual LWS
+   global gNL_Func          := ''                                                       ; _Funcs can use this to add New Previous Line
+   global gEOLComment_Func  := ''                                                       ; _Funcs can use this to add comments at EOL
+   global gEOLComment_Cont  := []                                                       ; 2025-05-24 Banaanae, ADDED for fix #296
    global gaScriptStrsUsed
 
+   ; 2025-05-06 AMB, ADDED optional progress update
+   if (tProg) {
+      lineCount := gOScriptStr.Length
+      curProg   := Prog.curProg
+      progInc   := (tProg/lineCount)
+   }
    ScriptOutput                     := ''
-   getScriptStringsUsed(ScriptString, 'IfMsgBox')                          ; 2025-10-28 Banaanae (limit scope boundary to current section only)
+   getScriptStringsUsed(ScriptString, 'IfMsgBox')                                       ; 2025-10-28 Banaanae (limit scope boundary to current section only)
 
    ; parse each line of the input script, convert line as required
    Loop {
@@ -250,100 +262,111 @@ _convertLines(ScriptString)
 ;      if (gOScriptStr.Length < gO_Index) {
       if (!gOScriptStr.HasNext) {
          ; This allows the user to add or remove lines if necessary
-         ; Do not forget to change the gO_Index if you want to remove or add the line above or lines below
+         ; Do not forget to change the gO_Index if you want to remove
+         ;   or add the line above or lines below
          break
       }
 
-;      curLine           := gOScriptStr[gO_Index]                    ; current line string to be converted
-      curLine           := gOScriptStr.GetNext                      ; current line string to be converted
-      Prog.ULog(,,,gO_Index,Trim(curLine))                          ; update UI - debug
-      gIndent           := RegExReplace(curLine,'^(\h*).*','$1')    ; original line indentation (if present)
-      EOLComment        := lp_DirectivesAndComment(&curLine)        ; process character directives and extract initial trailing comment from line
-      lineOpen          := lp_SplitLine(&curLine)                   ; see lp_splitLine() for details
-      gV1Line           := curLine                                  ; portion of line to process [prior to processing], has no trailing comment
-      lineClose         := ''                                       ; initial value, used later
-      gEOLComment_Cont  := [EOLComment]                             ; 2025-05-24 fix for #296 - support for multiple comments within line continuations
+      ; 2025-05-06 AMB, ADDED optional progress update
+      if (tProg) {
+         msg := 'Processing Line ', curProg += progInc                                  ; update prog details
+         Prog.ULog(curProg, msg gO_Index ' of ' lineCount '...')                        ; update UI
+	  }
 
-      ; TODO - for v1.0 -> v1.1 conversion idea... will need to separate v1 from v2 processing within most of the following operations
-      ;     currently v1.0 -> v1.1 conversion is not possible until the operations are separated
-      ;     this will happen in phase 2 of redesign
+;      curLine           := gOScriptStr[gO_Index]                                        ; current line string to be converted
+      curLine           := gOScriptStr.GetNext                                          ; current line string to be converted
+      Prog.ULog(,,,gO_Index,Trim(curLine))                                              ; update UI - debug
+      gIndent           := RegExReplace(curLine,'^(\h*).*','$1')                        ; original line indentation (if present)
+      EOLComment        := lp_DirectivesAndComment(&curLine)                            ; process character directives and extract initial trailing comment from line
+      lineOpen          := lp_SplitLine(&curLine)                                       ; see lp_splitLine() for details
+      ; TODO - set to LTrim(curLine) instead ?
+      gV1Line           := curLine                                                      ; portion of line to process [prior to processing], has no trailing comment
+      lineClose         := ''                                                           ; initial value, used later
+      gEOLComment_Cont  := [EOLComment]                                                 ; 2025-05-24 fix for #296 - support for multiple comments within line continuations
+
+      /*
+      TODO - for v1.0 -> v1.1 conversion idea... will need to separate v1 from v2
+         processing within most of the following operations. Currently v1.0 -> v1.1
+         conversion is not possible until the operations are separated. This will
+         happen in phase 2 of redesign
+      */
       ; ORDER MAY MATTER FOR FOLLOWING STEPS...
-      addContsToLine(&curLine, &EOLComment)                         ; Adds continuation lines to current line - TODO - USE CONT-MASKING ??
-      fixAssignments(&curLine)                                      ; line conversions related to assignments [var= and var:=] (v1/v2)
-      v1_convert_Ifs(&curline, &lineOpen)                           ; line conversions related to IF (v1)
-      v2_convert_Ifs(&curline, &lineOpen, &lineClose)               ; line conversions related to IF (v2)
+      addContsToLine(&curLine, &EOLComment)                                             ; Adds continuation lines to current line - TODO - USE CONT-MASKING ??
+      fixAssignments(&curLine)                                                          ; line conversions related to assignments [var= and var:=] (v1/v2)
+      v1_convert_Ifs(&curline, &lineOpen)                                               ; line conversions related to IF (v1)
+      v2_convert_Ifs(&curline, &lineOpen, &lineClose)                                   ; line conversions related to IF (v2)
 
-      fCmdConverted := false                                        ; will be set by v2_AHKCommand() thru v2_Conversions() below
-;      if (gV2Conv) {     ; 2025-07-03 - REMOVED TEMPORARILY        ; v2, but currently required for v1 conversion also
-         v2_Conversions(&curLine, &lineOpen, &EOLComment            ; line conversions related to V2 only (currently required for v1 conv also)
-                      , &fCmdConverted, scriptString)               ; SETS VALUE of fCmdConverted (indirectly)
+      fCmdConverted := false                                                            ; will be set by v2_AHKCommand() thru v2_Conversions() below
+;      if (gV2Conv) {     ; 2025-07-03 - REMOVED TEMPORARILY                            ; v2, but currently required for v1 conversion also
+         v2_Conversions(&curLine, &lineOpen, &EOLComment                                ; line conversions related to V2 only (currently required for v1 conv also)
+                      , &fCmdConverted, scriptString)                                   ; SETS VALUE of fCmdConverted (indirectly)
 ;      }
 
       ; these must come AFTER v2_Conversions()
-      lp_DisableInvalidCmds(&curLine, fCmdConverted)                ; disable commands no longer supported (turns them into comments)
-      curLine := lineOpen . curLine . lineClose                     ; reassemble line parts
-      lp_PostConversions(&curLine)                                  ; processing for current line that must be performed last
-      ScriptOutput .= lp_PostLineMsgs(&curLine,&EOLComment)         ; update conversion messages (to user) for current line. This is final line output.
+      lp_DisableInvalidCmds(&curLine, fCmdConverted)                                    ; disable commands no longer supported (turns them into comments)
+      curLine := lineOpen . curLine . lineClose                                         ; reassemble line parts
+      lp_PostConversions(&curLine)                                                      ; processing for current line that must be performed last
+      ScriptOutput .= lp_PostLineMsgs(&curLine,&EOLComment)                             ; update conversion messages (to user) for current line. This is final line output.
    }  ; END of individual-line conversions (loop)
 
    ; trim the very last (extra) newline from output string
-   ScriptOutput := RegExReplace(ScriptOutput, '\r\n$',,,1)          ; 2025-06-12 MOVED to here to eliminate multiple 'finalize' paths/processing
-   Mask_R(&ScriptOutput, 'BC')                                      ; 2025-06-12 AMB, Restore all block-comments
+   ScriptOutput := RegExReplace(ScriptOutput, '\r\n$',,,1)                              ; 2025-06-12 MOVED to here to eliminate multiple 'finalize' paths/processing
+   Mask_R(&ScriptOutput, 'BC')                                                          ; 2025-06-12 AMB, Restore all block-comments
    return ScriptOutput
 }
 ;################################################################################
-FinalizeConvert(&code)
-{
 ; 2024-06-27 ADDED, 2025-06-12, 2025-10-05, 2026-01-01 UPDATED
 ; 2026-01-24 AMB, UPDATED to support progress-gui
 ; 2026-03-08 AMB, UPDATED to add static kywd to methods as needed
 ; 2026-03-14 AMB, UPDATED to copy dynamic include file to global library, as needed
 ; 2026-03-29 AMB, UPDATED to move dynamic gui support to dedicated func
 ; Performs tasks that finalize overall conversion
-
-   Prog.ULog(,  'Post Process - Restore Classes/Funcs...', A_ThisFunc       )           ; update UI - current operation, debug
+FinalizeConvert(&code)
+{
+   pp := 'Post Process - '
+   Prog.ULog(,  pp 'Restore Classes/Funcs...', A_ThisFunc       )                       ; update UI - current operation, debug
       Mask_R(&code, 'FUNC&CLS')                                                         ; remove masking from classes/funcs (returned as v2 converted)
-   Prog.ULog(65,'Post Process - Expand zipped lines...'                     )           ; update UI - current operation - 65% complete
+   Prog.ULog(65,pp 'Expand zipped lines...'                     )                       ; update UI - current operation - 65% complete
       code := UnZip(code)                                                               ; 2025-11-30 AMB, expand ML code added by converter, add braces to blocks as needed
-   Prog.ULog(,  'Post Process - VarRefs and OnClipboardChange...'           )           ; update UI - current operation
+   Prog.ULog(,  pp 'VarRefs and OnClipboardChange...'           )                       ; update UI - current operation
       code := addToCode(code)                                                           ; 2026-01-01 AMB, add messages and directives to code
-   Prog.ULog(70,'Post Process - Labels/Hotkeys/Hotstrings...'               )           ; update UI - current operation - 70% complete
+   Prog.ULog(70,pp 'Labels/Hotkeys/Hotstrings...'               )                       ; update UI - current operation - 70% complete
       code := Update_LBL_HK_HS(code)                                                    ; 2025-10-05 AMB, UPDATED conversion for labels,HKs,HSs to v2 format
-   Prog.ULog(80,'Post Process - Premask Comments/Strings...'                )           ; update UI - current operation - 85% complete
+   Prog.ULog(80,pp 'Premask Comments/Strings...'                )                       ; update UI - current operation - 85% complete
       Mask_T(&code, 'C&S')                                                              ; 2025-10-10 AMB, first attempt to improve efficiency of conversion (WORK IN PROGRESS)
-   Prog.ULog(,  'Post Process - Fix Min/MaxIndex...'                        )           ; update UI - current operation
+   Prog.ULog(,  pp 'Fix Min/MaxIndex...'                        )                       ; update UI - current operation
       code := FixMinMaxIndex(code)                                                      ; 2025-12-21 AMB, MOVED to dedicated func
-   Prog.ULog(,  'Post Process - Fix OnMessage...'                           )           ; update UI - current operation
+   Prog.ULog(,  pp 'Fix OnMessage...'                           )                       ; update UI - current operation
       code := FixOnMessage(code)                                                        ; Fix turning off OnMessage when defined after turn off
-   Prog.ULog(,  'Post Process - Fix VarSetCapacity...'                      )           ; update UI - current operation
+   Prog.ULog(,  pp 'Fix VarSetCapacity...'                      )                       ; update UI - current operation
       code := FixVarSetCapacity(code)                                                   ; &buf -> buf.Ptr   &vssc -> StrPtr(vssc)
-   Prog.ULog(,  'Post Process - Fix ByRef Params...'                        )           ; update UI - current operation
+   Prog.ULog(,  pp 'Fix ByRef Params...'                        )                       ; update UI - current operation
       code := FixByRefParams(code)                                                      ; Replace ByRef with & in func declarations and calls - see related fixFuncParams()
-   Prog.ULog(,  'Post Process - Fix Increment/Decrement...'                 )           ; update UI - current operation
+   Prog.ULog(,  pp 'Fix Increment/Decrement...'                 )                       ; update UI - current operation
       code := FixIncDec(code)                                                           ; 2025-10-10 AMB, ADDED to cover issue #350
-   Prog.ULog(,  'Post Process - Remove ComObjMissing...'                    )           ; update UI - current operation
+   Prog.ULog(,  pp 'Remove ComObjMissing...'                    )                       ; update UI - current operation
       code := RemoveComObjMissing(code)                                                 ; Removes ComObjMissing() and variables
-   Prog.ULog(,  'Post Process - Add CB Args for Gui...'                     )           ; update UI - current operation
+   Prog.ULog(,  pp 'Add CB Args for Gui...'                     )                       ; update UI - current operation
       addGuiCBArgs(&code)                                                               ; Add args to Gui callback funcs
-   Prog.ULog(,  'Post Process - Add CB Args for Menu...'                    )           ; update UI - current operation
+   Prog.ULog(,  pp 'Add CB Args for Menu...'                    )                       ; update UI - current operation
       addMenuCBArgs(&code)                                                              ; 2024-06-26, AMB - Fix #131
-   Prog.ULog(,  'Post Process - Add CB Args for OnMessage...'               )           ; update UI - current operation
+   Prog.ULog(,  pp 'Add CB Args for OnMessage...'               )                       ; update UI - current operation
       addOnMessageCBArgs(&code)                                                         ; 2024-06-28, AMB - Fix #136
-   Prog.ULog(,  'Post Process - Add CB Args for Hotkey Command...'          )           ; update UI - current operation
+   Prog.ULog(,  pp 'Add CB Args for Hotkey Command...'          )                       ; update UI - current operation
       addHKCmdCBArgs(&code)                                                             ; 2025-10-12, AMB - Fix #328
-   Prog.ULog(,  'Post Process - Add Static keyword to methods...'           )           ; update UI - current operation
+   Prog.ULog(,  pp 'Add Static keyword to methods...'           )                       ; update UI - current operation
       addStaticKywdToMethod(&code)                                                      ; 2026-03-08, AMB - add static keyword to methods that require it
-   Prog.ULog(,  'Post Process - Update FileOpen Properties...'              )           ; update UI - current operation
+   Prog.ULog(,  pp 'Update FileOpen Properties...'              )                       ; update UI - current operation
       updateFileOpenProps(&code)                                                        ; 2025-10-12, AMB - support for #358
-   Prog.ULog(,  'Post Process - Add support for Dynamic Gui...'             )           ; update UI - current operation
+   Prog.ULog(,  pp 'Add support for Dynamic Gui...'             )                       ; update UI - current operation
       addDynGuiSupport(&code)                                                           ; add support for dynamic Gui, as needed
-   Prog.ULog(,  'Post Process - Restore Continuation Sections...'           )           ; update UI - current operation
+   Prog.ULog(,  pp 'Restore Continuation Sections...'           )                       ; update UI - current operation
       Mask_R(&code, 'CSect')                                                            ; restore remaining cont sects (returned as v2 converted)
-   Prog.ULog(,  'Post Process - Restore Multi-line Parentheses Blocks...'   )           ; update UI - current operation
-      Mask_R(&code, 'MLPBT')                                                             ; restore remaining ML parentheses blocks (with opt trailer)
-   Prog.ULog(,  'Post Process - Restore V1 Multi-line String Blocks...'     )           ; update UI - current operation
+   Prog.ULog(,  pp 'Restore Multi-line Parentheses Blocks...'   )                       ; update UI - current operation
+      Mask_R(&code, 'MLPBT')                                                            ; restore remaining ML parentheses blocks (with opt trailer)
+   Prog.ULog(,  pp 'Restore V1 Multi-line String Blocks...'     )                       ; update UI - current operation
       Mask_R(&code, 'V1MLS')                                                            ; restore remaining V1 ML strings
-   Prog.ULog(90,'Post Process - Restore Comments/Strings...'                )           ; update UI - current operation - 90% complete
+   Prog.ULog(90,pp 'Restore Comments/Strings...'                )                       ; update UI - current operation - 90% complete
       Mask_R(&code, 'C&S')                                                              ; ensure all comments/strings are restored (just in case)
 
    return                                                                               ; code by reference
@@ -418,7 +441,7 @@ lp_DirectivesAndComment(&lineStr) {
    ; if current line is char-directive declaration, grab the attributes
    if (RegExMatch(lineStr, 'i)^\h*#(CommentFlag|EscapeChar|DerefChar|Delimiter)\h+.')) {
       _grabCharDirectiveAttribs(lineStr)
-      return ''      ; might need to change this to actual line comment (EOLComment)
+      return ''                                                                         ; might need to change this to actual line comment (EOLComment)
    }
    ; not a char-directive declaration - update comment character on current line
    if (HasProp(gaScriptStrsUsed, 'CommentFlag')) {
@@ -443,16 +466,15 @@ lp_DirectivesAndComment(&lineStr) {
       lineStr  := RegExReplace(lineStr, '(?<!\Q' deref '\E)\Q' gaScriptStrsUsed.Delimiter '\E', ',')
    }
 
-   return EOLComment    ; return trailing comment for current line
+   return EOLComment                                                                    ; return trailing comment for current line
 
    ;############################################################################
-   _grabCharDirectiveAttribs(lineStr) {
    ; 2025-06-12 AMB, ADDED to separate processing of character directives
    ;  (for cleaner conversion loop, and v1.0 => v1.1 conversion)
    ; only one of these directives may be found on current line
    ; sets data within gaScriptStrsUsed for use later
    ; 2025-12-24 AMB, UPDATED - converted to internal func
-
+   _grabCharDirectiveAttribs(lineStr) {
       global gaScriptStrsUsed
 
       ; does line contain #CommentFlag directive?
@@ -488,24 +510,24 @@ lp_DisableInvalidCmds(&lineStr, fCmdConverted) {
    ; V1 and V2, but with different commands for each version
    ; 2025-10-08 AMB, Updated to fix #375
    fDisableLine := false
-   if (!fCmdConverted) {                                    ; if a targetted command was found earlier...
-      Loop Parse, gAhkCmdsToRemoveV1, '`n', '`r' {          ; [check for v1 deprecated]
-         targStr:= escRegexChars(A_LoopField)               ; prep for regex check
-         lead   := (A_LoopField ~= '^#') ? '' : '\b'        ; add word boundary to beginning of needle, but only when hash char not present
-         nTarg  := '(?i)' lead targStr '\b'                 ; needle to cover all scenerios in gAhkCmdsToRemoveV1
-         if (LTrim(gV1Line) ~= nTarg)                       ; ... is that command invalid after v1.0?
-            fDisableLine := true                            ; flag it as invalid
+   if (!fCmdConverted) {                                                                ; if a targetted command was found earlier...
+      Loop Parse, gAhkCmdsToRemoveV1, '`n', '`r' {                                      ; [check for v1 deprecated]
+         targStr:= escRegexChars(A_LoopField)                                           ; prep for regex check
+         lead   := (A_LoopField ~= '^#') ? '' : '\b'                                    ; add word boundary to beginning of needle, but only when hash char not present
+         nTarg  := '(?i)' lead targStr '\b'                                             ; needle to cover all scenerios in gAhkCmdsToRemoveV1
+         if (LTrim(gV1Line) ~= nTarg)                                                   ; ... is that command invalid after v1.0?
+            fDisableLine := true                                                        ; flag it as invalid
       }
-      if (gV2Conv) {                                        ; v2
-         Loop Parse, gAhkCmdsToRemoveV2, '`n', '`r' {       ; [check for v2 deprecated]
-            targStr := escRegexChars(A_LoopField)           ; prep for regex check
-            lead    := (A_LoopField ~= '^#') ? '' : '\b'    ; add word boundary to beginning of needle, but only when hask char not present
-            nTarg   := '(?i)' lead targStr '\b'             ; needle to cover all scenerios in gAhkCmdsToRemoveV2
-            if (LTrim(gV1Line) ~= nTarg)                    ; ... is that command invalid after v2?
-               fDisableLine := true                         ; flag it as invalid
+      if (gV2Conv) {                                                                    ; v2
+         Loop Parse, gAhkCmdsToRemoveV2, '`n', '`r' {                                   ; [check for v2 deprecated]
+            targStr := escRegexChars(A_LoopField)                                       ; prep for regex check
+            lead    := (A_LoopField ~= '^#') ? '' : '\b'                                ; add word boundary to beginning of needle, but only when hask char not present
+            nTarg   := '(?i)' lead targStr '\b'                                         ; needle to cover all scenerios in gAhkCmdsToRemoveV2
+            if (LTrim(gV1Line) ~= nTarg)                                                ; ... is that command invalid after v2?
+               fDisableLine := true                                                     ; flag it as invalid
          }
-         if (lineStr ~= '^\h*(\blocal\b)\h*$')  {           ; V2 Only - only force-local
-            fDisableLine := true                            ; flag it as invalid
+         if (lineStr ~= '^\h*(\blocal\b)\h*$')  {                                       ; V2 Only - only force-local
+            fDisableLine := true                                                        ; flag it as invalid
          }
       }
    }
@@ -524,13 +546,13 @@ lp_DisableInvalidCmds(&lineStr, fCmdConverted) {
 ; 2025-12-24 AMB, MOVED to ConvertFuncs.ahk
 ;   TODO - See if these can be combined in v2_Conversions
 lp_PostConversions(&lineStr) {
-   v1v2_FixNEQ(&lineStr)                    ; Convert <> to !=
-   v2_PseudoAndRegexMatchArrays(&lineStr)   ; mostly v2 (separating...)
-   v2_RemoveNewKeyword(&lineStr)            ; V2 ONLY! Remove New keyword from classes
-   v2_RenameKeywords(&lineStr)              ; V2 ONLY
-   v2_RenameLoopRegKeywords(&lineStr)       ; V2 ONLY! Can this be combined with keywords step above?
-   v2_VerCompare(&lineStr)                  ; V2 ONLY
-   return                                   ; lineStr by reference
+   v1v2_FixNEQ(&lineStr)                                                                ; Convert <> to !=
+   v2_PseudoAndRegexMatchArrays(&lineStr)                                               ; mostly v2 (separating...)
+   v2_RemoveNewKeyword(&lineStr)                                                        ; V2 ONLY! Remove New keyword from classes
+   v2_RenameKeywords(&lineStr)                                                          ; V2 ONLY
+   v2_RenameLoopRegKeywords(&lineStr)                                                   ; V2 ONLY! Can this be combined with keywords step above?
+   v2_VerCompare(&lineStr)                                                              ; V2 ONLY
+   return                                                                               ; lineStr by reference
 }
 ;################################################################################
 ; 2025-06-12 AMB, Moved to dedicated routine for cleaner convert loop
@@ -544,14 +566,14 @@ lp_PostLineMsgs(&lineStr, &EOLComment) {
    global gEOLComment_Cont, gEOLComment_Func, gNL_Func
 
    ; add a leading semi-colon to func comment string if it doesn't already exist
-   gEOLComment_Func := (trim(gEOLComment_Func))                 ; if not empty string
-   ? RegExReplace(gEOLComment_Func, '^(\h*[^;].*)$', ' `; $1')  ; ensure it has a leading semicolon
-   : gEOLComment_Func                                           ; semi-colon already exists
+   gEOLComment_Func := (trim(gEOLComment_Func))                                         ; if not empty string
+   ? RegExReplace(gEOLComment_Func, '^(\h*[^;].*)$', ' `; $1')                          ; ensure it has a leading semicolon
+   : gEOLComment_Func                                                                   ; semi-colon already exists
 
    ; V2 ONLY !
    ; Add warning for Array.MinIndex(), Array.MaxIndex()
    ; 2025-12-21 AMB, Updated
-   nMinIdxTag  := '\.' gMNPH, nMaxIdxTag := '\.' gMXPH          ; see MaskCode.ahk
+   nMinIdxTag  := '\.' gMNPH, nMaxIdxTag := '\.' gMXPH                                  ; see MaskCode.ahk
    hasMin      := (lineStr ~= nMinIdxTag), hasMax := (lineStr ~= nMaxIdxTag)
    if (hasMin && hasMax) {
       EOLComment .= ' `; V1toV2: Verify V2 values match V1 Min/MaxIndex'
@@ -564,22 +586,23 @@ lp_PostLineMsgs(&lineStr, &EOLComment) {
    }
 
    ; 2025-05-24 Banaanae, ADDED for fix #296
-   gNL_Func .= (gNL_Func) ? '`r`n' : ''                         ; ensure this has a trailing CRLF
-   NoCommentOutput   := gNL_Func . lineStr . 'v1v2EOLCommentCont' . EOLComment . gEOLComment_Func
-   OutSplit := StrSplit(NoCommentOutput, '`r`n')
+   gNL_Func .= (gNL_Func) ? '`r`n' : ''                                                 ; ensure this has a trailing CRLF
+   nco := gNL_Func lineStr 'v1v2EOLCommentCont' EOLComment gEOLComment_Func
+   OutSplit := StrSplit(nco, '`r`n')
 
-   ; TEMP - DEBUGGING - THESE TWO LENGTHS DO NOT MATCH SOMETIMES - CAUSES SCRIPT RUN ERRORS
+   ; TEMP - DEBUGGING
+   ; THESE TWO LENGTHS DO NOT MATCH SOMETIMES - CAUSES SCRIPT RUN ERRORS
    ; ... ESPECIALLY IN OLD VERSION OF CONVERTER
    if (OutSplit.Length < gEOLComment_Cont.Length)
    {
-;       MsgBox "[" NoCommentOutput "]`n`n" OutSplit.Length "`n`n" gEOLComment_Cont.Length
+       ;MsgBox "[" nco "]`n`n" OutSplit.Length "`n`n" gEOLComment_Cont.Length
    }
    for idx, comment in gEOLComment_Cont {
-      if (idx != OutSplit.Length) {                             ; if not last element
+      if (idx != OutSplit.Length) {                                                     ; if not last element
          ; 2025-11-30 AMB, ADDED Try to prevent index errors...
          ; ... when script lines are added by converter (or hidden with Zip())
          try {
-            OutSplit[idx] := OutSplit[idx] comment              ; add comment to proper line
+            OutSplit[idx] := OutSplit[idx] comment                                      ; add comment to proper line
          }
       }
       else
@@ -590,93 +613,97 @@ lp_PostLineMsgs(&lineStr, &EOLComment) {
       finalLine .= v '`r`n'
    }
    finalLine := StrReplace(finalLine, 'v1v2EOLCommentCont')
-   gNL_Func  := '', gEOLComment_Func := '' ; reset global variables
+   gNL_Func  := '', gEOLComment_Func := ''                                              ; reset global variables
    return    finalLine
 }
 ;################################################################################
 ; 2025-06-12 AMB, Moved to dedicated routine for cleaner convert loop
 ; 2025-12-24 AMB, MOVED to ConvertFuncs.ahk
 ; separates non-convert portion of line from portion to be converted
-; returns non-convert portion in 'lineOpen' (hotkey declaration, opening brace, Try\Else, etc)
+; returns non-convert portion in 'lineOpen' (HK decl, open-brace, Try\Else, etc)
 ; returns rest of line (that requires conversion) in 'lineStr'
 lp_SplitLine(&lineStr) {
-   v1v2_noKywdCommas(&lineStr)     ; first remove trailing commas from keywords (including Switch)
-   lineOpen := ''                  ; will become non-convert portion of line
+   v1v2_noKywdCommas(&lineStr)                                                          ; first remove trailing commas from keywords (including Switch)
+   lineOpen := ''                                                                       ; will become non-convert portion of line
    firstTwo := subStr(lineStr, 1, 2)
 
-   ; if line is not a hotstring, but is single-line hotkey with cmd, separate hotkey from cmd temporarily...
-   ;   so the cmd can be processed alone. The hotkey will be re-combined with cmd after it is converted.
-   ;   nHotKey   := gPtn_HOTKEY . '(.*)' ;((?:(?:^\h*+|\h*+&\h*+)(?:[^,\h]*|[$~!^#+]*,))+::)(.*+)$'
+   ; if line is not a HS, but is single-line HK with cmd,
+   ;    separate HK from cmd temporarily so the cmd can be processed alone.
+   ;    The HK will be re-combined with cmd after it is converted.
+   ; nHotKey := gPtn_HOTKEY . '(.*)'
    ; TODO - need to update needle for more accurate targetting
-   nHotKey   := '((?:(?:^\h*+|\h*+&\h*+)(?:[^,\h]*|[$~!^#+]*,))+::)(.*+)$'
-   if ((firstTwo   != '::') && RegExMatch(LineStr, nHotKey, &m)) {
-      lineOpen   := m[1]           ; non-convert portion
-      LineStr      := m[2]         ; portion to convert
+   nHotKey := '((?:(?:^\h*+|\h*+&\h*+)(?:[^,\h]*|[$~!^#+]*,))+::)(.*+)$'
+   if ((firstTwo != '::') && RegExMatch(LineStr, nHotKey, &m)) {
+      lineOpen   := m[1]                                                                ; non-convert portion
+      LineStr    := m[2]                                                                ; portion to convert
       return lineOpen
    }
 
    ; if line begins with switch, separate any value following it temporarily....
-   ;   so the cmd can be processed alone. The opening part will be re-combined with cmd after it is converted.
-   ; any trailing comma for switch statement should have already been removed via noKywdCommas()
+   ;    so the cmd can be processed alone. The opening part will be re-combined
+   ;    with cmd after it is converted. Any trailing comma for switch statement
+   ;    should have already been removed via noKywdCommas()
    nSwitch := 'i)^(\h*\bswitch\h*+)(.*+)'
    if (RegExMatch(LineStr, nSwitch, &m)) {
-      lineOpen   := m[1]           ; non-convert portion
-      LineStr      := m[2]         ; portion to convert
+      lineOpen   := m[1]                                                                ; non-convert portion
+      LineStr    := m[2]                                                                ; portion to convert
       return lineOpen
    }
 
-   ; if line begins with case or default, separate any command following it temporarily...
-   ;   so the cmd can be processed alone. The opening part will be re-combined with cmd after it is converted.
+   ; if line begins with case/default, separate any cmd following it temporarily...
+   ;    so the cmd can be processed alone. The opening part will be re-combined
+   ;    with cmd after it is converted.
    nCaseDefault := 'i)^(\h*(?:case .*?|default):(?!=)\h*+)(.*+)$'
    if (RegExMatch(LineStr, nCaseDefault, &m)) {
-      lineOpen   := m[1]           ; non-convert portion
-      LineStr      := m[2]         ; portion to convert
+      lineOpen   := m[1]                                                                ; non-convert portion
+      LineStr    := m[2]                                                                ; portion to convert
       return lineOpen
    }
 
-   ; if line begins with Try or Else, separate any command that may follow them temporarily...
-   ;   so the cmd can be processed alone. The try/else will be re-combined with cmd after it is converted.
+   ; if line begins with try/else, separate any cmd that may follow temporarily...
+   ;    so the cmd can be processed alone. The try/else will be re-combined with
+   ;    cmd after it is converted.
    nTryElse := 'i)^(\h*+}?\h*+(?:Try|Else)\h*[\h{]\h*+)(.*+)$'
    if (RegExMatch(LineStr, nTryElse, &m) && m[2]) {
-      lineOpen   := m[1]           ; non-convert portion
-      LineStr      := m[2]         ; portion to convert
+      lineOpen   := m[1]                                                                ; non-convert portion
+      LineStr    := m[2]                                                                ; portion to convert
       return lineOpen
    }
 
-   ; if line begins with {, separate any command following it temporarily...
-   ;   so the cmd can be processed alone. The { will be re-combined with cmd after it is converted.
+   ; if line begins with {, separate any cmd following it temporarily...
+   ;    so the cmd can be processed alone. The { will be re-combined with
+   ;    cmd after it is converted.
    if (RegExMatch(LineStr, '^(\h*+{\h*+)(.*+)$', &m)) {
-      lineOpen   := m[1]           ; non-convert portion
-      LineStr      := m[2]         ; portion to convert
+      lineOpen   := m[1]                                                                ; non-convert portion
+      LineStr    := m[2]                                                                ; portion to convert
       return lineOpen
    }
 
-   ; if line begins with } (but not else), separate any command following it temporarily...
-   ;   so the cmd can be processed alone. The } will be re-combined with cmd after it is converted.
+   ; if line begins with } (but not else), separate any cmd following it temp'y...
+   ;    so the cmd can be processed alone. The } will be re-combined with
+   ;    cmd after it is converted.
    if (RegExMatch(LineStr, 'i)^(\h*}(?!\h*else|\h*\n)\h*)(.*+)$', &m)) {
-      lineOpen   := m[1]           ; non-convert portion
-      LineStr      := m[2]         ; portion to convert
+      lineOpen   := m[1]                                                                ; non-convert portion
+      LineStr    := m[2]                                                                ; portion to convert
       return lineOpen
    }
    return lineOpen
 }
 ;################################################################################
-/**
- * Removes ComObjMissing and references to it from functions
- * Eg ComValue(0x10, ComObjMissing()) => ComValue(0x10)
- *    ComValue(0x20, VarForComObjMissing) => ComValue(0x20)
- * 2025-10-10 AMB, UPDATED- moved STR masking to FinalizeConvert()
- */
+; Removes ComObjMissing and references to it from functions
+; Eg ComValue(0x10, ComObjMissing())     => ComValue(0x10)
+;    ComValue(0x20, VarForComObjMissing) => ComValue(0x20)
+; 2025-10-10 AMB, UPDATED - moved STR masking to FinalizeConvert()
 RemoveComObjMissing(ScriptString) {
    if !InStr(ScriptString, 'ComObjMissing()')
       return ScriptString
-;   Mask_T(&ScriptString, 'STR')    ; 2025-10-10 - now handled in FinalizeConvert()
+   ;Mask_T(&ScriptString, 'STR')                                                        ; 2025-10-10 - now handled in FinalizeConvert()
    VarsToRemove := []
    EOLComments := Map_I()
    Lines := StrSplit(ScriptString, "`n", "`r")
 
    for i, Line in Lines {
-      Line := separateComment(Line, &com:=''), EOLComments[i] := com            ; separate comment from line
+      Line := separateComment(Line, &com:=''), EOLComments[i] := com                    ; separate comment from line
       first := true
       while InStr(Line, 'ComObjMissing()') {
          if RegExMatch(Line, "(\w+)\s*:=\s*ComObjMissing\(\)", &assignMatch)
@@ -702,11 +729,12 @@ RemoveComObjMissing(ScriptString) {
             Line := RTrim(Line, ",")
          } else {
             Mask_R(&Line, 'FC')
-            Line := RegExReplace(Line, "(.*?)((?:\w+\s*:=\s*)?ComObjMissing\(\))(.*)", "$1$3" Chr(0x8787) "$2")
-            sLine := StrSplit(Line, Chr(0x8787))
-            Line := sLine[1]
+            nCOM    := "(.*?)((?:\w+\s*:=\s*)?ComObjMissing\(\))(.*)"
+            Line    := RegExReplace(Line, nCOM, "$1$3" Chr(0x8787) "$2")
+            sLine   := StrSplit(Line, Chr(0x8787))
+            Line    := sLine[1]
             EOLComments[i] .= " `; V1toV2: Removed " sLine[2]
-            Line := RegExReplace(Line, "[\s,]+\)", ")")
+            Line    := RegExReplace(Line, "[\s,]+\)", ")")
          }
          Line := RTrim(Line, ",")
       }
@@ -726,8 +754,9 @@ RemoveComObjMissing(ScriptString) {
    final := ""
    for i, Line in Lines {
       finalLine := Line RTrim(EOLComments.Get(i, ""), ",")
-      finalLine := RegExReplace(finalLine, "^(\s*) (; V1toV2: Removed [^;]*ComObjMissing\(\))", "$1$2")
-      final .= finalLine "`r`n"
+      nRCOM     := "^(\s*) (; V1toV2: Removed [^;]*ComObjMissing\(\))"
+      finalLine := RegExReplace(finalLine, nRCOM, "$1$2")
+      final     .= finalLine "`r`n"
    }
    return RegExReplace(final, '\r\n$')
 }

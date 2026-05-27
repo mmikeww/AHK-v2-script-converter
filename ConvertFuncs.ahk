@@ -55,6 +55,7 @@ convertLines_NoScope(code,tProg:=0)
 ;################################################################################
 ; 2025-11-01 AMB, ADDED to support Scope
 ; 2026-01-24 AMB, UPDATED to support progress-gui
+; 2026-05-26 AMB, UPDATED as part of fix for #488
 ;   supports processing global-code first (by default)
 ;    change fGblOrder flag to 0 to test orig-order processing
 convertLines_UseScope(code,tProg)
@@ -97,6 +98,7 @@ convertLines_UseScope(code,tProg)
       }
    }
    Prog.ULog(,'Processing Sections - COMPLETE')                                         ; update UI - sections complete
+   Mask_R(&outStr,'CSECT2')                                                             ; 2026-05-26, part of fix for #488
    return outStr                                                                        ; return converted/output str
 }
 ;################################################################################

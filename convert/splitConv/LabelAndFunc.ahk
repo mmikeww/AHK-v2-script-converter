@@ -73,6 +73,8 @@ class clsLabelSect
 	;############################################################################
 	; 2026-01-01 AMB, UPDATED - added 'Unreachable' directive
 	; 2026-05-04 AMB, UPDATED - now fills sects array using external scope class
+	; 2026-05-26 AMB, UPDATED - as part of fix for #488
+
 		/*
 		1. separate code into sections
 			each section will be one of the following [GLOBAL,LBL,HK,HS,CLS,FUNC]
@@ -104,9 +106,11 @@ class clsLabelSect
 		*/
 	Static Main_ProcessSects(code)															; Main operation for this class
 	{
+		Mask_T(&code, 'MLPBT')																; 2026-05-26, AMB - part of fix for #488
 		this._getSects(&code)																; divide code into sections, get section list
 		this._organizeSects(&code)															; determine logic flow, create funcs, rearrange code as necessary
 		this._finalizeCode(&code)															; update goto/gosub/funcs, remove masking, finalize code
+		Mask_R(&code, 'MLPBT')																; 2026-05-26, AMB - part of fix for #488
 		return code																			; return updated script code
 	}
 	;############################################################################

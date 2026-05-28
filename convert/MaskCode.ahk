@@ -14,7 +14,7 @@
 			* Label,HK,HS declarations/blocks
 			* many others...
 			* TODO - TERNARY IF
-	2024-06-02 -> 2026-05-26 - UPDATED misc - see code comments
+	2024-06-02 -> 2026-05-27 - UPDATED misc - see code comments
 	GENERAL TODO
 		2025-10-05 FIX OnExit
 			MISSING 2ND PARAM AND "RETURN 1" BEING PLACE AFTER EXITAPP
@@ -119,11 +119,11 @@ gMLContList		:= []
 /*
  2025-06-22 AMB, ADDED as central hub for tagging code (rather than dedicated funcs)
 	Replaces targetted SUBSTRINGS [within passed code] with UNIQUE TAGS
- the multiple targ 'case' strings below are for convenience...
-2025-10-05 AMB, UPDATED
-2025-11-30 AMB, UPDATED restore option for Switch, when labels are masked
-2026-04-13 AMB, UPDATED
-2026-05-04 AMB, UPDATED to allow processing of multiple targs using single call
+	The multiple targ 'case' strings below are for convenience...
+ 2025-10-05 AMB, UPDATED
+ 2025-11-30 AMB, UPDATED restore option for Switch, when labels are masked
+ 2026-04-13 AMB, UPDATED
+ 2026-05-04 AMB, UPDATED to allow processing of multiple targs using single call
  ;###############################################################################
  Param Details
  CODE -		source-code/haystack that will be searched
@@ -195,6 +195,24 @@ gMLContList		:= []
 				clsMask.MaskAll(&code, 'LC'
 					, gPtn_LC, sessID?)
 		;########################################################################
+		case	'HKBLK':																		; HOTKEY BLOCKS (with braces)
+				if (!IsSet(sessID)) {
+					sessID := clsMask.NewSession()												; create session as needed
+				}
+				if (!IsSet(option) || (option & 1)) {											; premask by default, or if bit 1 is set
+					Mask_T(&code,	'C&S',	1,sessID?)											; 	recursion call - mask comments/strs		(INCLUDE MLQS)
+					Mask_T(&code,	'V1MLS',0,sessID?)											; 	recursion call - mask legacy ML strs	(dont pm/restore)
+					Mask_T(&code,	'MLPBT',0,sessID?)											; 	recursion call - mask ML parenth blks	(dont pm/restore)
+				}
+				nHKBlk := buildPtn_HKBLK()
+				clsMask.MaskAll(&code,'HKBLK'													; mask hotkey blocks
+					, nHKBlk, sessID?)
+				if (!IsSet(option) || (option & 2)) {											; restore by default, or if bit 2 is set
+					Mask_R(&code,	'MLPBT',,sessID?)											; 	restore ML parentheses blks
+					;Mask_R(&code,	'V1MLS',,sessID?)											; 	restore legacy ML strings
+					Mask_R(&code,	'C&S',	,sessID?)											; 	restore comments/strings
+				}
+		;########################################################################
 		case	'HK':																			; HOT KEYS (declaration)
 				if (!IsSet(sessID)) {
 					sessID := clsMask.NewSession()												; create session as needed
@@ -228,6 +246,39 @@ gMLContList		:= []
 				if (!IsSet(option) || (option & 2)) {											; restore by default, or if bit 2 is set
 					Mask_R(&code,	'MLPBT',,sessID?)											; 	restore ML parentheses blks
 					;Mask_R(&code,	'V1MLS',,sessID?)											; 	2026-01-17 - removed - restore legacy ML strings
+					Mask_R(&code,	'C&S',	,sessID?)											; 	restore comments/strings
+				}
+		;########################################################################
+		case	'LBLBLK':																		; LABEL BLOCKS (with braces)
+				if (!(code~='(?m)^[\h{}]*\S+?:(?=\h|$)')) {										; make sure there is a possible label within code
+					return																		; label should not be within code
+				}
+				; lots of things can interfere with label detection
+				; mask potential false positives
+				if (!IsSet(sessID)) {
+					sessID := clsMask.NewSession()												; create session as needed
+				}
+				if (!IsSet(option) || (option & 1)) {											; premask by default, or if bit 1 is set
+					Mask_T(&code,	'C&S',	1,sessID?)											; 	recursion call - mask comments/strs		(INCLUDE MLQS)
+					Mask_T(&code,	'V1MLS',0,sessID?)											; 	recursion call - mask legacy ML strs	(dont pm/restore)
+					Mask_T(&code,	'MLPBT',0,sessID?)											; 	recursion call - ML parentheses blks	(dont pm/restore)
+					Mask_T(&code,	'HK',	0,sessID?)											; 	recursion call - mask hotkey decl		(dont pm/restore)
+					Mask_T(&code,	'HS',	0,sessID?)											; 	recursion call - mask HS decl			(dont pm/restore)
+					Mask_T(&code,	'KV',	0,sessID?)											; 	recursion call - mask key/vals			(dont pm/restore)
+					;Mask_T(&code,	'SW',	2,sessID?)											; 	recursion call - mask switch blocks		(dont pm/restore)
+					Mask_T(&code,	'SW',	0,sessID?)											; 	2025-11-30 AMB, prevent HK's from being restored too soon
+				}
+				clsMask.MaskAll(&code, 'LBLBLK'													; mask label blocks (that have braces)
+					, gPtn_Blk_LBL, sessID?)													; currently already supports (?im)
+				;clsMask.MaskAll(&code, 'LBL'													; mask label declaration only
+				;	, gPtn_Blk_LBLP, sessID?)													; currently already supports (?im)
+				if (!IsSet(option) || (option & 2)) {											; restore by default, or if bit 2 is set
+					Mask_R(&code,	'SW',	,sessID?)											; 	restore switch blocks
+					Mask_R(&code,	'KV',	,sessID?)											; 	restore key/vals
+					Mask_R(&code,	'HS',	,sessID?)											; 	restore hotstring declarations
+					Mask_R(&code,	'HK',	,sessID?)											; 	restore hotkey declarations
+					Mask_R(&code,	'MLPBT',,sessID?)											; 	restore ML parentheses blks
+					;Mask_R(&code,	'V1MLS',,sessID?)											; 	restore legacy ML strings (2026-01-17 - removed)
 					Mask_R(&code,	'C&S',	,sessID?)											; 	restore comments/strings
 				}
 		;########################################################################
@@ -548,6 +599,10 @@ gMLContList		:= []
 				clsMask.RestoreAll(&code, 'LC'
 					, delTag, sessID?)
 		;########################################################################
+		case	'HKBLK':																		; HOTKEY BLOCKS (with braces)
+				clsMask.RestoreAll(&code, 'HKBLK'
+					, delTag, sessID?)
+		;########################################################################
 		case	'HK':																			; HOT KEYS (declaration)
 				clsMask.RestoreAll(&code, 'HK'
 					, delTag, sessID?)
@@ -556,10 +611,12 @@ gMLContList		:= []
 				clsMask.RestoreAll(&code, 'HS'
 					, delTag, sessID?)
 		;########################################################################
+		case	'LBLBLK':																		; LABEL BLOCKS (with braces)
+				clsMask.RestoreAll(&code, 'LBLBLK'
+					, delTag, sessID?)
+		;########################################################################
 		case	'LBL','LABELS':																	; LABELS (declaration)
 				clsMask.RestoreAll(&code, 'LBL'
-					, delTag, sessID?)
-				clsMask.RestoreAll(&code, 'LBLBLK'												; label blocks (has braces)
 					, delTag, sessID?)
 		;########################################################################
 		case	'MLPBT':																		; MULTI-LINE PARENTHESES BLOCKS (with optional trailer)
@@ -2052,6 +2109,27 @@ class clsNodeMap	; 'block map' might be better term
 	HKLWS	:= opt . '^(\s*+' . hotKeys . ')'													; supports leading blank lines
 	NOLWS	:= opt . '^(\h*+' . hotKeys . ')'													; DOES NOT support leading blank lines
 	return	{noLWS:NOLWS,LWS:HKLWS}
+}
+;################################################################################
+																 buildPtn_HKBLK()				; Hotkey with brace block
+;################################################################################
+{
+; 2026-05-27 AMB, ADDED -  Hotkey with brace block
+
+	opt 	:= '(?im)'																			; pattern options
+	LC		:= '(?:' gnLineComment ')'															; line comment (allows lead ws to be consumed already)
+	TG		:= '(?:' uniqueTag('(?:LC|BC)\w++') ')'												; comment tag
+	CT1		:= '(?<CT>(?:\h*+(?>' LC '|' TG ')))'												; line-comment OR tag
+	CT2		:= '(?:' . LC . '|' . TG . ')*+'													; optional line comment OR tag
+	TCT		:= '(?>\s*+' . CT2 . ')*+'															; optional trailing comment or tag (MUST BE ATOMIC)
+	declare	:= buildPtn_HotKey().noLWS															; declaration
+	brcBlk	:= '\s*+(?<brcBlk>\{(?<BBC>(?>[^{}]++|(?-2))*+)})'									; brcBlk - brace-block, BBC - blk contents (allows ML)
+	noTrl	:= '(?!\S)(?=\h*$)'																	; no trailer
+	trl		:= '(?<trail>' . CT1 . '|\h*+(?=\v|$))'												; line-comment, tag, or end of line
+	noTrail	:= opt . declare . noTrl															; no trailer
+	wTrail	:= opt . declare . trl																; see globals at top on this file
+	fullBlk	:= opt . '(?<declare>' declare . TCT . ')' . brcBlk
+	return	fullBlk
 }
 ;################################################################################
 																   buildPtn_CLS()				; class blocks

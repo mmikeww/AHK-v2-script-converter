@@ -28,6 +28,7 @@ GetScopeSections(code)
 }
 ;################################################################################
 ; 2026-05-04 AMB, UPDATED to merge common code from LabelAndFunc.ahk
+; 2026-05-27 AMB, UPDATED as part of fix for #489
 class clsScopeSect
 {
 	_oStr		:= ''																		; original section string (has lots of masking)
@@ -52,6 +53,7 @@ class clsScopeSect
 	;############################################################################
 	__new(obj)																				; CONSTRUCTOR
 	{
+		obj					:= this._expandBrcBlk(obj)										; remove block masking from HK/Label brace blocks (if present)
 		this._oStr			:= obj.oStr														; orig code for section (can be just a tag)
 		this.Line1			:= obj.sb.Line1													; declaration line (is masked as tag initially, unless global)
 		this.Blk			:= obj.sb.Blk													; full block initially [prior to ._exitCmdDetails()]
@@ -66,6 +68,23 @@ class clsScopeSect
 		}
 		this._exitCmdDetails()																; get details about exit command, its position, and any trailing code
 		this._extractName()																	; extract the name of LBL/FUNC/CLS, or trigger of HK/HS
+	}
+	;############################################################################
+	; 2026-05-27 AMB, ADDED as part of fix for #489
+	; adds support for nested labels within HK/Label brace-blocks
+	_expandBrcBlk(obj)																		; remove block masking from HK/Label brace-blocks
+	{
+		L1 := obj.sb.Line1																	; grab first line of obj code
+		if (!(L1 ~= '(?i)(?:HK|LBL)BLK'))													; if first line is NOT a HK/Label brace-blk tag...
+			return obj																		; ... return src obj - nothing to expand
+		oStr := obj.oStr																	; grab full original (masked) code from obj
+		if (InStr(L1,'HKBLK')) {															; if is a HK block...
+			Mask_R(&oStr,'HKBLK'), Mask_T(&oStr, 'HK')										; ... expand the block, then add normal HK   decl tag to first line
+		} else if (InStr(L1,'LBLBLK')) {													; if is a label block...
+			Mask_R(&oStr,'LBLBLK'), Mask_T(&oStr, 'LBL')									; ... expand to block, then add normal label decl tag to first line
+		}
+		sd		:= clsScopeSect._getSectDetails(oStr)										; repackage the contents into something the caller can use
+		return	{oStr:oStr,sb:sd.sb,tag:sd.tag}												; return an object that the caller expects
 	}
 	;############################################################################
 	_extractName()
@@ -323,7 +342,7 @@ class clsScopeSect
 
 		; if section type is one of the following...
 		tag := hasTag(sbLine1)																; extract orig contents of tag (line1)
-		if (RegExMatch(tag, '(?i)(HK|HS|LBL|BLKCLS|BLKFUNC)', &m))							; if line1 has a valid target tag...
+		if (RegExMatch(tag, '(?i)(HK|HS|LBL|BLKCLS|BLKFUNC|HKBLK|LBLBLK)', &m))				; if line1 has a valid target tag...
 			return {type:m[1],sb:sb,tag:tag}												; ... return tag and section-parts (obj)
 
 		return {type:'GBL',sb:sb,tag:''}													; must be global section
@@ -336,7 +355,7 @@ class clsScopeSect
 		if (RegExMatch(sect, '(?s)^([^\v]*)(.*)', &m)) {									; separate line 1 from rest of section
 			L1 := m[1], blk := m[2]															; Line1 and block
 		}
-		if (!(L1 ~= '(?i)' gTagChar '(?:LBL|HK|HS|BLKFUNC|BLKCLS)')) {						; if Line1 does not have a section declaration tag...
+		if (!(L1 ~= '(?i)' gTagChar '(?:LBL|HK|HS|BLKFUNC|BLKCLS|HKBLK|LBLBLK)')) {			; if Line1 does not have a section declaration tag...
 			L1 := '', blk := sect															; ... it should just be global code
 		}
 		return {Line1:L1,Blk:blk,TCWS:TCWS}													; return separated parts
@@ -384,6 +403,7 @@ class clsScopeSect
 }
 ;################################################################################
 ;################################################################################
+; 2026-05-27 AMB, UPDATED as part of fix for #489
 class codeChop	; responsible for marking script code with tags that separate sections
 {
 	Static _chopTag := ';[' . gTagChar . 'CHOP' . gTagChar . ']`r`n'						; ;[★CHOP★]
@@ -395,8 +415,8 @@ class codeChop	; responsible for marking script code with tags that separate sec
 	Static MarkSects(code, fLabels:=true, restorePM:=false)
 	{
 		this.MaskSects(&code, fLabels, restorePM)											; perform masking to prep for sect identification
-		nTargBlks	:= 'BLKCLS|BLKFUNC|HK|HS'												; needle for specific tag types
-		nTargBlks	.= (fLabels) ? '|LBL' : ''												; include labels if requested
+		nTargBlks	:= 'BLKCLS|BLKFUNC|HK|HS|HKBLK'											; needle for specific tag types
+		nTargBlks	.= (fLabels) ? '|LBL|LBLBLK' : ''										; include labels if requested
 		nTargBlks	:= '_?(?:' nTargBlks ')\w+'												; needle for all targetted tag types
 		nBlkTags	:= uniqueTag(nTargBlks)													; needle for tags themselves
 		chopTag		:= this._chopTag														; tag to add - ;[★CHOP★]
@@ -416,9 +436,9 @@ class codeChop	; responsible for marking script code with tags that separate sec
 		Mask_T(&code, 'C&S',1,sessID)														; mask comments/strings
 		Mask_T(&code, 'HIF', ,sessID)														; mask HotIfs
 		code := this._isolateTrailBraces(code)												; move opening braces to their own line
-		sectTypes := ['CLS&FUNC','HK','HS']													; look for FUNC, CLS, HK. HS...
+		sectTypes := ['CLS&FUNC','HKBLK','HK','HS']											; look for FUNC, CLS, HKBLK, HK, HS...
 		if (fLabels)
-			sectTypes.Push('LBL')															; ... and labels if requested
+			sectTypes.Push('LBLBLK'), sectTypes.Push('LBL')									; ... and labels if requested
 		Loop sectTypes.Length {																; for each section type...
 			mType := sectTypes[A_Index]														; ... get section type
 			Mask_T(&code, mType,,,false)													; ... mask section type
@@ -432,7 +452,8 @@ class codeChop	; responsible for marking script code with tags that separate sec
 	;############################################################################
 	Static RestoreMasksAll(code)															; restores orig code for specified tags
 	{
-		tagTypes := ['CLS&FUNC','HIF','HK','HS','LBL','IWTLFS','MLPBT','KVO','C&S']			; 2026-04-13 - added MLPBT
+		tagTypes := ['CLS&FUNC','HIF','HK','HKBLK','HS','LBL','LBLBLK'						; 2026-05-27 - added HKBLK, LBLBLK
+					,'IWTLFS','MLPBT','KVO','C&S']											; 2026-04-13 - added MLPBT
 		outStr := code
 		Mask_R(&outStr, tagTypes)
 		; restore any opening-braces that were move temporarily

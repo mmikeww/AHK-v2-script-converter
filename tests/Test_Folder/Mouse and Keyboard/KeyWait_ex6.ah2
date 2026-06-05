@@ -1,3 +1,4 @@
+﻿return ; V1toV2: remove if unnecessary
 *NumpadAdd::
 { ; V1toV2: Added opening brace for [*NumpadAdd]
 global ; V1toV2: Made function global

@@ -1,6 +1,7 @@
 ﻿#Include <v2DynGui> ; V1toV2: v2DynGui.ahk in library folder
 iniGuiCtrlVars() ; V1toV2: initialize gui ctrl vars
 #Warn Unreachable, Off
+return ; V1toV2: remove if unnecessary
 #z::HK1_z() ; Win+Z hotkey
 return
 

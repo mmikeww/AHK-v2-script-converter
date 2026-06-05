@@ -14,7 +14,6 @@ return
 my_lblClose:
 my_lblClose()
 ExitApp()
-return
 
 my_lblSize:
 my_lblSize()

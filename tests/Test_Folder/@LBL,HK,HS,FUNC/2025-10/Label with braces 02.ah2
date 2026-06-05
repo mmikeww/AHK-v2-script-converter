@@ -28,7 +28,6 @@ return
 exit:
 exit()
 	ExitApp()
-return
 
 ;###############  V1toV2 FUNCS  ###############
 HK2_lbutton() { ; V1toV2: HK->Func

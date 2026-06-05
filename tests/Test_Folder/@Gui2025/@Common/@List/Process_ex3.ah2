@@ -1,4 +1,5 @@
 ﻿#Warn Unreachable, Off
+return ; V1toV2: remove if unnecessary
 #z::HK1_z() ; Win+Z hotkey
 return
 

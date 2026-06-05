@@ -9,6 +9,7 @@ if (count = "")
 }
 
 ; Controls
+return ; V1toV2: remove if unnecessary
 a::HK1_a()
 init:
 init()

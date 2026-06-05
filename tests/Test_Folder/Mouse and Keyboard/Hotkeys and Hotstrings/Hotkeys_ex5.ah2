@@ -1,4 +1,4 @@
-Var := "Not set yet"
+﻿Var := "Not set yet"
 MsgBox(Var)
 Return
 
@@ -9,6 +9,7 @@ Var := "Set"
 Return
 } ; V1toV2: Added closing brace for [^l]
 
+return ; V1toV2: remove if unnecessary
 ^k::
 { ; V1toV2: Added opening brace for [^k]
 global ; V1toV2: Made function global

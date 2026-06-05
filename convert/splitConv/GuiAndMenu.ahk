@@ -182,7 +182,7 @@ GuiConv(p) {
 						lbl		:= aEventRename[A_Index].oldlabel
 						params	:= aEventRename[A_Index].parameters
 						funName	:= getV2Name(aEventRename[A_Index].NewFunctionName)
-						gmList_LblsToFunc[getV2Name(lbl)] := ConvLabel('GUI', lbl, params, funName)
+						gmList_LblsToFunc[getV2Name(lbl)] := clsConvLabel('GUI', lbl, params, funName)
 					}
 					LineResult .= curGuiName ".OnEvent(`"" aEventRename[A_Index].event "`", " getV2Name(aEventRename[A_Index].NewFunctionName) ")`r`n"
 				}
@@ -338,7 +338,7 @@ GuiConv(p) {
 			params		:= 'A_GuiEvent:="", A_GuiControl:="", Info:="", *'
 			funcName	:= getV2Name(ControlLabel)
 			; 2025-10-07 AMB - Added regex for A_EventInfo -> Info conversion for new Gui funcs
-			gmList_LblsToFunc[funcName] := ConvLabel('AG', lbl, params, funcName, {NeedleRegEx: "im)^(.*?)\b\QA_EventInfo\E\b(.*+)$", Replacement: "$1Info$2"})
+			gmList_LblsToFunc[funcName] := clsConvLabel('AG', lbl, params, funcName, {NeedleRegEx: "im)^(.*?)\b\QA_EventInfo\E\b(.*+)$", Replacement: "$1Info$2"})
 		}
 		if (ControlHwnd != "") {
 			LineResult .= ", " ControlHwnd " := " ControlObject ".hwnd"
@@ -1100,7 +1100,7 @@ MenuConv(p) {
 			if (gmAltLabel.Has(FunctionName)) {
 				FunctionName := gmAltLabel[FunctionName]
 			} else if (scriptHasLabel(Var4)) {						; 2025-11-01 AMB, UPDATED
-				gmList_LblsToFunc[Var4] := ConvLabel('MN', Var4, 'A_ThisMenuItem:="", A_ThisMenuItemPos:="", MyMenu:="", *', FunctionName)
+				gmList_LblsToFunc[Var4] := clsConvLabel('MN', Var4, 'A_ThisMenuItem:="", A_ThisMenuItemPos:="", MyMenu:="", *', FunctionName)
 			}
 			if (Var4 != "") {
 				; 2024-06-26 ADDED by AMB for fix #131

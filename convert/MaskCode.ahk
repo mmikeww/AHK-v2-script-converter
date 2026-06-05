@@ -14,7 +14,7 @@
 			* Label,HK,HS declarations/blocks
 			* many others...
 			* TODO - TERNARY IF
-	2024-06-02 -> 2026-05-27 - UPDATED misc - see code comments
+	2024-06-02 -> 2026-06-05 - UPDATED misc - see code comments
 	GENERAL TODO
 		2025-10-05 FIX OnExit
 			MISSING 2ND PARAM AND "RETURN 1" BEING PLACE AFTER EXITAPP
@@ -494,6 +494,12 @@ gMLContList		:= []
 				clsMask.MaskAll(&code, 'HIF'
 					, gPtn_HotIf, sessID?)
 		;########################################################################
+		; 2026-06-05 AMB, ADDED
+		case	'SECTBLK':																		; SECTION BLOCK
+				clsMask.MaskAll(&code, 'SECTBLK'
+					, '(?s).+', sessID?)														; mask entire str (unless empty)
+				code := '`r`n' code																; add leading CRLF to tag
+		;########################################################################
 		default:
 				; targ not found in case-list above...
 				; ... so it may be a custom target for custom masking...
@@ -741,6 +747,13 @@ gMLContList		:= []
 		;########################################################################
 		case	'HIF', 'HOTIF':																	; HOTIF
 				clsMask.RestoreAll(&code, 'HIF'
+					, delTag, sessID?)
+		;########################################################################
+		; 2026-06-05 AMB, ADDED
+		case	'SECTBLK':																		; SECTION BLOCK
+				needle := '`r`n(' uniqueTag('SECTBLK\w+') ')'									;	needle for CRLF before sectBlk
+				code := RegExReplace(code, needle, '$1')										;	remove CRLF before sectBlk
+				clsMask.RestoreAll(&code, 'SECTBLK'												;	restore orig code for sectBlk
 					, delTag, sessID?)
 		;########################################################################
 		; 2026-05-04 AMB, ADDED to support restoring all masks with single call
@@ -2044,6 +2057,7 @@ class clsNodeMap	; 'block map' might be better term
 ;################################################################################
 {
 ; 2024-08-06 AMB, ADDED - Label (block - NOT YET)
+; 2026-06-05 AMB, UPDATED needle details
 ; WORK IN PROGRESS - IS CURRENTLY ONLY LABEL DECLARATION AND COMMENT
 ;	DOES NOT (YET) INCLUDE LINES THAT FOLLOW LABEL DECLARATION
 
@@ -2056,14 +2070,15 @@ class clsNodeMap	; 'block map' might be better term
 	CT1		:= '(?<CT>(?:\h*+(?>' LC '|' TG ')))'												; line-comment OR tag
 	CT2		:= '(?:' . LC . '|' . TG . ')*+'													; optional line comment OR tag
 	TCT		:= '(?>\s*+' . CT2 . ')*+'															; optional trailing comment or tag (MUST BE ATOMIC)
-	declare	:= '^\h*+(?<decl>(?::{0,2}(?:[^:,``\s]++|``[;%])++:)++)'							; declaration
+	declare	:= '^\h*+(?<decl>(?::{0,2}(?<lblName>[^:,``\s]++|``[;%])++:)++)'					; declaration
 	brcBlk	:= '\s*+(?<brcBlk>\{(?<BBC>(?>[^{}]++|(?-2))*+)})'									; brcBlk - brace-block, BBC - blk contents (allows ML)
 	noTrl	:= '(?!\S)(?=\h*$)'																	; no trailer
 	trl		:= '(?<trail>' . CT1 . '|\h*+(?=\v|$))'												; line-comment, tag, or end of line
 	noTrail	:= opt . declare . noTrl															; no trailer
 	wTrail	:= opt . declare . trl																; see globals at top on this file
 	fullBlk	:= opt . '(?<declare>' declare . TCT . ')' . brcBlk
-	return	{FB:fullBlk,NT:noTrail,WT:wTrail}
+	bbd		:= opt . declare . TCT . '\s*+\{'
+	return	{FB:fullBlk,NT:noTrail,WT:wTrail,BBD:bbd}
 }
 ;################################################################################
 																buildPtn_HotKey()				; hotkey declaration

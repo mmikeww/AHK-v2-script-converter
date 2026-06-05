@@ -1,3 +1,4 @@
+﻿return ; V1toV2: remove if unnecessary
 ~CapsLock::
 { ; V1toV2: Added opening brace for [~CapsLock]
 global ; V1toV2: Made function global

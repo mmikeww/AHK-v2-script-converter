@@ -1,4 +1,5 @@
-#HotIf MouseIsOver("ahk_class Shell_TrayWnd")
+﻿#HotIf MouseIsOver("ahk_class Shell_TrayWnd")
+return ; V1toV2: remove if unnecessary
 WheelUp::Send("{Volume_Up}")
 WheelDown::Send("{Volume_Down}")
 

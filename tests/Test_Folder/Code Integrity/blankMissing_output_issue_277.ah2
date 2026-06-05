@@ -1,6 +1,7 @@
-#Requires Autohotkey v2.0
+﻿#Requires Autohotkey v2.0
 #SingleInstance Force
 
+return ; V1toV2: remove if unnecessary
 esc::ExitApp()
 F11::
 F12::

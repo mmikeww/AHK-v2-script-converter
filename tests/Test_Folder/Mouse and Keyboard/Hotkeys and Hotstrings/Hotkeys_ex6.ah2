@@ -1,3 +1,4 @@
+﻿return ; V1toV2: remove if unnecessary
 [::   ; now allowed
 { ; V1toV2: Added opening brace for [[]
 global ; V1toV2: Made function global
@@ -5,6 +6,7 @@ Run("Notepad")
 return
 } ; V1toV2: Added closing brace for [[]
 
+return ; V1toV2: remove if unnecessary
 (::Run("Notepad") ; now allowed
 
 ^!s::
@@ -14,6 +16,7 @@ Send("Sincerely,{enter}John Smith")  ; This line sends keystrokes to the active 
 return
 } ; V1toV2: Added closing brace for [^!s]
 
+return ; V1toV2: remove if unnecessary
 NumpadEnd::
 Numpad1::
 { ; V1toV2: Added opening brace for [Numpad1]
@@ -22,6 +25,7 @@ MsgBox("This hotkey is launched regardless of whether NumLock is on.")
 return
 } ; V1toV2: Added closing brace for [Numpad1]
 
+return ; V1toV2: remove if unnecessary
 {::   ; now allowed
 { ; V1toV2: Added opening brace for [{]
 global ; V1toV2: Made function global

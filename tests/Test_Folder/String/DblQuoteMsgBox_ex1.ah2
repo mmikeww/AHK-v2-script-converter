@@ -1,3 +1,4 @@
+﻿return ; V1toV2: remove if unnecessary
 F1:: MsgBox("`"") ; "
 F2:: MsgBox("abc`"123") ; abc"123
 F3:: MsgBox("abc`"123" MyFunc("", "123`"abc") "") ; abc"123123"abc

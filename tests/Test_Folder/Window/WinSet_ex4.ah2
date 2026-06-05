@@ -1,3 +1,4 @@
+﻿return ; V1toV2: remove if unnecessary
 #t::  ; Press Win+T to make the color under the mouse cursor invisible.
 { ; V1toV2: Added opening brace for [#t]
 global ; V1toV2: Made function global
@@ -9,6 +10,7 @@ WinSetTransColor(MouseRGB " 220", "ahk_id " MouseWin)
 return
 } ; V1toV2: Added closing brace for [#t]
 
+return ; V1toV2: remove if unnecessary
 #o::  ; Press Win+O to turn off transparency for the window under the mouse.
 { ; V1toV2: Added opening brace for [#o]
 global ; V1toV2: Made function global
@@ -17,6 +19,7 @@ WinSetTransColor("Off", "ahk_id " MouseWin)
 return
 } ; V1toV2: Added closing brace for [#o]
 
+return ; V1toV2: remove if unnecessary
 #g::  ; Press Win+G to show the current settings of the window under the mouse.
 { ; V1toV2: Added opening brace for [#g]
 global ; V1toV2: Made function global

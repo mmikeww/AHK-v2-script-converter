@@ -12,12 +12,13 @@
 ;################################################################################
 ; 2025-11-01 AMB, ADDED
 ; 2025-12-24 AMB, UPDATED output to object
+; 2026-06-05 AMB, UPDATED
 ;	Separates code into sections
 ;	Each section contains sub-string blocks for one of the following...
 ;	 Label, HK, HS, Func, Class, or global (may be multiple global sections)
 GetScopeSections(code)
 {
-	sects		:= clsScopeSect.GetSections(&code)											; separate code into sections
+	sects	 := clsSectList(&code).Sects													; separate code into sections
 	outSects := []																			; [output array]
 	for idx, sect in sects {																; for each section...
 		sectType := sect.tType																; ... get section type
@@ -27,9 +28,8 @@ GetScopeSections(code)
 	return outSects																			; return output array (simple sub-strings for each section)
 }
 ;################################################################################
-; 2026-05-04 AMB, UPDATED to merge common code from LabelAndFunc.ahk
-; 2026-05-27 AMB, UPDATED as part of fix for #489
-class clsScopeSect
+; 2026-06-05 AMB, ADDED as dedicated section class
+class clsSect
 {
 	_oStr		:= ''																		; original section string (has lots of masking)
 	_L1Obj		:= ''																		; line 1 details (object)
@@ -47,7 +47,7 @@ class clsScopeSect
 	; PUBLIC section properties
 	L1			=> this._line1Details														; line 1 details and its parts (public shortcut)
 	GetSectStr	=> this.PCWS . this.Line1 . this.Blk . this.tBlk . this.TCWS				; final section string (still has masking)
-	RawSectStr	=> codeChop.RestoreMasksAll(this.GetSectStr)								; final section string with masking removed
+	RawSectStr	=> clsCodeChop.RestoreMasksAll(this.GetSectStr)								; final section string with masking removed
 	HasExit		=> !!((this._xCmd && this._xPos) || this.L1.cmd)							; does section have an exit command?
 
 	;############################################################################
@@ -83,7 +83,7 @@ class clsScopeSect
 		} else if (InStr(L1,'LBLBLK')) {													; if is a label block...
 			Mask_R(&oStr,'LBLBLK'), Mask_T(&oStr, 'LBL')									; ... expand to block, then add normal label decl tag to first line
 		}
-		sd		:= clsScopeSect._getSectDetails(oStr)										; repackage the contents into something the caller can use
+		sd		:= clsSectList.GetSectDetails(oStr)											; repackage the contents into something the caller can use
 		return	{oStr:oStr,sb:sd.sb,tag:sd.tag}												; return an object that the caller expects
 	}
 	;############################################################################
@@ -159,39 +159,36 @@ class clsScopeSect
 			return	(this._L1Obj := {tag:tag,decl:decl,cmd:cmd,TC:TC,LWS:LWS})				; set/return Line 1 details
 		}
 	}
+}
+;################################################################################
+;################################################################################
+; 2026-06-05 AMB, UPDATED - removed Static, now outputs objects
+class clsSectList
+{
+	origStr		:= ''
+	Sects		:= []																		; array to hold (final) section objects
+	GblLblCnt	:= 0																		; counter for creating unique label/funcs, from stray global code
+	NextGblLbl	=> ++this.GblLblCnt															; returns next value for GblLblCnt
+	codeTop		:= ''	; used by LabelAndFunc.ahk calls									; code that occurs before any LBL/HK/HS/FUNC/CLS
+	codeBot		:= ''	; used by LabelAndFunc.ahk calls									; code that occurs after  all LBL/HK/HS/FUNC/CLS sections
+
 	;############################################################################
-	;###################################  STATIC  ###############################
-	;############################################################################
-	; STATIC Class properties
-	Static Sects		:= []																; array to hold (final) section objects
-	Static GblLblCnt	:= 0																; counter for creating unique label/funcs, from stray global code
-	Static NextGblLbl	=> ++this.GblLblCnt													; returns next value for GblLblCnt
-	Static _orderGbl	:= ''																; enables global code to be processed first
-	Static OrderGbl		=> this._sortSections()												; PUBLIC
-	Static codeTop		:= ''	; used by LabelAndFunc.ahk calls							; code that occurs before any LBL/HK/HS/FUNC/CLS
-	Static codeBot		:= ''	; used by LabelAndFunc.ahk calls							; code that occurs after  all LBL/HK/HS/FUNC/CLS sections
-	;############################################################################
-	Static Reset()
+	__New(&code,LnF:=0)
 	{
-		this.Sects		:= []
-		this.GblLblCnt	:= 0
-		this._orderGbl	:= ''
-		this.codeTop	:= ''
-		this.codeBot	:= ''
+		this.origStr := code																; save original code
+		this._getSections(&code,LnF)														; get sections from code, place in section list
 	}
 	;############################################################################
-	Static GetSections(&code,LnF:=0)			; LnF:=1 for LabelAndFunc calls				; separates and returns scope sections
+	_getSections(&code,LnF:=0)			; LnF:=1 for LabelAndFunc calls						; separates and returns scope sections
 	{
-		this.Reset()																		; resets static vars - required when performing bulk/unit testing
 		rawSects	:= this._getRawSects(&code,LnF)											; chop code into very raw sections
 		rawSects	:= this._shiftTCWS(rawSects)											; rearrange trailing comments/CRLFs between sections
 		dummy		:= this._rawToFinal(rawSects,LnF)										; create global sects between LBL,HK,HS,FUNC,CLS (as needed)
-		return		this.Sects		; is filled in _rawToFinal()							; output final sects array
 	}
 	;############################################################################
-	Static _getRawSects(&code,LnF:=0)			; LnF:=1 for LabelAndFunc calls				; separates script code into raw sections (GBL,LBL,HK,HS,FUNC,CLS)
+	_getRawSects(&code,LnF:=0)			; LnF:=1 for LabelAndFunc calls						; separates script code into raw sections (GBL,LBL,HK,HS,FUNC,CLS)
 	{
-		sectObj	 := codeChop.MarkSects(code)												; add chop/section markers to code
+		sectObj	 := clsCodeChop.MarkSects(code)												; add chop/section markers to code
 		rawSects := []																		; [output array]
 		for idx, sect in sectObj.chops {													; for each script section...
 			if (LnF && idx = 1) {															; if LnF sect AND current code is above first tagged section...
@@ -205,7 +202,7 @@ class clsScopeSect
 		return rawSects																		; return array of raw sections
 	}
 	;############################################################################
-	Static _rawToFinal(rawSects,LnF:=0)			; LnF:=1 for LabelAndFunc calls				; handles global code between sections, creates final Sects array
+	_rawToFinal(rawSects,LnF:=0)		; LnF:=1 for LabelAndFunc calls						; handles global code between sections, creates final Sects array
 	{
 		; relocate executable global code between sections (for LnF only)
 		fConvGblOK := false																	; controls whether global code should be conv to lbl/func
@@ -286,7 +283,7 @@ class clsScopeSect
 		return this.Sects																	; return to support external calls (mainly for labelAndFunc.ahk calls)
 	}
 	;############################################################################
-	Static _makeGblSections(code,LnF:=0)		; LnF:=1 for LabelAndFunc calls				; creates new global sections from passed code
+	_makeGblSections(code,LnF:=0)		; LnF:=1 for LabelAndFunc calls						; creates new global sections from passed code
 	{																						;	creates as many sections as code contains
 		sectList:= []																		; output array - to return multiple new sections
 		done	:= false																	; flag to determine when all sections have been created
@@ -304,21 +301,21 @@ class clsScopeSect
 		return sectList																		; return list of newly created sections
 	}
 	;############################################################################
-	Static _newGblSect(code,LnF:=0)				; LnF:=1 for LabelAndFunc calls				; creates new section object from code
+	_newGblSect(code,LnF:=0)			; LnF:=1 for LabelAndFunc calls						; creates new section object from code
 	{
 		if (LnF)																			; if LabelAndFunc call...
 			return this._convGblToLblAndFunc(&code)											; ... convert global code to Label/Func
 		return this._newSect(code)															; otherwise, return new section obj
 	}
 	;############################################################################
-	Static _newSect(sect)																	; creates section object
+	_newSect(sect)																			; creates section object
 	{
 		if (!sd := this._getSectDetails(sect))												; validate that section is a legit target
 			return false																	; ... flag as invalid
-		return this({oStr:sect,sb:sd.sb,tag:sd.tag})										; create new section object and return it
+		return clsSect({oStr:sect,sb:sd.sb,tag:sd.tag})										; create new section object and return it
 	}
 	;############################################################################
-	Static _convGblToLblAndFunc(&code)														; converts stray global code to label/func (for labelAndFunc calls only)
+	_convGblToLblAndFunc(&code)																; converts stray global code to label/func (for labelAndFunc calls only)
 	{
 		if (RegExMatch(code, '(?s)^(\s*)(.*)', &m))											; separate lead ws from code
 			LWS := m[1], code := m[2]
@@ -330,38 +327,12 @@ class clsScopeSect
 		return		sectObj																	; return section object
 	}
 	;############################################################################
-	Static _getSectDetails(sect)															; ensures that sect is a legit target
+	_getSectDetails(sect)
 	{
-		if (!Trim(sect))																	; if section is empty...
-			return false																	; ... invalid
-
-		sb	 	:= this._splitSect(sect)													; separate line1, sect, and trailing ws/comments
-		sbLine1	:= sb.Line1																	; [first line of current section]
-		Mask_R(&sbLine1, 'C&S')																; restore line1 comments and strings
-		sbBlk := sb.Blk, sbTCWS := sb.TCWS													; section blk and trailing ws/comments
-
-		; if section type is one of the following...
-		tag := hasTag(sbLine1)																; extract orig contents of tag (line1)
-		if (RegExMatch(tag, '(?i)(HK|HS|LBL|BLKCLS|BLKFUNC|HKBLK|LBLBLK)', &m))				; if line1 has a valid target tag...
-			return {type:m[1],sb:sb,tag:tag}												; ... return tag and section-parts (obj)
-
-		return {type:'GBL',sb:sb,tag:''}													; must be global section
+		return clsSectList.GetSectDetails(sect)
 	}
 	;############################################################################
-	Static _splitSect(sect)																	; sub-divides section into Line1, block, TCWS
-	{
-		L1 := blk := ''																		; ini
-		sect := separateTrailCWS(sect, &TCWS:='')											; separate trailing comments/CRLFs from section
-		if (RegExMatch(sect, '(?s)^([^\v]*)(.*)', &m)) {									; separate line 1 from rest of section
-			L1 := m[1], blk := m[2]															; Line1 and block
-		}
-		if (!(L1 ~= '(?i)' gTagChar '(?:LBL|HK|HS|BLKFUNC|BLKCLS|HKBLK|LBLBLK)')) {			; if Line1 does not have a section declaration tag...
-			L1 := '', blk := sect															; ... it should just be global code
-		}
-		return {Line1:L1,Blk:blk,TCWS:TCWS}													; return separated parts
-	}
-	;############################################################################
-	Static _shiftTCWS(sectsArr)																; moves trailing comments/CRLFs of one sect to beginning of next sect
+	_shiftTCWS(sectsArr)																	; moves trailing comments/CRLFs of one sect to beginning of next sect
 	{
 		for idx, sect in sectsArr {															; for each section in array...
 			if (idx = sectsArr.length)														; dont process last section in array (already updated)
@@ -373,7 +344,7 @@ class clsScopeSect
 		return sectsArr																		; return updated array
 	}
 	;############################################################################
-	Static _cleanCode(code, inclExit:=false)												; removes comments, ws, etc, so executable code is easier to decect
+	_cleanCode(code, inclExit:=false)														; removes comments, ws, etc, so executable code is easier to decect
 	{
 		if (inclExit) {																		; if exit cmds should be removed...
 			code := RegExReplace(code, '(?i)\bRETURN\b')									; ... remove return
@@ -383,14 +354,34 @@ class clsScopeSect
 		return code																			; remainder should be 'executable' code
 	}
 	;############################################################################
-	Static _sortSections()																	; organize section-indexes so global-code is processed first
+	Static GetSectDetails(sect)																; ensures that sect is a legit target
 	{
-		if (this._orderGbl) {																; if global-index-order has already been determined...
-			return this._orderGbl															; ... return order string
-		}
-		orderStr := '', orderOth := ''														; ini
-		for idx, sect in this.Sects {														; for each section...
-			if (sect.tType = 'GBL') {														; ... if sect is global...
+		if (!Trim(sect))																	; if section is empty...
+			return false																	; ... invalid
+
+		sb	 	:= this._splitSect(sect)													; separate line1, sect, and trailing ws/comments
+		sbLine1	:= sb.Line1																	; [first line of current section]
+		Mask_R(&sbLine1, 'C&S')																; restore line1 comments and strings
+		tag := hasTag(sbLine1), tag := (tag) ? tag : ''										; extract orig contents of tag (line1)
+		return {sb:sb,tag:tag}																; return details (obj)
+	}
+	;############################################################################
+	Static _splitSect(sect)																	; sub-divides section into Line1, block, TCWS
+	{
+		L1 := blk := ''																		; ini
+		sect := separateTrailCWS(sect, &TCWS:='')											; separate trailing comments/CRLFs from section
+		if (RegExMatch(sect, '(?s)^([^\v]*)(.*)', &m))										; separate line 1 from rest of section
+			L1 := m[1], blk := m[2]															; Line1 and block
+		if (!(L1 ~= '(?i)' gTagChar '(?:LBL|HK|HS|BLKFUNC|BLKCLS|HKBLK|LBLBLK)'))			; if Line1 does not have a section declaration tag...
+			L1 := '', blk := sect															; ... it should just be global code
+		return {Line1:L1,Blk:blk,TCWS:TCWS}													; return separated parts (obj)
+	}
+	;############################################################################
+	Static OrderGlobal(sectsList)															; organize section-indexes so global-code is processed first
+	{
+		orderStr := orderOth := ''
+		for idx, sectObj in sectsList {														; for each section...
+			if (sectObj.sect.tType = 'GBL') {												; ... if sect is global...
 				orderStr .= idx ','															; ...	record index of global sections
 			} else {																		; ... otherwise...
 				orderOth .= idx ','															; ...	record index of non-global sections
@@ -398,28 +389,31 @@ class clsScopeSect
 		}
 		orderStr .= orderOth																; place global sections before any other sections
 		orderStr := Trim(orderStr, ',')														; cleanup
-		return (this._orderGbl := orderStr)													; set/return index order string
+		return (orderStr)																	; set/return index order string
 	}
 }
 ;################################################################################
 ;################################################################################
 ; 2026-05-27 AMB, UPDATED as part of fix for #489
-class codeChop	; responsible for marking script code with tags that separate sections
+; 2026-06-05 AMB, UPDATED
+class clsCodeChop	; responsible for marking script code with tags that separate sections
 {
-	Static _chopTag := ';[' . gTagChar . 'CHOP' . gTagChar . ']`r`n'						; ;[★CHOP★]
+	Static ChopTag := '[' . gTagChar . 'CHOP' . gTagChar . ']`r`n'							; [★CHOP★]
 
 	;############################################################################
-	; PUBLIC - adds tags ;[★CHOP★] to mark declarations of CLS/FUNC/HK/HS/LBL...
+	; PUBLIC - adds tags [★CHOP★] to mark declarations of CLS/FUNC/HK/HS/LBL...
 	;	... so each 'code-sect' can be found/isolated easily for processing
 	; output (three forms): code with chopTags, array of sects (chops), chopTag itself
-	Static MarkSects(code, fLabels:=true, restorePM:=false)
+	Static MarkSects(code, fLabels:=true, nBlkTags:='', restorePM:=false)
 	{
 		this.MaskSects(&code, fLabels, restorePM)											; perform masking to prep for sect identification
-		nTargBlks	:= 'BLKCLS|BLKFUNC|HK|HS|HKBLK'											; needle for specific tag types
-		nTargBlks	.= (fLabels) ? '|LBL|LBLBLK' : ''										; include labels if requested
-		nTargBlks	:= '_?(?:' nTargBlks ')\w+'												; needle for all targetted tag types
-		nBlkTags	:= uniqueTag(nTargBlks)													; needle for tags themselves
-		chopTag		:= this._chopTag														; tag to add - ;[★CHOP★]
+		if (nBlkTags='') {
+			nTargBlks	:= 'BLKCLS|BLKFUNC|HK|HS|HKBLK'										; needle for specific tag types
+			nTargBlks	.= (fLabels) ? '|LBL|LBLBLK' : ''									; include labels if requested
+			nTargBlks	:= '_?(?:' nTargBlks ')\w+'											; needle for all targetted tag types
+			nBlkTags	:= uniqueTag(nTargBlks)												; needle for tags themselves
+		}
+		chopTag		:= this.ChopTag															; tag to add - [★CHOP★]
 		While(pos	:= RegexMatch(code, nBlkTags, &mTag, pos??1)) {							; find each masked declaration (tags)
 			tag		:= mTag[]																; [masked-declaration tag]
 			repl	:= chopTag . tag														; add CHOP tag above masked-declaration

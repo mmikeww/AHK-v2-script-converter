@@ -1,5 +1,6 @@
 ﻿; https://github.com/mmikeww/AHK-v2-script-converter/issues/461
 
+return ; V1toV2: remove if unnecessary
 SC018::Send("{=}")	; capitol O key (orig example)
 
 ; use Ctrl+q to test these

@@ -1,4 +1,4 @@
-; Requires AutoHotkey v1.1.26+, and the keyboard hook must be installed.
+﻿; Requires AutoHotkey v1.1.26+, and the keyboard hook must be installed.
 InstallKeybdHook()
 SendSuppressedKeyUp(key) {
     DllCall("keybd_event"
@@ -9,6 +9,7 @@ SendSuppressedKeyUp(key) {
 }
 
 ; Disable Alt+key shortcuts for the IME.
+return ; V1toV2: remove if unnecessary
 ~LAlt::SendSuppressedKeyUp("LAlt")
 
 ; Test hotkey:
@@ -22,6 +23,7 @@ global ; V1toV2: Made function global
     SendSuppressedKeyUp("LCtrl")
     return
 } ; V1toV2: Added closing brace for [*CapsLock]
+return ; V1toV2: remove if unnecessary
 *CapsLock up::
 { ; V1toV2: Added opening brace for [*CapsLock up]
 global ; V1toV2: Made function global

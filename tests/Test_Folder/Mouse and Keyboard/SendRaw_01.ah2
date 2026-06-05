@@ -1,4 +1,5 @@
-﻿^q::
+﻿return ; V1toV2: remove if unnecessary
+^q::
 { ; V1toV2: Added opening brace for [^q]
 global ; V1toV2: Made function global
 Send("{Raw}`;")

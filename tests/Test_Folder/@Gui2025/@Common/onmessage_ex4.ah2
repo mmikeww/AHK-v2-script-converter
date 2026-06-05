@@ -19,7 +19,6 @@ WM_LBUTTONDOWN(wParam, lParam, msg, hwnd)
 GuiClose:
 GuiClose()
 ExitApp()
-Return
 
 Off() {
     ToolTip()

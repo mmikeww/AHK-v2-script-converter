@@ -1,4 +1,5 @@
 ﻿#Warn Unreachable, Off
+return ; V1toV2: remove if unnecessary
 ^h::HK1_h()
 Return ; V1toV2: post-return for Goto
 V1toV2_GblCode_001:

@@ -9,6 +9,7 @@ A()
 return
 B:
 C:	; v1 says this combo is invalid
+return ; V1toV2: remove if unnecessary
 ^q::
 HKfunc1(*) {
 MsgBox("HKfunc1")

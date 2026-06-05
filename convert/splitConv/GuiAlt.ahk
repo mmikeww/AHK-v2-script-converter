@@ -719,7 +719,7 @@ class clsGuiObj
 			lbl		:= curEvent.origlabel													; ... record label name
 			fn		:= getV2Name(curEvent.newFunc)											; ... record func name
 			params	:= curEvent.params														; ... record func params
-			gmList_LblsToFunc[getV2Name(lbl)]:=ConvLabel('GUI',lbl,params,fn)				; ... create conversion object (see labelAndFunc.ahk), place in map
+			gmList_LblsToFunc[getV2Name(lbl)]:=clsConvLabel('GUI',lbl,params,fn)			; ... create conversion object (see labelAndFunc.ahk), place in map
 			comma	:= (gDynGuiNaming) ? ',' : ', '											; ... [trailing ws will depend on naming method]
 			eventLines .= guiName '.OnEvent("' curEvent.event '"' comma						; ... create .onEvent string
 						. (getV2Name(curEvent.newFunc) ')' NL.CRLF)
@@ -1424,7 +1424,7 @@ class clsGuiCtrl
 		}
 		if (scriptHasLabel(ctrlLabel)) {													; if script has a matching label...
 			params := 'A_GuiEvent:="", A_GuiControl:="", Info:="", *'						; ... setup attributes req for labelToFunc conversion
-			gmList_LblsToFunc[funcName] := ConvLabel('AG', ctrlLabel, params				; ... [needed in multiple routines]
+			gmList_LblsToFunc[funcName] := clsConvLabel('AG', ctrlLabel, params				; ... [needed in multiple routines]
 			, funcName, { NeedleRegEx: "im)^(.*?)\b\QA_EventInfo\E\b(.*+)$"
 						, Replacement: "$1Info$2" })
 		}

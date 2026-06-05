@@ -437,7 +437,7 @@ _HashtagWarn(p) {
 	}
 	Out := "#Warn "
 	if (p[1] != "") {
-		if (p[1] ~= "^((Use(Env|Unset(Local|Global)))|ClassOverwrite)$") {	; UseUnsetLocal, UseUnsetGlobal, UseEnv, ClassOverwrite
+		if (p[1] ~= "^((Use(Env|Unset(Local|Global)))|ClassOverwrite)$") {					; UseUnsetLocal, UseUnsetGlobal, UseEnv, ClassOverwrite
 			Out := "; V1toV2: Removed " Out p[1]
 			if (p[2] != "")
 				Out .= ", " p[2]
@@ -458,8 +458,8 @@ _Hotkey(p) {
 
 	;Convert label to function
 
-	if (scriptHasLabel(p[2])) {												; 2025-11-01 UPDATED as part of Scope support
-		gmList_LblsToFunc[p[2]] := ConvLabel('HK', p[2], 'ThisHotkey:=""', p[2])
+	if (scriptHasLabel(p[2])) {																; 2025-11-01 UPDATED as part of Scope support
+		gmList_LblsToFunc[p[2]] := clsConvLabel('HK', p[2], 'ThisHotkey:=""', p[2])
 	}
 	if (p[1] = "IfWinActive") {
 		p[2] := p[2] = "" ? "" : ToExp(p[2])
@@ -484,9 +484,9 @@ _Hotkey(p) {
 		if (P[2] = "on" || P[2] = "off" || P[2] = "Toggle" || P[2] ~= "^AltTab" || P[2] ~= "^ShiftAltTab") {
 			p[2] := p[2] = "" ? "" : ToExp(p[2])
 		}
-		if (SubStr(Trim(P[2]),1,1) = '%') {									; 2025-10-12 AMB - fix for #328
-			p[2]		:= ToExp(p[2])										; remove %, (but we needed to know this was a var and not a str)
-			funcName	:= addHKCmdFunc(p[2])								; link var name and func it points to
+		if (SubStr(Trim(P[2]),1,1) = '%') {													; 2025-10-12 AMB - fix for #328
+			p[2]		:= ToExp(p[2])														; remove %, (but we needed to know this was a var and not a str)
+			funcName	:= addHKCmdFunc(p[2])												; link var name and func it points to
 		}
 		if InStr(p[3], "UseErrorLevel") {
 			p[3] := Trim(StrReplace(p[3], "UseErrorLevel"))
@@ -505,7 +505,7 @@ _Hotstring(p) {
 	global gmList_LblsToFunc
 	if (RegExMatch(p[1], '":') && p.Has(2)) {
 		p[2] := Trim(p[2], '"')
-		gmList_LblsToFunc[p[2]] := ConvLabel('HS', p[2], '*', getV2Name(p[2]))
+		gmList_LblsToFunc[p[2]] := clsConvLabel('HS', p[2], '*', getV2Name(p[2]))
 	}
 	Out := "Hotstring("
 	loop p.Length {
@@ -1000,7 +1000,7 @@ _Object(p) {
 ; 2025-11-01 AMB, UPDATED as part of Scope support, and gmList_LblsToFunc key case-sensitivity
 _OnExit(p) {
 	if (scriptHasLabel(p[1])) {
-		gmList_LblsToFunc[p[1]] := ConvLabel('OX', p[1], 'A_ExitReason, ExitCode', ''
+		gmList_LblsToFunc[p[1]] := clsConvLabel('OX', p[1], 'A_ExitReason, ExitCode', ''
 		, regex := {NeedleRegEx: "(?i)^(.*)(\bRETURN\b)([\s\t]*;.*|)$", Replacement: "$1$2 1$3"})
 	}
 	; return needs to be replaced by return 1 inside the exitcode
@@ -1380,11 +1380,11 @@ _SetTimer(p) {
 	if (p[2] = "Off") {
 		Out := format("SetTimer({1},0)", p*)
 	} else if (p[2] = 0) {
-		Out := format("SetTimer({1},1)", p*)								; Change to 1, because 0 deletes timer instead of no delay
+		Out := format("SetTimer({1},1)", p*)											; Change to 1, because 0 deletes timer instead of no delay
 	} else {
 		Out := format("SetTimer({1},{2},{3})", p*)
 	}
-	gmList_LblsToFunc[p[1]] := ConvLabel('ST', p[1], '')
+	gmList_LblsToFunc[p[1]] := clsConvLabel('ST', p[1], '')
 
 	Return RegExReplace(Out, "[\s\,]*\)$", ")")
 }

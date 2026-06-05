@@ -12,7 +12,6 @@ return
 guiclose:
 guiclose()
 ExitApp()
-return
 
 ;###############  V1toV2 FUNCS  ###############
 guiclose(*) { ; V1toV2: Lbl->Func

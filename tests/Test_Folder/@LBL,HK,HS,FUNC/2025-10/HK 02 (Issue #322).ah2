@@ -1,6 +1,7 @@
 ﻿#Warn Unreachable, Off
 ; https://github.com/mmikeww/AHK-v2-script-converter/issues/322
 
+return ; V1toV2: remove if unnecessary
 f::HK1_f()
 Return
 

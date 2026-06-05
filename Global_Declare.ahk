@@ -108,7 +108,6 @@ setGlobals() {																				; for globals that are reset with each new con
 	clsMask.Reset()																			; 2025-11-01 - ADDED as part of Scope support, unit testing
 	clsNodeMap.Reset()																		; 2025-11-01 - ADDED as part of Scope support, unit testing
 	clsLabelSect.Reset()																	; 2025-11-01 - ADDED as part of Scope support, unit testing
-	clsScopeSect.Reset()																	; 2025-11-01 - ADDED as part of Scope support, unit testing
 	clsGuiObj.Reset()																		; 2026-03-11 - ADDED for unit testing
 }
 ;################################################################################

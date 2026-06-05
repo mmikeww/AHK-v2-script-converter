@@ -1,5 +1,6 @@
 ﻿#Include <v2DynGui> ; V1toV2: v2DynGui.ahk in library folder
 #Warn Unreachable, Off
+return ; V1toV2: remove if unnecessary
 ^l::HK1_l()
 return
 

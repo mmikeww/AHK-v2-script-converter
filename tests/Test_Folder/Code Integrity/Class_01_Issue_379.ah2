@@ -1,4 +1,4 @@
-#SingleInstance Force
+﻿#SingleInstance Force
 
 obj := cls()	; will be converted to cls()
 obj.showName()
@@ -25,4 +25,5 @@ class cls
 	}
 }
 
+return ; V1toV2: remove if unnecessary
 esc::ExitApp()

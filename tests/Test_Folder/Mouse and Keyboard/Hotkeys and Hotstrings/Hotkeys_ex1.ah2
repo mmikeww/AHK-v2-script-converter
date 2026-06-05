@@ -1,3 +1,4 @@
+﻿return ; V1toV2: remove if unnecessary
 #n::
 { ; V1toV2: Added opening brace for [#n]
 global ; V1toV2: Made function global

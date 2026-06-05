@@ -16,6 +16,7 @@ WM_LBUTTONDOWN(wParam, lParam, msg, hwnd)
   ToolTip("GUI Clicked")
 }
 
+return ; V1toV2: remove if unnecessary
 F5::HK1_F5()
 Return
 

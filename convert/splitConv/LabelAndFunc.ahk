@@ -117,9 +117,10 @@ class clsLabelSect
 	Static _getSects(&code)																	; divides code into sects, fills sects array
 	{																						;	each sect is one of [GLOBAL,LBL,HK,HS,CLS,FUNC]
 		this.Reset()																		; resets static vars - required when performing bulk/unit testing
-		this.Sects	 := clsLFScope.GetSections(&code,1)										; get/organize sects, create final Sects array
-		this.codeTop := clsLFScope.codeTop													; transfer code top section
-		this.codeBot := clsLFScope.codeBot													; transfer code bottom section
+		oSectList	 := clsLFSectList(&code,1)												; create section list obj
+		this.Sects	 := oSectList.Sects														; extract sect list
+		this.codeTop := oSectList.codeTop													; transfer code top section
+		this.codeBot := oSectList.codeBot													; transfer code bottom section
 	}
 	;############################################################################
 	Static _organizeSects(&code)
@@ -138,7 +139,7 @@ class clsLabelSect
 	{
 		code := this._updateLblToFuncs(code)												; adds v2 formatting to new label funcs
 		code := this._gotoToFC_orig(code)													; converts goto to funcCalls as needed (for orig script funcs only)
-		code := codeChop.RestoreMasksAll(code)												; removes temp-masking, performs cleanup of script code
+		code := clsCodeChop.RestoreMasksAll(code)											; removes temp-masking, performs cleanup of script code
 		code := this._gosubUpdate(code)														; update Gosub calls (to reflect changes made here, and fix issue #322)
 		(gHasV2Funcs) && code := '#Warn Unreachable, Off`r`n' . code						; add warning if labels were converted to funcs
 	}
@@ -420,7 +421,7 @@ class clsLabelSect
 		}
 
 		outFunc	:= ''																		; ini output
-		blk		:= sect.Blk, blk := codeChop.RestoreMasksAll(blk)							; get current block/body, and restore its orig code
+		blk		:= sect.Blk, blk := clsCodeChop.RestoreMasksAll(blk)						; get current block/body, and restore its orig code
 		Mask_T(&blk, 'C&S')																	; ... but we need comments/strings masked
 		lblName	:= sect.LabelName															; get HK trigger str
 		convMsg	:= ' `; V1toV2: HK->Func'													; msg to user about new func creation
@@ -474,7 +475,7 @@ class clsLabelSect
 
 		; ini
 		outFunc	 := ''																		; ini output
-		blk		 := sect.Blk, blk := codeChop.RestoreMasksAll(blk)							; get current block/body, and restore its orig code
+		blk		 := sect.Blk, blk := clsCodeChop.RestoreMasksAll(blk)						; get current block/body, and restore its orig code
 		Mask_T(&blk, 'C&S')																	; ... but we need comments/strings masked
 		lblName	 := sect.LabelName															; get label name
 		convMsg	 := ' `; V1toV2: Lbl->Func'													; msg to user about new func creation
@@ -638,7 +639,19 @@ class clsLabelSect
 }
 ;################################################################################
 ;################################################################################
-class clsLFScope extends clsScopeSect	; see Scope.ahk for parent class
+; 2026-06-05 AMB, UPDATED
+class clsLFSectList extends clsSectList			; see Scope.ahk for parent class
+{
+	_newSect(sect) {										; overide						; creates section object
+		if (!sd := this._getSectDetails(sect))												; validate that section is a legit target
+			return false																	; ... flag as invalid
+		return clsLFSect({oStr:sect,sb:sd.sb,tag:sd.tag})	; different						; create new section object and return it
+	}
+}
+;################################################################################
+;################################################################################
+; 2026-06-05 AMB, UPDATED
+class clsLFSect extends clsSect					; see Scope.ahk for parent class
 {
 	_nV2FC		:= ''																		; func name to use for labelToFunc conversion
 	_nHKFC		:= ''																		; func name to use for HKs that have named-blocks (funcs)
@@ -730,7 +743,7 @@ class clsLFScope extends clsScopeSect	; see Scope.ahk for parent class
 ; holds details related to label conversions for the following hosts...
 ;	HK - Hotkey, HS - HotString, MN - Menu, ST - SetTimer,
 ;	OX - OnExit, OOC - OnClipbordChnge, GUI - gui, AG - A_Gui
-class ConvLabel
+class clsConvLabel
 {
 	hostType	:= ''																		; host type - HK, HS, MN, ST, OX, OOC, GUI, AG
 	labelName	:= ''																		; label name that is being called
@@ -1089,6 +1102,69 @@ HK1LToML(line, idx, &lines)
 	return line
 }
 ;################################################################################
+; 2026-06-05 AMB, ADDED - adds 'Return' line above each HK (except same logic HKs)
+HKReturn(&code)
+{
+
+	retMsg	:= 'return `; V1toV2: remove if unnecessary'									; line to add
+	TCT		:= commonBlockNeedles().TCT														; needle for trailing tags/comments
+	nHKTag	:= UniqueTag('HK\w+')															; needle for HK tags
+	nHKLn	:= '(?im)^(' nHKTag '.*)'														; needle for HK line declaration
+	nDblHK	:= nHKLn '(' TCT ')' retMsg '\s+(' nHKTag ')'									; needle for double HK tag
+
+	; add preceding return lines to each HK declaration
+	Mask_T(&code, 'HK')																		; mask HK declarations
+	pos := 1																				; ini
+	While(pos := RegexMatch(code, nHKLn, &m, pos??1)) {										; for each HK declaration tag...
+		match	:= m[1]																		; ... grab full match
+		rMatch	:= match, Mask_R(&rMatch, 'HK'), LWS := ''									; ... prep to extract lead ws
+		if (RegExMatch(rMatch, '^\h+', &mLWS))												; ... if match has lead horz ws...
+			LWS := mLWS[]																	; ... grab LWS
+		repl	:= LWS . retMsg . '`r`n' . match											; ... [replacement]
+		code	:= RegExReplace(code, escRegexChars(match), repl,,1,pos)					; ... add preceding 'return' line
+		pos		+= StrLen(repl)																; ... prep for next pass
+	}
+	; remove return lines between logically chained HKs
+	pos := 1																				; ini
+	While(pos := RegexMatch(code,nDblHK, &m, pos??1)) {										; for each double-HK...
+		match	:= m[], HK1 := m[1], HK2 := m[5]											; ... [fill working vars]
+		LWS		:= m[2],LWS	:= RegExReplace(LWS, '\h+$')									; ... grab lead ws
+		repl	:= HK1 . LWS . HK2															; ... [fill working vars]
+		code	:= RegExReplace(code, escRegexChars(match), repl,,1,pos)					; ... remove return lines between logic-HKs
+		pos		+= StrLen(HK1)																; ... prep for next pass
+	}
+	Mask_R(&code, 'HK')																		; restore HK declarations
+}
+;################################################################################
+; 2026-06-05 AMB, ADDED to remove unnecessary exit commands
+FixRedundantExits(&code, targ:='')
+{
+	Mask_T(&code, 'C&S'), Mask_T(&code, 'IWTLFS')											; hide comments, strings, and logic blocks
+	nExitCmd	:= '\b(RETURN\b|(?:EXITAPP|RELOAD)(?:\(\))?)'								; needle for exit commands
+	nRetVal		:= '(?<val>.*)'																; needle for values after Return cmds
+	targ		:= (targ) ? targ : nExitCmd nRetVal											; determine the targeted exit cmds
+	TCT			:= commonBlockNeedles().TCT													; needle for trailing tags/comments
+	nExit1		:= '(?im)^(\h*' nExitCmd ')'												; needle for exit cmd that will be preserved
+	nExitTarg	:= nExit1 '('  TCT ')' . targ												; needle for double exit commands
+	loop {																					; allows recursion until all double-exits are eliminated
+		updated := false																	; flag to determine when all double-exits are eliminated
+		pos := 1																			; ini with each loop
+		While(pos := RegexMatch(code, nExitTarg, &m, pos)) {								; for each HK declaration tag...
+			match	:= m[], ec1 := m[1], val := ''											; ... [fill working vars]
+			if (InStr(targ, nRetVal))														; ... if searching for default target (targ not passed by caller)...
+				val := m.val, val := cleanCWS(val)											; ... get the actual value that may follow Return cmd
+			LWS		:= m[4], LWS := RegExReplace(LWS, '\r\n\h*$',,,1)						; ... get lead ws, remove last CRLF and horz ws from end
+			repl	:= ec1 . LWS															; ... set replacement
+			if (val	 = '') {																; ... if a value does NOT follow the exit cmd...
+				code:= RegExReplace(code, escRegexChars(match), repl,,1,pos)				; ... remove redundant exit cmd
+				updated	:= true																; ... flag that code was updated
+			}
+			pos		+= StrLen(repl)															; ... prep for next pass
+		}
+	} Until (!updated)																		; continue the search until all double-exits have been eliminated
+	code := clsCodeChop.RestoreMasksAll(code)												; remove all masking from code
+}
+;################################################################################
 ; 2025-10-12 AMB, ADDED to fix #328
 ; see addHKCmdCBArgs() for adding param to func declaration
 addHKCmdFunc(varName)
@@ -1097,7 +1173,7 @@ addHKCmdFunc(varName)
 	funcName := '', oStr := gOScriptStr._origStr
 	if (RegExMatch(oStr, nFunc, &m)) {														; if a func is associated with varName
 		funcName := Trim(m[1], '"')															; capture that funcName
-		gmList_HKCmdToFunc[funcName] := ConvLabel('HKY', varName, 'ThisHotkey', funcName)	; add funcName and func param to obj/array
+		gmList_HKCmdToFunc[funcName] := clsConvLabel('HKY',varName,'ThisHotkey',funcName)	; add funcName and func param to obj/array
 	}
 	return funcName																			; return funcName, in case caller can use it
 }

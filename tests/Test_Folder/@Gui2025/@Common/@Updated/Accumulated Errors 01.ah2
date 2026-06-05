@@ -486,6 +486,7 @@ MsgBox(obj.keyC)
 
 ; Send6.ahk - F3:: DISAPPEARS (THIS IS V2)
 
+return ; V1toV2: remove if unnecessary
 F3:: {
  MouseGetPos(&mx, &my)
  If PixelSearch(&x, &y, mx - within, my - within, mx + within, my + within, find)
@@ -496,6 +497,7 @@ F3:: {
 ; SendKey 123298 and 123299.ahk (THIS IS V1)
 
 ; 123299
+return ; V1toV2: remove if unnecessary
 $*s::
 {
 	ToolTip()

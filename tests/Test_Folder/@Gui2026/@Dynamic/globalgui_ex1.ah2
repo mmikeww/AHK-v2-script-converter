@@ -8,6 +8,7 @@ MyFunc() {
 }
 MyFunc()
 
+return ; V1toV2: remove if unnecessary
 F1::
 { ; V1toV2: Added opening brace for [F1]
 global ; V1toV2: Made function global

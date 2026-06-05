@@ -1,3 +1,4 @@
+﻿return ; V1toV2: remove if unnecessary
 ~RControl::
 { ; V1toV2: Added opening brace for [~RControl]
 global ; V1toV2: Made function global

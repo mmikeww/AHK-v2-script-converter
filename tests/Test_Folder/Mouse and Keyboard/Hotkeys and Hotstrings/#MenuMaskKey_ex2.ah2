@@ -1,5 +1,6 @@
-A_MenuMaskKey := "vkFF"  ; vkFF is no mapping.
+﻿A_MenuMaskKey := "vkFF"  ; vkFF is no mapping.
 #UseHook
+return ; V1toV2: remove if unnecessary
 #Space::
 !Space::
 { ; V1toV2: Added opening brace for [!Space]

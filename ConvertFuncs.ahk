@@ -67,7 +67,7 @@ convertLines_UseScope(code,tProg)
 
    if (fGblOrder    :=1) {                                                              ; if global code should be processed first...
       origOrder     := Map_I()                                                          ; [will keep track of orig section order]
-      gblOrder      := StrSplit(clsScopeSect.OrderGbl, ',')                             ; get global-first index ordering
+      gblOrder      := StrSplit(clsSectList.OrderGlobal(sects), ',')                    ; get global-first index ordering
       gfNewScope    := false                                                            ; ini
       sectCount     := gblOrder.Length, progInc := (tProg/sectCount)                    ; calc average progress percent for each section
       for idx, index in gblOrder {                                                      ; for each order index...
@@ -368,6 +368,10 @@ FinalizeConvert(&code)
       Mask_R(&code, 'MLPBT')                                                            ; restore remaining ML parentheses blocks (with opt trailer)
    Prog.ULog(,  pp 'Restore V1 Multi-line String Blocks...'     )                       ; update UI - current operation
       Mask_R(&code, 'V1MLS')                                                            ; restore remaining V1 ML strings
+   Prog.ULog(,pp 'Adding return before HKs...'                  )                       ; update UI - current operation
+      HKReturn(&code)                                                                   ; add return before each HK
+   Prog.ULog(,pp 'Removing redundant exit commands...'          )                       ; update UI - current operation
+      FixRedundantExits(&code)                                                          ; remove redundant/unnecessary exit commands
    Prog.ULog(90,pp 'Restore Comments/Strings...'                )                       ; update UI - current operation - 90% complete
       Mask_R(&code, 'C&S')                                                              ; ensure all comments/strings are restored (just in case)
 
@@ -387,7 +391,7 @@ addToCode(code) {
    maskedCode := code, Mask_T(&maskedCode, 'C&S')   ; prevent false positives (for Instr) within strings and comments
    if (InStr(maskedCode, 'OnClipboardChange:')) {
       code := 'OnClipboardChange(OnClipboardChange_v2)`r`n' . code      ; add this to top of script
-      gmList_LblsToFunc['OnClipboardChange_v2'] := ConvLabel('OCC', 'OnClipboardChange_v2', 'dataType:=""', 'OnClipboardChange_v2'
+      gmList_LblsToFunc['OnClipboardChange_v2'] := clsConvLabel('OCC', 'OnClipboardChange_v2', 'dataType:=""', 'OnClipboardChange_v2'
                                                 , {NeedleRegEx: "im)^(.*?)\b\QA_EventInfo\E\b(.*+)$", Replacement: "$1dataType$2"})
    }
    return code

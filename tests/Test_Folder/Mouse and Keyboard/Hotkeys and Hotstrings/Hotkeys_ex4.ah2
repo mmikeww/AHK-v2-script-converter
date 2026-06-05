@@ -1,3 +1,4 @@
+﻿return ; V1toV2: remove if unnecessary
 NumpadEnd::
 Numpad1::
 { ; V1toV2: Added opening brace for [Numpad1]

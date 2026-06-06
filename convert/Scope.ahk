@@ -53,21 +53,38 @@ class clsSect
 	;############################################################################
 	__new(obj)																				; CONSTRUCTOR
 	{
-		obj					:= this._expandBrcBlk(obj)										; remove block masking from HK/Label brace blocks (if present)
-		this._oStr			:= obj.oStr														; orig code for section (can be just a tag)
-		this.Line1			:= obj.sb.Line1													; declaration line (is masked as tag initially, unless global)
-		this.Blk			:= obj.sb.Blk													; full block initially [prior to ._exitCmdDetails()]
-		this.TCWS			:= obj.sb.TCWS													; trailing comments/CRLFs after meaningful block code (cmds)
-		this.Tag			:= obj.tag														; actual masked-tag (if present) on Line 1
-		this.tType			:= (this.Tag)													; section type (if tag is present)
-							? getTagType(this.Tag)											; ... section type is one of the following [LBL,HK,HS,FUNC,CLS]
-							: 'GBL'															; ... otherwise is a global section
-		if (this.tType = 'GBL') {															; if section is global
-			this.Blk := separatePreCWS(this.Blk, &pre:='')									; ... separate preceding comments/CRLFs from significant blk code
-			this.PCWS := pre																; ... [preceding comments/CRLFs before blk code]
+		;obj			:= this._expandBrcBlk(obj)											; remove block masking from HK/Label brace blocks (if present)
+		this._oStr		:= obj.oStr															; orig code for section (can be just a tag)
+		this.Line1		:= obj.sb.Line1														; declaration line (is masked as tag initially, unless global)
+		this.Blk		:= obj.sb.Blk														; full block initially [prior to ._exitCmdDetails()]
+		this.TCWS		:= obj.sb.TCWS														; trailing comments/CRLFs after meaningful block code (cmds)
+		this.Tag		:= obj.tag															; actual masked-tag (if present) on Line 1
+		this.tType		:= (this.Tag)														; section type (if tag is present)
+						? getTagType(this.Tag)												; ... section type is one of the following [LBL,HK,HS,FUNC,CLS]
+						: 'GBL'																; ... otherwise is a global section
+		if (this.tType	= 'GBL') {															; if section is global
+			this.Blk	:= separatePreCWS(this.Blk, &pre:='')								; ... separate preceding comments/CRLFs from significant blk code
+			this.PCWS	:= pre																; ... [preceding comments/CRLFs before blk code]
 		}
+		this._convertBrcBlk()																; for HKBLK,LBLBLK - transforms brace-block obj to normal obj
 		this._exitCmdDetails()																; get details about exit command, its position, and any trailing code
 		this._extractName()																	; extract the name of LBL/FUNC/CLS, or trigger of HK/HS
+	}
+	;############################################################################
+	; 2026-06-06 AMB, ADDED as part of fix for #489											; enables nested labels to remain with parent block, (prevents global treatment)
+	; only applies to HKBLK, LBLBLK objects													; transforms brace-block obj to normal obj (preserving nested labels)
+	_convertBrcBlk()
+	{
+		oType := this.tType																	; original section type
+		if (!(oType ~= '(?i)\b(HK|LBL)BLK\b'))												; if orig section type is NOT HKBLK or LBLBLK...
+			return																			; ... no conversion necessary
+		nType := RegExReplace(oType, 'BLK$')												; new section type (strip BLK from section name)
+		L1	:= this.Line1, Mask_R(&L1, oType), Mask_T(&L1, nType)							; convert line1 tag from xBLK to x
+		if (!RegExMatch(L1, '^(' uniqueTag(nType '\w+') ')(.*)(?s)(.+)$', &m))				; if line1 is not proper format (should not happen)...
+			return																			; ... exit early without changes
+		tag := m[1], L1Trail := m[2], brcBlk := m[3]										; [capture to vars]
+		this.tType := nType, this.Tag := tag, this.Line1 := tag . L1Trail					; update obj with new details
+		this.Blk := brcBlk . this.Blk, this._oStr := this.Line1 . this.Blk					; update obj with new details
 	}
 	;############################################################################
 	; 2026-05-27 AMB, ADDED as part of fix for #489

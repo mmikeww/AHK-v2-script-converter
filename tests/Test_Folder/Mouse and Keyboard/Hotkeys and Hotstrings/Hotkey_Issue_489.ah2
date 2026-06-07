@@ -16,6 +16,7 @@ return
 lbl2:
 MsgBox("Nested Label 2")
 return
+V1toV2_GblCode_001() ; V1toV2: remove if unnecessary
 }
 
 V1toV2_GblCode_001:

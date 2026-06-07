@@ -19,7 +19,7 @@ return
 ;###############  V1toV2 FUNCS  ###############
 label1()
 { ; V1toV2: Lbl->Func
-;global
+global
 MsgBox("label1 within braces")
 return
 }

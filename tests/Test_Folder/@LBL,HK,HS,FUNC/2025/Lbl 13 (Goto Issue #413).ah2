@@ -20,7 +20,7 @@ lbl1() { ; V1toV2: Lbl->Func
  }
  else
   ExitApp()
-lbl2()
+ lbl2()
 }
 ;##############################################
 lbl2() { ; V1toV2: Lbl->Func

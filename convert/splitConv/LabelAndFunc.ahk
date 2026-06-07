@@ -36,13 +36,28 @@ class clsLabelSect
 		this.HKFuncCnt		:= 0
 	}
 	;############################################################################
+	; 2026-06-07 AMB, UPDATED to guarantee sections have CRLF between them
 	Static _buildSectStr																	; assembles all (final) section strings into single string
 	{
 		get {
-			outStr := ''
-			for idx, sect in this.Sects
-				outStr .= sect.GetSectStr													; add each section string to output
-			return outStr
+			outStr := L_CRLF := T_CRLF := PT_CRLF := ''										; ini (CRLF - lead, trail, prev trail)
+			for idx, sect in this.Sects {													; for each section in list
+				curStr := sect.GetSectStr													; get current sect string
+				; is CRLF at either end of current section str?
+				RegExReplace(curStr, '^\R',, &L_CRLF)										; determine whether lead  CRLF is present for current str
+				RegExReplace(curStr, '\R$',, &T_CRLF)										; determine whether trail CRLF is present for current str
+				; decide whether lead CRLF will be needed or not
+				CRLF := ''																	; ini current CRLF as empty
+				if (idx > 1																	; if this is NOT first section...
+				&& (!(PT_CRLF||L_CRLF))) {													; ... AND BOTH, prev trail CRLF, and cur lead CRLF are empty...
+					CRLF	:= '`r`n'														; ...	add a lead CRLF   for current str
+					curStr	:= LTrim(curStr, ' \t')											; ... 	trim lead horz WS for current str
+				}
+				; update output str
+				outStr	.= CRLF . curStr													; add cur string to output, including lead CRLF as needed
+				PT_CRLF	:= T_CRLF															; save cur trail CRLF for check during next pass
+			}
+			return outStr																	; return final output
 		}
 	}
 	;############################################################################
@@ -258,6 +273,7 @@ class clsLabelSect
 		; convert HK/HS to func as needed
 		for idx, sect in this.Sects {
 
+			isBrcBlk := false																; ini flag for each section
 			;####################################################################
 			; first, weed out situations to skip
 			if (sect.tType = 'BLKFUNC') {													; if section is a func (tag)...
@@ -266,7 +282,7 @@ class clsLabelSect
 					sect.Line1 := funcCode													; ...	update line 1 to include wildcard param
 				continue																	; ... continue to next section
 			}
-			else if (!(sect.tType ~= '(?i)(?:HK|HS)')) {									; if not HK/HS (is label)...
+			else if (!(sect.tType ~= '(?i)HK|HS')) {										; if not HK/HS (is label)...
 				continue																	; ... skip it, goto next section
 			}
 			else if (sect.tType = 'HK' && sect.HasCaller) {									; if is HK and has a caller (gosub, goto)
@@ -276,12 +292,13 @@ class clsLabelSect
 				continue																	; ... skip it, goto next section
 			}
 			else if (blkDetails := isBraceBlock(sect.Blk)) {								; if already has brace-blk...
-				continue																	; ... skip it, goto next section
+				isBrcBlk := true															; ... flag as a brace-block and allow checks below
+				;continue																	; ... skip it, goto next section
 			}
 			else if (idx < this.Sects.length && !sect.Blk) {								; [if no cmd on line 1], and has no code block...
 				nextSect := this.sects[idx+1]												; ... get next section
 				nextType := nextSect.tType													; ... get next section type
-				if (nextType ~= '(?i)(?:HK|HS)') {											; if next section is also HK/HS...
+				if (nextType ~= '(?i)HK|HS') {												; if next section is also HK/HS...
 					sect.FuncStr := 'SKIP'													; ... flag it so NO func is created later
 					continue																; ... is pass-thru... skip it, goto next section
 				}
@@ -295,29 +312,38 @@ class clsLabelSect
 			; handle HK/HS situations
 			lblName	 := sect.LabelName														; get HK/HS declaration
 			; HotStrings
-			if (sect.tType = 'HS' && sect.Blk) {											; if is HS AND has code to execute [but no cmd on L1]...
-				uniqStr	 := ' for [' trim(lblName) ']'										; ... include HS trigger in msg...
-				sect.Blk := sect._addBraces(uniqStr)										; ... surround code-block with braces (convert to func)
-				continue
+			if (sect.tType = 'HS'															; if is HS...
+				&& !isBrcBlk && sect.Blk)		{											; ... AND NOT a brace-block, but has code to execute...
+					uniqStr	 := ' for [' trim(lblName) ']'									; ... include HS trigger in msg...
+					sect.Blk := sect._addBraces(uniqStr)									; ... surround code-block with braces (convert to func)
+					continue
 			}
 			; HotKeys
 			if (sect.tType = 'HK'															; if is HK... (support for Issue #322)
 				&& sect.L1.cmd																; ... AND has cmd on Line1
-				&& sect.HasCaller) {														; ... AND HK has a caller (gosub,goto)
+				&& sect.HasCaller)				{											; ... AND HK has a caller (gosub,goto)
 					sect.HK_1LineToML()														; ...	convert single line HK to multi-line HK
 					this._makeFuncHK(&sect)													; ...	convert HK to func (will be moved below global code)
 					continue
 			}
 			nextLink := this._nextLogicLink(lblName)										; get next link in logic-chain
-			if (sect.tType = 'HK'															; if is HK...
-				&& (sect.Blk || nextLink))	{												; ... AND has code to execute OR will execute code elsewhere...
-				if (scriptHasL2F())				{											; ... if ANY labels will be converted to func...
-					this._makeFuncHK(&sect)													; ...	convert HK to func (will be moved below global code)
-				}																			;		[will be added to script in _makeFuncsStr()]
-				else						{												; ... NO labels will be converted to func, so...
-					uniqStr	 := ' for [' trim(lblName) ']'									; ... 	[include HK trigger in msg]
-					sect.Blk := sect._addBraces(uniqStr)									; ... 	surround code-block with braces, but don't move it
-				}
+			if (sect.tType = 'HK'															; if is HK
+				&& !isBrcBlk																; ... AND NOT a brace-block...
+				&& (sect.Blk || nextLink))		{											; ... AND has code to execute OR will execute code elsewhere...
+					if (scriptHasL2F())			{											; ... if ANY labels will be converted to func...
+						this._makeFuncHK(&sect)												; ...	convert HK to func (will be moved below global code)
+					}																		;		[will be added to script in _makeFuncsStr()]
+					else						{											; ... NO labels will be converted to func, so...
+						uniqStr	 := ' for [' trim(lblName) ']'								; ... 	[include HK trigger in msg]
+						sect.Blk := sect._addBraces(uniqStr)								; ... 	surround code-block with braces, but don't move it
+					}
+					continue
+			}
+			; 2026-06-07 AMB, ADDED to simulate v1 logic flow for brace-blocks				; allowing logic flow beyond the brace-block
+			if (sect.tType ~= '(?i)HK|LBL'													; if is HK or LBL...
+				&& isBrcBlk																	; ... AND IS brace-block...
+				&& nextLink && sect.AllowBridge){											; ... AND nextLink is avail and AllowBridge is set...
+					sect.BridgeLogicFlow(nextLink)											; ...	allow code execution to extend beyond brace-block
 			}
 		}
 	}
@@ -344,7 +370,7 @@ class clsLabelSect
 				return this.LogicFlowStr													; ... exit early
 			}
 			for idx, curSect in this.sects {												; for each section...
-				if (!(curSect.tType ~= '(?i)(?:HK|HS|LBL)')) {								; if cur section is Not HK,HS,LBL...
+				if (!(curSect.tType ~= '(?i)(?:HK|HS|LBL|GBL)')) {							; if cur section is Not HK,HS,LBL,GBL...
 					continue																; ... skip it (probably FUNC/CLS)
 				}
 				curLabel := curSect.LabelName												; capture name of current section
@@ -447,7 +473,8 @@ class clsLabelSect
 		blk		:= indent 'global' blk														; add global keyword to beginning of body/blk
 		if (nextLink && !sect._xCmd) {														; if there is a next-logic-link, and no exit command...
 			if (nxSect := this.SectionObj[nextLink]) {										; ... get the section obj for the next link
-				blk .= '`r`n' nxSect.sect.FuncName '()'										; ... create funcCall for next-link, append call to body
+				RegExReplace(blk, '\R$',,&cnt), CRLF := (cnt) ? '' : '`r`n'					; ... determine required CRLF
+				blk .= CRLF indent nxSect.sect.FuncName '()'								; ... create funcCall for next-link, append call to body
 			}
 		}
 		funcName	:= sect.FuncName
@@ -489,10 +516,11 @@ class clsLabelSect
 			blk		:= bbObj.bbc															; extract just the guts of that body (without braces)
 			indent	:= RegExReplace(Trim(blk,'`r`n'), '(?s)^(\h*).*', '$1')					; get block indent
 			defGui	:= (defGui) ? '`r`n' indent defGui : defGui								; apply SetDefaultGui() call, as needed
-			blk		:= indent '`;global' defGui blk											; update block with changes
+			blk		:= indent 'global' defGui blk											; update block with changes
 			if (nextLink && !sect._xCmd) {													; if there is a next-logic-link, and no exit command...
 				if (nxSect := this.SectionObj[nextLink]) {									; ... get the section obj for the next link
-					blk .= '`r`n' nxSect.sect.FuncName '()`r`n'								; ... create funcCall for next-link, append call to body
+					RegExReplace(blk, '\R$',,&cnt), CRLF := (cnt) ? '' : '`r`n'				; ... determine required CRLF
+					blk .= CRLF indent nxSect.sect.FuncName '()`r`n'						; ... create funcCall for next-link, append call to body
 				}
 			}
 			funcName	:= getV2Name(lblName)												; get name to use for new func
@@ -513,7 +541,8 @@ class clsLabelSect
 		blk		:= indent 'global' defGui blk												; update block with changes
 		if (nextLink && !sect._xCmd) {														; if there is a next-logic-link, and no exit command...
 			if (nxSect := this.SectionObj[nextLink]) {										; ... get the section obj for the next link
-				blk .= '`r`n' nxSect.sect.FuncName '()'										; ... create/add func call for next link
+				RegExReplace(blk, '\R$',,&cnt), CRLF := (cnt) ? '' : '`r`n'					; ... determine required CRLF
+				blk .= CRLF indent nxSect.sect.FuncName '()'								; ... create funcCall for next-link, append call to body
 			}
 		}
 		funcName	:= getV2Name(lblName)													; get name to use for new func
@@ -656,7 +685,10 @@ class clsLFSect extends clsSect					; see Scope.ahk for parent class
 	_nV2FC		:= ''																		; func name to use for labelToFunc conversion
 	_nHKFC		:= ''																		; func name to use for HKs that have named-blocks (funcs)
 	_newFunc	:= ''																		; new (entire) func (if being converted to func)
+	_softExit	:= 0																		; flag that will prevent exit cmd from controlling logic flow
 	LabelName	=> this._name																; name of LBL/FUNC/CLS, or HK/HS trigger (public shortcut)
+	HasExit		=> !!(!this._softExit && ((this._xCmd && this._xPos) || this.L1.cmd))		; OVERRIDE - does section have an exit cmd, or should exit be ignored?
+	AllowBridge	=> this._softExit															; flag to allow logic/execution to flow outside of brace-block
 	HasCaller	=> (gmList_LblsToFunc.Has(this.LabelName)									; to assist prevention of empty labelToFunc conversions
 				||  gmList_LblsToFunc.Has(this.FuncName)
 				|| 	gmList_GosubToFunc.Has(this.LabelName)
@@ -666,6 +698,62 @@ class clsLFSect extends clsSect					; see Scope.ahk for parent class
 	{
 		super.__New(obj)																	; use parent constuctor
 		this._getV2Name()																	; get v2 func name
+	}
+	;############################################################################
+	; 2026-06-07 AMB, ADDED to simulate v1 logic flow for v1 brace-blocks
+	; this only applies to sections that were originally brace-blocks in v1 script
+	BridgeLogicFlow(lblName)																; adds a logical link pointing to code beyond current brace-block
+	{
+		; add a lblName() call that continues logical code execution
+		blk := this.Blk																		; get current sect block
+		if (!bbObj := isBraceBlock(blk))													; if not a brace-block...
+			return false																	; ... no changes are required
+
+		TCT			:= bbObj.TCT															; get leading WS/comments for block
+		guts		:= bbObj.bbc															; get block code (within braces)
+		indent		:= RegExReplace(Trim(guts,'`r`n'), '(?s)^(\h*).*', '$1')				; capture indent
+		msg			:= ' `; V1toV2: remove if unnecessary'									; user msg for added line
+		guts		.= indent lblName '()' msg '`r`n'										; add call for next-link label (to bottom of block)
+		this.Blk	:= TCT . '{' . guts . '}'												; finish new brace-block, update this object
+
+		; flag labelname to be (forced) converted to func, as needed
+		if (!gmList_LblsToFunc.Has(lblName)) {												; if labelname is NOT already listed...
+			funcName := getV2Name(lblName)													; ... get valid v2 func name
+			gmList_LblsToFunc[lblName] := clsConvLabel('FORCE', lblName,'',funcName)		; ... add labelname obj to list
+		}
+		return this.Blk																		; return updated brace-block to caller (why not?)
+	}
+	;############################################################################
+	; 2026-06-07 AMB, ADDED to OVERRIDE original method
+	; this OVERRIDE allows logic flow to bypass exitCmd, as needed for v1 brcBlks
+	_exitCmdSplit(blk)																		; sub-divides sect blk based on position of exit cmd (if present)
+	{																						;	also extracts exit cmd if present
+		Mask_T(&blk, 'IWTLFS')																; mask [For,If,Loop,Switch,Try,While] within sect block
+		saveBlk		:= blk																	; used to split code above/below exit command
+		nExit		:= '(?im)^\h*\b(?:RETURN|EXITAPP|EXIT|RELOAD)\b.*'						; exit command needle (targets full line)
+		xCmdLine 	:= '', tBlk := ''														; ini, in case no exit cmd
+
+		; if section is a v1 brace-block, allow alternate logic flow
+		isV1Blk := false
+		if (this._isV1BrcBlk && isBB := isBraceBlock(blk)) {								; if section was a v1 brace-block originally...
+			; TODO - IF FIRST CMD AFTER BRACE BLOCK IS AN EXIT CMD...
+			;	... DO NOT ALLOW CALL() TO NEXT LOGICAL SECTION
+			pos			:= 0, xCmdLine := ''												; ... flag block as having NO EXIT CMD
+			blk			:= isBB.TCT . isBB.bb '`r`n'										; ... limit block to just the brace-block itself
+			tBlk		:= isBB.trail, this.tBlk := tBlk									; ... get code following brace-blk
+			isV1Blk		:= 1	; still allows capture for v1 brcBlk exitCmd line			; ... flag for Regex search below
+			this._softExit := 1																; ... set flag that can be used later
+		}
+		; find FIRST exit command in block
+		if (pos	:= RegExMatch(blk, nExit, &m)) {											; locate FIRST exit command (if present)
+			xCmdLine	:= m[]	; still allows capture for v1 brcBlk exitCmd line			; first exit command (full line)
+			if (!isV1Blk) {																	; if flag was NOT set above...
+				endPos	:= pos + StrLen(xCmdLine)											; ... position of last character on exitCmd line
+				blk		:= SubStr(saveBlk, 1, endPos-1)										; ... block, including exitCmd (full line)
+				tBlk	:= SubStr(saveBlk, endPos)											; ... trailing code after exitCmd - will not be executed within block...
+			}
+		}																					; ... but might be converted to new global section
+		return {xCmd:xCmdLine,xPos:pos,blk:blk,tBlk:tBlk}									; return details, whether exitCmd exist or not
 	}
 	;############################################################################
 	HKFunc		; PUBLIC (mght add validations later)										; func (name) that is sometimes used as HK block code

@@ -526,6 +526,7 @@ $*s::
 		}
 		Send("{LShift up}{s up}{c up}")
 	}
+	V1toV2_GblCode_001() ; V1toV2: remove if unnecessary
 }
 V1toV2_GblCode_001:
 V1toV2_GblCode_001()

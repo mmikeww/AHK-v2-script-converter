@@ -43,6 +43,7 @@ class clsSect
 	_xPos		:= ''																		; position of exit command (with masking applied)
 	tBlk		:= ''																		; any block code that follows first exit command
 	TCWS		:= ''																		; any trailing comments/CRLFs/WS after meaningful block code
+	_isV1BrcBlk	:= 0																		; flag to track whether v1 section was originally a brace-block
 
 	; PUBLIC section properties
 	L1			=> this._line1Details														; line 1 details and its parts (public shortcut)
@@ -53,7 +54,6 @@ class clsSect
 	;############################################################################
 	__new(obj)																				; CONSTRUCTOR
 	{
-		;obj			:= this._expandBrcBlk(obj)											; remove block masking from HK/Label brace blocks (if present)
 		this._oStr		:= obj.oStr															; orig code for section (can be just a tag)
 		this.Line1		:= obj.sb.Line1														; declaration line (is masked as tag initially, unless global)
 		this.Blk		:= obj.sb.Blk														; full block initially [prior to ._exitCmdDetails()]
@@ -66,42 +66,27 @@ class clsSect
 			this.Blk	:= separatePreCWS(this.Blk, &pre:='')								; ... separate preceding comments/CRLFs from significant blk code
 			this.PCWS	:= pre																; ... [preceding comments/CRLFs before blk code]
 		}
-		this._convertBrcBlk()																; for HKBLK,LBLBLK - transforms brace-block obj to normal obj
+		this._isV1BrcBlk := this._convertBrcBlk()											; for HKBLK,LBLBLK - transforms brace-block obj to normal obj
 		this._exitCmdDetails()																; get details about exit command, its position, and any trailing code
 		this._extractName()																	; extract the name of LBL/FUNC/CLS, or trigger of HK/HS
+		;MsgBox "[" this.RawSectStr "]"
 	}
 	;############################################################################
-	; 2026-06-06 AMB, ADDED as part of fix for #489											; enables nested labels to remain with parent block, (prevents global treatment)
+	; 2026-06-06 AMB, ADDED as part of fix for #489											; enables nested labels to remain with parent block (prevents global treatment)
 	; only applies to HKBLK, LBLBLK objects													; transforms brace-block obj to normal obj (preserving nested labels)
 	_convertBrcBlk()
 	{
 		oType := this.tType																	; original section type
 		if (!(oType ~= '(?i)\b(HK|LBL)BLK\b'))												; if orig section type is NOT HKBLK or LBLBLK...
-			return																			; ... no conversion necessary
+			return false																	; ... no conversion necessary
 		nType := RegExReplace(oType, 'BLK$')												; new section type (strip BLK from section name)
 		L1	:= this.Line1, Mask_R(&L1, oType), Mask_T(&L1, nType)							; convert line1 tag from xBLK to x
 		if (!RegExMatch(L1, '^(' uniqueTag(nType '\w+') ')(.*)(?s)(.+)$', &m))				; if line1 is not proper format (should not happen)...
-			return																			; ... exit early without changes
-		tag := m[1], L1Trail := m[2], brcBlk := m[3]										; [capture to vars]
+			return false																	; ... exit early without changes
+		tag := m[1], L1Trail := m[2], brcBlk := m[3]										; [capture regex to vars]
 		this.tType := nType, this.Tag := tag, this.Line1 := tag . L1Trail					; update obj with new details
 		this.Blk := brcBlk . this.Blk, this._oStr := this.Line1 . this.Blk					; update obj with new details
-	}
-	;############################################################################
-	; 2026-05-27 AMB, ADDED as part of fix for #489
-	; adds support for nested labels within HK/Label brace-blocks
-	_expandBrcBlk(obj)																		; remove block masking from HK/Label brace-blocks
-	{
-		L1 := obj.sb.Line1																	; grab first line of obj code
-		if (!(L1 ~= '(?i)(?:HK|LBL)BLK'))													; if first line is NOT a HK/Label brace-blk tag...
-			return obj																		; ... return src obj - nothing to expand
-		oStr := obj.oStr																	; grab full original (masked) code from obj
-		if (InStr(L1,'HKBLK')) {															; if is a HK block...
-			Mask_R(&oStr,'HKBLK'), Mask_T(&oStr, 'HK')										; ... expand the block, then add normal HK   decl tag to first line
-		} else if (InStr(L1,'LBLBLK')) {													; if is a label block...
-			Mask_R(&oStr,'LBLBLK'), Mask_T(&oStr, 'LBL')									; ... expand to block, then add normal label decl tag to first line
-		}
-		sd		:= clsSectList.GetSectDetails(oStr)											; repackage the contents into something the caller can use
-		return	{oStr:oStr,sb:sd.sb,tag:sd.tag}												; return an object that the caller expects
+		return true																			; flag as converted
 	}
 	;############################################################################
 	_extractName()
@@ -148,6 +133,7 @@ class clsSect
 		saveBlk := blk																		; used to split code above/below exit command
 		nExit	:= '(?im)^\h*\b(?:RETURN|EXITAPP|EXIT|RELOAD)\b.*'							; exit command needle (targets full line)
 		xCmdLine := '', tBlk := ''															; ini, in case no exit cmd
+		; find FIRST exit command in block
 		if (pos	:= RegExMatch(blk, nExit, &m)) {											; locate FIRST exit command (if present)
 			xCmdLine	:= m[]																; first exit command (full line)
 			endPos		:= pos + StrLen(xCmdLine)											; position of last character on exitCmd line

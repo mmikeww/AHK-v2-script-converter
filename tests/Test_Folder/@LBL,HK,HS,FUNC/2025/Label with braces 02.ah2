@@ -40,11 +40,10 @@ return
 ;##############################################
 label_with_braces()
 { ; V1toV2: Lbl->Func
-	;global
+	global
 	MsgBox("label with braces")
 	; return
-
-V1toV2_GblCode_001()
+	V1toV2_GblCode_001()
 }
 ;##############################################
 V1toV2_GblCode_001() { ; V1toV2: Lbl->Func

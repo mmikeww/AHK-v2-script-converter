@@ -1509,6 +1509,8 @@ class clsExtract
 	;############################################################################
 	Static ExtCtrlVar(srcStr)																; extract control variable, if present
 	{
+	; TODO - OMISSION ERRORS CAN OCCUR WITH CHAINED EXPRESSIONS
+
 		ctrlVar	:= ''																		; ini
 		nOpt	:= '(?i)'																	; options (case-insensitive)
 		nDecl	:= '(?<![-+])(?<=^|["\h])V'													; V for gui varible (can be preceded by DQ/WS/nothing)
@@ -1516,6 +1518,7 @@ class clsExtract
 		nIdx	:= '(?<aIdx>(\w*)"\h+(?:\h*\.\h*)?(A_INDEX))'								; A_Index		[% "x" x " vVar" . A_Index]
 		nXVar1	:= '"\h+(?<xVar1>[^,\s]+)'													; Expression	[% "x" x " v"  This.BtnNum]
 		nXVar2	:= '(?<xVar2>\w*"\h+(?:\h*\.\h*)?\w+)'										; Expression	[% "x" x " vLV_" . lv]
+		;nVChn	:= '"(?<varChain>(\h+\w+|\h+"\h*\w+\h*"|\h+\.(?=\h)|(?<=\w)\.\w+)+)'		; Expression	chain (unable to control boundaries)
 		nNorm	:= '(?<norm>\w+\h*)'														; Normal var	[vButton1]
 		nVar	:= nOpt nDecl '(?<var>' ncc '|' nIdx '|' nXVar1 '|' nXVar2 '|' nNorm ')'	; assemble final needle
 
@@ -1545,6 +1548,32 @@ class clsExtract
 		}
 		return ctrlVar																		; return result
 	}
+	;############################################################################
+	; 2026-06-08 AMB, ADDED to extract gui X,Y,W,H values
+	; supports var expression chains separated by ws
+	; fixed trunicated var names, also now prevents false positives
+	; TODO - DOES NOT support quoted strings as part of expression chain
+	Static ExtXYWH(srcStr)
+	{
+		nLeft := '(?i)(?<=\h|")', nVarChain := '"\h+((\h+|\w+|[-.+*/\\,)(\[\]])+)'
+		X := Y := W := H := '', V := srcStr
+		if (pos := RegExMatch(V,nLeft 'X' nVarChain, &mV))
+			X := mV[1], V := RegExReplace(V, escRegexChars(X),,,1,pos)
+		if (pos := RegExMatch(V,nLeft 'Y' nVarChain, &mV))
+			Y := mV[1], V := RegExReplace(V, escRegexChars(Y),,,1,pos)
+		if (pos := RegExMatch(V,nLeft 'W' nVarChain, &mV))
+			W := mV[1], V := RegExReplace(V, escRegexChars(W),,,1,pos)
+		if (pos := RegExMatch(V,nLeft 'H' nVarChain, &mV))
+			H := mV[1], V := RegExReplace(V, escRegexChars(H),,,1,pos)
+		nLeft := '(?i)(?<=^|\h)', nRight := '%?(\w+)%?'
+		(X='' && RegExMatch(V,nLeft 'X' nRight, &mV)) && (X := mV[1])
+		(Y='' && RegExMatch(V,nLeft 'Y' nRight, &mV)) && (Y := mV[1])
+		(W='' && RegExMatch(V,nLeft 'W' nRight, &mV)) && (W := mV[1])
+		(H='' && RegExMatch(V,nLeft 'H' nRight, &mV)) && (H := mV[1])
+		c:=' ,.', X:=Trim(X,c),Y:=Trim(Y,c),W:=Trim(W,c),H := Trim(H,c)
+		return {X:X,Y:Y,W:W,H:H}
+	}
+
 	;############################################################################
 	Static _escRXChars(srcStr)
 	{

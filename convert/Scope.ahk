@@ -427,14 +427,16 @@ class clsCodeChop	; responsible for marking script code with tags that separate 
 		return {code:code,chops:chops,chopTag:chopTag}										; return multiple versions of output
 	}
 	;############################################################################
+	; 2026-06-08 AMB, UPDATED as part of fix for #495
 	Static MaskSects(&code, fLabels:=true, restorePM:=false)								; masks section declarations, funcs, classes
 	{
 		sessID := clsMask.NewSession()														; new masking session for isolation
 		Mask_T(&code, 'C&S',1,sessID)														; mask comments/strings
+		this._hideHotIFBraces(&code)														; remove/hide brace-blocks for HotIf
 		Mask_T(&code, 'HIF', ,sessID)														; mask HotIfs
-		code := this._isolateTrailBraces(code)												; move opening braces to their own line
+		this._isolateTrailBraces(&code)														; move opening braces to their own line
 		sectTypes := ['CLS&FUNC','HKBLK','HK','HS']											; look for FUNC, CLS, HKBLK, HK, HS...
-		if (fLabels)
+		if (fLabels)																		; if labels should be included...
 			sectTypes.Push('LBLBLK'), sectTypes.Push('LBL')									; ... and labels if requested
 		Loop sectTypes.Length {																; for each section type...
 			mType := sectTypes[A_Index]														; ... get section type
@@ -463,7 +465,7 @@ class clsCodeChop	; responsible for marking script code with tags that separate 
 		return outStr
 	}
 	;############################################################################
-	Static _isolateTrailBraces(code)														; moves trailing braces to their own line (temporarily)
+	Static _isolateTrailBraces(&code)														; moves trailing braces to their own line (temporarily)
 	{
 		outStr := '', ntrailBrc := '^(.+?)(\h*\{\h*)$'										; ini output and trailing-brace needle
 		tempBrc := ' `;' . gTagChar "TEMP_MOVE_BRC" gTagChar								; tag/msg for braces that will be moved
@@ -479,6 +481,22 @@ class clsCodeChop	; responsible for marking script code with tags that separate 
 		}
 		outStr := RegExReplace(outStr, '`r`n$',,,1)											; remove final (extra) CRLF from output
 		Mask_T(&outStr, 'LC')																; 2025-11-01 - remask line comments
-		return outStr																		; return updated script
+		code := outStr																		; return result, via byref
+	}
+	;############################################################################
+	; 2026-06-08 AMB, ADDED as part of fix for #495
+	Static _hideHotIFBraces(&code)															; hides braces (via comment) for HotIF brace blocks
+	{
+		cCode	:= code
+		nHIF	:= gPtn_HotIfBlk
+		uMsg	:= ' `; V1toV2: removed'
+		While(pos := RegexMatch(cCode,nHIF, &m, pos??1)) {
+			match	:= m[]
+			left	:= m.decl . m.mc . m.TCT, guts := m.guts
+			repl	:= left . '`;{' uMsg guts '`;}' uMsg									; hide braces (via comment), add V1toV2 msg
+			cCode	:= RegExReplace(cCode, escRegexChars(match), repl,,1,pos)
+			pos		+= StrLen(repl)
+		}
+		code := cCode
 	}
 }

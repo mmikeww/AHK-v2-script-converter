@@ -14,7 +14,7 @@
 			* Label,HK,HS declarations/blocks
 			* many others...
 			* TODO - TERNARY IF
-	2024-06-02 -> 2026-06-05 - UPDATED misc - see code comments
+	2024-06-02 -> 2026-06-08 - UPDATED misc - see code comments
 	GENERAL TODO
 		2025-10-05 FIX OnExit
 			MISSING 2ND PARAM AND "RETURN 1" BEING PLACE AFTER EXITAPP
@@ -79,6 +79,7 @@ gPtn_Blk_LP		:= buildPtn_Loop()																; 2025-10-05 AMB, ADDED		- Loop b
 gPtn_Blk_TRY	:= buildPtn_Try()																; 2025-10-05 AMB, ADDED		- Try block
 gPtn_Blk_FOR	:= buildPtn_For()																; 2025-10-05 AMB, ADDED		- For block
 gPtn_HotIf		:= '(?im)^\h*\K#HOTIF.*'														; 2025-10-05 AMB, ADDED		- HotIf
+gPtn_HotIfBlk	:= buildPtn_HotIF()																; 2026-06-08 AMB, ADDED		- HotIf brace-blocks
 gPtn_Colon		:= '(?<!:):(?!=)(?!:)'															; 2025-12-24 AMB, ADDED		- lone-colon
 gPtn_Ternary	:= '(?im)\?(?<T>[^:]|:=)+' . gPtn_Colon . '(?<F>[^,;\v\)]+)'					; 2025-12-24 AMB, ADDED		- Ternary expression
 ;gPtn_Ternary	:= '(?im)' . buildPtn_Ternary().full											; 2026-04-??, ADDED			- Ternary full
@@ -2205,6 +2206,19 @@ class clsNodeMap	; 'block map' might be better term
 	exclude		:= '(?<!\bIF\b|\bWHILE\b|\bLOOP\b)'												; exclude - prevents false detection of If/While/Loop
 	pattern		:= opt . fcName . exclude . gPtn_PrnthBlk
 	return		pattern
+}
+;################################################################################
+																 buildPtn_HotIF()				; HotIf blocks, single/multi line
+;################################################################################
+{
+; HOTIF Brace-Blocks
+; 2026-06-08 AMB, ADDED as part of fix for #495
+
+	cbn		:= commonBlockNeedles()
+	opt		:= '(?im)'
+	decl	:= '^(?<decl>\h*#HOTIF)'
+	pattern := opt . decl . cbn.mc . cbn.TCT . cbn.bbg
+	return	pattern
 }
 ;################################################################################
 															 commonBlockNeedles()				; common block needles

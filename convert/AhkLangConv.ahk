@@ -423,11 +423,12 @@ _GuiControlGet(p) {
 	return GuiControlGetConv(p)	; see GuiAndMenu.ahk
 }
 ;################################################################################
+; 2026-06-08 AMB, UPDATED to fix empty params
 _HashtagIfWinActivate(p) {
-	if (p[1] = "" && p[2] = "") {
-		Return "#HotIf"
-	}
-	Return format("#HotIf WinActive({1}, {2})", p*)
+	if (p[1] = '' && p[2] = '')
+		Return '#HotIf'
+	params	:= RTrim(format('{1}, {2}', p*), ', `t')
+	Return	'#HotIf WinActive(' params ')'
 }
 ;################################################################################
 ; #Warn {1}, {2}

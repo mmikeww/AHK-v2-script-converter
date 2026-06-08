@@ -522,41 +522,13 @@ GuiControlConv(p) {
 		}
 		Return ControlObject ".Text := " ToExp(Value)
 	} else if (SubCommand = "Move" || SubCommand = "MoveDraw") {
-
-		X := RegExMatch(Value, "i)^.*\bx`"\s*\.?\s*([^`"]*?)\s*\.?\s*(`".*|)$", &newX) = 0 ? "" : newX[1]
-		Y := RegExMatch(Value, "i)^.*\by`"\s*\.?\s*([^`"]*?)\s*\.?\s*(`".*|)$", &newY) = 0 ? "" : newY[1]
-		W := RegExMatch(Value, "i)^.*\bw`"\s*\.?\s*([^`"]*?)\s*\.?\s*(`".*|)$", &newW) = 0 ? "" : newW[1]
-		H := RegExMatch(Value, "i)^.*\bh`"\s*\.?\s*([^`"]*?)\s*\.?\s*(`".*|)$", &newH) = 0 ? "" : newH[1]
-
-		if (X = "") {
-			X := RegExMatch(Value, "i)^.*\bx([\w]*)\b.*$", &newX) = 0 ? "" : newX[1]
-		}
-		if (X = "") {
-			X := RegExMatch(Value, "i)^.*\bx%([\w]*)\b%.*$", &newX) = 0 ? "" : newX[1]
-		}
-		if (Y = "") {
-			Y := RegExMatch(Value, "i)^.*\bY([\w]*)\b.*$", &newY) = 0 ? "" : newY[1]
-		}
-		if (Y = "") {
-			Y := RegExMatch(Value, "i)^.*\bY%([\w]*)\b%.*$", &newY) = 0 ? "" : newY[1]
-		}
-		if (W = "") {
-			W := RegExMatch(Value, "i)^.*\bw([\w]*)\b.*$", &newW) = 0 ? "" : newW[1]
-		}
-		if (W = "") {
-			W := RegExMatch(Value, "i)^.*\bw%([\w]*)\b%.*$", &newW) = 0 ? "" : newW[1]
-		}
-		if (H = "") {
-			H := RegExMatch(Value, "i)^.*\bh([\w]*)\b.*$", &newH) = 0 ? "" : newH[1]
-		}
-		if (H = "") {
-			H := RegExMatch(Value, "i)^.*\bh%([\w]*)\b%.*$", &newH) = 0 ? "" : newH[1]
-		}
-
-		SubCommand := StrReplace(SubCommand, "draw")
-		Out := ControlObject "." SubCommand "(" X ", " Y ", " W ", " H ")"
-		Out := RegExReplace(Out, "[\s\,]*\)$", ")")
-		Return Out
+		; 2026-06-08 AMB, UPDATED - moved extraction to GuiAlt.ahk
+		; fixed trunicated var names, also now prevents false positives
+		; TODO - DOES NOT support quoted strings as part of expression chain
+		SubCommand	:= StrReplace(SubCommand, 'draw')
+		obj			:= clsExtract.ExtXYWH(Value)	; extract XYWH properties
+		params		:= RTrim(obj.X ', ' obj.Y ', ' obj.W ', ' obj.H, ', ')
+		Return		ControlObject '.' SubCommand '(' params ')'
 	} else if (SubCommand = "Focus") {
 		Return ControlObject ".Focus()"
 	} else if (SubCommand = "Disable") {

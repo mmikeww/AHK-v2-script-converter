@@ -1,19 +1,18 @@
 global gV1GuiLine := unset
 ;################################################################################
-GuiAlt(p)
-{
+; simulates orig gui handling (with updated features) or provides new dynamic gui handling
 ; 2026-03-11 AMB, ADDED to support updated gui cmd handling
 ; 2026-03-29 AMB, UPDATED to allow tracking of v1 orig gui line contents
-; simulates orig gui handling (with updated features) or provides new dynamic gui handling
-
+GuiAlt(p)
+{
 	if (hasTernary(gV1Line))																; if line has ternary expression
 		return LTrim(gV1Line) ' `; V1toV2: Ternary not yet supported (coming soon)'			; ... SKIP it for now
 	global gV1GuiLine																		; provides access to details about current v1 script gui line
 	gV1GuiLine	:= clsGuiLine(p)															; perform pre-processing of current gui line
 	if (gV1GuiLine.PreProcessOK)															; if pre-processing was successful...
 		gV1GuiLine.ProcessParams()															; ... perform the rest of the processing
-	lineout		:= gV1GuiLine.LineOut														; save new v2 script line
-	return		lineout																		; return v2 converted line
+	lineOut		:= gV1GuiLine.LineOut														; save new v2 script line
+	return		lineOut																		; return v2 converted line
 }
 ;################################################################################
 class clsGuiLine
@@ -54,7 +53,7 @@ class clsGuiLine
 					LWS	 := Format("{:" . A_Index*2 . "}", "")								; 	leading whitespace (cascading indents)
 					pStr .= ('`r`n' . LWS . this._guiObj.P%A_Index%)						; 	param str
 				}
-				fpath	 := '' ;'`r`n' gFilePAth											; current v1 script filepath
+				fpath	 := '' ;'`r`n' gFilePAth											; current v1 script filePath
 				origP1	 := '`t`t(ORIG P1)`t[' this._guiObj.oParams[1] ']'					; original param1
 				return	 fPath '`r`n' this._guiObj.GuiVarName origP1 pStr					; assembled output string
 			}
@@ -67,7 +66,7 @@ class clsGuiLine
 		get {
 			this._lineOut := this._cleanCommas(this._lineOut)								; remove trailing ws from commas
 			try this._lineOut .= this._guiObj.ListCWS	; empty 99.99% of the time			; add lines that might have comments/WS extracted between list fragments
-			if (InStr(this._lineOut, '`n'))													; if lineout is multi-line...
+			if (InStr(this._lineOut, '`n'))													; if lineOut is multi-line...
 				return Zip(this._lineOut, 'GUIML')											; ... compress multi-line into single-line tag
 			return this._lineOut															; not multi-line... return as is
 		}
@@ -101,12 +100,11 @@ class clsGuiLine
 	}
 
 	;############################################################################
-	_preProcessP1()																			; PRE-process param1 for current line
-	{
 	; separates gui name/number from subCommand
 	; preps clsGuiLine instance/object for handling subCommands later
 	; 2026-04-22 AMB, UPDATED as part of fix for #479
-
+	_preProcessP1()																			; PRE-process param1 for current line
+	{
 		global gfNewScope																	; used to assist controlling of scope (not used yet)
 
 		namenum	:= this._getGuiNameNum() ; also stored in this._namenum						; extract name/number of gui (if present)
@@ -139,7 +137,7 @@ class clsGuiLine
 			this._lineOut := this._processP1Exception(this._p1, namenum)					; ... 	set line, without normal processing (short-circuit)
 			return false																	; ... 	notify caller of short-circuit
 		}
-		else if (this._p1 = 'LISTVIEW') {													; if P1 is LISTVIEW cmd...
+		else if (this._p1 = 'LISTVIEW') {													; if P1 is listView cmd...
 			; in V2, listView is not a valid param for p1									; ... not valid in v2
 			; will comment out the line in _processSubCmd()									; ... will be handled in _processSubCmd()
 		}
@@ -229,7 +227,7 @@ class clsGuiLine
 		global gGuiActiveFont																; used in GuiControlConv()
 
 		incGuiName := !(gDynGuiNaming && !this.HasOrigName)									; include gui name?
-		try guiName := this._guiObj.GuiVarName[incGuiName]									; TRY - guiObj not yet set for NEW/LISTVIEW
+		try guiName := this._guiObj.GuiVarName[incGuiName]									; TRY - guiObj not yet set for NEW/listView
 
 		switch this._p1,0 {																	; P1 - NOT case-sensitive
 
@@ -246,10 +244,10 @@ class clsGuiLine
 				this._lineOut := guiName . '.BackColor := ' toExp(this._p2,,1)				; assemble final output
 
 			;####################################################################
-			case 'DEFAULT':
+			; Gui object is set indirectly via _preProcessP1()
+			;	so no need to do it manually here
 			; 2026-03-29 AMB, UPDATED to add SetDefaultGui() call
-				; Gui object is set indirectly via _preProcessP1()
-				;	so no need to do it manually here
+			case 'DEFAULT':
 				if (gDynGuiNaming) {														; if using dynamic gui naming...
 					gn := ToExp(this._guiObj.GuiName,1,1)									; ... format guiName
 					this._lineout	:= 'SetDefaultGui(' gn ')'								; ... add dynamic call string
@@ -270,8 +268,8 @@ class clsGuiLine
 				}
 
 			;####################################################################
-			case 'FONT':
 			; 2026-04-22 AMB, UPDATED as part of fix for issue #479
+			case 'FONT':
 				comma			:= (gDynGuiNaming) ? ',' : ', '								; comma with/without trailing ws
 				p2				:= RegExReplace(this._p2,'(?i)\b(NORM)\w*\b','$1')			; "Norm*" -> "Norm" (part of fix for #479)
 				p2				:= (p2		 != '')	? toExp(p2		,,1) : ''				; format param2
@@ -286,17 +284,17 @@ class clsGuiLine
 				if (InStr(ctrlID, '%')) {													; if ctrlID contains %...
 					; TODO - ADD HANDLING FOR % VAR, %VAR%, if needed						; ... HANDLING WILL BE ADDED LATER
 				}
-				if (ctrlObj := clsGuiObj.CtrlObjFromCtrlID(ctrlID)) {						; get listview ctrl obj, if it exists (is known about)...
-					this._setDefaultNames('LISTVIEW', ctrlObj.V2GCVar)						; ... set listview default name
-					varName := ctrlObj.V2GCVar												; ... get listview var name
+				if (ctrlObj := clsGuiObj.CtrlObjFromCtrlID(ctrlID)) {						; get listView ctrl obj, if it exists (is known about)...
+					this._setDefaultNames('LISTVIEW', ctrlObj.V2GCVar)						; ... set listView default name
+					varName := ctrlObj.V2GCVar												; ... get listView var name
 					varName := (gDynGuiNaming) ? varName : "'" varName "'"					; ... add surrounding quotes as needed
 					msg		:= ' `; V1toV2: removed, but applied'							; ... msg to user...
 					this._lineOut	:= (gDynGuiNaming)										; ... assemble final output
-									? 'global gV2CurLV := ' varName							; ... set script var to point to cur listview as default
+									? 'global gV2CurLV := ' varName							; ... set script var to point to cur listView as default
 									: '`;' LTrim(gV1Line) msg NL.CRLF gLineFillMsg			; ... add user msg to output, also add fill line
 					return
 				}
-				; listview ctrl (ctrlID) not identified using v1 script (so far)...			; but, dynamic handling may be able to identify it
+				; listView ctrl (ctrlID) not identified using v1 script (so far)...			; but, dynamic handling may be able to identify it
 				if (gDynGuiNaming) {														; if using dynamic naming method...
 					varName			:= gDynMapGC '[["",' toExp(ctrlID,1,1) ']]'				; ... use map as variable
 					this._lineOut	:= 'global gV2CurLV := ' varName						; ... assemble final output
@@ -332,8 +330,8 @@ class clsGuiLine
 				this._lineOut	:= titleStr . showStr										; assemble final output
 
 			;####################################################################
-			case 'SUBMIT':
 			; 2026-03-29 AMB, UPDATED to add V2DynSubmit()
+			case 'SUBMIT':
 				param := (this._p2 = 'NoHide') ? '0' : ''									; [NoHide param]
 				if (gDynGuiNaming) {														; if using dynamic naming...
 					dynGui			:= gDynMapGui '[A_DefaultGui]'							; ... [dynamic gui string]
@@ -347,8 +345,8 @@ class clsGuiLine
 				}
 
 			;####################################################################
-			case 'TAB','TAB2','TAB3':
 			; 2026-04-23 AMB, UPDATED as part of fix for issue #480
+			case 'TAB','TAB2','TAB3':
 				emptyVal		:= (gDynGuiNaming) ? 0 : ''									; val to use if param 2 is empty
 				tabPage			:= (this._p2) ? toExp(this._p2) : emptyVal					; tab page value
 				this._lineOut	:= 'V2TabCtrl.UseTab(' tabPage ')'							; ... assemble final output
@@ -388,7 +386,7 @@ class clsGuiLine
 		}
 		decl	.= ((p4) ? ', ' p4 : ''), decl := Trim(decl, ' ,') . ')'					; finalize decl string
 		; add var declaration as needed
-		curLVStr	:= ''																	; ini current Listview str
+		curLVStr	:= ''																	; ini current listView str
 		declStr		:= ''																	; ini final declare str
 		ctrlVarStr	:= ctrlObj.V2GCVar[incGuiName]											; string that acts as a variable for CTRL obj
 		if (!gDynGuiNaming																	; if using simple naming method...
@@ -397,7 +395,7 @@ class clsGuiLine
 		}
 		else if (ctrl ~= '(?i)\b(LISTVIEW|STATUSBAR|TREEVIEW)\b') {							; if added ctrl is one of these...
 			declStr	:= ctrlVarStr ' := ' decl												; ... var declaration - FORCED
-			if (gDynGuiNaming && ctrl = 'LISTVIEW') {										; if using dynamic naming AND added ctrl is ListView...
+			if (gDynGuiNaming && ctrl = 'LISTVIEW') {										; if using dynamic naming AND added ctrl is listView...
 				ctrlVarStr	:= (gDynGuiNaming) ? ctrlVarStr : "'" ctrlVarStr "'"			; ... add quotes as needed
 				curLVStr	:= NL.CRLF "global gV2CurLV := " ctrlVarStr						; ... update declare str
 			}
@@ -427,9 +425,9 @@ class clsGuiLine
 		this._setDefaultNames(ctrl, ctrlVarStr)												; set default name for LV,SB,TV (as applicable)
 	}
 	;############################################################################
+	; 2026-03-29 AMB, UPDATED
 	_processNewCmd()																		; processes NEW SubCommand
 	{
-	; 2026-03-29 AMB, UPDATED
 		if (hwndVar		:= clsExtract.ExtHwndVar(&p2:=this._p2,true))						; if gui hwnd present, extract it...
 			this._p2	:= p2																; ... p2 with hwnd removed
 		if (pLabel		:= clsExtract.ExtPLabel(&p2:=this._p2,true))						; if pLabel present, extract it...
@@ -456,7 +454,7 @@ class clsGuiLine
 		newGuiStr		:= guiVarStr ' := ' guiDecl '(' params ')'							; string used to create new Gui
 		join			:= ((gDynGuiNaming) ? NL.CRLF : ', ')								; use CRLF/comma to join commands, depending on which naming method is being used
 		HwndStr			:= (hwndVar) ? join hwndVar ' := ' guiVarStr '.Hwnd': ''			; string that assigns hwnd to hwndVar
-		newGuiStr		.= HwndStr															; append hwnd var assignemnt to output str
+		newGuiStr		.= HwndStr															; append hwnd var assignment to output str
 		defEventsStr	:= this._guiObj.DefaultEvents(pLabel)								; string that defines gui event handler (if applicable)
 		if (pLabel && !defEventsStr) {														; if function/method for +Label was NOT found...
 			msg			 := ' `; V1toV2: Unable to locate [' pLabel '] for +Label'			; ... user msg
@@ -467,7 +465,7 @@ class clsGuiLine
 		this._lineOut	:=	newGuiStr														; assemble final output
 	}
 	;############################################################################
-	_processNewGui()																		; creates/outputs new gui delaration as needed
+	_processNewGui()																		; creates/outputs new gui declaration as needed
 	{
 		if (!this._isNewGui) {																; if new gui declaration should not be added...
 			return																			; ... exit
@@ -514,9 +512,9 @@ class clsGuiLine
 		return {varNameStr:varNameStr,id:id}												; obj with VarName-string and ID
 	}
 	;############################################################################
+	; 2026-03-29 AMB, ADDED
 	_getSubmitCtrlVarList()																	; returns list of ctrl var assignments for Submit cmd
 	{
-	; 2026-03-29 AMB, ADDED
 		exclude		:=	'|ACTIVEX|BUTTON|GROUPBOX|LINK|PIC|PICTURE'							; excluded ctrl types
 					.	'|PROGRESS|STATUSBAR|TEXT|'
 		ctrlVarStr	:= '', ctrlList := '|'													; ini
@@ -554,7 +552,7 @@ class clsGuiLine
 		for idx, var in hwndVars {															; for each hwnd var that was extracted above...
 			join		:= ((gDynGuiNaming) ? NL.CRLF : ', ')								; ... use CRLF/comma to join commands, depending on naming method being used
 			curStr		:= join var ' := ' guiVarStr '.Hwnd'								; ... create a hwnd var assignment
-			hwndVarsStr	.= curStr															; ... add assignment to hwnd assignemnt declarations str
+			hwndVarsStr	.= curStr															; ... add assignment to hwnd assignment declarations str
 		}
 		hwndVarsStr	:= (optsStr) ? hwndVarsStr	: LTrim(hwndVarsStr, ', `r`n')				; trim leading CRLF/comma as needed
 		optsStr		.= hwndVarsStr															; update output str
@@ -610,7 +608,7 @@ class clsGuiObj
 	KeyName			=> (this.HasOrigV1Nm)	? this.HasOrigV1Nm : this._v1GuiName			; is sometimes empty
 
 	;############################################################################
-	__New(v1Name,v1Num,v1OrigName,forceName)												; constuctor
+	__New(v1Name,v1Num,v1OrigName,forceName)												; constructor
 	{
 		this._v1GuiName	:= v1Name															; record v1 gui name
 		this._v1GuiNum	:= v1Num															; record v1 gui number
@@ -622,7 +620,7 @@ class clsGuiObj
 	{
 		get {
 			if (gDynGuiNaming) {															; if using dynamic naming method...
-				if (!incName)																; ... if gui name shoud be empty
+				if (!incName)																; ... if gui name should be empty
 					return gDynMapGui '[""]'												; ...	return dyn var string with NO name
 				name	:= this.GuiName														; ... format v2 dyn name
 				name	:= (name) ? ToExp(name,1,1) : '""'									; ... format name further
@@ -700,23 +698,23 @@ class clsGuiObj
 
 		; push each default event (and attributes) into an array
 		defEvents	:= []
-		defEvents.Push({origlabel: origClose,	event:	'Close'
+		defEvents.Push({origLabel: origClose,	event:	'Close'
 						, newFunc: origClose,	params:	defParams	})
-		defEvents.Push({origlabel: origEsc,		event:	'Escape'
+		defEvents.Push({origLabel: origEsc,		event:	'Escape'
 						, newFunc: origEsc,		params:	defParams	})
-		defEvents.Push({origlabel: origSize,	event:	'Size'
+		defEvents.Push({origLabel: origSize,	event:	'Size'
 						, newFunc: origSize,	params: sizParams	})
-		defEvents.Push({origlabel: origCMenu,	event:	'ContextMenu'
+		defEvents.Push({origLabel: origCMenu,	event:	'ContextMenu'
 						, newFunc: origCMenu,	params:	defParams	})
-		defEvents.Push({origlabel: origDFiles,	event:	'DropFiles'
+		defEvents.Push({origLabel: origDFiles,	event:	'DropFiles'
 						, newFunc: origDFiles,	params:	dpfParams	})
 
 		incGuiName	:= !(gDynGuiNaming && !gV1GuiLine.HasOrigName)							; include gui name ?
 		eventLines	:= '', guiName := this.guiVarName[incGuiName]							; ini
 		for idx, curEvent in defEvents {													; for each event in default events...
-			if (!scriptHasLabel(curEvent.origlabel))										; ... if event label does not exist in script...
+			if (!scriptHasLabel(curEvent.origLabel))										; ... if event label does not exist in script...
 				continue																	; ...	skip it
-			lbl		:= curEvent.origlabel													; ... record label name
+			lbl		:= curEvent.origLabel													; ... record label name
 			fn		:= getV2Name(curEvent.newFunc)											; ... record func name
 			params	:= curEvent.params														; ... record func params
 			gmList_LblsToFunc[getV2Name(lbl)]:=clsConvLabel('GUI',lbl,params,fn)			; ... create conversion object (see labelAndFunc.ahk), place in map
@@ -926,7 +924,7 @@ class clsGuiObj
 		if (entername && (!this.Has(enterName)))											; if orig (v1) name/num is not yet listed...
 			this.sGuiList[String(enterName)] := guiObj										; ... add it to list (so it can be referenced later)
 		altKeyName := name . num															; this will be used as alternate map-key for gui object list
-		this.sGuiList[altKeyName] := guiObj													; altKeyName usually the same as entername (add both to list)
+		this.sGuiList[altKeyName] := guiObj													; altKeyName usually the same as enterName (add both to list)
 		(force) && this.SetThdGuiObj(guiObj)												; force update of current-thread gui obj, if requested
 		return guiObj																		; return gui object to caller
 	}
@@ -986,7 +984,7 @@ class clsGuiCtrl
 {
 	_hwndVar			:= ''																; v1 ctrl hwnd variable
 	_ctrlVar			:= ''																; v1 ctrl variable
-	_ctrlLabel			:= ''																; v1 ctrl glabel
+	_ctrlLabel			:= ''																; v1 ctrl global
 	_ctrlCapTxt			:= ''																; v1 ctrl caption/text
 	_ctrlID				:= ''																; v1 ctrl ID
 	_ctrlType			:= ''																; ctrl type
@@ -1040,7 +1038,7 @@ class clsGuiCtrl
 					? inclGui																;  ... honor caller's request
 					: !(gDynGuiNaming && !gV1GuiLine.HasOrigName)							;  ... otherwise, include gui name ONLY IF v1 line specified a name
 			guiName := (inclGui) ? dp.guiName : '""'										;  gui name (included or not)
-			return	gDynMapGC '[[' guiName ',' dp.ctrlID ']]'								;  return formated dyn var string
+			return	gDynMapGC '[[' guiName ',' dp.ctrlID ']]'								;  return formatted dyn var string
 		}
 	}
 	;############################################################################
@@ -1057,11 +1055,11 @@ class clsGuiCtrl
 	{
 		switch this.CtrlType,0 {															; not case-sensitive
 			;####################################################################
-			case 'BUTTON','CHECKBOX','PIC','PICTURE','UPDOWN':
 			; TODO - should PIC/PICTURE use FileName as ctrlID? See ShowAudioMeter.ahk
+			case 'BUTTON','CHECKBOX','PIC','PICTURE','UPDOWN':
 
 				this._createCtrlObjName(1)		; text ALLOWED as CtrlID					; create unique ctrl obj name
-				this._getEventFunc()														; get glabel/eventFunc if applicable
+				this._getEventFunc()														; get gLabel/eventFunc if applicable
 
 			;####################################################################
 			case 'ACTIVEX','DATETIME','EDIT','HOTKEY','LINK','MONTHCAL'
@@ -1072,7 +1070,7 @@ class clsGuiCtrl
 				if (!gDynGuiNaming && (this.CtrlType ~= nExcept))							; if using simple naming, and ctrl is one of the exceptions...
 					txtAsID := 1															; ... allow Text (p4) to be used as CtrlID (for now)
 				this._createCtrlObjName(txtAsID)											; create unique ctrl obj name
-				this._getEventFunc()														; get glabel/eventFunc if applicable
+				this._getEventFunc()														; get gLabel/eventFunc if applicable
 
 			;####################################################################
 			case 'COMBOBOX','DDL','DROPDOWNLIST','LISTBOX','LISTVIEW'
@@ -1081,20 +1079,20 @@ class clsGuiCtrl
 				p2 := this.P2, p3 := this.P3, p4 := this.P4									; [use local vars]
 				this._getP4List(p2, p3, p4)													; format list string (p4), if present
 				this._createCtrlObjName(0)		; text NOT allowed as CtrlID				; create unique ctrl obj name
-				this._getEventFunc()														; get glabel/eventFunc if applicable
+				this._getEventFunc()														; get gLabel/eventFunc if applicable
 
 			;####################################################################
 			case 'CUSTOM':
 
 				this._createCtrlObjName(0)		; text NOT allowed as CtrlID				; create unique ctrl obj name
-				this._getEventFunc()														; get glabel/eventFunc if applicable
+				this._getEventFunc()														; get gLabel/eventFunc if applicable
 
 			;####################################################################
 			case 'GROUPBOX':
 
 				txtAsID := !!gDynGuiNaming													; allow text to be used as ctrlID for dynamic naming only
 				this._createCtrlObjName(txtAsID)											; create unique ctrl obj name
-				this._getEventFunc()														; get glabel/eventFunc if applicable
+				this._getEventFunc()														; get gLabel/eventFunc if applicable
 
 			;####################################################################
 			Default:
@@ -1105,10 +1103,9 @@ class clsGuiCtrl
 		}
 	}
 	;############################################################################
+	; useCtrlText - whether to allow ctrl text to be used as ctrl ID
 	_createCtrlObjName(useCtrlText:=true)													; creates unique (internal) name (string) for ctrl object
 	{
-	; useCtrlText - whether to allow ctrl text to be used as ctrl ID
-
 		ctrlID := this._getCtrlID(useCtrlText)												; get controlID
 		if (gDynGuiNaming) {																; if using dynamic naming method...
 			ctrlName := (ctrlID)															; ... if ctrlID is present...
@@ -1142,13 +1139,13 @@ class clsGuiCtrl
 			}
 		}
 		else if (ctrlType ~= '(?i)\b(?:BUTTON|LISTVIEW|TREEVIEW)\b'							; if ctrlType is one of these...
-		|| this.CtrlLabel ) {																; OR ctrl has glabel...
+		|| this.CtrlLabel ) {																; OR ctrl has gLabel...
 			ctrlName := gCtrlPfx . ctrlType . this._ctrlCapTxt								; ... set ctrl name - use text
 		}
-		else if (ctrlType = 'LISTBOX') {													; if ctrlType is listview...
+		else if (ctrlType = 'LISTBOX') {													; if ctrlType is listView...
 			ctrlName	:= (this.CtrlVar) ? gCtrlPfx . ctrlID :	ctrlID						; ... set ctrl name based on availability of ctrlVar
 		}
-		else if (ctrlType = 'STATUSBAR') {													; if ctrlType is statusbar...
+		else if (ctrlType = 'STATUSBAR') {													; if ctrlType is statusBar...
 			ctrlName	:= gSBNameDefault													; ... set ctrl name to SB default name
 		}
 		else {																				; other controls...
@@ -1156,7 +1153,7 @@ class clsGuiCtrl
 			ctrlID		:= RegExReplace(ctrlID, cType,,,1)									; ... remove ctrlType from ctrlID
 			ctrlName	:= gCtrlPfx . cType . ctrlID										; ... set ctrl name
 		}
-		return ctrlName																		; return ctrl name that simualtes orig naming method
+		return ctrlName																		; return ctrl name that simulates orig naming method
 	}
 	;############################################################################
 	_getNameParts(srcStr)																	; extracts guiname/ctrlname (and other details) from srcStr
@@ -1210,7 +1207,7 @@ class clsGuiCtrl
 			return																			; ... no list to process - exit
 
 		oList	:= this._getListFragments()													; get full list, if fragmented on multiple lines
-		p4		.= oList.listFrags															; add fragmentd parts (if present) to p4
+		p4		.= oList.listFrags															; add fragmented parts (if present) to p4
 		this._guiObj.ListCWS := oList.listCWS												; comments/WS that may be between list fragments (rare)
 		; is list a variable?
 		if (RegExMatch(p4, '%([^%]+)%', &m)) {												; if list is a variable...
@@ -1237,10 +1234,9 @@ class clsGuiCtrl
 		this.P3 := p3, this.P4 := p4, this._p4Str := arrList								; save object properties
 	}
 	;############################################################################
+	; captures list fragments that are broken up by comments/CRLFs
 	_getListFragments()																		; returns fragmented parts of list, if present
 	{
-	; captures list fragments that are broken up by comments/CRLFs
-
 		global gO_Index
 		; get list continuation (on lines following current global loop-line)
 		listFrags := '', listCWS := '', lOffset := 1										; ini
@@ -1274,15 +1270,14 @@ class clsGuiCtrl
 				selIdx += (curCnt + 1)														; ... 	determine selection index
 			}
 		}
-		p4		:= RTrim(StrReplace(p4, '||', '|'), '|')									; remove douple-pipes from p4 (returned byRef)
+		p4		:= RTrim(StrReplace(p4, '||', '|'), '|')									; remove double-pipes from p4 (returned byRef)
 		return	selIdx																		; return selection index
 	}
 	;############################################################################
-	_getCtrlID(incCapTxt:=true)																; ascertain the ctrlID to use for control
-	{
 	; https://www.autohotkey.com/docs/v1/lib/GuiControl.htm
 	;	ctrlID priority - var, ClassNN, cap/text, pic ctrl filename, hwnd
-
+	_getCtrlID(incCapTxt:=true)																; ascertain the ctrlID to use for control
+	{
 		ctrlType := this.CtrlType															; [control type] - use local var
 		this._ctrlCapTxt := RegExReplace(this.P4,'\W+')										; remove non-word chars from caption/text
 		this._getCtrlVar()																	; get ctrl var, if present
@@ -1402,12 +1397,12 @@ class clsGuiCtrl
 			bindClass	:= (isMethod) ? clsObj.cls comma : ''								; include class param for class methods only
 			bindParam	:= (ctrlEvent~='(?i)\b(CHANGE|CLICK)') ? 'Normal' : ctrlEvent		; set bind param
 			bindStr		:= funcName '.Bind(' bindClass '"' bindParam '")'					; set bind string
-			if (gfHasDynamicGLabel) {														; if v1 had dynamic glabel...
+			if (gfHasDynamicGLabel) {														; if v1 had dynamic gLabel...
 				dp		:= this.CtrlDynProps												; ... get dynamic properties
 				guiName	:= (gV1GuiLine.HasOrigName) ? dp.guiName : '""'						; ... gui name
 				ev1		:= gDynEH '(' guiName  comma dp.ctrlID								; ... setup OnEvent str
 						. comma '"' ctrlEvent '"' comma bindStr ')'							; ... cont
-			} else {																		; if NOT dynamic glabel...
+			} else {																		; if NOT dynamic gLabel...
 				ev1		:= ctrlVar '.OnEvent("' ctrlEvent '"' comma bindStr ')'				; ... setup OnEvent str
 			}
 			this._onEventStr := ev1															; ... save to obj property
@@ -1443,9 +1438,9 @@ class clsGuiCtrl
 			if (((guiOrigID := this._guiObj.HasOrigV1Nm) != '1')							; ... if gui name is not default name...
 			&& this.CtrlType = 'BUTTON') {													; ... AND ctrl is a button...
 				label := guiOrigID . label													; ...	add guiname prefix to labelName
-			}																				; TODO - might need to add more scenerios here
+			}																				; TODO - might need to add more scenarios here
 		}
-		label	:= getV2Name(label)															; ensure label name is v2 compatable
+		label	:= getV2Name(label)															; ensure label name is v2 compatible
 		return	(this._handlerExists(label)) ? label : ''									; return label (only if handler exists)
 	}
 	;############################################################################
@@ -1462,13 +1457,13 @@ class clsExtract
 	;############################################################################
 	Static ExtGLabel(srcStr)																; extract gLabel, if present
 	{
-		full	:= glabel := ''																; ini
-		srcStr	:= RegExReplace(srcStr, '(?i)(\bGRID\b)', this.tagChar '$1')				; mask stand-alone 'Grid' to avoid false-positive as glabel
+		full	:= gLabel := ''																; ini
+		srcStr	:= RegExReplace(srcStr, '(?i)(\bGRID\b)', this.tagChar '$1')				; mask stand-alone 'Grid' to avoid false-positive as gLabel
 		nGLabel	:= '(\h*("\h*)?(?<=^|\h)g([^,\h``"]+)(\h*")?)'								; [gLabel needle]
 		if (RegExMatch(srcStr, nGLabel, &m)) {												; if srcStr has a v1 gLabel...
-			full := m[1], glabel := Trim(m[3], ' ()')										; ... extract v1 gLabel details
+			full := m[1], gLabel := Trim(m[3], ' ()')										; ... extract v1 gLabel details
 		}
-		return {full:full,label:glabel}														; return result (object)
+		return {full:full,label:gLabel}														; return result (object)
 	}
 	;############################################################################
 	Static ExtPLabel(&srcStr,removeTarg:=false)												; extract pLabel, if present
@@ -1507,13 +1502,12 @@ class clsExtract
 		return hwndVar																		; return hwnd variable
 	}
 	;############################################################################
+	; TODO - OMISSION ERRORS CAN OCCUR WITH CHAINED EXPRESSIONS
 	Static ExtCtrlVar(srcStr)																; extract control variable, if present
 	{
-	; TODO - OMISSION ERRORS CAN OCCUR WITH CHAINED EXPRESSIONS
-
 		ctrlVar	:= ''																		; ini
 		nOpt	:= '(?i)'																	; options (case-insensitive)
-		nDecl	:= '(?<![-+])(?<=^|["\h])V'													; V for gui varible (can be preceded by DQ/WS/nothing)
+		nDecl	:= '(?<![-+])(?<=^|["\h])V'													; V for gui variable (can be preceded by DQ/WS/nothing)
 		ncc		:= '(?<cc>(?<ccv>\w+)(?<ccp>(?:%\w+%)+))'									; Concat		[w%w% vVar%n%]
 		nIdx	:= '(?<aIdx>(\w*)"\h+(?:\h*\.\h*)?(A_INDEX))'								; A_Index		[% "x" x " vVar" . A_Index]
 		nXVar1	:= '"\h+(?<xVar1>[^,\s]+)'													; Expression	[% "x" x " v"  This.BtnNum]
@@ -1549,9 +1543,9 @@ class clsExtract
 		return ctrlVar																		; return result
 	}
 	;############################################################################
-	; 2026-06-08 AMB, ADDED to extract gui X,Y,W,H values
 	; supports var expression chains separated by ws
-	; fixed trunicated var names, also now prevents false positives
+	; fixed truncated var names, also now prevents false positives
+	; 2026-06-08 AMB, ADDED to extract gui X,Y,W,H values
 	; TODO - DOES NOT support quoted strings as part of expression chain
 	Static ExtXYWH(srcStr)
 	{
@@ -1573,13 +1567,11 @@ class clsExtract
 		c:=' ,.', X:=Trim(X,c),Y:=Trim(Y,c),W:=Trim(W,c),H := Trim(H,c)
 		return {X:X,Y:Y,W:W,H:H}
 	}
-
 	;############################################################################
-	Static _escRXChars(srcStr)
-	{
 	; escapes regex special chars so regex can treat them literally
 	; for use with RegexReplace to target replacements using position accuracy
-
+	Static _escRXChars(srcStr)
+	{
 		outStr			:= srcStr
 		specialChars	:= '\.?*+|^$(){}[]<>'
 		for idx, char in StrSplit(specialChars) {
@@ -1590,11 +1582,11 @@ class clsExtract
 }
 ;################################################################################
 ;################################################################################
+; Detects whether dynamic naming should be enabled
+; 2026-03-11 AMB, ADDED
+; 2026-03-14 AMB, UPDATED: added return value
 detectDynamicGuiState(srcLine)
 {
-; 2026-03-11 AMB, ADDED - to detect whether dynamic naming should be enabled
-; 2026-03-14 AMB, UPDATED: added return value
-
 	global gDynGuiNaming, gfHasDynamicGui ;, gAutoGuiNaming, gfHasDynamicGLabel
 
 	nGui			:= '(?im)\bGUI\b.+'														; Gui cmd
@@ -1617,20 +1609,19 @@ detectDynamicGuiState(srcLine)
 	return gfHasDynamicGui
 }
 ;################################################################################
+; Detects dynamic Gui attributes
+; 2026-03-11 AMB, ADDED
 hasDynamicGuiNaming(srcStr)
 {
-; 2026-03-11 AMB, ADDED - to detect dynamic Gui attributes
-
 	return ((isDynamicGui(srcStr)) || (isDynamicGuiCtrl(srcStr)))
 }
 ;################################################################################
-isDynamicGui(srcStr)
-{
-; 2026-03-11 AMB, ADDED - to detect dynamic Gui attributes for Gui cmd
+; Detects dynamic Gui attributes for Gui cmd
+; 2026-03-11 AMB, ADDED
 ; TODO - WORK IN PROGRESS !
 ;	include:	default
-
-
+isDynamicGui(srcStr)
+{
 	nGui := '(?im)\bGUI\b(?:\h*,\h*)?(.+)'													; detection for gui line (in general)
 	if (!(srcStr ~= nGui))																	; if not a Gui command line...
 		return false																		; ... exit, notify caller (NOT dynamic)
@@ -1669,11 +1660,11 @@ isDynamicGui(srcStr)
 	return false																			; does not appear to have dynamic attributes
 }
 ;################################################################################
+; Detects dynamic Gui attributes for GuiCtrl cmd
+; 2026-03-11 AMB, ADDED
+; TODO - WORK IN PROGRESS !
 isDynamicGuiCtrl(srcStr)
 {
-; 2026-03-11 AMB, ADDED - to detect dynamic Gui attributes for GuiCtrl cmd
-; TODO - WORK IN PROGRESS !
-
 	nGuiCtrl := '(?im)\bGUICONTROL\b(?:\h*,\h*)?(.+)'
 	if (!(srcStr ~= nGuiCtrl))																; if not a Gui command line...
 		return false																		; ... exit, notify caller (NOT dynamic)
@@ -1720,10 +1711,10 @@ isDynamicGuiCtrl(srcStr)
 	return false																			; does not appear to have dynamic attributes
 }
 ;################################################################################
+; Returns whether id appears to be a ClassNN
+; 2026-03-11 AMB, ADDED
 isClassNN(id)
 {
-; 2026-03-11 AMB, ADDED - returns whether id appears to be a ClassNN
-
 	ClassNNList :=	'AtlAxWin|Button|ComboBox|ComboBoxEx32|'
 				.	'Edit|ListBox|'
 				.	'msctls_hotkey32|msctls_progress32|'
@@ -1737,10 +1728,10 @@ isClassNN(id)
 	return false																			; does not appear to be a ClassNN
 }
 ;################################################################################
+; Copies dynamic include file to global library, as needed
+; 2026-03-14 AMB, ADDED
 dynIncludeToLib()
 {
-; 2026-03-14 AMB, ADDED: copies dynamic include file to global library, as needed
-
 	if (!gCopyIncl) {	; see Global_Declare.ahk											; if auto-copy is disabled...
 		return false																		; ... do not copy include file to library
 	}
@@ -1772,11 +1763,10 @@ dynIncludeToLib()
 	return !!(FileExist(dFile))																; return whether dest file exists
 }
 ;################################################################################
+; Determines whether include-file exists, can show msg and terminate, if requested
+; 2026-03-14 AMB, ADDED
 dynIncludeExist(srcPath:='',showMsg:=true,terminate:=true)
 {
-; 2026-03-14 AMB, ADDED
-;	determines whether include-file exists, can show msg and terminate, if requested
-
 	dPath	:= A_ScriptDir '\Lib\v2DynGui.ahk'												; default src path/file
 	srcPath	:= (srcPath!='') ? srcPath : dPath												; [Include file path]
 	if (FileExist(srcPath))																	; if file exists...
@@ -1795,7 +1785,8 @@ dynIncludeExist(srcPath:='',showMsg:=true,terminate:=true)
 	return false																			; otherwise, return 'file missing' flag
 }
 ;################################################################################
-buildCtrlVarAssignFunc(indent:='`t')					; 2026-03-29 AMB, ADDED				; builds function (string) that initiates gui ctrl vars
+; 2026-03-29 AMB, ADDED
+buildCtrlVarAssignFunc(indent:='`t')														; builds function (string) that initiates gui ctrl vars
 {
 	if (!ctrlListArr := getGuiCtrls())														; get array list of all ctrl vars for all guis in v1 script
 		return ''																			; ... return empty string if no ctrl vars found
@@ -1810,7 +1801,8 @@ buildCtrlVarAssignFunc(indent:='`t')					; 2026-03-29 AMB, ADDED				; builds fun
 	return	funcStr																			; return function string
 }
 ;################################################################################
-getGuiCtrls()											; 2026-03-29 AMB, ADDED				; returns array list of all ctrl variable-names for all guis
+; 2026-03-29 AMB, ADDED
+getGuiCtrls()																				; returns array list of all ctrl variable-names for all guis
 {
 	exclude		:=	'|ACTIVEX|BUTTON|GROUPBOX|LINK|PIC|PICTURE'								; excluded ctrl types
 				.	'|PROGRESS|STATUSBAR|TEXT|'

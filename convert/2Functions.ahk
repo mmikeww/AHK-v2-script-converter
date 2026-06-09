@@ -1,5 +1,5 @@
 ﻿#Requires AutoHotKey v2.0
-
+;################################################################################
 ; 2025-12-24 AMB, MOVED Dynamic Conversion Funcs to AhkLangConv.ahk
 /* a list of all renamed functions, in this format:
     , "OrigV1Function" ,
@@ -121,39 +121,41 @@ gmAhkFuncsToConvert := OrderedMap(
       "*_VarSetCapacity"
 )
 ;################################################################################
-;// FormatParam:
-;//          - param names ending in "T2E" will convert a literal Text param TO an Expression
-;//              this would be used when converting a Command to a Func or otherwise needing an expr
-;//              such as      word -> "word"      or      %var% -> var
-;//              Changed: empty strings will return an emty string
-;//              like the 'value' param in those  `IfEqual, var, value`  commands
-;//          - param names ending in "T2QE" will convert a literal Text param TO an Quoted Expression
-;//              this would be used when converting a Command to a expr
-;//              This is the same as T2E, but will return an "" if empty.
-;//          - param names ending in "Q2T" will convert a Quoted Text param TO text
-;//              this would be used when converting a function variable that holds a label or function
-;//              "WM_LBUTTONDOWN" => WM_LBUTTONDOWN
-;//          - param names ending in "CBE2E" would convert parameters that 'Can Be an Expression TO an EXPR'
-;//              this would only be used if the conversion goes from Command to Func
-;//              we'd need to strip a preceeding "% " which was used to force an expr when it was unnecessary
-;//          - param names ending in "CBE2T" would convert parameters that 'Can Be an Expression TO literal TEXT'
-;//              this would be used if the conversion goes from Command to Command
-;//              because in v2, those command parameters can no longer optionally be an expression.
-;//              these will be wrapped in %%s, so   expr+1   is now    %expr+1%
-;//          - param names ending in "Q2T" would convert parameters that 'Can Be an quoted TO literal TEXT'
-;//               "var" => var
-;//               'var' => var
-;//                var => var
-;//          - param names ending in "V2VR" would convert an output variable name to a v2 VarRef
-;//              basically it will just add an & at the start. so var -> &var
-;//          - param names ending in "V2VRM" would convert an output variable name to a v2 VarRef
-;//              same as V2VR but adds a placeholder name if blank, only use if its mandatory param in v2
-;//          - any other param name will not be converted
-;//              this means that the literal text of the parameter is unchanged
-;//              this would be used for InputVar/OutputVar params, or whenever you want the literal text preserved
+/*
+ FormatParam:
+          - param names ending in "T2E" will convert a literal Text param TO an Expression
+              this would be used when converting a Command to a Func or otherwise needing an expr
+              such as      word -> "word"      or      %var% -> var
+              Changed: empty strings will return an empty string
+              like the 'value' param in those  `IfEqual, var, value`  commands
+          - param names ending in "T2QE" will convert a literal Text param TO an Quoted Expression
+              this would be used when converting a Command to a expr
+              This is the same as T2E, but will return an "" if empty.
+          - param names ending in "Q2T" will convert a Quoted Text param TO text
+              this would be used when converting a function variable that holds a label or function
+              "WM_LBUTTONDOWN" => WM_LBUTTONDOWN
+          - param names ending in "CBE2E" would convert parameters that 'Can Be an Expression TO an EXPR'
+              this would only be used if the conversion goes from Command to Func
+              we'd need to strip a preceding "% " which was used to force an expr when it was unnecessary
+          - param names ending in "CBE2T" would convert parameters that 'Can Be an Expression TO literal TEXT'
+              this would be used if the conversion goes from Command to Command
+              because in v2, those command parameters can no longer optionally be an expression.
+              these will be wrapped in %%s, so   expr+1   is now    %expr+1%
+          - param names ending in "Q2T" would convert parameters that 'Can Be an quoted TO literal TEXT'
+               "var" => var
+               'var' => var
+                var => var
+          - param names ending in "V2VR" would convert an output variable name to a v2 VarRef
+              basically it will just add an & at the start. so var -> &var
+          - param names ending in "V2VRM" would convert an output variable name to a v2 VarRef
+              same as V2VR but adds a placeholder name if blank, only use if its mandatory param in v2
+          - any other param name will not be converted
+              this means that the literal text of the parameter is unchanged
+              this would be used for InputVar/OutputVar params, or whenever you want the literal text preserved
 ; Converts Parameter to different format T2E T2QE Q2T CBE2E CBE2T Q2T V2VR V2VRM
 ; 2025-06-12 AMB, UPDATED - changed function name, some var and funcCall names
 ; 2025-12-24 AMB, MOVED to 2Functions.ahk
+*/
 FormatParam(ParName, ParValue) {
 ;   ParName := StrReplace(Trim(ParName), "*")  ; Remove the *, that indicate an array (2025-06-12 NOT USED)
     ParValue := Trim(ParValue)
@@ -171,7 +173,7 @@ FormatParam(ParName, ParValue) {
         if (isInteger(ParValue))                                                            ; if this param is int
         || (SubStr(ParValue, 1, 2) = "% ")                                                  ; or the expression was forced
         || ((SubStr(ParValue, 1, 1) = "%") && (SubStr(ParValue, -1) = "%"))                 ; or var already wrapped in %%s
-            ParValue := ParValue                                                            ; dont do any conversion
+            ParValue := ParValue                                                            ; don't do any conversion
         else
             ParValue := "%" . ParValue . "%"                                                ; wrap in percent signs to evaluate the expr
     } else if (ParName ~= "Q2T$") {                                                         ; 'Can Be an quote TO literal Text'
@@ -217,7 +219,7 @@ FormatParam(ParName, ParValue) {
 ; Returns an Array of the parameters, taking into account brackets and quotes
 ; Created by Ahk_user
 ; Tries to split the parameters better because sometimes the , is part of a quote, function or object
-; spinn-off from DeathByNukes from https://autohotkey.com/board/topic/35663-functions-to-get-the-original-command-line-and-parse-it/
+; spin-off from DeathByNukes from https://autohotkey.com/board/topic/35663-functions-to-get-the-original-command-line-and-parse-it/
 ; I choose not to trim the values as spaces can be valuable too
 ; 2025-12-24 AMB, MOVED to 2Functions.ahk
 V1ParamSplit(String, IsFromFunc := 0) {
@@ -262,14 +264,14 @@ V1ParamSplit(String, IsFromFunc := 0) {
 
       if (Char = "`"" && !InApostrophe && CheckQuotes) {
          if (IsExpr && !InQuote) {
-            ;  2024-06-24 andymbody - added double quote to Instr search just in case causing hidden issues
+            ;  2024-06-24 AMB - added double quote to Instr search just in case causing hidden issues
             if (A_Index = 1 || (oString.has(A_Index - 1) && Instr('(" ,', oString[A_Index - 1]))) {
                InQuote := 1
             } else {
                CheckQuotes := 0
             }
          } else {
-            ;  2024-06-24 andymbody - added double quote to Instr search to fix failed test RegexMatch_O-Mode_ex2.ah1
+            ;  2024-06-24 AMB - added double quote to Instr search to fix failed test RegexMatch_O-Mode_ex2.ah1
             if (A_Index = oString.Length || (oString.has(A_Index + 1) && Instr(')" ,', oString[A_Index + 1]))) {
                InQuote := 0
             } else {
@@ -322,7 +324,7 @@ V1ParamSplit(String, IsFromFunc := 0) {
 ;       oResult.pre           text before the function
 ;       oResult.func          function name
 ;       oResult.parameters    parameters of the function
-;       oResult.post          text afther the function
+;       oResult.post          text after the function
 ;       oResult.separator     character before the function
 ; --------------------------------------------------------------------
 ; Returns an object of parameters in the function properties: pre, function, parameters, post & separator

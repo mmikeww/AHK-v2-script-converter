@@ -1,6 +1,5 @@
-
+;################################################################################
 ; 2025-12-24 AMB, MOVED Dynamic Conversion Funcs to AhkLangConv.ahk
-
 ;################################################################################
 Class PseudoArray
 {
@@ -14,15 +13,12 @@ Class PseudoArray
 	regex := true		; boolean T/F - always true
 }
 ;################################################################################
+;// Converts PseudoArray to Array
 ;//	Example array123 => array[123]
 ;//	Example array%A_index% => array[A_index]
 ;//	Special cases in RegExMatch		=> {OutVar: OutVar[0],		OutVar0: ""				}
 ;//	Special cases in StringSplit	=> {OutVar: "",				OutVar0: OutVar.Length	}
 ;//	Special cases in WinGet(List) => {OutVar: OutVar.Length,	OutVar0: ""				}
-;// Converts PseudoArray to Array
-ConvertPseudoArray(ScriptStringInput, PseudoArrayName) {
-; 2025-10-12 AMB, UPDATED to fix issue #118-1
-
 	; The caller does a fast InStr before calling.
 	; Summary of suffix variations depending on sources:
 	;	- StringSplit		=> OutVar:Blank		; OutVar0:Length; OutVarN:Items;
@@ -30,12 +26,14 @@ ConvertPseudoArray(ScriptStringInput, PseudoArrayName) {
 	;	- RegExMatch-Mode1	=> OutVar:Text		; OutVar0:Blank;	OutVarN:Items;
 	;	- RegExMatch-Mode2	=> OutVar:Length	; OutVar0:Blank;	OutVarN:Blank; OutVarPosN:Item-pos; OutVarLenN:Item-len;
 	;	- RegExMatch-Mode3	=> OutVar:Object	; OutVar0:Blank;	OutVarN:Blank;
+; 2025-10-12 AMB, UPDATED to fix issue #118-1
+ConvertPseudoArray(ScriptStringInput, PseudoArrayName) {
 
 	; 2025-10-12 AMB - add custom masking to avoid updating var within RegexMatch()
-	sessID := clsMask.NewSession()						; create isolated masking session (might not be necessary, but doesn't hurt)
-	Mask_T(&ScriptStringInput, 'C&S',,sessID)			; hide comments/strings within isolated session
-	nRM := '(?i)REGEXMATCH' . gPtn_PrnthBlk				; create custom needle for RegexMatch() calls
-	Mask_T(&ScriptStringInput, 'RXM', nRM)				; hide RegexMatch calls (custom masking)
+	sessID := clsMask.NewSession()															; create isolated masking session
+	Mask_T(&ScriptStringInput, 'C&S',,sessID)												; hide comments/strings within isolated session
+	nRM := '(?i)REGEXMATCH' . gPtn_PrnthBlk													; create custom needle for RegexMatch() calls
+	Mask_T(&ScriptStringInput, 'RXM', nRM)													; hide RegexMatch calls (custom masking)
 
 	ArrayName := PseudoArrayName.name
 	NewName := PseudoArrayName.HasOwnProp("newname") ? PseudoArrayName.newname : ArrayName
@@ -69,17 +67,17 @@ ConvertPseudoArray(ScriptStringInput, PseudoArrayName) {
 		ScriptStringInput := RegExReplace(ScriptStringInput, "is)(?<!\w|&|\.)" ArrayName "([1-9]\d*)(?!\w|\.|\[)", NewName "[$1]")
 		ScriptStringInput := RegExReplace(ScriptStringInput, "is)(?<!\w|&|\.)" ArrayName "%(\w+)%(?!\w|\.|\[)", NewName "[$1]")
 	}
-	Mask_R(&ScriptStringInput, 'RXM')					; restore all RegexMatch() calls
-	Mask_R(&ScriptStringInput, 'C&S',,sessID)			; restore comments/strings from isolated session only
+	Mask_R(&ScriptStringInput, 'RXM')														; restore all RegexMatch() calls
+	Mask_R(&ScriptStringInput, 'C&S',,sessID)												; restore comments/strings from isolated session only
 	Return ScriptStringInput
 }
 ;################################################################################
+;// Converts Object Match V1 to Object Match V2
 ;//	Example ObjectMatch.Value(N) => ObjectMatch[N]
 ;//	Example ObjectMatch.Len(N) => ObjectMatch.Len[N]
 ;//	Example ObjectMatch.Mark() => ObjectMatch.Mark
 ;//	Special case ObjectMatch.Name(N) => ObjectMatch.Name(N)
 ;//	Special case ObjectMatch.Name => ObjectMatch["Name"]
-;// Converts Object Match V1 to Object Match V2
 ConvertMatchObject(ScriptStringInput, ObjectMatchName)
 {
 	; The caller does a fast InStr before calling.
@@ -91,10 +89,6 @@ ConvertMatchObject(ScriptStringInput, ObjectMatchName)
 	Return ScriptStringInput
 }
 ;################################################################################
-										   v2_PseudoAndRegexMatchArrays(&lineStr)
-;################################################################################
-{
-; 2025-06-12 AMB, Moved to dedicated routine for cleaner convert loop
 ; Purpose: Converts PseudoArray to Array and...
 ;	ensures v1 RegexMatchObject can be accessed as a v2 Array
 /*
@@ -106,6 +100,9 @@ ConvertMatchObject(ScriptStringInput, ObjectMatchName)
 	Special cases in StringSplit	=> { OutVar: "",			OutVar0: OutVar.Length	}
 	Special cases in WinGet(List)	=> { OutVar: OutVar.Length,	OutVar0: ""				}
 */
+; 2025-06-12 AMB, Moved to dedicated routine for cleaner convert loop
+v2_PseudoAndRegexMatchArrays(&lineStr)
+{
 
 	; gaList_PseudoArr gets its input from
 	;	_StringSplit()

@@ -42,7 +42,8 @@ Convert(code)                                                                   
    return code                                                                          ; . 'fail for debugging'
 }
 ;################################################################################
-; 2025-11-01 AMB, ADDED to provide option for testing without using Macro Scope
+; Provides option for testing without using Macro Scope
+; 2025-11-01 AMB, ADDED
 ; 2026-05-06 AMB, UPDATED to provide progress tracking
 convertLines_NoScope(code,tProg:=0)
 {
@@ -53,11 +54,11 @@ convertLines_NoScope(code,tProg:=0)
    return _convertLines(code,tProg)                                                     ; convert lines from top to bottom
 }
 ;################################################################################
+; Supports processing global-code first (by default)
+;  change fGblOrder flag to 0 to test orig-order processing
 ; 2025-11-01 AMB, ADDED to support Scope
 ; 2026-01-24 AMB, UPDATED to support progress-gui
 ; 2026-05-26 AMB, UPDATED as part of fix for #488
-;   supports processing global-code first (by default)
-;    change fGblOrder flag to 0 to test orig-order processing
 convertLines_UseScope(code,tProg)
 {
    curProg          := Prog.curProg                                                     ; get current progress percentage
@@ -146,10 +147,10 @@ After_LineConverts(&code)
    return    ; code by reference
 }
 ;################################################################################
+; Pre-processing of certain commands via single-iteration of script lines
 ; 2025-11-23 AMB, ADDED - part of fix for #413
 ; 2026-03-11 AMB, UPDATED to detect dynamic naming requirements for Gui/GuiControls
 ; 2026-03-14 AMB, UPDATED to ensure dynamic include file is found
-; pre-processing of certain commands via single-iteration of script lines
 PreProcessLines(&code)
 {
    global gDynGuiNaming, gfHasDynamicGui ;, gAutoGuiNaming
@@ -179,7 +180,7 @@ PreProcessLines(&code)
       else if (line ~= '(?i)GUI') {                                                     ; if line has 'GUI' string
          if (detectDynamicGuiState(line)                                                ; if line has dynamic gui content...
          &&  !dynIncludeExist()) {  ; see GuiAlt.ahk                                    ; ... BUT dynamic Include file is missing...
-			ExitApp                                                                     ; ... terminate conversion (reduntant - terminates as part of call)
+			ExitApp                                                                     ; ... terminate conversion (redundant - terminates as part of call)
          }
       }
       outStr  .= line '`r`n'                                                            ; add line to output str
@@ -190,7 +191,6 @@ PreProcessLines(&code)
    return                                                                               ; return Code by reference
 }
 ;################################################################################
-; 2025-11-01 AMB, ADDED as part of Scope support
 ; scopeCode - can be entire script string, or a limited portion of code
 ; when term is NOT specified...
 ;   sets global flags as needed (scopeCode param should be entire script)
@@ -198,11 +198,12 @@ PreProcessLines(&code)
 ;   scopeCode param should be set to code of limited scope
 ;   sets flag for term (output-option one)
 ;   also returns whether term was found in scopeCode
+; 2025-11-01 AMB, ADDED as part of Scope support
 getScriptStringsUsed(scopeCode, term:='')
 {
    global gaScriptStrsUsed
 
-   ; First, remove false positives hiding in commments and strings
+   ; First, remove false positives hiding in comments and strings
    maskStr := scopeCode                                                                 ; ini
    Mask_T(&maskStr, 'C&S',1), Mask_T(&maskStr, 'V1MLS')                                 ; hide comments/strings
 
@@ -221,7 +222,7 @@ getScriptStringsUsed(scopeCode, term:='')
 ; 2025-06-12 AMB, UPDATED
 ;   moved most operations to external funcs for modular design (SEE ConvLoopFuncs.ahk)
 ;   removed finalize parameter and optional step at bottom of function
-;   changed gOSriptStr from array to class object - prep for more functionaity later
+;   changed gOSriptStr from array to class object - prep for more functionality later
 ;   added block-comment masking as a global condition for full ScriptString
 ;   changed many variable and function names
 ; 2025-11-01 AMB, UPDATED as part of Scope support
@@ -275,7 +276,7 @@ _convertLines(ScriptString,tProg:=0)
          Prog.ULog(curProg, msg gO_Index ' of ' lineCount '...')                        ; update UI
 	  }
 
-;      curLine           := gOScriptStr[gO_Index]                                        ; current line string to be converted
+      ;curLine           := gOScriptStr[gO_Index]                                        ; current line string to be converted
       curLine           := gOScriptStr.GetNext                                          ; current line string to be converted
       Prog.ULog(,,,gO_Index,Trim(curLine))                                              ; update UI - debug
       gIndent           := RegExReplace(curLine,'^(\h*).*','$1')                        ; original line indentation (if present)
@@ -295,8 +296,8 @@ _convertLines(ScriptString,tProg:=0)
       ; ORDER MAY MATTER FOR FOLLOWING STEPS...
       addContsToLine(&curLine, &EOLComment)                                             ; Adds continuation lines to current line - TODO - USE CONT-MASKING ??
       fixAssignments(&curLine)                                                          ; line conversions related to assignments [var= and var:=] (v1/v2)
-      v1_convert_Ifs(&curline, &lineOpen)                                               ; line conversions related to IF (v1)
-      v2_convert_Ifs(&curline, &lineOpen, &lineClose)                                   ; line conversions related to IF (v2)
+      v1_convert_Ifs(&curLine, &lineOpen)                                               ; line conversions related to IF (v1)
+      v2_convert_Ifs(&curLine, &lineOpen, &lineClose)                                   ; line conversions related to IF (v2)
 
       fCmdConverted := false                                                            ; will be set by v2_AHKCommand() thru v2_Conversions() below
 ;      if (gV2Conv) {     ; 2025-07-03 - REMOVED TEMPORARILY                            ; v2, but currently required for v1 conversion also
@@ -317,12 +318,12 @@ _convertLines(ScriptString,tProg:=0)
    return ScriptOutput
 }
 ;################################################################################
+; Performs tasks that finalize overall conversion
 ; 2024-06-27 ADDED, 2025-06-12, 2025-10-05, 2026-01-01 UPDATED
 ; 2026-01-24 AMB, UPDATED to support progress-gui
 ; 2026-03-08 AMB, UPDATED to add static kywd to methods as needed
 ; 2026-03-14 AMB, UPDATED to copy dynamic include file to global library, as needed
 ; 2026-03-29 AMB, UPDATED to move dynamic gui support to dedicated func
-; Performs tasks that finalize overall conversion
 FinalizeConvert(&code)
 {
    pp := 'Post Process - '
@@ -378,7 +379,8 @@ FinalizeConvert(&code)
    return                                                                               ; code by reference
 }
 ;################################################################################
-; 2026-01-01 AMB, ADDED - Add global warnings, etc
+; Adds global warnings, etc
+; 2026-01-01 AMB, ADDED
 addToCode(code) {
 
    If (goWarnings.HasProp("AddedV2VRPlaceholder") && goWarnings.AddedV2VRPlaceholder = 1) {
@@ -397,7 +399,8 @@ addToCode(code) {
    return code
 }
 ;################################################################################
-; 2026-03-29 AMB, ADDED - Adds final elements to support dynamic gui handling
+; Adds final elements to support dynamic gui handling
+; 2026-03-29 AMB, ADDED
 ; https://www.autohotkey.com/docs/v2/Scripts.htm#lib
 addDynGuiSupport(&code) {                                                               ; Adds support for dynamic gui handling (if needed)
    if (!gfHasDynamicGui)                                                                ; if script does not have dynamic gui elements...
@@ -424,7 +427,8 @@ DebugWindow(Text, Clear := 0, LineBreak := 0, Sleep := 0, AutoHide := 0) {
    return
 }
 ;################################################################################
-; 2025-12-21 AMB, ADDED to update MnxIndex handling
+; Updates MnxIndex handling
+; 2025-12-21 AMB, ADDED
 FixMinMaxIndex(code) {
    nStrSplit    := '(?i)(STRSPLIT' gPtn_PrnthBlk '\.)'
    nSqBktArr    := '(?i)((?<!\w)' gPtn_SqrBkts '\.)'
@@ -440,9 +444,9 @@ FixMinMaxIndex(code) {
    return       code
 }
 ;################################################################################
-; 2025-06-12 AMB, ADDED to separate processing of character directives and line comment
+; Processing of character directives and line comment
+; 2025-06-12 AMB, ADDED
 ; 2025-12-24 AMB, MOVED to ConvertFuncs.ahk
-;  (for cleaner conversion loop, and v1.0 => v1.1 conversion)
 lp_DirectivesAndComment(&lineStr) {
    ; if current line is char-directive declaration, grab the attributes
    if (RegExMatch(lineStr, 'i)^\h*#(CommentFlag|EscapeChar|DerefChar|Delimiter)\h+.')) {
@@ -475,10 +479,11 @@ lp_DirectivesAndComment(&lineStr) {
    return EOLComment                                                                    ; return trailing comment for current line
 
    ;############################################################################
-   ; 2025-06-12 AMB, ADDED to separate processing of character directives
+   ; Processing of character directives
    ;  (for cleaner conversion loop, and v1.0 => v1.1 conversion)
    ; only one of these directives may be found on current line
    ; sets data within gaScriptStrsUsed for use later
+   ; 2025-06-12 AMB, ADDED
    ; 2025-12-24 AMB, UPDATED - converted to internal func
    _grabCharDirectiveAttribs(lineStr) {
       global gaScriptStrsUsed
@@ -507,28 +512,28 @@ lp_DirectivesAndComment(&lineStr) {
    }
 }
 ;################################################################################
-; 2025-06-12 AMB, Moved to dedicated routine for cleaner convert loop
+; Purpose: Remove/Disable incompatible commands (that are no longer allowed)
+; V1 and V2, but with different commands for each version
+; 2025-06-12 AMB, MOVED to dedicated routine for cleaner convert loop
+; 2025-10-08 AMB, UPDATED to fix #375
 ; 2025-12-24 AMB, MOVED to ConvertFuncs.ahk
 ; 2026-01-01 AMB, UPDATED - changed global gEarlyLine to gV1Line
 ; 2026-03-08 AMB, UPDATED - added LTrim to gV1Line
-; Purpose: Remove/Disable incompatible commands (that are no longer allowed)
 lp_DisableInvalidCmds(&lineStr, fCmdConverted) {
-   ; V1 and V2, but with different commands for each version
-   ; 2025-10-08 AMB, Updated to fix #375
    fDisableLine := false
-   if (!fCmdConverted) {                                                                ; if a targetted command was found earlier...
+   if (!fCmdConverted) {                                                                ; if a targeted command was found earlier...
       Loop Parse, gAhkCmdsToRemoveV1, '`n', '`r' {                                      ; [check for v1 deprecated]
          targStr:= escRegexChars(A_LoopField)                                           ; prep for regex check
          lead   := (A_LoopField ~= '^#') ? '' : '\b'                                    ; add word boundary to beginning of needle, but only when hash char not present
-         nTarg  := '(?i)' lead targStr '\b'                                             ; needle to cover all scenerios in gAhkCmdsToRemoveV1
+         nTarg  := '(?i)' lead targStr '\b'                                             ; needle to cover all scenarios in gAhkCmdsToRemoveV1
          if (LTrim(gV1Line) ~= nTarg)                                                   ; ... is that command invalid after v1.0?
             fDisableLine := true                                                        ; flag it as invalid
       }
       if (gV2Conv) {                                                                    ; v2
          Loop Parse, gAhkCmdsToRemoveV2, '`n', '`r' {                                   ; [check for v2 deprecated]
             targStr := escRegexChars(A_LoopField)                                       ; prep for regex check
-            lead    := (A_LoopField ~= '^#') ? '' : '\b'                                ; add word boundary to beginning of needle, but only when hask char not present
-            nTarg   := '(?i)' lead targStr '\b'                                         ; needle to cover all scenerios in gAhkCmdsToRemoveV2
+            lead    := (A_LoopField ~= '^#') ? '' : '\b'                                ; add word boundary to beginning of needle, but only when hash char not present
+            nTarg   := '(?i)' lead targStr '\b'                                         ; needle to cover all scenarios in gAhkCmdsToRemoveV2
             if (LTrim(gV1Line) ~= nTarg)                                                ; ... is that command invalid after v2?
                fDisableLine := true                                                     ; flag it as invalid
          }
@@ -548,7 +553,7 @@ lp_DisableInvalidCmds(&lineStr, fCmdConverted) {
    return      ; lineStr by reference
 }
 ;################################################################################
-; 2025-06-12 AMB, Moved to dedicated routine for cleaner convert loop
+; 2025-06-12 AMB, MOVED to dedicated routine for cleaner convert loop
 ; 2025-12-24 AMB, MOVED to ConvertFuncs.ahk
 ;   TODO - See if these can be combined in v2_Conversions
 lp_PostConversions(&lineStr) {
@@ -561,9 +566,9 @@ lp_PostConversions(&lineStr) {
    return                                                                               ; lineStr by reference
 }
 ;################################################################################
-; 2025-06-12 AMB, Moved to dedicated routine for cleaner convert loop
 ; Updates conversion communication messages to user, for current line
 ; currently the LAST step performed for a line
+; 2025-06-12 AMB, MOVED to dedicated routine for cleaner convert loop
 ; 2025-10-05 AMB, UPDATED - changed source of mask chars
 ; 2025-11-30 AMB, UPDATED - added Try to prevent index errors in certain situations
 ; 2025-12-21 AMB, UPDATED - MinIndex, MaxIndex messages
@@ -578,7 +583,7 @@ lp_PostLineMsgs(&lineStr, &EOLComment) {
 
    ; V2 ONLY !
    ; Add warning for Array.MinIndex(), Array.MaxIndex()
-   ; 2025-12-21 AMB, Updated
+   ; 2025-12-21 AMB, UPDATED
    nMinIdxTag  := '\.' gMNPH, nMaxIdxTag := '\.' gMXPH                                  ; see MaskCode.ahk
    hasMin      := (lineStr ~= nMinIdxTag), hasMax := (lineStr ~= nMaxIdxTag)
    if (hasMin && hasMax) {
@@ -623,11 +628,11 @@ lp_PostLineMsgs(&lineStr, &EOLComment) {
    return    finalLine
 }
 ;################################################################################
-; 2025-06-12 AMB, Moved to dedicated routine for cleaner convert loop
-; 2025-12-24 AMB, MOVED to ConvertFuncs.ahk
-; separates non-convert portion of line from portion to be converted
+; Separates non-convert portion of line from portion to be converted
 ; returns non-convert portion in 'lineOpen' (HK decl, open-brace, Try\Else, etc)
 ; returns rest of line (that requires conversion) in 'lineStr'
+; 2025-06-12 AMB, MOVED to dedicated routine for cleaner convert loop
+; 2025-12-24 AMB, MOVED to ConvertFuncs.ahk
 lp_SplitLine(&lineStr) {
    v1v2_noKywdCommas(&lineStr)                                                          ; first remove trailing commas from keywords (including Switch)
    lineOpen := ''                                                                       ; will become non-convert portion of line

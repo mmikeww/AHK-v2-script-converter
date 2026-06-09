@@ -1,5 +1,5 @@
 #Requires AutoHotKey v2.0
-
+;################################################################################
 ; 2025-12-24 AMB, MOVED Dynamic Conversion Funcs to AhkLangConv.ahk
 /* Commands and How to convert them
   Specification format:
@@ -10,7 +10,7 @@
     - param names ending in "T2E" will convert a literal Text param TO an Expression
         this would be used when converting a Command to a Func or otherwise needing an expr
         such as      word -> "word"      or      %var% -> var
-        Changed: empty strings will return an emty string
+        Changed: empty strings will return an empty string
         like the 'value' param in those  `IfEqual, var, value`  commands
     - param names ending in "T2QE" will convert a literal Text param TO an Quoted Expression
         this would be used when converting a Command to a expr
@@ -20,7 +20,7 @@
         "WM_LBUTTONDOWN" => WM_LBUTTONDOWN
     - param names ending in "CBE2E" would convert parameters that 'Can Be an Expression TO an EXPR'
         this would only be used if the conversion goes from Command to Func
-        we'd need to strip a preceeding "% " which was used to force an expr when it was unnecessary
+        we'd need to strip a preceding "% " which was used to force an expr when it was unnecessary
     - param names ending in "CBE2T" would convert parameters that 'Can Be an Expression TO literal TEXT'
         this would be used if the conversion goes from Command to Command
         because in v2, those command parameters can no longer optionally be an expression.
@@ -40,9 +40,9 @@
         this would be used for InputVar/OutputVar params, or whenever you want the literal text preserved
   Replacement format:
     - use {1} which corresponds to Param1, etc
-    - use asterisk * and a function name to call, for custom processing when the params dont directly match up
+    - use asterisk * and a function name to call, for custom processing when the params don't directly match up
 */
-
+;################################################################################
 ; 2025-06-12 AMB, ADDED - for separation of v1.1 and v2 conversions
 ; 2025-12-24 AMB, UPDATED - re-ordered Map Keys to alphabetic
 global gAhkCmdsToRemoveV1 := "
@@ -54,11 +54,10 @@ global gAhkCmdsToRemoveV1 := "
     SetFormat
     SplashImage
   )"
-
+;################################################################################
 ; 2025-06-12 AMB, UPDATED - altered for separation of v1.1 and v2 conversions
 ; 2025-12-24 AMB, UPDATED - re-ordered Map Keys to alphabetic
 ; SplashTextOn and SplashTextOff are removed, but alternative gui code is available
-;global gAhkCmdsToRemove := "
 global gAhkCmdsToRemoveV2 := "
   (c
     #AllowSameLineComments
@@ -72,7 +71,7 @@ global gAhkCmdsToRemoveV2 := "
     SoundGetWaveVolume
     SoundSetWaveVolume
   )"
-
+;################################################################################
 ; 2025-06-12 AMB, ADDED - for separation of v1.1 and v2 conversions
 ; 2025-11-28 AMB, UPDATED - changed to Case-Insensitive Map
 ; 2025-12-24 AMB, UPDATED - re-ordered Map Keys to alphabetic
@@ -145,7 +144,7 @@ gmAhkCmdsToConvertV1 := OrderedMap(
   , "Transform,OutputVar,SubCommand,Value1T2E,Value2T2E" ,
       "*_Transform"
 )
-
+;################################################################################
 ; 2025-06-12 AMB, UPDATED - altered for separation of v1.1 and v2 conversions
 ; 2025-10-05 AMB, UPDATED - changed Goto to custom handling
 ; 2025-11-23 AMB, UPDATED - removed Goto ( see convertGoto() now )

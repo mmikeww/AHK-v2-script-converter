@@ -1,22 +1,21 @@
 
 ;################################################################################
-Class Cls_Line
-{
 ; line objects hold orig line string, as well as the converted version
 ;	can be multi-line
-;	track what kind of data is within line?
+;	TODO - track what kind of data is within line ?
 ;		gui related?, has comment?, variables?, func calls?, expression or legacy? ahk command found?
-
+Class Cls_Line
+{
 	_lineNum		:= -1
 	_origCode		:= ''
 	_convCode		:= ''
 	_lineComment	:= ''
-
+	;############################################################################
 	__New(lineCode)
 	{
 		this._origCode := lineCode
 	}
-
+	;############################################################################
 	; Public properties
 	OrigCode => this._origCode
 	ConvCode {
@@ -26,29 +25,26 @@ Class Cls_Line
 		}
 	}
 }
-
+;################################################################################
 ;################################################################################
 Class Cls_Conversion
 {
-	_origCode	:= ''
-	_LinesArr	:= []
-
+	_origCode		:= ''
+	_LinesArr		:= []
+	ConvertCode		=> this._convertCode()		 											; convert code and return final converted string
+	ConvertedCode	=> this._getConvertedStr()
+	;############################################################################
 	__New(code)
 	{
 		this._origCode := code
-		this.__prepCode()
+		this._prepCode()
 	}
-
-	; Public properties
-	ConvertCode		=> this.__convertCode()		 ; convert code and return final converted string
-	ConvertedCode	=> this.__getConvertedStr()
-
-	; Private method
-	;	performs conversion process
-	__convertCode()
+	;############################################################################
+	; performs conversion process
+	_convertCode()
 	{
 		for idx, lineObj in this._LinesArr {
-			lineObj.ConvCode := this.__lineConversion(lineObj.Origcode)
+			lineObj.ConvCode := this._lineConversion(lineObj.Origcode)
 		}
 		return this.ConvertedCode
 		/*
@@ -62,22 +58,17 @@ Class Cls_Conversion
 				place converted version
 		*/
 	}
-
-	; Private - conversion steps
-	__lineConversion(lineStr)
+	;############################################################################
+	; conversion steps
+	_lineConversion(lineStr)
 	{
-		outStr := lineStr
-
-		; conversion steps
-		outStr := toExpEquals(outStr)	; Replace = with := expression equivilents in "var = value" assignment lines
-
-		return outStr
+		return toExpEquals(lineStr)
 	}
-
-	; Private method - returns final converted string
-	;	extracts all converted line strings (from line objects held in LinesArr)...
-	;	combines them to form the final converted string for final output
-	__getConvertedStr()
+	;############################################################################
+	; returns final converted string
+	; extracts all converted line strings (from line objects held in LinesArr)...
+	; combines them to form the final converted string for final output
+	_getConvertedStr()
 	{
 		; extract and combine strings from LinesArr
 		retStr := ''
@@ -86,12 +77,10 @@ Class Cls_Conversion
 		}
 		return retStr
 	}
-
-
-
-	__prepCode()
+	;############################################################################
+	_prepCode()
 	{
-		this.__getlines()
+		this._getLines()
 		/*
 			mask block comments
 			mask all line comments?
@@ -99,14 +88,13 @@ Class Cls_Conversion
 			mask classes?
 			mask functions?
 			mask function calls?
-			mask multilines
+			mask multi-lines
 			split lines into LinesArr[] containing Line-objects
 				see Line Class for details
 		*/
-
 	}
-
-	__getLines()
+	;############################################################################
+	_getLines()
 	{
 		lines := StrSplit(this._origCode, '`n', '`r')
 		for idx, line in lines
@@ -116,28 +104,31 @@ Class Cls_Conversion
 		}
 	}
 }
-
+;################################################################################
+;################################################################################
 Class ConvertV1 extends Cls_Conversion
 {
 	; OVERRIDES same method in parent
-	convertCode()
+	_convertCode()
 	{
 	}
 }
-
+;################################################################################
+;################################################################################
 Class ConvertV2 extends Cls_Conversion
 {
 	; OVERRIDES same method in parent
-	convertCode()
+	_convertCode()
 	{
 	}
 }
-
+;################################################################################
+;################################################################################
 toExpEquals(code)
 {
 	retCode := ''
 	if (RegExMatch(code, "(?i)^(\h*[a-z_%][a-z_0-9%]*\h*)=([^;\v]*)", &m)) {
-		retCode := RTrim(m[1]) . " := " . ToExp(m[2],,1)   ; regex above keeps the gIndent already
+		retCode := RTrim(m[1]) . " := " . ToExp(m[2],,1)									; regex above keeps the gIndent already
 	}
 	return retCode
 }

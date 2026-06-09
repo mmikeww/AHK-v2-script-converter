@@ -1,6 +1,5 @@
 ﻿;################################################################################
-
-; 2025-12-24 AMB - Combined cmds/func functions into single file for easier manangement
+; 2025-12-24 AMB - Combined cmds/func functions into single file for easier management
 ; This file contains functions used to convert v1 cmd/funcs to v2 format
 ;	They accept an array of v1 parameters (p) and return v2 command/func in text form
 ;	These funcs are called (dynamically) from:
@@ -102,13 +101,13 @@ _ControlGet(p) {
 			Out := format("o{1} := ControlGet{2}({4}, {5}, {6}, {7}, {8})", p*) "`r`n"
 			Out .= gIndent "loop o" p[1] ".length`r`n"
 			Out .= gIndent "{`r`n"
-			Out .= gIndent gSingleIndent p[1] " .= A_index=1 ? `"`" : `"``n`"`r`n"	; Attention do not add ``r!!!
+			Out .= gIndent gSingleIndent p[1] " .= A_index=1 ? `"`" : `"``n`"`r`n"			; Attention do not add ``r!!!
 			Out .= gIndent gSingleIndent p[1] " .= o" p[1] "[A_Index] `r`n"
 			Out .= gIndent "}"
 		}
 	}
 	out		:= RegExReplace(Out, "[\s\,]*\)", ")")
-	out		:= Zip(out, 'CTRLGET')		; 2025-11-30 AMB - compress to single-line tag, as needed
+	out		:= Zip(out, 'CTRLGET')															; 2025-11-30 AMB - compress to single-line tag, as needed
 	Return	out
 }
 ;################################################################################
@@ -229,7 +228,7 @@ _FileCopy(p) {
 		out := format("FileCopy({1}, {2}, {3})", p*)
 	}
 	out		:= RegExReplace(Out, "[\s\,]*\)", ")")
-	out		:= Zip(out, 'FILECOPY')		; 2025-11-30 AMB - compress to single-line tag, as needed
+	out		:= Zip(out, 'FILECOPY')															; 2025-11-30 AMB - compress to single-line tag, as needed
 	Return	out
 }
 ;################################################################################
@@ -245,7 +244,7 @@ _FileCopyDir(p) {
 		out := format("DirCopy({1}, {2}, {3})", p*)
 	}
 	out		:= RegExReplace(Out, "[\s\,]*\)", ")")
-	out		:= Zip(out, 'FILECOPYDIR')	; 2025-11-30 AMB - compress to single-line tag, as needed
+	out		:= Zip(out, 'FILECOPYDIR')														; 2025-11-30 AMB - compress to single-line tag, as needed
 	Return	out
 }
 ;################################################################################
@@ -261,7 +260,7 @@ _FileMove(p) {
 		out := format("FileMove({1}, {2}, {3})", p*)
 	}
 	out		:= RegExReplace(Out, "[\s\,]*\)", ")")
-	out		:= Zip(out, 'FILEMOVE')		; 2025-11-30 AMB - compress to single-line tag, as needed
+	out		:= Zip(out, 'FILEMOVE')															; 2025-11-30 AMB - compress to single-line tag, as needed
 	Return	out
 }
 ;################################################################################
@@ -284,10 +283,10 @@ _FileRead(p) {
 ;################################################################################
 ; FileReadLine, OutputVar, Filename, LineNum
 ; Not really a good alternative, inefficient but the result is the same
+; 2025-11-30 AMB, UPDATED - to fix indent issue
 _FileReadLine(p) {
 	if (gaScriptStrsUsed.ErrorLevel) {
-		; 2025-11-30 AMB - fix indent issue
-		cmd :=							; Very bulky solution, only way for errorlevel
+		cmd :=																				; Very bulky solution, only way for errorlevel
 		(
 		'Try {`r`n'
 		gIndent gSingleIndent 'Global ErrorLevel := 0, ' p[1] ' := StrSplit(FileRead(' p[2] '),`"``n`",`"``r`")[' p[3] ']`r`n'
@@ -295,10 +294,10 @@ _FileReadLine(p) {
 		gIndent gSingleIndent p[1] ' := "", ErrorLevel := 1`r`n'
 		gIndent '}'
 		)
-		Return Zip(cmd, 'FILEREADLN')	; 2025-11-30 AMB - compress to single-line tag, as needed
+		Return Zip(cmd, 'FILEREADLN')														; 2025-11-30 AMB - compress to single-line tag, as needed
 	} else {
 		out := p[1] " := StrSplit(FileRead(" p[2] "),`"``n`",`"``r`")[" P[3] "]"
-		Return Zip(out, 'FILEREADLN')	; 2025-11-30 AMB - compress to single-line tag, as needed
+		Return Zip(out, 'FILEREADLN')														; 2025-11-30 AMB - compress to single-line tag, as needed
 	}
 }
 ;################################################################################
@@ -346,7 +345,7 @@ _FileSelect(p) {
 		Line .= gIndent gSingleIndent "ErrorLevel := 0`r`n"
 		Line .= gIndent "}"
 	}
-	return Zip(Line, 'FILESELECT')		; 2025-11-30 AMB - compress to single-line tag, as needed
+	return Zip(Line, 'FILESELECT')															; 2025-11-30 AMB - compress to single-line tag, as needed
 }
 ;################################################################################
 ; old V1 : FileSetAttrib, Attributes, FilePattern, OperateOnFolders?, Recurse?
@@ -379,48 +378,46 @@ _GetKeyState(p) {
 	return	out
 }
 ;################################################################################
-_Gosub(p) {
 ; 2024-07-07 AMB, UPDATED - as part of label-to-function naming
 ; 2025-10-05 AMB, UPDATED - to use new gmList_GosubToFunc, updated msg to user
 ; 2025-11-01 AMB, UPDATED - key case-sensitivity for gmList_GosubToFunc
 ; TODO - try to add support for %label%
-
+_Gosub(p) {
 	; check for Gosub %label% - not yet supported
 	p[1] := RegExReplace(p[1], '%\h*([^%]+?)\h*$', '%$1%')
 	If (InStr(p[1], '%')) {
 		EOLComment	:= ' `; V1toV2: Gosub (Manual edit required)'
 		return 'Gosub ' . Trim(p[1]) . EOLComment
 	}
-
 	; should have legit label, but the labelname may change after calling Update_LBL_HK_HS()
-	; ... so, just record the Gosub call for now, with no chnages to script
+	; ... so, just record the Gosub call for now, with no changes to script
 	; ... clsLabelSect._gosubUpdate() will make the final changes ass part of Update_LBL_HK_HS()
-	; ... this also provides support for isssue #322, and similar
+	; ... this also provides support for issue #322, and similar
 	v1LabelName := Trim(p[1])
 	gmList_GosubToFunc[v1LabelName] := true
 	return 'Gosub ' .  v1LabelName	; no changes here
 }
 ;;################################################################################
+;; SEE PreProcessLines()	in ConvertFuncs.ahk
+;; and convertGoto()		in LabelAndFunc.ahk
 ;_Goto() {
-;	; SEE PreProcessLines()	in ConvertFuncs.ahk
-;	; 	and convertGoto()	in LabelAndFunc.ahk
 ;}
 ;################################################################################
-_Gui(p) {
 ; 2026-03-11 AMB, UPDATED to support simple/dynamic gui handling option
-	if (gUseGuiAlt) {			; see Global_Declare.ahk
-		return GuiAlt(p)		; see GuiAlt.ahk			(simple/dynamic handling)
+_Gui(p) {
+	if (gUseGuiAlt) {																		; see Global_Declare.ahk
+		return GuiAlt(p)																	; see GuiAlt.ahk	 (simple/dynamic handling)
 	} else {
-		return GuiConv(p)		; see GuiAndMenu.ahk		(orig handling)
+		return GuiConv(p)																	; see GuiAndMenu.ahk (orig handling)
 	}
 }
 ;################################################################################
 _GuiControl(p) {
-	return GuiControlConv(p)	; see GuiAndMenu.ahk
+	return GuiControlConv(p)																; see GuiAndMenu.ahk
 }
 ;################################################################################
 _GuiControlGet(p) {
-	return GuiControlGetConv(p)	; see GuiAndMenu.ahk
+	return GuiControlGetConv(p)																; see GuiAndMenu.ahk
 }
 ;################################################################################
 ; 2026-06-08 AMB, UPDATED to fix empty params
@@ -456,9 +453,6 @@ _HashtagWarn(p) {
 _Hotkey(p) {
 	LineSuffix := ""
 	global gmList_LblsToFunc
-
-	;Convert label to function
-
 	if (scriptHasLabel(p[2])) {																; 2025-11-01 UPDATED as part of Scope support
 		gmList_LblsToFunc[p[2]] := clsConvLabel('HK', p[2], 'ThisHotkey:=""', p[2])
 	}
@@ -666,7 +660,7 @@ _Loop(p) {
 		p[3] := Match[1]
 		BracketEnd := Match[2]
 	}
-	if (InStr(p[1], "*") && InStr(p[1], "\")) {								; Automatically switching to Files loop
+	if (InStr(p[1], "*") && InStr(p[1], "\")) {												; Automatically switching to Files loop
 		IncludeFolders := p[2]
 		Recurse := p[3]
 		p[3] := ""
@@ -693,7 +687,7 @@ _Loop(p) {
 		Line := Line != "" ? ", " Line : ""
 		Line := p.Has(1) ? Trim(p[1]) Line : "" Line
 		Line := "Loop " Line
-		Line := RegExReplace(Line, "(?:,\s(?:`"`")?)*$", "")				; remove trailing ,\s and ,\s""
+		Line := RegExReplace(Line, "(?:,\s(?:`"`")?)*$", "")								; remove trailing ,\s and ,\s""
 		return Line BracketEnd
 	}
 
@@ -708,11 +702,11 @@ _Loop(p) {
 		Line := ", " Trim(p[2]) Line
 		Line := "Loop Parse" Line
 		; Line := format("Loop {1}, {2}, {3}, {4}",p[1], p[2], ToExp(p[3]), ToExp(p[4]))
-		Line := RegExReplace(Line, "(?:,\s(?:`"`")?)*$", "")				; remove trailing ,\s and ,\s""
+		Line := RegExReplace(Line, "(?:,\s(?:`"`")?)*$", "")								; remove trailing ,\s and ,\s""
 		return Line BracketEnd
 	} else if (p[1] = "Files") {
 		Line := format("Loop {1}, {2}, {3}", "Files", ToExp(p[2]), ToExp(p[3]))
-		Line := RegExReplace(Line, "(?:,\s(?:`"`")?)*$", "")				; remove trailing ,\s and ,\s""
+		Line := RegExReplace(Line, "(?:,\s(?:`"`")?)*$", "")								; remove trailing ,\s and ,\s""
 		return Line
 	} else if (p[1] = "Read") {
 		Line := p.Has(3) ? Trim(ToExp(p[3])) : ""
@@ -721,7 +715,7 @@ _Loop(p) {
 		Line := Line != "" ? ", " Line : ""
 		Line := p.Has(1) ? Trim(p[1]) Line : "" Line
 		Line := "Loop " Line
-		Line := RegExReplace(Line, "(?:,\s(?:`"`")?)*$", "")				; remove trailing ,\s and ,\s""
+		Line := RegExReplace(Line, "(?:,\s(?:`"`")?)*$", "")								; remove trailing ,\s and ,\s""
 		return Line BracketEnd
 	} else {
 		Line := p[1] != "" ? "Loop " Trim(ToExp(p[1])) : "Loop"
@@ -781,8 +775,8 @@ _LV_Modify(p) {
 	Return	RegExReplace(Out, "[\s\,]*\)$", ")")
 }
 ;################################################################################
-_LV_ModifyCol(p) {
 ; 2026-02-13 AMB, UPDATED to support HDR option, may need adj later
+_LV_ModifyCol(p) {
 	if (p.Has(1) && p[1] = '"HDR"')
 		return format("{1}.Opt({2})", gLVNameDefault, p[1])
 	return format("{1}.ModifyCol({2}, {3}, {4})", gLVNameDefault, p*)
@@ -793,7 +787,7 @@ _LV_SetImageList(p) {
 }
 ;################################################################################
 _Menu(p) {
-	return MenuConv(p)		; see GuiAndMenu.ahk
+	return MenuConv(p)																		; see GuiAndMenu.ahk
 }
 ;################################################################################
 ; 2025-07-03 AMB, CHANGED for dual conversion support
@@ -801,11 +795,11 @@ _MsgBox(p) {
 	return (gV2Conv) ? _MsgBox_V2(p) : _MsgBox_V1(p)
 }
 ;################################################################################
-; 2025-07-03 AMB, ADDED for v1.1 conversion (WORK IN PROGRESS)
-;	TODO - may merge with _MsgBox_V2() when done
 ; V1:
 ;	 MsgBox, Text (1-parameter method)
 ;	 MsgBox [, Options, Title, Text, Timeout]
+; 2025-07-03 AMB, ADDED for v1.1 conversion (WORK IN PROGRESS)
+;	TODO - may merge with _MsgBox_V2() when done
 _MsgBox_V1(p) {
 	if (RegExMatch(p[1], 'i)^((0x)?\d*\h*|\h*%\h*\w+%?\h*)$')
 	&& (p.Extra.OrigArr.Length > 1)) {
@@ -816,7 +810,7 @@ _MsgBox_V1(p) {
 		||	IsNumber(p[4])
 		||	RegExMatch(p[4], '\h*%', &mVar))) {
 			text	:= (csStr := CSect.HasContSect(p[3])) ? csStr : ToExp(p[3])
-			TmOut	:= (IsEmpty(p[4])) ? '' : ToExp(p[4])					; add timeout as needed
+			TmOut	:= (IsEmpty(p[4])) ? '' : ToExp(p[4])									; add timeout as needed
 		} else {
 			text	:= ''
 			loop p.Extra.OrigArr.Length - 2
@@ -827,9 +821,9 @@ _MsgBox_V1(p) {
 		Out := format('MsgBox {1}, {2}, {3}', ToExp(options), (title = '""' ? '' : title), text)
 		Out .= (TmOut) ? ', ' TmOut : ''
 		return Out
-	} else {																; only has 1 param - could be text, var, func call, or combo of these
-		; 2024-08-03 AMB, ADDED support for multiline text that may include variables
-		if (csStr := CSect.HasContSect(p[1])) {								; if has continuation section, converts it
+	} else {																				; only has 1 param - could be text/var/funcCall,or combo of these
+		; 2024-08-03 AMB, ADDED support for multi-line text that may include variables
+		if (csStr := CSect.HasContSect(p[1])) {												; if has continuation section, converts it
 			return 'MsgBox %' csStr
 		}
 		; does not have continuation section
@@ -840,13 +834,13 @@ _MsgBox_V1(p) {
 	}
 }
 ;################################################################################
-; 2025-07-03 AMB, ADDED/UPDATED for dual conversion support (WORK IN PROGRESS)
-;	TODO - may merge with _MsgBox_V1() when done
 ; V1:
 ; 	MsgBox, Text (1-parameter method)
 ; 	MsgBox [, Options, Title, Text, Timeout]
 ; V2:
 ; 	Result := MsgBox(Text, Title, Options)
+; 2025-07-03 AMB, ADDED/UPDATED for dual conversion support (WORK IN PROGRESS)
+;	TODO - may merge with _MsgBox_V1() when done
 _MsgBox_V2(p) {
 	if (RegExMatch(p[1], 'i)^((0x)?\d*\h*|\h*%\h*\w+%?\h*)$')
 	&& (p.Extra.OrigArr.Length > 1)) {
@@ -857,7 +851,7 @@ _MsgBox_V2(p) {
 		||	IsNumber(p[4])
 		||	RegExMatch(p[4], '\h*%', &mVar))) {
 			text	:= (csStr := CSect.HasContSect(p[3])) ? csStr : ToExp(p[3])
-			options	.= (IsEmpty(p[4])) ? '' : ' " T" ' ToExp(p[4])			; add timeout as needed
+			options	.= (IsEmpty(p[4])) ? '' : ' " T" ' ToExp(p[4])							; add timeout as needed
 		} else {
 			text	:= ''
 			loop p.Extra.OrigArr.Length - 2
@@ -870,16 +864,16 @@ _MsgBox_V2(p) {
 			Out := 'msgResult := ' Out
 		}
 		; clean up options param
-		if IsSet(mVar) {													; If timeout is variable
+		if IsSet(mVar) {																	; If timeout is variable
 			Out := RegExReplace(Out, '``" T``" (\w+)"\)', '" T" $1)')
 		}
 		Out := RegExReplace(Out, '``" T``" ', 'T')
 		Out := RegExReplace(Out, '" " T', '" T')
 		Out := RegExReplace(Out, '(,\h*"[^,]*?)\h*"([^,]*"[^,]*?\))$', '$1$2')
 		return Out
-	} else {																; only has 1 param - could be text, var, func call, or combo of these
-		; 2024-08-03 AMB, ADDED support for multiline text that may include variables
-		if (csStr := CSect.HasContSect(p[1])) {								; if has continuation section, converts it
+	} else {																				; only has 1 param - could be text, var, func call, or combo of these
+		; 2024-08-03 AMB, ADDED support for multi-line text that may include variables
+		if (csStr := CSect.HasContSect(p[1])) {												; if has continuation section, converts it
 			return 'MsgBox(' csStr ')'
 		}
 		; does not have continuation section
@@ -986,7 +980,7 @@ _NumPut(p) {
 ;################################################################################
 _Object(p) {
 	Parameters := ""
-	Function := (p.Has(2)) ? "Map" : "Object"								; If parameters are used, a map object is intended
+	Function := (p.Has(2)) ? "Map" : "Object"												; If parameters are used, a map object is intended
 	Loop p.Length {
 		Parameters .= Parameters = "" ? p[A_Index] : ", " p[A_Index]
 	}
@@ -1008,53 +1002,53 @@ _OnExit(p) {
 	return Format("OnExit({1}, {2})", p*)
 }
 ;################################################################################
+; Used with gmOnMessageMap
 ; 2025-10-12 AMB - ADDED for better support of OnMessage params and binding
-; used with gmOnMessageMap
 class clsOnMsg {
-	msg		:= ''															; OnMessage message ID
-	cbFunc	:= ''															; callback func - from OnMessage-call perspective
-	bindStr	:= ''															; bind string (can be used for sensing or appending)
-	__new(msg,cbf:='',bs:='') {												; must be instantiated using msg id
+	msg		:= ''																			; OnMessage message ID
+	cbFunc	:= ''																			; callback func - from OnMessage-call perspective
+	bindStr	:= ''																			; bind string (can be used for sensing or appending)
+	__new(msg,cbf:='',bs:='') {																; must be instantiated using msg id
 		this.msg		:= msg
 		this.cbFunc		:= cbf
 		this.bindStr	:= bs
 	}
-	funcName => Trim(this.cbFunc, '% ')										; callback func NAME ONLY (in case it's needed)
+	funcName => Trim(this.cbFunc, '% ')														; callback func NAME ONLY (in case it's needed)
 }
 ;################################################################################
+; OnMessage(MsgNumber, FunctionQ2T, MaxThreads)
+; OnMessage({1}, {2}, {3})
 ; 2025-10-05 AMB, UPDATED - changed masking src to gCBPH - see MaskCode.ahk
 ; 2025-10-12 AMB, UPDATED - to provide better support for params and binding
 ;	gmOnMessageMap now holds custom clsOnMsg objects
-; OnMessage(MsgNumber, FunctionQ2T, MaxThreads)
-; OnMessage({1}, {2}, {3})
 _OnMessage(p) {
 	global gmOnMessageMap
 	if (p.Has(1) && p.Has(2) && p[1] != '' && p[2] != '') {
-		msg := string(p[1]), cbFunc := p[2], bindStr := ''					; use vars for better clarity
-		if (InStr(cbFunc, 'Func(')) {										; when cbFunc param is using v1 Func()...
-			if (RegExMatch(cbFunc, '\.Bind\(.*\)', &bindContent)) {			; if OnMsg call includes .Bind()...
-				bindStr := bindContent[]									; ... save .Bind() string
+		msg := string(p[1]), cbFunc := p[2], bindStr := ''									; use vars for better clarity
+		if (InStr(cbFunc, 'Func(')) {														; when cbFunc param is using v1 Func()...
+			if (RegExMatch(cbFunc, '\.Bind\(.*\)', &bindContent)) {							; if OnMsg call includes .Bind()...
+				bindStr := bindContent[]													; ... save .Bind() string
 			}
-			if (RegExMatch(cbFunc, '%Func\("(\w+)"\)', &m)) {				; when cbFunc param is using Func("name")...
-				cbFunc := m[1]												; ... record just the CB func name
+			if (RegExMatch(cbFunc, '%Func\("(\w+)"\)', &m)) {								; when cbFunc param is using Func("name")...
+				cbFunc := m[1]																; ... record just the CB func name
 			}
-			else if RegExMatch(cbFunc, '%Func\((\w+)\)', &m) {				; when cbFunc param is using Func(var)...
-				cbFunc := '%' m[1] '%'										; ... add deref to cb func name
+			else if RegExMatch(cbFunc, '%Func\((\w+)\)', &m) {								; when cbFunc param is using Func(var)...
+				cbFunc := '%' m[1] '%'														; ... add deref to cb func name
 			}
 		}
 		; 2025-10-12 AMB - changed to using clsOnMsg object for issue #384-2
 		; see addOnMessageCBArgs() in GuiAndMenu.ahk
-		gmOnMessageMap[msg] := clsOnMsg(msg,cbFunc,bindStr)					; create a new clsOnMsg object
-		maxThds := (p.Has(3) && p[3] != '') ? ', ' p[3] : ''				; include maxThreads param if present
-		return	'OnMessage(' msg ', ' cbFunc bindStr maxThds ')'			; create/return OnMessage Call str
+		gmOnMessageMap[msg] := clsOnMsg(msg,cbFunc,bindStr)									; create a new clsOnMsg object
+		maxThds := (p.Has(3) && p[3] != '') ? ', ' p[3] : ''								; include maxThreads param if present
+		return	'OnMessage(' msg ', ' cbFunc bindStr maxThds ')'							; create/return OnMessage Call str
 	}
-	if (p.Has(2) && p[2] = '') {											; if cbFunc is empty...
+	if (p.Has(2) && p[2] = '') {															; if cbFunc is empty...
 		Try {
-			callback := gmOnMessageMap[string(p[1])].cbFunc					; try to get cb func...
-		} Catch {															; ... (no object has been created for this msg)
-			Return 'OnMessage(' p[1] ', ' gCBPH ', 0)'						; Didnt find lister to turn off
+			callback := gmOnMessageMap[string(p[1])].cbFunc									; try to get cb func...
+		} Catch {																			; ... (no object has been created for this msg)
+			Return 'OnMessage(' p[1] ', ' gCBPH ', 0)'										; Didn't find listener to turn off
 		}
-		Return 'OnMessage(' p[1] ', ' callback ', 0)'						; Found the listener to turn off
+		Return 'OnMessage(' p[1] ', ' callback ', 0)'										; Found the listener to turn off
 	}
 }
 ;################################################################################
@@ -1069,7 +1063,7 @@ _Pause(p) {
 _PixelGetColor(p) {
 	Out := p[1] " := PixelGetColor(" p[2] ", " p[3]
 	if (p[4] != "") {
-		mode := StrReplace(p[4], "RGB")										; We remove RGB because it is no longer used, while it doesn't error now it might error in the future
+		mode := StrReplace(p[4], "RGB")														; this doesn't error now, but might in the future
 		if (Trim(Trim(mode, '"')) = "")
 			Return Out ")"
 		Return Out ", " Trim(mode) ")"
@@ -1186,8 +1180,8 @@ _Progress(p) {
 	return	Out
 }
 ;################################################################################
-; 2025-12-10 AMB, UPDATED - added line fill to prevent lockups in certain cases
 ; V1: Random, OutputVar, Min, Max
+; 2025-12-10 AMB, UPDATED - added line fill to prevent lockups in certain cases
 _Random(p) {
 	if (p[1] = "") {
 		Return "`; V1toV2: Removed Random reseed" . NL.CRLF gLineFillMsg
@@ -1229,14 +1223,14 @@ _RegExMatch(p) {
 			; Mode 3 (match object)
 			; v1OutputVar.Value(1) -> v2OutputVar[1]
 			; The v1 methods Count and Mark are properties in v2.
-			P[2] := ( Match[1] || Match[2] ? '"' Match[1] Match[2] ")" : '"' ) . Match[3] ; Remove the "O" from the options
+			P[2] := ( Match[1] || Match[2] ? '"' Match[1] Match[2] ")" : '"' ) . Match[3]	; Remove the "O" from the options
 			gaList_MatchObj.Push(OutputVar)
 		} else if (RegExMatch(OrigPattern, '^"([^"(])*P([^"(])*\)(.*)$', &Match)) {
 			; Mode 2 (position-and-length)
 			; v1OutputVar		-> v2OutputVar.Len
 			; v1OutputVarPos1	-> v2OutputVar.Pos[1]
 			; v1OutputVarLen1	-> v2OutputVar.Len[1]
-			P[2] := ( Match[1] || Match[2] ? '"' Match[1] Match[2] ")" : '"' ) . Match[3] ; Remove the "P" from the options
+			P[2] := ( Match[1] || Match[2] ? '"' Match[1] Match[2] ")" : '"' ) . Match[3]	; Remove the "P" from the options
 			gaList_PseudoArr.Push({name: OutputVar "Len", newname: OutputVar '.Len'})
 			gaList_PseudoArr.Push({name: OutputVar "Pos", newname: OutputVar '.Pos'})
 			gaList_PseudoArr.Push({strict: true, name: OutputVar, newname: OutputVar ".Len"})
@@ -1244,8 +1238,8 @@ _RegExMatch(p) {
 				gaList_PseudoArr.Push({strict: true, name: OutputVar "Len" CaptName, newname: OutputVar '.Len["' CaptName '"]'})
 				gaList_PseudoArr.Push({strict: true, name: OutputVar "Pos" CaptName, newname: OutputVar '.Pos["' CaptName '"]'})
 			}
-		} else if (RegExMatch(OrigPattern, 'i)^"[a-z``]*\)'))		; Explicit options.
-			|| 	   RegExMatch(OrigPattern, 'i)^"[^"]*[^a-z``]') {	; Explicit no options.
+		} else if (RegExMatch(OrigPattern, 'i)^"[a-z``]*\)'))								; Explicit options.
+			|| 	   RegExMatch(OrigPattern, 'i)^"[^"]*[^a-z``]') {							; Explicit no options.
 			; Mode 1 (Default)
 			; v1OutputVar	-> v2OutputVar[0]
 			; v1OutputVar1	-> v2OutputVar[1]
@@ -1302,31 +1296,38 @@ _RegWrite(p) {
 }
 ;################################################################################
 _RemoveAt(p) {
-	if (p.Length = 1 && p[1] = "") {																						; Arr.Remove()
+	if (p.Length = 1 && p[1] = "") {														; Arr.Remove()
 		Return "Pop()"
-	} else if (p.Length = 1 && (IsDigit(p[1]) || p[1] = Trim(p[1], '"'))) {													; Arr.Remove(n)
+	} else if (p.Length = 1
+	  && (IsDigit(p[1]) || p[1] = Trim(p[1], '"')))				{							; Arr.Remove(n)
 		Return "RemoveAt(" p[1] ")"
-	} else if (p.Length = 2 && (IsDigit(p[1]) || p[1] = Trim(p[1], '"')) && (IsDigit(p[2]) || p[2] = Trim(p[2], '"'))) {	; Arr.Remove(n, n)
+	} else if (p.Length = 2
+	  && (IsDigit(p[1]) || p[1] = Trim(p[1], '"'))
+	  && (IsDigit(p[2]) || p[2] = Trim(p[2], '"')))				{							; Arr.Remove(n, n)
 		Return "RemoveAt(" p[1] ", " p[2] " - " p[1] " + 1)"
-	} else if (p.Length = 2 && (IsDigit(p[1]) || p[1] = Trim(p[1], '"')) && p[2] = "`"`"") {								; Arr.Remove(n, "")
+	} else if (p.Length = 2
+	  && (IsDigit(p[1]) || p[1] = Trim(p[1], '"'))
+	  && p[2] = "`"`"")											{							; Arr.Remove(n, "")
 		Return "Delete(" p[1] ")"
-	} else {
+	} else														{
 		params := ""
 		for , param in p
 			params .= param ", "
-		Return "Delete(" RTrim(params, ", ") ") `; V1toV2: Check Object.Remove in v1 docs to see which one matches"
+		msg := " `; V1toV2: Check Object.Remove in v1 docs to see which one matches"
+		Return "Delete(" RTrim(params, ", ") ")" msg
 	}
 }
 ;################################################################################
 _Run(p) {
 	if (InStr(p[3], "UseErrorLevel")) {
 		p[3] := RegExReplace(p[3], "i)(.*?)\s*\bUseErrorLevel\b(.*)", "$1$2")
-		Out := format("{   ErrorLevel := `"ERROR`"`r`n" gIndent "   Try ErrorLevel := Run({1}, {2}, {3}, {4})`r`n" gIndent "}", p*)
+		Out := format("{   ErrorLevel := `"ERROR`"`r`n"
+			. gIndent "   Try ErrorLevel := Run({1}, {2}, {3}, {4})`r`n" gIndent "}", p*)
 	} else {
 		Out := format("Run({1}, {2}, {3}, {4})", p*)
 	}
 	Out		:= RegExReplace(Out, "[\s\,]*\)$", ")")
-	Out		:= Zip(out, 'RUN')			; 2025-11-30 AMB - compress to single-line tag, as needed
+	Out		:= Zip(out, 'RUN')																; 2025-11-30 AMB - compress to single-line tag, as needed
 	Return	Out
 }
 ;################################################################################
@@ -1349,11 +1350,14 @@ _SB_SetIcon(p) {
 _SendMessage(p) {
 	if (p[3] ~= "^&.*") {
 		p[3] := SubStr(p[3],2)
-		Out := format('if (type(' . p[3] . ')="Buffer") { `; V1toV2: If statement may be removed depending on type parameter`r`n'
-			. gIndent . gSingleIndent 'ErrorLevel := SendMessage({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9})', p*)
+		Out := format('if (type(' . p[3]
+			. ')="Buffer") { `; V1toV2: If statement may be removed depending on type parameter`r`n'
+			. gIndent . gSingleIndent
+			. 'ErrorLevel := SendMessage({1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9})', p*)
 		Out := RegExReplace(Out, "[\s\,]*\)$", ")")
 		Out .= format('`r`n' . gIndent . '} else{`r`n'
-			. gIndent . gSingleIndent 'ErrorLevel := SendMessage({1}, {2}, StrPtr({3}), {4}, {5}, {6}, {7}, {8}, {9})', p*)
+			. gIndent . gSingleIndent
+			. 'ErrorLevel := SendMessage({1}, {2}, StrPtr({3}), {4}, {5}, {6}, {7}, {8}, {9})', p*)
 		Out := RegExReplace(Out, "[\s\,]*\)$", ")")
 		Out .= '`r`n' . gIndent . "}"
 		return Out
@@ -1367,12 +1371,12 @@ _SendMessage(p) {
 ;################################################################################
 ; 2026-04-13 AMB, UPDATED to fix stray trailing DQ in some cases
 _SendRaw(p) {
-	p1	:= FormatParam('keysT2E', p[1])													; format just the param itself
-	raw	:= '"{Raw}" '																	; ini default raw str
-	if (p1 ~= '^"') {																	; if formatted param begins with DQ...
-		p1	:= SubStr(p1,2), raw := RTrim(raw, '" ')									; ... remove lead DQ from param, and trail DQ/space from raw
+	p1	:= FormatParam('keysT2E', p[1])														; format just the param itself
+	raw	:= '"{Raw}" '																		; ini default raw str
+	if (p1 ~= '^"') {																		; if formatted param begins with DQ...
+		p1	:= SubStr(p1,2), raw := RTrim(raw, '" ')										; ... remove lead DQ from param, and trail DQ/space from raw
 	}
-	Return	'Send(' raw p1 ')'															; return result
+	Return	'Send(' raw p1 ')'																; return result
 }
 ;################################################################################
 ; 2025-10-05 AMB, UPDATED - changed gaList_LblsToFuncO to gmList_LblsToFunc
@@ -1381,7 +1385,7 @@ _SetTimer(p) {
 	if (p[2] = "Off") {
 		Out := format("SetTimer({1},0)", p*)
 	} else if (p[2] = 0) {
-		Out := format("SetTimer({1},1)", p*)											; Change to 1, because 0 deletes timer instead of no delay
+		Out := format("SetTimer({1},1)", p*)												; Change to 1, because 0 deletes timer instead of no delay
 	} else {
 		Out := format("SetTimer({1},{2},{3})", p*)
 	}
@@ -1421,7 +1425,7 @@ _SoundGet(p) {
 }
 ;################################################################################
 ; SoundSet,NewSetting,ComponentTypeT2E,ControlType,DeviceNumberT2E
-; Not 100% verified, more examples would be helpfull.
+; Not 100% verified, more examples would be helpful.
 _SoundSet(p) {
 	NewSetting		:= p[1]
 	ComponentType	:= p[2]
@@ -1484,12 +1488,14 @@ _SplashImage(p) {
 _SplashTextOn(p) {
 	P[1] := P[1] = "" ? 200	: P[1]
 	P[2] := P[2] = "" ? 0	: P[2]
-	return "SplashTextGui := Gui(`"ToolWindow -Sysmenu Disabled`", " p[3] "), SplashTextGui.Add(`"Text`",, " p[4] "), SplashTextGui.Show(`"w" p[1] " h" p[2] "`")"
+	return "SplashTextGui := Gui(`"ToolWindow -Sysmenu Disabled`", "
+			. p[3] "), SplashTextGui.Add(`"Text`",, "
+			. p[4] "), SplashTextGui.Show(`"w" p[1] " h" p[2] "`")"
 }
 ;################################################################################
 _StringCaseSense(p) {
-	if	p[1] =	"Locale"													; In conversions locale is treated as off
-		p[1] :=	'"Locale"'													; this is just for is script checks in expressions, (and no unset var warnings)
+	if	p[1] =	"Locale"																	; In conversions locale is treated as off
+		p[1] :=	'"Locale"'																	; just for in script checks in expressions, (and no unset var warnings)
 	return "A_StringCaseSense := " p[1]
 }
 ;################################################################################
@@ -1498,15 +1504,15 @@ _StringGetPos(p) {
 	if (IsEmpty(p[4]) && IsEmpty(p[5])) {
 		return RegExReplace(format("{2} := InStr({3}, {4},{1}) - 1", CaseSense, p*), "[\s,]*\)", ")")
 	}
-	; modelled off of:
+	; modeled from:
 	; https://github.com/Lexikos/AutoHotkey_L/blob/9a88309957128d1cc701ca83f1fc5cca06317325/source/script.cpp#L14732
 	else {
-		p[5] := p[5] ? p[5] : 0												; 5th param is 'Offset' aka starting position. set default value if none specified
+		p[5] := p[5] ? p[5] : 0																; 5th param is 'Offset' aka start pos. set default val if none specified
 		p4FirstChar	:= SubStr(p[4], 1, 1)
 		p4LastChar	:= SubStr(p[4], -1)
-		if (p4FirstChar = "`"") && (p4LastChar = "`"") {					; remove start/end quotes, would be nice if a non-expr was passed in
-			; the text param was already conveted to expr based on the SideT2E param definition
-			; so this block handles cases such as "L2" or "R1" etc
+		if (p4FirstChar = "`"") && (p4LastChar = "`"") {									; remove start/end quotes, would be nice if a non-expr was passed in
+			; text param already converted to expr based on SideT2E param def...
+			; ... so this handles cases like "L2" or "R1" etc
 			p4noquotes	:= SubStr(p[4], 2, -1)
 			p4char1		:= SubStr(p4noquotes, 1, 1)
 			occurrences	:= SubStr(p4noquotes, 2)
@@ -1566,7 +1572,7 @@ _StringMid(p) {
 			out .= format(gIndent gSingleIndent "{1} := SubStr(SubStr({2}, 1, {3}), -{4})", p*) . "`r`n"
 			out .= format(gIndent "else", p) . "`r`n"
 			out .= format(gIndent gSingleIndent "{1} := SubStr({2}, {3}, {4})", p*)
-			Out := Zip(Out, 'STRMID')	; 2025-11-30 AMB - compress to single-line tag, as needed
+			Out := Zip(Out, 'STRMID')														; 2025-11-30 AMB - compress to single-line tag, as needed
 			return out
 		}
 	}
@@ -1587,7 +1593,7 @@ _StringReplace(p) {
 		Out := format("{2} := StrReplace({3}, {4}, {5},{1},, 1)", CaseSense, p*)
 	} else {
 		p5char1 := SubStr(p[5], 1, 1)
-		if (p[5] = "UseErrorLevel") {											; UseErrorLevel also implies ReplaceAll
+		if (p[5] = "UseErrorLevel") {														; UseErrorLevel also implies ReplaceAll
 			Out := format("{2} := StrReplace({3}, {4}, {5},{1}, &ErrorLevel)", CaseSense, p*)
 		} else if (p5char1 = "1") || (StrUpper(p5char1) = "A") {
 			; if the first char of the ReplaceAll param starts with '1' or 'A'
@@ -1596,13 +1602,15 @@ _StringReplace(p) {
 			Out := format("{2} := StrReplace({3}, {4}, {5},{1})", CaseSense, p*)
 		} else {
 			Out := "if (not " ToExp(p[5]) ")"
-			Out .= "`r`n" . gIndent . gSingleIndent . format("{2} := StrReplace({3}, {4}, {5},{1},, 1)", CaseSense, p*)
+			Out .= "`r`n" . gIndent . gSingleIndent
+				. format("{2} := StrReplace({3}, {4}, {5},{1},, 1)", CaseSense, p*)
 			Out .= "`r`n" . gIndent . "else"
-			Out .= "`r`n" . gIndent . gSingleIndent . format("{2} := StrReplace({3}, {4}, {5},{1}, &ErrorLevel)", CaseSense, p*)
+			Out .= "`r`n" . gIndent . gSingleIndent
+				. format("{2} := StrReplace({3}, {4}, {5},{1}, &ErrorLevel)", CaseSense, p*)
 		}
 	}
 	Out		:= RegExReplace(Out, "[\s\,]*\)$", ")")
-	Out		:= Zip(Out, 'STRREPL')		; 2025-11-30 AMB - compress to single-line tag, as needed
+	Out		:= Zip(Out, 'STRREPL')															; 2025-11-30 AMB - compress to single-line tag, as needed
 	return	Out
 }
 ;################################################################################
@@ -1746,7 +1754,7 @@ _VarSetCapacity(p) {
 	}
 	reM := gfrePostFuncMatch
 	if (p[3] != "") {
-		; since even multiline continuation allows line comments adding vrEOLComment_Func shouldn't break anything, but if it does, add this hacky comment
+		; since even multi-line continuation allows line comments adding vrEOLComment_Func shouldn't break anything, but if it does, add this hacky comment
 		;`{3} + 0*StrLen("V1toV2: comment")`, or when you can't add a 0 (to a buffer)
 		; p.Push("V1toV2: comment")
 		; retStr := Format('RegExReplace("{1} := Buffer({2}, {3}) ``; {4}", " ``;.*$")', p*)
@@ -1758,24 +1766,24 @@ _VarSetCapacity(p) {
 		retBuf := Format("{1} := Buffer({2}, {3})", p*)
 		dbgTT(3, "@_VarSetCapacity: 3 args, plain", Time:=3,id:=5,x:=-1,y:=-1)
 		} else {
-		if (reM.Count = 1) {												; just in case, min should be 2
+		if (reM.Count = 1) {																; just in case, min should be 2
 			p.Push(reM[])
 			retBuf	:= Format("({1} := Buffer({2}, {3})).Size{4}", p*)
 			dbgTT(3, "@_VarSetCapacity: 3 args, Regex 1 group", Time:=3,id:=5,x:=-1,y:=-1)
-		} else if (reM.Count = 2) {											; one operator and a number, e.g. *0
+		} else if (reM.Count = 2) {															; one operator and a number, e.g. *0
 			; op	:= reM[1]
 			; num	:= reM[2]
 			; if Trim(op) = "//"
 			p.Push(reM[])
 			retBuf	:= Format("({1} := Buffer({2}, {3})).Size{4}", p*)
 			dbgTT(3, "@_VarSetCapacity: 3 args, Regex 2 groups", Time:=3,id:=5,x:=-1,y:=-1)
-		} else if (reM.Count = 3) {											; op1, number, op2, e.g. *0+
+		} else if (reM.Count = 3) {															; op1, number, op2, e.g. *0+
 			op1 := reM[1]
 			num := reM[2]
 			op2 := reM[3]
-			if (Trim(op1)="*" && Trim(num)="0") {							; move to the previous new line, remove regex matches
-				if (%vrNL_Func%) {											; add a newline for multiple calls in a line
-				%vrNL_Func% .= "`r`n"										;;;;; but breaks other calls
+			if (Trim(op1)="*" && Trim(num)="0") {											; move to the previous new line, remove regex matches
+				if (%vrNL_Func%) {															; add a newline for multiple calls in a line
+					%vrNL_Func% .= "`r`n"													;;;;; but breaks other calls
 				}
 				%vrEOLComment_Func% .= " NB! if this is part of a control flow block without {}, please enclose this and the next line in {}!"
 				p.Push(%vrEOLComment_Func%)
@@ -1844,14 +1852,14 @@ _WinGet(p) {
 		gaList_PseudoArr.Push({strict: true, name: P[1], newname: "a" P[1] ".Length"})
 	}
 	Out		:= RegExReplace(Out, "[\s\,]*\)$", ")")
-	Out		:= Zip(Out, 'WINGET')		; 2025-11-30 AMB - compress to single-line tag, as needed
+	Out		:= Zip(Out, 'WINGET')															; 2025-11-30 AMB - compress to single-line tag, as needed
 	Return	Out
 }
 ;################################################################################
 _WinGetActiveStats(p) {
 	Out := format("{1} := WinGetTitle(`"A`")", p*) . "`r`n"
 	Out .= format("WinGetPos(&{4}, &{5}, &{2}, &{3}, `"A`")", p*)
-	Out := Zip(Out, 'WINGAS')			; 2025-11-30 AMB - compress to single-line tag, as needed
+	Out := Zip(Out, 'WINGAS')																; 2025-11-30 AMB - compress to single-line tag, as needed
 	return Out
 }
 ;################################################################################
@@ -1879,7 +1887,7 @@ _WinMove(p) {
 ;################################################################################
 _WinSet(p) {
 	if (p[1] = "AlwaysOnTop" || p[1] = "TopMost") {
-		p[1] := "AlwaysOnTop"												; Convert TopMost
+		p[1] := "AlwaysOnTop"																; Convert TopMost
 		Switch p[2], False {
 			Case '"on"':		p[2] := 1
 			Case '"off"':	p[2] := 0
@@ -1924,7 +1932,7 @@ _WinWait(p) {
 	} else {
 		out := Format("WinWait({1}, {2}, {3}, {4}, {5})", p*)
 	}
-	Return RegExReplace(out, "[\s\,]*\)$", ")")								; remove trailing empty params
+	Return RegExReplace(out, "[\s\,]*\)$", ")")												; remove trailing empty params
 }
 ;################################################################################
 ; Created because else there where empty parameters.
@@ -1934,7 +1942,7 @@ _WinWaitActive(p) {
 	} else {
 		out := Format("WinWaitActive({1}, {2}, {3}, {4}, {5})", p*)
 	}
-	Return RegExReplace(out, "[\s\,]*\)$", ")")								; remove trailing empty params
+	Return RegExReplace(out, "[\s\,]*\)$", ")")												; remove trailing empty params
 }
 ;################################################################################
 ; Created because else there where empty parameters.
@@ -1944,7 +1952,7 @@ _WinWaitClose(p) {
 	} else {
 		out := Format("WinWaitClose({1}, {2}, {3}, {4}, {5})", p*)
 	}
-	Return RegExReplace(out, "[\s\,]*\)$", ")")								; remove trailing empty params
+	Return RegExReplace(out, "[\s\,]*\)$", ")")												; remove trailing empty params
 }
 ;################################################################################
 ; Created because else there where empty parameters.
@@ -1954,7 +1962,7 @@ _WinWaitNotActive(p) {
 	} else {
 		out := Format("WinWaitNotActive({1}, {2}, {3}, {4}, {5})", p*)
 	}
-	Return RegExReplace(out, "[\s\,]*\)$", ")")								; remove trailing empty params
+	Return RegExReplace(out, "[\s\,]*\)$", ")")												; remove trailing empty params
 }
 
 /*

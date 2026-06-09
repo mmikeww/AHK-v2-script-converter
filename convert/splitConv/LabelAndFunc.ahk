@@ -3,9 +3,8 @@
 ;	LBL,HK,HS,Func/Class
 ; 2026-05-04 AMB, UPDATED to merge common code with Scope.ahk
 ;################################################################################
-; class clsLabelSect - 2025-10-05 AMB, ADDED
-; 2026-05-04 AMB, UPDATED - changed class name, merged some code with Scope.ahk
-; To support new stucture for labels, hotkeys, hotstrings, and...
+; class clsLabelSect
+; To support new structure for labels, hotkeys, hotstrings, and...
 ;	the interaction between them, global-scope-code, and funcs
 ; The goal of this class is to organize individual LBLs/HKs/HSs,
 ;	their code-blocks, and the logic flow between them
@@ -13,6 +12,8 @@
 ; This class separates the original code into sections/chunks. The borders of...
 ;	... these sections occur where LBL/HK/HS/FUNC/CLS/GLOBAl-CODE meet.
 ;	Each section holds the code associated with one of those section types.
+; 2025-10-05 AMB, ADDED
+; 2026-05-04 AMB, UPDATED - changed class name, merged some code with Scope.ahk
 class clsLabelSect
 {
 	Static Sects			:= []															; array to hold section objects
@@ -61,7 +62,7 @@ class clsLabelSect
 		}
 	}
 	;############################################################################
-	Static SectionObj[lblName]																; returns sect obj associated wth lblName param
+	Static SectionObj[lblName]																; returns sect obj associated with lblName param
 	{
 		get {
 			for idx, sect in this.Sects {													; look thru array list...
@@ -100,7 +101,7 @@ class clsLabelSect
 				call HK funcs using same-line func calls
 				leave orig same-line HKs as is
 				leave orig pass-thru HKs as is
-			b. convert multi-line HSs to func, but dont move code
+			b. convert multi-line HSs to func, but don't move code
 				leave orig same-line HSs as is
 				leave orig pass-thru HSs as is
 			c. stray global code between LBL,HK,HS,CLS,FUNC...
@@ -117,7 +118,7 @@ class clsLabelSect
 			logic flow will behave normally ?
 			no change to stray global code
 		4. Orig funcs/classes will not be changed, except...
-			update func params for v2 comatibility, as needed
+			update func params for v2 compatibility, as needed
 		*/
 	Static Main_ProcessSects(code)															; Main operation for this class
 	{
@@ -154,6 +155,10 @@ class clsLabelSect
 	{
 		code := this._updateLblToFuncs(code)												; adds v2 formatting to new label funcs
 		code := this._gotoToFC_orig(code)													; converts goto to funcCalls as needed (for orig script funcs only)
+;		if (gMicroScopeTest) {
+;			return
+;		}
+
 		code := clsCodeChop.RestoreMasksAll(code)											; removes temp-masking, performs cleanup of script code
 		code := this._gosubUpdate(code)														; update Gosub calls (to reflect changes made here, and fix issue #322)
 		(gHasV2Funcs) && code := '#Warn Unreachable, Off`r`n' . code						; add warning if labels were converted to funcs
@@ -179,7 +184,7 @@ class clsLabelSect
 		if (!funcListStr := this._makeFuncsStr())											; if funcListStr creation is NOT successful...
 			return ''																		; ... return empty str
 		div			:= StrReplace(Format('{:15}',''),' ','#')								; generic divider
-		divline		:= '`r`n`r`n`;' div '  V1toV2 FUNCS  ' div								; mark very top of func list
+		divLine		:= '`r`n`r`n`;' div '  V1toV2 FUNCS  ' div								; mark very top of func list
 		global		gHasV2Funcs := true														; 2026-03-29 ADDED
 		return		divLine . funcListStr													; return func list string
 	}
@@ -254,7 +259,7 @@ class clsLabelSect
 						}
 						else {																; ... UNKNOWN label - probably not global (located in a func maybe?)
 							msg		:= ' `; V1toV2: Gosub (Manual edit required)'			; ... 	flag Gosub call as a manual edit
-							line	:= leftStr . GS . Lbl . msg . trail						; ...	add mssg to Gusub call
+							line	:= leftStr . GS . Lbl . msg . trail						; ...	add msg to Gosub call
 						}
 					}
 				}
@@ -303,7 +308,7 @@ class clsLabelSect
 					continue																; ... is pass-thru... skip it, goto next section
 				}
 				else if (nextType = 'BLKFUNC') {											; if next section is a func...
-					wcFuncsToUpdate[nextSect.Tag] := sect.LabelName							; ... flag func (tag) to be updated with new wilcard param
+					wcFuncsToUpdate[nextSect.Tag] := sect.LabelName							; ... flag func (tag) to be updated with new wildcard param
 					sect.FuncName := nextSect.LabelName										; ... update funcName for current sect so it points to named-func
 					continue																; ... continue to next section
 				}
@@ -418,7 +423,7 @@ class clsLabelSect
 					}
 					; ADD MORE TERMINTION CHECKS AS NEEDED
 
-					; Any other scenerio for next section... catch all
+					; Any other scenario for next section... catch all
 					if (nextSect.tType ~= '(?i)(?:HK|HS|LBL)'){								; if next section is a lBL/HK/HS...
 						flowStr .= curLabel . jChar	; ⟹									; ... marks section as pass-thru (jump over)
 						break																; ... goto next section
@@ -492,6 +497,7 @@ class clsLabelSect
 	; 2026-03-29 AMB, UPDATED: to add SetDefaultGui() and fix missing indent
 	Static _makeFuncLBL(&sect)																; creates BrcBlk/func (and funcCall) from LBL code, as needed
 	{
+		global gmGuiFuncCBChecks
 
 		if (sect.tType != 'LBL') {															; process for labels only
 			return ''
@@ -553,6 +559,7 @@ class clsLabelSect
 		sect.Blk	:= '`r`n' func_DnC														; replace orig blk/body with a func call
 		exitCmd		:= RegExReplace(sect._xCmd, '(?i)^(\h*RETURN).*', '$1')					; 2025-10-27 - remove anything following Return cmd
 		sect.Blk	.= (exitCmd) ? ('`r`n' . exitCmd) : '`r`nreturn'						; add any orig-lbl exit-command after func call, otherwise add simple return
+		;gmGuiFuncCBChecks[funcName] := true
 		return		outFunc																	; return the new func
 	}
 	;############################################################################
@@ -589,7 +596,7 @@ class clsLabelSect
 		paths	:= '(?:' lbl gJumpChar ')*'
 		targ	:= '(?<targ>(?&lbl))'
 		nFlow	:= escRegexChars(curLbl) . path1 . paths . targ . term
-		; curLbl[⟹⟼](?:(?<lbl>[^⟹⟼✖]+)⟹)*(?<targ>(?&lbl))(?<term>[⟼✖]|$)		; does not capture curLbl
+		; curLbl[⟹⟼](?:(?<lbl>[^⟹⟼✖]+)⟹)*(?<targ>(?&lbl))(?<term>[⟼✖]|$)			; does not capture curLbl
 
 		flowStr	:= this._logicFlow															; get logic flow reference string
 		if (RegExMatch(flowStr, nFlow, &m)) {												; if next link is available...
@@ -624,7 +631,7 @@ class clsLabelSect
 			}
 		}
 		nl .= indent																		; add indent to CRLF
-		if (gDynGuiNaming && gfHasDynamicGui) {												; if using dynamic namng and v1 script has dynamic gui attributes
+		if (gDynGuiNaming && gfHasDynamicGui) {												; if using dynamic naming and v1 script has dynamic gui attributes
 			param	:= 'A_GuiControl'														; ... set common param
 			setDef	:= '(IsSet(' param ')) && SetDefaultGui(' param ')' nl					; ... set SetDefaultGui() call (string)
 		}
@@ -638,7 +645,7 @@ class clsLabelSect
 	;############################################################################
 	; 2025-11-01 AMB, UPDATED key case-sensitivity for gmList_LblsToFunc
 	; 2026-02-22 AMB, UPDATED guiContStr
-	; 2026-03-29 AMB, UPDATED to move A_GuiControl addition to dedicted func
+	; 2026-03-29 AMB, UPDATED to move A_GuiControl addition to dedicated func
 	Static _updateLblToFuncs(code)															; applies A_GuiEvent/A_GuiControl params/vars, Regex replacements
 	{
 		While(pos := RegexMatch(code,gPtn_Blk_FUNC, &mFunc, pos??1))						; for each func found in code...
@@ -657,7 +664,7 @@ class clsLabelSect
 			brcBlk	:= this._updateLblBlock(brcBlk, declare)								; add A_GuiControl manipulations to brace block contents
 			funcStr	:= declare . TCT . brcBlk												; rebuild func
 			for idx, reObj in L2F_Obj.RegExList {											; apply regexs as needed
-				funcStr := applyRegex(funcStr, L2f_Obj.RegExList)							; perform ALL occurences of ALL needles
+				funcStr := applyRegex(funcStr, L2f_Obj.RegExList)							; perform ALL occurrences of ALL needles
 			}
 			;code	:= RegExReplace(code,escRegexChars(origStr),funcStr,,1,pos)				; apply updates to orig code (will fault if needle length > 40K)
 			code	:= StrReplaceAt(code, origStr, funcStr,, pos, 1)						; 2026-01-17 - apply updates to orig code
@@ -671,7 +678,7 @@ class clsLabelSect
 ; 2026-06-05 AMB, UPDATED
 class clsLFSectList extends clsSectList			; see Scope.ahk for parent class
 {
-	_newSect(sect) {										; overide						; creates section object
+	_newSect(sect) {										; override						; creates section object
 		if (!sd := this._getSectDetails(sect))												; validate that section is a legit target
 			return false																	; ... flag as invalid
 		return clsLFSect({oStr:sect,sb:sd.sb,tag:sd.tag})	; different						; create new section object and return it
@@ -696,12 +703,13 @@ class clsLFSect extends clsSect					; see Scope.ahk for parent class
 	;############################################################################
 	__New(obj)																				; constructor
 	{
-		super.__New(obj)																	; use parent constuctor
+		super.__New(obj)																	; use parent constructor
 		this._getV2Name()																	; get v2 func name
 	}
 	;############################################################################
-	; 2026-06-07 AMB, ADDED to simulate v1 logic flow for v1 brace-blocks
+	; Provides simulated v1 logic flow for v1 brace-blocks
 	; this only applies to sections that were originally brace-blocks in v1 script
+	; 2026-06-07 AMB, ADDED
 	BridgeLogicFlow(lblName)																; adds a logical link pointing to code beyond current brace-block
 	{
 		; add a lblName() call that continues logical code execution
@@ -724,8 +732,8 @@ class clsLFSect extends clsSect					; see Scope.ahk for parent class
 		return this.Blk																		; return updated brace-block to caller (why not?)
 	}
 	;############################################################################
+	; This OVERRIDE allows logic flow to bypass exitCmd, as needed for v1 brcBlks
 	; 2026-06-07 AMB, ADDED to OVERRIDE original method
-	; this OVERRIDE allows logic flow to bypass exitCmd, as needed for v1 brcBlks
 	_exitCmdSplit(blk)																		; sub-divides sect blk based on position of exit cmd (if present)
 	{																						;	also extracts exit cmd if present
 		Mask_T(&blk, 'IWTLFS')																; mask [For,If,Loop,Switch,Try,While] within sect block
@@ -736,8 +744,11 @@ class clsLFSect extends clsSect					; see Scope.ahk for parent class
 		; if section is a v1 brace-block, allow alternate logic flow
 		isV1Blk := false
 		if (this._isV1BrcBlk && isBB := isBraceBlock(blk)) {								; if section was a v1 brace-block originally...
-			; TODO - IF FIRST CMD AFTER BRACE BLOCK IS AN EXIT CMD...
-			;	... DO NOT ALLOW CALL() TO NEXT LOGICAL SECTION
+
+
+			; TODO - IF FIRST CMD AFTER BRACE BLOCK AN EXIT CMD, DO NOT ADD LINK TO OUTSIDE
+
+
 			pos			:= 0, xCmdLine := ''												; ... flag block as having NO EXIT CMD
 			blk			:= isBB.TCT . isBB.bb '`r`n'										; ... limit block to just the brace-block itself
 			tBlk		:= isBB.trail, this.tBlk := tBlk									; ... get code following brace-blk
@@ -756,20 +767,20 @@ class clsLFSect extends clsSect					; see Scope.ahk for parent class
 		return {xCmd:xCmdLine,xPos:pos,blk:blk,tBlk:tBlk}									; return details, whether exitCmd exist or not
 	}
 	;############################################################################
-	HKFunc		; PUBLIC (mght add validations later)										; func (name) that is sometimes used as HK block code
+	HKFunc		; PUBLIC (might add validations later)										; func (name) that is sometimes used as HK block code
 	{
 		; for HKs only - https://www.autohotkey.com/docs/v1/Hotkeys.htm#Function
 		get => this._nHKFC
 		set => this._nHKFC := value
 	}
 	;############################################################################
-	FuncName	; PUBLIC (mght add validations later)										; name to use for func when section is converted to func
+	FuncName	; PUBLIC (might add validations later)										; name to use for func when section is converted to func
 	{
 		get => (this.HKFunc) ? this.HKFunc : ((this._nV2FC) ? this._nV2FC : this._name)
 		set => this._nV2FC := value
 	}
 	;############################################################################
-	FuncStr {	; PUBLIC (mght add validations later)										; newly created func that will hold section code
+	FuncStr {	; PUBLIC (might add validations later)										; newly created func that will hold section code
 		get => this._newFunc
 		set => this._newFunc := value
 	}
@@ -779,7 +790,7 @@ class clsLFSect extends clsSect					; see Scope.ahk for parent class
 		oBrc	:= '`r`n{ `; V1toV2: Added opening brace' . uniqStr							; opening brace to be added  to top of sect
 		glbl	:= '`r`nglobal `; V1toV2: Made function global'								; global keyword to be added to top of sect
 		cBrc	:= '`r`n} `; V1toV2: Added closing brace' . uniqStr							; closing brace to be added to sect exit
-		fExit	:= false																	; ini, incase no exit found
+		fExit	:= false																	; ini, in case no exit found
 		blkStr	:= this.Blk																	; initial code block
 		if (this.HasExit) {																	; if section has an exit command...
 			oExitCmd := this._xCmd, pos := this._xPos										; ... record details about exit cmd line
@@ -837,7 +848,7 @@ class clsConvLabel
 	labelName	:= ''																		; label name that is being called
 	params		:= ''																		; func params if applicable for host
 	funcName	:= ''																		; func name if applicable
-	RegExList	:= []																		; rexex needles and replacements - array of map objs
+	RegExList	:= []																		; regex needles and replacements - array of map objs
 
 	__new(hostType, lblName, params, funcName := '', regex := '')
 	{
@@ -860,20 +871,21 @@ applyRegex(srcStr, RegexArr)																; applies regex replacements as requ
 				loop {																		; ensure all replacements are made within srcStr
 					saveSrcStr := srcStr													; will be used to control loop exit
 					srcStr := RegExReplace(srcStr, obj.NeedleRegEx, obj.Replacement)		; apply replacement as necessary
-				} Until (srcStr = saveSrcStr)												; exit loop when ALL occurence are replaced
+				} Until (srcStr = saveSrcStr)												; exit loop when ALL occurrence are replaced
 			}
 		}
 	}
 	return srcStr
 }
 ;################################################################################
-; 2025-10-05 AMB, ADDED
-; provides access to conversion of Labels, HK, HS thru clsLabelSect.Main_ProcessSects()
+; Provides access to conversion of Labels, HK, HS thru clsLabelSect.Main_ProcessSects()
 ; attempts to overcome limitations caused by the removal of Gosub from AHKv2,
 ;	and allow the combination of Goto and func calls to behave the same as...
 ;	they did in v1 script...
+; 2025-10-05 AMB, ADDED
 Update_LBL_HK_HS(code)
 {
+;	code := LF2(code)
 	code := clsLabelSect.Main_ProcessSects(code)
 	code := fixLabelNames(code)																; ensure no name conflicts for labels/funcs
 	return code
@@ -894,8 +906,8 @@ fixLabelNames(code)
 	return retStr
 }
 ;################################################################################
+; Determines whether script has labels that req conversion to funcs
 ; 2026-05-04 AMB, MOVED out of class
-; determines whether script has labels that req conversion to funcs
 scriptHasL2F(lblName:='')
 {
 	if (lblName) {
@@ -908,14 +920,16 @@ scriptHasL2F(lblName:='')
 			|| gmList_GotoLabel.Count )														; 2025-11-18 ADDED as part of fix for #409
 }
 ;################################################################################
-; 2025-11-01 AMB, ADDED - determines whether v1 script has specified label
+; Determines whether v1 script has specified label
+; 2025-11-01 AMB, ADDED
 ; 2026-03-29 AMB, UPDATED to mask regex special chars in needle
 scriptHasLabel(labelName)
 {
 	return (gAllV1LabelNames ~= '(?i)\b' escRegexChars(labelName) ',')
 }
 ;################################################################################
-; 2025-11-01 AMB, ADDED - determines whether v1 script has specified function
+; Determines whether v1 script has specified function
+; 2025-11-01 AMB, ADDED
 ; 2026-03-29 AMB, UPDATED to mask regex special chars in needle
 ; TODO - add support for detecting class methods as legit funcs
 scriptHasFunc(funcName)
@@ -923,14 +937,16 @@ scriptHasFunc(funcName)
 	return (gAllFuncNames ~= '(?i)\b' escRegexChars(funcName) ',')
 }
 ;################################################################################
-; 2025-11-01 AMB, ADDED - determines whether v1 script has specified class
+; Determines whether v1 script has specified class
+; 2025-11-01 AMB, ADDED
 ; 2026-03-29 AMB, UPDATED to mask regex special chars in needle
 scriptHasClass(className)
 {
 	return (gAllClassNames ~= '(?i)\b' escRegexChars(className) ',')
 }
 ;################################################################################
-; 2026-03-08 AMB, ADDED - determines whether v1 script has specified class-method
+; Determines whether v1 script has specified class-method
+; 2026-03-08 AMB, ADDED
 scriptHasMethod(srcStr)
 {
 	if (RegExMatch(srcStr, '^(?<cls>[^\s]+)\.(?<meth>[^.]+)$', &m)							; if input is a class method...
@@ -939,13 +955,13 @@ scriptHasMethod(srcStr)
 	return false																			; not an existing class method
 }
 ;################################################################################
-; 2025-06-12 AMB, ADDED
-; returns srcStr if any valid v1 label is found in string
+; Returns srcStr if any valid v1 label is found in string
 ; https://www.autohotkey.com/docs/v1/misc/Labels.htm
 ; invalid v1 label chars are...
 ;	comma, double-colon (except at beginning),
 ;	whitespace, accent (that's not used as escape)
 ; see gPtn_Blk_LBLD for label declaration needle
+; 2025-06-12 AMB, ADDED
 hasValidV1Label(&srcStr)
 {
 	tempStr := trim(RemovePtn(srcStr, 'LC'))												; remove line comments and trim ws
@@ -955,14 +971,14 @@ hasValidV1Label(&srcStr)
 	return ''																				; no valid v1 label found in srcStr
 }
 ;################################################################################
-; 2025-06-12 AMB, ADDED
-; returns extracted label if it resembles a valid v1 label
+; Returns extracted label if it resembles a valid v1 label
 ; 	does not verify that it is a valid v2 label (see validV2Label for that)
 ; https://www.autohotkey.com/docs/v1/misc/Labels.htm
 ; invalid v1 label chars are...
 ;	comma, double-colon (except at beginning),
 ;	whitespace, accent (that's not used as escape)
 ; see gPtn_Blk_LBLD for details of label declaration needle (in MaskCode.ahk)
+; 2025-06-12 AMB, ADDED
 isValidV1Label(srcStr)
 {
 	tempStr := trim(RemovePtn(srcStr, 'LC'))												; remove line comments and trim ws
@@ -973,9 +989,9 @@ isValidV1Label(srcStr)
 	return ''																				; not a valid v1 label
 }
 ;################################################################################
-; 2024-07-07 AMB, ADDED
+; Returns extracted label if it resembles a valid v1 label
 ; srcStr label MUST HAVE TRAILING COLON to be considered valid
-; returns extracted label if it resembles a valid v1 label
+; 2024-07-07 AMB, ADDED
 ; 2025-06-12 AMB, UPDATED - calls new function now
 ; 2025-07-06 AMB, UPDATED - minor adj
 getV1Label(srcStr, returnColon:=true)
@@ -986,7 +1002,8 @@ getV1Label(srcStr, returnColon:=true)
 	return ''	; not a valid v1 label
 }
 ;################################################################################
-; 2024-07-07 AMB, ADDED - Replaces GetV2Label()
+; Replaces GetV2Label()
+; 2024-07-07 AMB, ADDED
 ; 2025-07-06 AMB, UPDATED
 ; 2025-10-05 AMB, UPDATED to support unit tests (restore strings)
 getV2Name(v1LabelName)
@@ -996,7 +1013,8 @@ getV2Name(v1LabelName)
 	return (gmAllV2LablNames.Has(labelName)) ? gmAllV2LablNames[labelName] : labelName
 }
 ;################################################################################
-; 2024-07-07 AMB, ADDED - Ensures name is unique (support for v1 to v2 label naming)
+; Ensures name is unique (support for v1 to v2 label naming)
+; 2024-07-07 AMB, ADDED
 ; 2024-07-09 AMB, UPDATED to check existing label names also
 ; 2025-07-06 AMB, UPDATED to add label name to global func list
 ; 2025-11-01 AMB, UPDATED as part of Scope support
@@ -1023,10 +1041,10 @@ _getUniqueV2Name(v1LabelName)
 	return newName
 }
 ;################################################################################
-; 2024-07-07 AMB, ADDED
-; srcStr label MUST HAVE TRAILING COLON to be considered valid
-; returns valid v2 label with or without colon based on flag [returnColon]
+; Returns valid v2 label with or without colon based on flag [returnColon]
 ; makes sure returned name is unique and does not conflict with existing function names
+; srcStr label MUST HAVE TRAILING COLON to be considered valid
+; 2024-07-07 AMB, ADDED
 ; 2025-07-06 AMB, CHANGED func name and ADJ
 validV2LabelName(srcStr, returnColon:=true)
 {
@@ -1064,9 +1082,9 @@ getV1LabelNames(code)
 	return v1LabelNames
 }
 ;################################################################################
-; 2024-07-07 AMB, ADDED
-; converts v1 label names to valid v2 (label/funcName)...
+; Converts v1 label names to valid v2 (label/funcName)...
 ;	... and returns a map for global gmAllV2LablNames
+; 2024-07-07 AMB, ADDED
 ; 2025-07-06 AMB, UPDATED - changed func name and refactor...
 ;	... now uses v1 labelNamelist created with getV1LabelNames(), as source
 getV2LabelNames(v1LabelNameList)
@@ -1078,10 +1096,11 @@ getV2LabelNames(v1LabelNameList)
 	return labelMap
 }
 ;################################################################################
-; 2025-06-22 AMB, ADDED - to move labels to their own line...
+; Moves labels to their own line...
 ;	... when they are on same line as opening/closing brace
-; can be adjusted o handle occurences for any other trailing item as well
+; can be adjusted o handle occurrences for any other trailing item as well
 ;	(to make sure braces are isolated to their own line)
+; 2025-06-22 AMB, ADDED
 isolateLabels(code)
 {
 	outCode	:= ''
@@ -1108,14 +1127,14 @@ isolateLabels(code)
 	return outCode
 }
 ;################################################################################
-; 2025-11-23 AMB, ADDED - replaces previous Goto handling (part of fix for #413)
-; 2025-11-30 AMB, UPDATED call for Zip()
-; 2026-01-01 AMB, UPDATED with cleanCWS() call
-; converts  Goto, label  -->>  Goto("label")
+; Converts  Goto, label  -->>  Goto("label")
 ;	also adds trailing Return as needed
 ;	places Goto/Return into a single-line tag
 ; tags will be restored in restoreGotoReturn(), which is called from PreProcessLines()
 ; this func is called from PreProcessLines() and HK1LToML()
+; 2025-11-23 AMB, ADDED - replaces previous Goto handling (part of fix for #413)
+; 2025-11-30 AMB, UPDATED call for Zip()
+; 2026-01-01 AMB, UPDATED with cleanCWS() call
 convertGoto(line, idx, &lines)
 {
 	global gmList_GotoLabel
@@ -1129,7 +1148,7 @@ convertGoto(line, idx, &lines)
 	; convert Goto
 	LWS := m[1], gotoStr := m[2], param := m[3]												; extract line/goto parts
 	Mask_R(&param, 'LC')																	; expose any trailing line comment
-	param		:= separateComment(param, &TC:='')											; separate trailing line comment (first occurence)
+	param		:= separateComment(param, &TC:='')											; separate trailing line comment (first occurrence)
 	param		:= Trim(LTrim(param, ','))													; remove leading comma if present
 	v1LabelName	:= param																	; should be left with v1 label name
 	v2FuncName	:= Trim(getV2Name(v1LabelName))												; get v2 funcname associated with v1 label name
@@ -1153,8 +1172,8 @@ convertGoto(line, idx, &lines)
 	return line
 }
 ;################################################################################
+; Moves same-line HK commands below HK declaration, in certain cases
 ; 2025-11-23 AMB, ADDED - part of fix for #413
-; moves same-line HK commands below HK declaration, in certain cases
 HK1LToML(line, idx, &lines)
 {
 	nHK := '(?im)^(?<LWS>\h*)(?<HKDecl>' gPtn_HOTKEY . ')(?<cmd>.*)'						; needle for HK full line
@@ -1190,7 +1209,8 @@ HK1LToML(line, idx, &lines)
 	return line
 }
 ;################################################################################
-; 2026-06-05 AMB, ADDED - adds 'Return' line above each HK (except same logic HKs)
+; Adds 'Return' line above each HK (except same logic HKs)
+; 2026-06-05 AMB, ADDED
 HKReturn(&code)
 {
 
@@ -1222,9 +1242,11 @@ HKReturn(&code)
 		pos		+= StrLen(HK1)																; ... prep for next pass
 	}
 	Mask_R(&code, 'HK')																		; restore HK declarations
+	;FixRedundantExits(&code, retMsg '\r\n')
 }
 ;################################################################################
-; 2026-06-05 AMB, ADDED to remove unnecessary exit commands
+; Removes unnecessary exit commands
+; 2026-06-05 AMB, ADDED
 FixRedundantExits(&code, targ:='')
 {
 	Mask_T(&code, 'C&S'), Mask_T(&code, 'IWTLFS')											; hide comments, strings, and logic blocks
@@ -1253,8 +1275,8 @@ FixRedundantExits(&code, targ:='')
 	code := clsCodeChop.RestoreMasksAll(code)												; remove all masking from code
 }
 ;################################################################################
+; See addHKCmdCBArgs() for adding param to func declaration
 ; 2025-10-12 AMB, ADDED to fix #328
-; see addHKCmdCBArgs() for adding param to func declaration
 addHKCmdFunc(varName)
 {
 	nFunc	 := '(?i)' varName '\h*:=\h*FUNC\(([^)]+)\)'									; needle to locate... var := Func("funcName")
@@ -1285,7 +1307,7 @@ addHKCmdCBArgs(&code)
 			; target function found
 			if (RegExMatch(m[], nDeclare, &declare)) {										; get just declaration line
 				argList		:= declare.fArgG, trail := declare.trail						; extract params and trailing portion of line
-				LWS			:= TWS := '', params := ''										; ini exisiting params details, inc lead/trail ws
+				LWS			:= TWS := '', params := ''										; ini existing params details, inc lead/trail ws
 				if (RegExMatch(argList, '\((\h*)(.+?)(\h*)\)', &mWS)) {						; separate lead/trail ws in params
 					LWS := mWS[1], params := mWS[2], TWS := mWS[3]							; extract existing params and preserve lead/trail ws
 				}
@@ -1299,7 +1321,8 @@ addHKCmdCBArgs(&code)
 	return ; code by reference
 }
 ;################################################################################
-; 2026-03-08 AMB, ADDED - adds Static keyword to methods that require it
+; Adds Static keyword to methods that require it
+; 2026-03-08 AMB, ADDED
 addStaticKywdToMethod(&code)
 {
 	nCommon	:= '^(\h*)((?<fName>(?<!``)[_a-z]\w*+)\((?<Args>(?>[^()]|\((?&Args)\))*+)'

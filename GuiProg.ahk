@@ -92,7 +92,7 @@ class clsProgGui {																					; Gui object handling
 	txtOp			:= ''																			; current conversion operation
 	txtFunc			:= ''																			; current conversion function		(optional)
 	txtLineNum		:= ''																			; current conversion line number	(optional)
-	txtLineVal		:= ''																			; current convertion line code		(optional)
+	txtLineVal		:= ''																			; current conversion line code		(optional)
 	debugMode		:= false																		; debug flag
 	wGui			:= 450																			; gui width
 	hGui			:= (IsSet(gQCV2_Test) || IsSet(gUIDesign)) ? 130 : 110							; gui height (initial)
@@ -150,13 +150,13 @@ class clsProgGui {																					; Gui object handling
 		this.lblLine	:= this.oGui.AddText(bd tClr ' x20 y+5 w' wlbl, 'Line:'					)	; label	- current conversion line code
 		this.txtLineVal	:= this.oGui.AddText(bd tClr ' yp w' wTxt ' h' hTxt, '...Line Text'		)	; display current conversion line code	 (debug option)
 
-		; for testing muti-line
+		; for testing multi-line
 		if (IsSet(gUIDesign)) {
 			this.txtDir.Value		:= dirTxt														; display current conversion line code	 (debug option)
 			this.txtLineVal.Value	:= dirTxt														; display current conversion line code	 (debug option)
 		}
 
-		; set initial visibilty for ctrls
+		; set initial visibility for ctrls
 		this.chkDebug.Visible	:= false															; ini debug checkbox as hidden
 		this.chkDebug.Visible	:= (vis | (IsSet(gQCV2_Test)))										; now make it visible for QC or design mode
 		this.evDebug(this.chkDebug)																	; set debug details, based on debug mode
@@ -178,7 +178,7 @@ class clsProgGui {																					; Gui object handling
 	}
 	;############################################################################
 	_disableClose() {
-		hMenu := DllCall("GetSystemMenu", "Ptr", this.oGui.Hwnd, "Int", False, "Ptr")				; get handle fo sysmenu
+		hMenu := DllCall("GetSystemMenu", "Ptr", this.oGui.Hwnd, "Int", False, "Ptr")				; get handle for sysmenu
 		DllCall("DeleteMenu", "Ptr", hMenu, "UInt", 0xF060, "UInt", 0x8)							; delete sysMenu - 0x8 is MF_BYPOSITION (or MF_BYCOMMAND 0xF060)
 		this.oGui.OnEvent("Close", (*) => 1)														; prevent close
 	}

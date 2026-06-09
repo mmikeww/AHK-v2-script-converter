@@ -8,14 +8,13 @@
 		*	either way, might need to account for left-behind #IFs
 */
 ;#Include %A_Desktop%\My_AHK\tools\VisCompareV2.ahk											; for error detection
-
 ;################################################################################
+; Separates code into sections
+; Each section contains sub-string blocks for one of the following...
+;	Label, HK, HS, Func, Class, or global (may be multiple global sections)
 ; 2025-11-01 AMB, ADDED
 ; 2025-12-24 AMB, UPDATED output to object
 ; 2026-06-05 AMB, UPDATED
-;	Separates code into sections
-;	Each section contains sub-string blocks for one of the following...
-;	 Label, HK, HS, Func, Class, or global (may be multiple global sections)
 GetScopeSections(code)
 {
 	sects	 := clsSectList(&code).Sects													; separate code into sections
@@ -72,8 +71,8 @@ class clsSect
 		;MsgBox "[" this.RawSectStr "]"
 	}
 	;############################################################################
-	; 2026-06-06 AMB, ADDED as part of fix for #489											; enables nested labels to remain with parent block (prevents global treatment)
 	; only applies to HKBLK, LBLBLK objects													; transforms brace-block obj to normal obj (preserving nested labels)
+	; 2026-06-06 AMB, ADDED as part of fix for #489											; enables nested labels to remain with parent block (prevents global treatment)
 	_convertBrcBlk()
 	{
 		oType := this.tType																	; original section type
@@ -106,7 +105,7 @@ class clsSect
 	_exitCmdDetails()																		; gets first legit exit command within section code-block
 	{
 		if (this.tType ~= '(?i)(?:FUNC|CLS)') {												; if func or class...
-			this._xCmd := 'return'															; [implied, regrdless]	value doesn't matter for func/cls
+			this._xCmd := 'return'															; [implied, regardless]	value doesn't matter for func/cls
 			this._xPos := 'end'																; [end of func]			value doesn't matter for func/cls
 			return
 		}
@@ -121,7 +120,7 @@ class clsSect
 				this.Blk	:= brcBlk.TCT . brcBlk.bb										; ... save brace block details...
 				this.tBlk	:= brcBlk.trail													; ... and portion after brace block (might become new global section)
 			} else {																		; does not have brace block already...
-				this.Blk	:= sec.Blk														; ... update obj-blk (to include masking) so recorded pos is acurate
+				this.Blk	:= sec.Blk														; ... update obj-blk (to include masking) so recorded pos is accurate
 				this.tBlk	:= sec.tBlk														; ... will not be executed within block (might become new global section)
 			}
 		}
@@ -143,7 +142,7 @@ class clsSect
 		return {xCmd:xCmdLine,xPos:pos,blk:blk,tBlk:tBlk}									; return details, whether exitCmd exist or not
 	}
 	;############################################################################
-	_line1Details																			; extracts details of Line 1 (declaration lne)
+	_line1Details																			; extracts details of Line 1 (declaration line)
 	{
 		get {
 			if (this._L1Obj)																; if details have already been parsed...
@@ -338,7 +337,7 @@ class clsSectList
 	_shiftTCWS(sectsArr)																	; moves trailing comments/CRLFs of one sect to beginning of next sect
 	{
 		for idx, sect in sectsArr {															; for each section in array...
-			if (idx = sectsArr.length)														; dont process last section in array (already updated)
+			if (idx = sectsArr.length)														; don't process last section in array (already updated)
 				break
 			nextSect		:= sectsArr[idx+1]												; get next section
 			nextSect.PCWS	:= sect.TCWS . nextSect.PCWS									; move   trailing comments/CRLFs to beginning of next section
@@ -347,7 +346,7 @@ class clsSectList
 		return sectsArr																		; return updated array
 	}
 	;############################################################################
-	_cleanCode(code, inclExit:=false)														; removes comments, ws, etc, so executable code is easier to decect
+	_cleanCode(code, inclExit:=false)														; removes comments, ws, etc, so executable code is easier to detect
 	{
 		if (inclExit) {																		; if exit cmds should be removed...
 			code := RegExReplace(code, '(?i)\bRETURN\b')									; ... remove return
@@ -413,7 +412,7 @@ class clsCodeChop	; responsible for marking script code with tags that separate 
 		if (nBlkTags='') {
 			nTargBlks	:= 'BLKCLS|BLKFUNC|HK|HS|HKBLK'										; needle for specific tag types
 			nTargBlks	.= (fLabels) ? '|LBL|LBLBLK' : ''									; include labels if requested
-			nTargBlks	:= '_?(?:' nTargBlks ')\w+'											; needle for all targetted tag types
+			nTargBlks	:= '_?(?:' nTargBlks ')\w+'											; needle for all targeted tag types
 			nBlkTags	:= uniqueTag(nTargBlks)												; needle for tags themselves
 		}
 		chopTag		:= this.ChopTag															; tag to add - [★CHOP★]

@@ -1,12 +1,12 @@
 #Requires AutoHotKey v2.0
-
+;################################################################################
 /* a list of all renamed variables, in this format:
     , "OrigVar" ,
       "ReplacementVar"
     ↑ first comma is not needed for the first pair
   important: the order matters. the first 2 in the list could cause a mistake if not ordered properly
 */
-
+;################################################################################
 ; 2024-04-08 AMB
 ;   Moved LoopReg keywords to a dedicated map
 ;   ... so they can be treated differently
@@ -41,7 +41,7 @@ gmAhkKeywdsToRename := OrderedMap(
   , "ComSpec" ,
       "A_ComSpec"
 )
-
+;################################################################################
 ; 2024-04-08 AMB
 ;   Separated these from gmAhkKeywdsToRename
 ;   ... so they can be treated differently

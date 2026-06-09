@@ -27,7 +27,7 @@ getINISettings()																			; 2026-01-26 - AMB, ADDED to support user int
 #Include Convert/4ArrayMethods.ahk
 #Include Convert/5Keywords.ahk
 #Include Convert/Conversion_CLS.ahk															; 2025-06-12 - future support of Class version
-#Include Convert/Validation.ahk																; 2026-04-06 - support for variable vaidation
+#Include Convert/Validation.ahk																; 2026-04-06 - support for variable validation
 #Include Convert/ContSections.ahk															; 2025-06-22 - support for continuation sections
 #Include Convert/SplitConv/ConvV1_Funcs.ahk													; 2025-07-01 - support for separated conversion
 #Include Convert/SplitConv/ConvV2_Funcs.ahk													; 2025-07-01 - support for separated conversion
@@ -40,9 +40,9 @@ getINISettings()																			; 2026-01-26 - AMB, ADDED to support user int
 setGlobals() {																				; for globals that are reset with each new conversion
 	Global
 	; func and label
-	gAllFuncNames			:= ''															; 2024-07-07 - comma-deliminated string holding the names of all functions
-	gAllClassNames			:= ''															; 2024-10-08 - comma-deliminated string holding the names of all classes
-	gAllV1LabelNames		:= ''															; 2024-07-09 - comma-deliminated string holding the names of all v1 labels
+	gAllFuncNames			:= ''															; 2024-07-07 - comma-delimited string holding the names of all functions
+	gAllClassNames			:= ''															; 2024-10-08 - comma-delimited string holding the names of all classes
+	gAllV1LabelNames		:= ''															; 2024-07-09 - comma-delimited string holding the names of all v1 labels
 	gmAllV2LablNames		:= Map_I()														; 2024-07-07 - map holding v1 labelNames (key) and their new v2 label/FuncName (value)
 	gmList_LblsToFunc		:= Map_I()														; 2025-10-05 - replaces gaList_LblsToFuncO and gaList_LblsToFuncC
 	gmList_GosubToFunc		:= Map_I()														; 2025-10-05 - tracks gosubs that need to be converted to func calls
@@ -67,7 +67,7 @@ setGlobals() {																				; for globals that are reset with each new con
 	gGuiNameDefault			:= getUserDefGuiName()											; 2026-01-26 UPDATED - as part of support for user settings
 	gmGuiVList				:= Map_I()														; Used to list all variable names defined in a Gui
 	gUseLastName			:= False														; Keep track of if we use the last set name in gGuiList
-	gGuiCtrlVarAssignFunc	:= ''															; 2026-03-29 - func string for initializing gui ctrl varaibles
+	gGuiCtrlVarAssignFunc	:= ''															; 2026-03-29 - func string for initializing gui ctrl variables
 	gGuiCtrlVarAssignFN		:= 'iniGuiCtrlVars()'											; 2026-03-29 - func name for gGuiCtrlVarAssignFunc
 
 	;gOScriptStr			:= []															; array of all the lines (prior to being an object)
@@ -102,7 +102,7 @@ setGlobals() {																				; for globals that are reset with each new con
 							: gLVNameDefault
 	gTVNameDefault			:= 'TV'
 	gSBNameDefault			:= 'SB'
-	gaFileOpenVars			:= []															; 2025-10-12 - callection of FileOpen object names
+	gaFileOpenVars			:= []															; 2025-10-12 - collection of FileOpen object names
 	gaZipTagIDs				:= []															; 2025-11-30 - TagID list for line compression (Zip,Unzip)
 
 	clsMask.Reset()																			; 2025-11-01 - ADDED as part of Scope support, unit testing
@@ -111,11 +111,11 @@ setGlobals() {																				; for globals that are reset with each new con
 	clsGuiObj.Reset()																		; 2026-03-11 - ADDED for unit testing
 }
 ;################################################################################
-getIniSettings() {
+; Reads user settings from disk, transfers settings to script vars
 ; 2026-01-26 AMB, ADDED as part of support for user settings
 ; 2026-03-14 AMB, UPDATED settings/names, added gCopyIncl
 ; 2026-04-06 AMB, UPDATED to ensure ini file exists
-;	reads user settings from disk, transfers settings to script vars
+getIniSettings() {
 	verifyINIFile()																			; ensure ini file exists
 	iniFile	:= gINIFile, Section := 'Settings'
 	guiMode	:= IniRead(iniFile, Section, 'GuiMode',		'1'	)
@@ -132,11 +132,11 @@ getIniSettings() {
 							:  'myGui'
 }
 ;################################################################################
-getUserDefGuiName() {
+; Returns user-preferred gui name from ini file
 ; 2026-01-26 AMB, ADDED as part of support for user settings
 ; 2026-03-14 AMB, UPDATED ini setting name - StdGuiName
 ; 2026-04-06 AMB, UPDATED to ensure ini file exists
-;	returns user-preferred gui name from ini file
+getUserDefGuiName() {
 	verifyINIFile()																			; ensure ini file exists
 	iniFile	:= gINIFile, Section := 'Settings'
 	guiMode	:= IniRead(iniFile, Section, 'GuiMode',		'1'		)
@@ -146,8 +146,8 @@ getUserDefGuiName() {
 	return defName
 }
 ;################################################################################
-verifyINIFile() {																			; ensures converter ini file exists, with intial settings
 ; 2026-04-06 AMB, ADDED
+verifyINIFile() {																			; ensures converter ini file exists, with initial settings
 	if (FileExist(gINIFile))																; if ini file already exists...
 		return																				; ... don't create
 	; ini file does not exist, write it with initial settings
@@ -163,13 +163,13 @@ verifyINIFile() {																			; ensures converter ini file exists, with in
 	IniWrite('1',		gINIFile, Section, 'ConvMsgs'	)
 }
 ;################################################################################
-class NL {
 ; 2025-12-10 - dynamic newLine that includes current indent
+class NL {
 	Static CRLF		=> ('`r`n' . (IsSet(gIndent) ? gIndent : ''))
 }
 ;################################################################################
-Class Map_I extends Map {
 ; 2025-11-28 - custom Map with case-sensitivity disabled by default
+Class Map_I extends Map {
 	caseSense		:= 0																	; disable case-sensitivity by default
 	KeysToString	=> Map_I._Join(this		 	)											; return list of object keys
 	KeyValPairs		=> Map_I._Join(this,1		)											; return list of {key:val}	pairs

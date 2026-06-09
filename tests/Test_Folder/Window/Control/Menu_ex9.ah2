@@ -1,7 +1,7 @@
 ﻿#Warn Unreachable, Off
 Persistent
 Tray := A_TrayMenu
-Tray.Delete() ; V1toV2: not 100% replacement of NoStandard, Only if NoStandard is used at the beginning
+Tray.Delete() ; V1toV2: Will simulate v1 NoStandard, only when placed immediately after menu ini
 Tray.Add("Exit", Exit)
 Return
 

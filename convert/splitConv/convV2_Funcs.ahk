@@ -1,23 +1,20 @@
 ;################################################################################
-														  v2_VerCompare(&lineStr)
-;################################################################################
-{
-; 2025-06-12 AMB, Moved to dedicated routine for cleaner convert loop
 ; not sure why this is required for conversion ?
-
+; 2025-06-12 AMB, Moved to dedicated routine for cleaner convert loop
+v2_VerCompare(&lineStr)
+{
 	nVer	:= 'i)\b(A_AhkVersion)(\h*[!=<>]+\h*)"?(\d[\w\-\.]*)"?'
 	lineStr	:= RegExReplace(lineStr, nVer, 'VerCompare($1, "$3")${2}0')
 	return		; lineStr by reference
 }
 ;################################################################################
-											   v2_RenameLoopRegKeywords(&lineStr)
-;################################################################################
-{
-; 2024-04-08 AMB, ADDED
 ; separated LoopReg keywords from gmAhkKeywdsToRename map...
 ;	so that they can be treated differently - See 5Keywords.ahk
+; 2024-04-08 AMB, ADDED
 ; 2025-06-12 AMB, UPDATED - changed func name, and some var and funcCall names
 ; 2025-07-03 AMB, UPDATED - minor
+v2_RenameLoopRegKeywords(&lineStr)
+{
 
 	for v1, v2 in gmAhkLoopRegKeywds {
 		targ := Trim(v1), repl := Trim(v2)
@@ -29,25 +26,23 @@
 	return		; lineStr by reference
 }
 ;################################################################################
-													  v2_RenameKeywords(&lineStr)
-;################################################################################
-{
-; 2024-04-08 AMB, ADDED
 ; moved this code from main loop to it's own function
 ; also separated LoopReg keywords from gmAhkKeywdsToRename map...
 ;	so that they can be treated differently - See 5Keywords.ahk
 ; Added the ability to mask the line-strings so that Keywords found within
 ;	strings are no longer converted along with Keyword vars
+; 2024-04-08 AMB, ADDED
 ; 2025-06-12 AMB, UPDATED - changed some var and funcCall names
 ; 2025-07-03 AMB, UPDATED - minor
-
+v2_RenameKeywords(&lineStr)
+{
 	; replace any renamed vars
 	; Fixed - NO LONGER converts text found in strings
 	masked := false
 	for v1, v2 in gmAhkKeywdsToRename {
 		targ := Trim(v1), repl := Trim(v2)
 		if (InStr(lineStr, targ)) {
-			if (!masked) {		; masking is slow, so only do this as necessary
+			if (!masked) {																			; masking is slow, so only do this as necessary
 				masked	:= true
 				sess	:= clsMask.NewSession()
 				Mask_T(&lineStr, 'STR', sess)
@@ -62,87 +57,77 @@
 	return		; lineStr by reference
 }
 ;################################################################################
-													v2_RemoveNewKeyword(&lineStr)
-;################################################################################
-{
 ; 2025-10-08 AMB, UPDATED - to fix #379 (object instantiation)
-
-	return v2_NewKywdToObjInstance(&lineStr)	; redirect to also support obj instantiation
+v2_RemoveNewKeyword(&lineStr)
+{
+	return v2_NewKywdToObjInstance(&lineStr)														; redirect to also support obj instantiation
 }
 ;################################################################################
-												v2_NewKywdToObjInstance(&lineStr)
-;################################################################################
-{
+; Redirected v2_RemoveNewKeyword() to here
+; preserves any existing params
+; can support multi-line params if they exist as part of lineStr (untested)
 ; 2025-10-08 AMB, ADDED to convert [obj := new cls] -> [obj := cls()]
-;	redirected v2_RemoveNewKeyword() to here
-;	preserves any existing params
-;	can support multi-line params if they exist as part of lineStr (untested)
-
+v2_NewKywdToObjInstance(&lineStr)
+{
 	if (!InStr(lineStr, 'new'))
 		return
 
-	Mask_T(&lineStr, 'STR')							; protect "new" within strings
+	Mask_T(&lineStr, 'STR')																			; protect "new" within strings
 	nNew := 'i)^(.+?)(:=|\(|,)(\h*)\bnew\h(\h*\w+\h*)' . gPtn_PrnthBlk . '?(?<trl>.*)'
 	if (RegExMatch(lineStr, nNew, &m)) {
 		objVar	:= m[1], op := m[2], LWS := m[3], cls := m[4], trail := m.trl
 		clsName := Trim(cls)
-		if (!(gAllClassNames ~= clsName ',')) {		; in case class verification should be supported
+		if (!(gAllClassNames ~= clsName ',')) {														; in case class verification should be supported
 			;MsgBox "class does not exist in script `n[" clsName "]"
 		}
-		params	:= (m.FcParth) ? m.FcParth : '()'	; add empty params if params do not already exist
-		lineStr	:= objVar op LWS cls params trail	; remove 'new' from instantiation line
+		params	:= (m.FcParth) ? m.FcParth : '()'													; add empty params if params do not already exist
+		lineStr	:= objVar op LWS cls params trail													; remove 'new' from instantiation line
 	}
 	Mask_R(&lineStr, 'STR')
 	return		; lineStr by reference
 }
 ;################################################################################
-		  v2_Conversions(&lineStr,&lineOpen,&EOLComment,&fCmdConverted,scriptStr)
-;################################################################################
-{
-; 2025-06-12 AMB, Moved to dedicated routine for cleaner convert loop
 ; Purpose: misc V2 ONLY conversions
+; 2025-06-12 AMB, Moved to dedicated routine for cleaner convert loop
 ; TODO - will need to separate v1 from v2 processing within most of these functions
 ;	currently v1.0 -> v1.1 conversion is not possible until the operations are separated
-
+v2_Conversions(&lineStr,&lineOpen,&EOLComment,&fCmdConverted,scriptStr)
+{
 	; order matters for these two
 	; convert AHKv1 (built-in) FUNCTIONS to AHKv2 format (see 2Functions.ahk)
 	v2_AHKFuncs(&lineStr, scriptStr)
 	; convert AHKv1 (built-in) COMMANDS  to AHKv2 format (see 1Commands.ahk)
-	v2_AHKCommands(&lineStr, &lineOpen, &EOLComment, &fCmdConverted)	; SETS VALUE OF fCmdConverted
+	v2_AHKCommands(&lineStr, &lineOpen, &EOLComment, &fCmdConverted)								; SETS VALUE OF fCmdConverted
 
 	; listed alphabetically - but order can matter, so be careful
-	v2_AssocArr2Map(&lineStr, scriptStr)		; convert associative arrays to map (limited)
-	v2_CleanReturns(&lineStr)					; fix return commands (misc)
-	v2_DateTimeMath(&lineStr)					; var += 31, days  ->  var1 := DateAdd(var1, 31, 'days')
-	v2_DQ_Literals(&lineStr)					; handles all "" (v1) to `" (v2)
-	v2_FixACaret(&lineStr)						; fix v1 A_Caret references
-	v2_fixObjKeyNames(&lineStr)					; {"A": "B"} -> {A: "B"}
-	v2_FormatClassProperties(&lineStr)			; removes optional [] from class properties (TODO - THIS NEEDS TO BE FIXED!)
-	v2_FuncDotStr(&lineStr)	; do last			; func.("string") -> func.Call("string")
-	return										; lineStr by reference
+	v2_AssocArr2Map(&lineStr, scriptStr)															; convert associative arrays to map (limited)
+	v2_CleanReturns(&lineStr)																		; fix return commands (misc)
+	v2_DateTimeMath(&lineStr)																		; var += 31, days  ->  var1 := DateAdd(var1, 31, 'days')
+	v2_DQ_Literals(&lineStr)																		; handles all "" (v1) to `" (v2)
+	v2_FixACaret(&lineStr)																			; fix v1 A_Caret references
+	v2_fixObjKeyNames(&lineStr)																		; {"A": "B"} -> {A: "B"}
+	v2_FormatClassProperties(&lineStr)																; removes optional [] from class properties (TODO - THIS NEEDS TO BE FIXED!)
+	v2_FuncDotStr(&lineStr)	; do last																; func.("string") -> func.Call("string")
+	return																							; lineStr by reference
 }
 ;################################################################################
-								  v2_convert_Ifs(&lineStr, &lineOpen, &lineClose)
-;################################################################################
-{
-; 2025-06-12 AMB, Moved steps to dedicated routine for cleaner convert loop
 ; Processes converts that are related to If declarations
+; 2025-06-12 AMB, Moved steps to dedicated routine for cleaner convert loop
 ; 2025-07-01 AMB, SEPARATED for dual conversion support
-
-	if (gV2Conv) {	; v2 only conversion
-		v2_If_Between(&lineStr, &lineOpen)					; v2		- if between
-		v2_If_VarIsType(&lineStr, &lineOpen)				; v2		- if var is type
-		v2_fixElseError(&lineStr, &lineOpen, &lineClose)	; V2 - fixes 'Unexpected Else' error
+v2_convert_Ifs(&lineStr, &lineOpen, &lineClose)
+{
+	if (gV2Conv) {																					; v2 only conversion
+		v2_If_Between(&lineStr, &lineOpen)															; v2 - if between
+		v2_If_VarIsType(&lineStr, &lineOpen)														; v2 - if var is type
+		v2_fixElseError(&lineStr, &lineOpen, &lineClose)											; V2 - fixes 'Unexpected Else' error
 	}
 	return		; vars by reference
 }
 ;################################################################################
-											   v2_If_Between(&lineStr, &lineOpen)
-;################################################################################
-{
+; Converts If Between
 ; 2025-06-12 AMB, Moved to dedicated routine for cleaner convert loop
-; converts If Between
-
+v2_If_Between(&lineStr, &lineOpen)
+{
 	nIf := 'i)^(\h*)(else\h+)?if\h+([a-z_]\w*)\h(\h*not\h+)?between\h([^{;]*)\hand\h([^{;]*)(\h*{?\h*)(.*)'
 	if (!RegExMatch(lineStr, nIf, &m))
 		return	false
@@ -164,12 +149,10 @@
 	return		true
 }
 ;################################################################################
-											 v2_If_VarIsType(&lineStr, &lineOpen)
-;################################################################################
-{
+; Converts If Var is type
 ; 2025-06-12 AMB, Moved to dedicated routine for cleaner convert loop
-; converts If Var is type
-
+v2_If_VarIsType(&lineStr, &lineOpen)
+{
 	nIf := 'i)^(\h*)(else\h+)?if\h+([a-z_]\w*)\his\h+(not\h+)?([^{;]*)(\h*{?\h*)(.*)'
 	if (!RegExMatch(lineStr, nIf, &m))
 		return	false
@@ -184,13 +167,11 @@
 	return		true
 }
 ;################################################################################
-								 v2_fixElseError(&lineStr, &lineOpen, &lineClose)
-;################################################################################
-{
-; 2025-06-12 AMB, Moved to dedicated routine for cleaner convert loop
 ; Fix 'Unexpected Else' error, when else follows Try without braces (add braces)
+; 2025-06-12 AMB, Moved to dedicated routine for cleaner convert loop
 ; TODO - this is original code, have not looked it over yet
-
+v2_fixElseError(&lineStr, &lineOpen, &lineClose)
+{
 	static linesInIf := unset
 
 	; V2 ONLY !
@@ -205,7 +186,7 @@
 			linesInIf--
 		}
 		Else If ((Trim(lineStr) ~= 'i)else(?!\h+if)')
-			|| (SubStr(Trim(lineStr), 1, 1) = '{') ; Fails if { is on lineStr further than next
+			|| (SubStr(Trim(lineStr), 1, 1) = '{')													 ; Fails if { is on lineStr further than next
 			|| (linesInIf >= 2))
 		{
 			; just else - cancel search
@@ -224,13 +205,11 @@
 	return
 }
 ;################################################################################
-											 V2_AssocArr2Map(&lineStr, scriptStr)
-;################################################################################
-{
-; 2025-06-12 AMB, MOVED from ConvertFuncs, modified slightly
 ; Converts associative arrays to maps (fails currently if more then one level ?)
+; 2025-06-12 AMB, MOVED from ConvertFuncs, modified slightly
 ; TODO - look over, see if improvements can be made
-
+V2_AssocArr2Map(&lineStr, scriptStr)
+{
 	if (!RegExMatch(lineStr, 'i)^(\h*)((global|local|static)\h+)?([a-z_0-9]+)(\h*:=\h*)(\{[^;]*)$', &m))
 		return	; lineStr by reference - make no changes
 
@@ -268,13 +247,11 @@
 	return	; lineStr by reference
 }
 ;################################################################################
-														V2_CleanReturns(&lineStr)
-;################################################################################
-{
+; Handles v1 to v2 conversion of 'return' commands
 ; 2025-06-12 AMB, Moved to dedicated routine for cleaner convert loop
 ; 2025-10-05,10-16 AMB, UPDATED
-; handles v1 to v2 conversion of 'return' commands
-
+V2_CleanReturns(&lineStr)
+{
 	; return % var -> return var
 	nReturn1 := '(?i)^(\h*return\h+)%\h*\h+(.*)$'
 	lineStr	 := RegExReplace(lineStr, nReturn1, '$1$2')
@@ -285,255 +262,239 @@
 
 	; Fix return that has multiple return values (not common)
 	If (RegExMatch(lineStr, '(?i)^(\h*return\h+)(.*)', &m) && InStr(m[2], ',')) {
-		sess := clsMask.NewSession()		; create temp masking session
-		Mask_T(&lineStr, 'FC',,sess)		; mask func CALLS (also masks strings)
-		Mask_T(&lineStr, 'ARRSQ',,sess)		; don't wrap array literal list [sq brkts] (2025-10-16 see Return_ex4)
-		Mask_T(&lineStr, 'KV',,sess)		; don't wrap key/val pair objects
-		if InStr(lineStr, ',') {			; line appears to have multiple return values...
-			lineStr := m[1] '(AHKv1v2_Temp := ' m[2] ', AHKv1v2_Temp) `; V1toV2: Wrapped Multi-statement return with parentheses'
+		sess := clsMask.NewSession()																; create temp masking session
+		Mask_T(&lineStr, 'FC',,sess)																; mask func CALLS (also masks strings)
+		Mask_T(&lineStr, 'ARRSQ',,sess)																; don't wrap array literal list [sq brkts] (2025-10-16 see Return_ex4)
+		Mask_T(&lineStr, 'KV',,sess)																; don't wrap key/val pair objects
+		if InStr(lineStr, ',') {																	; line appears to have multiple return values...
+			uMsg	:= ' `; V1toV2: Wrapped Multi-statement return with parentheses'
+			lineStr	:= m[1] '(AHKv1v2_Temp := ' m[2] ', AHKv1v2_Temp)' . uMsg
 		}
-		Mask_R(&lineStr, 'KV',,sess)		; restore key/val pairs
-		Mask_R(&lineStr, 'ARRSQ',,sess)		; restore array literal list [sq brkts] (2025-10-16 see Return_ex4)
-		Mask_R(&lineStr, 'FC',,sess)		; restore function calls
+		Mask_R(&lineStr, 'KV',,sess)																; restore key/val pairs
+		Mask_R(&lineStr, 'ARRSQ',,sess)																; restore array literal list [sq brkts] (2025-10-16 see Return_ex4)
+		Mask_R(&lineStr, 'FC',,sess)																; restore function calls
 	}
-	return
+	return		; lineStr by reference
 }
 ;################################################################################
-														V2_DateTimeMath(&lineStr)
-;################################################################################
-{
+; Converts v1 dateTime math to v2 format
 ; 2025-06-12 AMB, Moved to dedicated routine for cleaner convert loop
 ; 2025-12-06 AMB, UPDATED needle to avoid false positives (chained assignments)
-; converts v1 dateTime math to v2 format
-
-	nVar		:= '([a-z_]\w*+)'									; variable
-	nOp			:= '\h*([+-])=\h*'									; operator
-	nVal		:= '([^,\h]+)\h*'									; value (digits or varible)
-	nUnits		:= '\h*([smhd]\w*+)'								; units [secs,mins,hours,days]
-	nNotAssign	:= '([^,+-=]*+)'									; anything after, 2025-12-06 - avoid chained assignments
+V2_DateTimeMath(&lineStr)
+{
+	nVar		:= '([a-z_]\w*+)'																	; variable
+	nOp			:= '\h*([+-])=\h*'																	; operator
+	nVal		:= '([^,\h]+)\h*'																	; value (digits or variable)
+	nUnits		:= '\h*([smhd]\w*+)'																; units [secs,mins,hours,days]
+	nNotAssign	:= '([^,+-=]*+)'																	; anything after, 2025-12-06 - avoid chained assignments
 	nAssign		:= nVar nOp nVal ',' nUnits nNotAssign
 	;if (RegExMatch(lineStr, 'i)^(\h*)([a-z_][a-z_0-9]*)\h*(\+|-)=\h*([^,\h]*)\h*,\h*([smhd]\w*)(.*)$', &m)) {
 	if (RegExMatch(lineStr, 'i)^(\h*)' nAssign '$', &m)) {
 		cmd := (m[3]='+') ? 'DateAdd' : 'DateDiff'
 		lineStr := m[1] m[2] ' := ' cmd '((' m[2] ' != "" ? ' m[2] ' : A_Now), ' FormatParam('ValueCBE2E', m[4]) ", '" m[5] "')" m[6]
 	}
-	return
+	return		; lineStr by reference
 }
 ;################################################################################
-														   v2_FixACaret(&lineStr)
-;################################################################################
-{
-; 2025-06-12 AMB, Moved to dedicated routine for cleaner convert loop
 ; Purpose: Adds support (compensates) for A_CaretX, A_CaretY that were remove in v2
 ; Adds/Uses CaretGetPos() to create variables of same name as v1 commands (A_CaretX and A_CaretY)
-
+; 2025-06-12 AMB, Moved to dedicated routine for cleaner convert loop
+v2_FixACaret(&lineStr)
+{
 	if (!RegexMatch(lineStr, 'i)A_Caret(X|Y)', &m))
-		return														; A_Caret not on this line - exit
+		return																						; A_Caret not on this line - exit
 
 	if ((lineStr ~= 'i)A_CaretX') && (lineStr ~= 'i)A_CaretY')) {
-		Param	:= '&A_CaretX, &A_CaretY'							; create vars for both x and y
+		Param	:= '&A_CaretX, &A_CaretY'															; create vars for both x and y
 	} else {
-		sep		:= (m[1] = 'X') ? '' : ', '							; X or Y ? (Y requires a separator comma)
-		Param	:= sep . '&' m[]									; create var for just one or the other
+		sep		:= (m[1] = 'X') ? '' : ', '															; X or Y ? (Y requires a separator comma)
+		Param	:= sep . '&' m[]																	; create var for just one or the other
 	}
 	; add CaretGetPos() to beginning of orig line code
-	RegExMatch(lineStr, '^(\h*)(.*)', &m)							; grab orig line, separating leading ws from line-command
-	lineStr := m[1] 'CaretGetPos(' Param '), ' m[2]					; add CaretGetPos() to beginning of orig line code
+	RegExMatch(lineStr, '^(\h*)(.*)', &m)															; grab orig line, separating leading ws from line-command
+	lineStr := m[1] 'CaretGetPos(' Param '), ' m[2]													; add CaretGetPos() to beginning of orig line code
 
 	return		; lineStr by reference
 }
 ;################################################################################
-													  v2_fixObjKeyNames(&lineStr)
-;################################################################################
-{
-; 2025-06-12 AMB, Moved to dedicated routine for cleaner convert loop
 ; Purpose: Make sure kvPairs have valid v2 key names [{"A": "B"}] => [{A: "B"}]
 ; characters for V2 key names are much more restrictive, may need to update further
 ;  also updated to detect valid {key:val} objects (only)
+; 2025-06-12 AMB, Moved to dedicated routine for cleaner convert loop
 ; TODO - THIS CAN CHANGE KEY NAMES - NEED TO ADD SUPPORT FOR...
 ;	1. ENSURING KEYNAMES ARE STILL UNIQUE
 ;	2. UPDATING KEYNAME REFERENCES WITHIN CODE (obj.KEYNAME)
-
-	Mask_T(&lineStr, 'STR')	; must be here to avoid errors with next regex			; don't match false positives (found within strings)
-	if (!(lineStr ~= gPtn_KVO))	{													; make sure line has VALID {key:val} object
-		Mask_R(&lineStr, 'STR')														; cleanup before early exit
+v2_fixObjKeyNames(&lineStr)
+{
+	Mask_T(&lineStr, 'STR')	; must be here to avoid errors with next regex							; don't match false positives (found within strings)
+	if (!(lineStr ~= gPtn_KVO))	{																	; make sure line has VALID {key:val} object
+		Mask_R(&lineStr, 'STR')																		; cleanup before early exit
 		return	; unchanged lineStr by reference
 	}
-
 	pos := 1
-	While (pos		:= RegexMatch(lineStr, gPtn_KVO, &mObj, pos)) {					; for each {key:val} object found on current line...
-		kvObj		:= mObj[]														; [working var]
-		kvPairsList	:= RegExReplace(kvObj, '\{([^}]+)\}', '$1')						; ... strip outer {} from object, now just key:val list sep by commas
-		newObj		:= '{'															; [will be the new object string]
-		for idx, kvPair in StrSplit(kvPairsList, ',') {								; for each key:val pair in list...
-			if (RegExMatch(kvPair, '(?s)^(?<key>[^:]+):(?<val>.+)$', &mKV)) {		; if seems to be properly formatted key:val...
+	While (pos		:= RegexMatch(lineStr, gPtn_KVO, &mObj, pos)) {									; for each {key:val} object found on current line...
+		kvObj		:= mObj[]																		; [working var]
+		kvPairsList	:= RegExReplace(kvObj, '\{([^}]+)\}', '$1')										; ... strip outer {} from object, now just key:val list sep by commas
+		newObj		:= '{'																			; [will be the new object string]
+		for idx, kvPair in StrSplit(kvPairsList, ',') {												; for each key:val pair in list...
+			if (RegExMatch(kvPair, '(?s)^(?<key>[^:]+):(?<val>.+)$', &mKV)) {						; if seems to be properly formatted key:val...
 				; TODO - FOR ANY KEYNAME CHANGES in next line...
 				; ... ADD SUPPORT FOR UPDATING KEYNAME REFERENCES WITHIN CODE
-				val := mKV.val														; [working var]
-				if((key	:= validKeyName(mKV.key)) = '') {							; make sure key name is valid
-					key	:= mKV.key '_INVALID_KEYNAME'								; TODO - TEMP SOLUTION FOR NOW
+				val := mKV.val																		; [working var]
+				if((key	:= validKeyName(mKV.key)) = '') {											; make sure key name is valid
+					key	:= mKV.key '_INVALID_KEYNAME'												; TODO - TEMP SOLUTION FOR NOW
 				}
-				kvPair := key ':' val												; reassemble key:val pair with updated key
+				kvPair := key ':' val																; reassemble key:val pair with updated key
 			}
-			newObj .= kvPair . ','													; add updated key:val pair to new object list
+			newObj .= kvPair . ','																	; add updated key:val pair to new object list
 		}
-		newObj	:= RTrim(newObj, ',') . '}'											; remove any trailing comma, and close the object with '}'
-		lineStr	:= RegExReplace(lineStr, escRegexChars(kvObj), newObj,, 1, pos)		; update output - replacing old object string with new one
-		pos		+= StrLen(newObj)													; prep for next loop iteration
+		newObj	:= RTrim(newObj, ',') . '}'															; remove any trailing comma, and close the object with '}'
+		lineStr	:= RegExReplace(lineStr, escRegexChars(kvObj), newObj,, 1, pos)						; update output - replacing old object string with new one
+		pos		+= StrLen(newObj)																	; prep for next loop iteration
 	}
-	Mask_R(&lineStr, 'STR')															; restore any remaining masked-strings
+	Mask_R(&lineStr, 'STR')																			; restore any remaining masked-strings
 	return		; lineStr by reference
 }
 ;################################################################################
-																validKeyName(key)
-;################################################################################
-{
-; 2025-06-22 AMB, ADDED - ensures keyname is valid format
+; Ensures keyname is valid format
+; 2025-06-22 AMB, ADDED
 ; 2025-06-23 BANAANAE, UPDATED - to add support for vars as part of key
 ; TODO - WORK IN PROGRESS
-
+validKeyName(key)
+{
 	; support for wrapping var, using deref to access
-	if HasTag(key, 'QS')															; if key contained quoted (masked) strings...
-		key := RegExReplace(key, '(?<= |^)(?<!"|\w)(\w+)(?!"|\w)(?= |$)', '%$1%')	; ... wrap unquoted text in %% (variable)
+	if HasTag(key, 'QS')																			; if key contained quoted (masked) strings...
+		key := RegExReplace(key, '(?<= |^)(?<!"|\w)(\w+)(?!"|\w)(?= |$)', '%$1%')					; ... wrap unquoted text in %% (variable)
 
-	Mask_R(&key, 'STR', false)	; DO NOT REMOVE										; strings are masked when receiving from v2_fixObjKeyNames()
-	key := StrReplace(RegExReplace(key,'\h+\.\h+'),'"')								; remove any concat operators and quotes from key (creates new var name)
-	nKN := '^((?:\h*+\(*+)*+)([\w%]+(?:[-\h]*[\w%]+)*)+?((?:\h*+\)*+)*+)$'			; [identifies key name - supports optional parentheses/hyphens(not minus)/ws]
-	if (!RegExMatch(key, nKN, &mKN)) {												; if key does not look valid...
-		return ''																	; ... return empty string
+	Mask_R(&key, 'STR', false)	; DO NOT REMOVE														; strings are masked when receiving from v2_fixObjKeyNames()
+	key := StrReplace(RegExReplace(key,'\h+\.\h+'),'"')												; remove any concat operators and quotes from key (creates new var name)
+	nKN := '^((?:\h*+\(*+)*+)([\w%]+(?:[-\h]*[\w%]+)*)+?((?:\h*+\)*+)*+)$'							; [identifies key name - supports optional parentheses/hyphens(not minus)/ws]
+	if (!RegExMatch(key, nKN, &mKN)) {																; if key does not look valid...
+		return ''																					; ... return empty string
 	}
 	; keyname looks like its valid or can be fixed...
-	LWS	:= mKN[1]																	; leading ws and optional opening parenthesis (could be more than 1)
-	KN	:= mKN[2]																	; [working var for keyname]
-	TWS	:= mKN[3]																	; trailing ws and optional closing parenthesis (could be more than 1)
+	LWS	:= mKN[1]																					; leading ws and optional opening parenthesis (could be more than 1)
+	KN	:= mKN[2]																					; [working var for keyname]
+	TWS	:= mKN[3]																					; trailing ws and optional closing parenthesis (could be more than 1)
 
-	if (KN ~= '^\d+$') {															; if keyname is a number (1 or more integer digits) ? ...
-		return (LWS . KN . TWS)														; ... is valid - return it
+	if (KN ~= '^\d+$') {																			; if keyname is a number (1 or more integer digits) ? ...
+		return (LWS . KN . TWS)																		; ... is valid - return it
 	}
 
 	; is alpha-numeric - ensure proper formatting
-	KN := RegExReplace(KN, '[^\w%]')	; remove ws and hyphens						; valid chars are [a-z_0-9] (I think), also allow vars wrapped in %
-	KN := RegExReplace(KN, '^(\h*)(\d\D.+)$', '$1_$2')								; keyname cannot begin with a number, add underscore to beginning if it does
+	KN := RegExReplace(KN, '[^\w%]')	; remove ws and hyphens										; valid chars are [a-z_0-9] (I think), also allow vars wrapped in %
+	KN := RegExReplace(KN, '^(\h*)(\d\D.+)$', '$1_$2')												; keyname cannot begin with a number, add underscore to beginning if it does
 
-	return (KN) ? (LWS . KN . TWS) : ''												; trim any ws if KN is now empty
-
+	return (KN) ? (LWS . KN . TWS) : ''																; trim any ws if KN is now empty
 }
 ;################################################################################
-											   v2_formatClassProperties(&lineStr)
-;################################################################################
-{
+; Removes optional [] from class properties
 ; 2025-06-12 AMB, Moved to dedicated routine for cleaner convert loop
-; removes optional [] from class properties
 ; TODO - NEEDS WORK... should target Class methods only...
 ; TODO - Use class masking to target only classes - support already exists in MaskCode
 ; TODO - Update for more accurate detection and targeting
 ; TODO - MUST ALSO ADD support to include a static property of same name...
 ;     so it can simulate same behavior as V1
-
+v2_formatClassProperties(&lineStr)
+{
 	global gOScriptStr
 
 	if (!lineStr)
 		return
 
-	nProperty := '(?i)^(\h*[a-z]\w*)\[\](\h*\{?.*)$'								; needle for (PROBABLE) class property - not fool-proof tho
-	if (RegExMatch(lineStr, nProperty, &m)) {										; if line looks like a class property with []
-		lineLastChar := SubStr(lineStr, -1)											; grab last char on current line
-		nextLineChar := ''															; [avoid errors with next lines]
-		if (hasNextLine	 := gOScriptStr.Length >= gO_Index +1) {					; [avoid errors with next lines]
-			nextLineChar := SubStr(Trim(gOScriptStr.GetLine(gO_Index + 1)), 1, 1)	; grab first char of next line
+	nProperty := '(?i)^(\h*[a-z]\w*)\[\](\h*\{?.*)$'												; needle for (PROBABLE) class property - not fool-proof tho
+	if (RegExMatch(lineStr, nProperty, &m)) {														; if line looks like a class property with []
+		lineLastChar := SubStr(lineStr, -1)															; grab last char on current line
+		nextLineChar := ''																			; [avoid errors with next lines]
+		if (hasNextLine	 := gOScriptStr.Length >= gO_Index +1) {									; [avoid errors with next lines]
+			nextLineChar := SubStr(Trim(gOScriptStr.GetLine(gO_Index + 1)), 1, 1)					; grab first char of next line
 		}
-		if ((lineLastChar = '{')													; if we find opening brace on cuurent line...
-			|| (hasNextLine && nextLineChar = '}')) {								; ... or opening brace on next line (at beginning)
-			lineStr := m[1] m[2]													; discard [] from current line (PROBABLY is a property)
+		if ((lineLastChar = '{')																	; if we find opening brace on current line...
+			|| (hasNextLine && nextLineChar = '}')) {												; ... or opening brace on next line (at beginning)
+			lineStr := m[1] m[2]																	; discard [] from current line (PROBABLY is a property)
 		}
 	}
 	return		; lineStr by reference
 }
 ;################################################################################
-														  v2_FuncDotStr(&lineStr)
-;################################################################################
-{
-; 2025-06-12 AMB, Moved to dedicated routine for cleaner convert loop
 ; Purpose: Convert... func.("string") -> func.Call("string")
-; TODO - update for more accurate targetting
+; 2025-06-12 AMB, Moved to dedicated routine for cleaner convert loop
+; TODO - update for more accurate targeting
+v2_FuncDotStr(&lineStr)
+{
+	nFC := '(\w+)\.\('																				; orig needle - TODO - this should be updated
+	If (!(lineStr ~= nFC))																			; if not a valid target...
+		return	; no change to lineStr																; ... exit
 
-	nFC := '(\w+)\.\('										; orig needle - TODO - this should be updated
-	If (!(lineStr ~= nFC))									; if not a valid target...
-		return	; no change to linestr						; ... exit
-
-	Mask_T(&lineStr, 'STR')									; avoid issues caused my string chars
-		lineStr := RegExReplace(lineStr, nFC, '$1.Call(')	; TODO - should update needle
-	Mask_R(&lineStr, 'STR')									; remove string masks
+	Mask_T(&lineStr, 'STR')																			; avoid issues caused my string chars
+		lineStr := RegExReplace(lineStr, nFC, '$1.Call(')											; TODO - should update needle
+	Mask_R(&lineStr, 'STR')																			; remove string masks
 	return		; lineStr by reference
 }
 ;################################################################################
-											  v2_AHKFuncs(&lineStr, scriptString)
-;################################################################################
-{
+; Purpose: Convert AHK v1 built-in functions to v2 format
+;	see gmAhkFuncsToConvert() within 2Functions.ahk
 ; 2025-06-12 AMB, Moved to dedicated routine for cleaner convert loop
 ; 2025-10-05 AMB, UPDATED - changed gfNoSideEffect to gfLockGlbVars
 ; 2025-10-09 AMB, UPDATED - to fix #348
-; Purpose: Convert AHK v1 built-in functions to v2 format
-;	see gmAhkFuncsToConvert() within 2Functions.ahk
 ; TODO - MOVE THIS AND RELATED FUNCTIONS TO 2Functions.ahk ??
-
+v2_AHKFuncs(&lineStr, scriptString)
+{
 	global gfLockGlbVars
 
-	nFC := '(?i)' uniqueTag('FC\w++')												; needle for funcCall TAGS
-	Mask_T(&lineStr, 'FC')															; mask all func calls in source str
-	gfLockGlbVars := False															; turn off global var lock
-	While(pos := RegexMatch(lineStr,nFC, &m, pos??1)) {								; locate each FC tag, ONE AT A TIME
-		tag		:= m[]																; found an FC tag
-		oStr	:= HasTag(,tag)														; get orig str for tag
-		Mask_R(&oStr, 'STR')														; restore any masked strings within FC orig str
-		lineStr	:= StrReplace(lineStr, tag, oStr)									; replace tag with orig str, so it is exposed for processing
-		V1toV2_Functions(scriptString, lineStr, &lineFuncV2, &gotFunc:=False)		; process the ONE AND ONLY FC that is exposed in string
-		if (gotFunc) {																; if a v2 change was made...
-			lineStr := lineFuncV2													; update linestr with that v2 change
-			Mask_T(&lineStr, 'STR'), Mask_T(&lineStr, 'HFC', gPtn_FuncCall)			; hide the FC that was just changed (next pass can break it)
+	nFC := '(?i)' uniqueTag('FC\w++')																; needle for funcCall TAGS
+	Mask_T(&lineStr, 'FC')																			; mask all func calls in source str
+	gfLockGlbVars := False																			; turn off global var lock
+	While(pos := RegexMatch(lineStr,nFC, &m, pos??1)) {												; locate each FC tag, ONE AT A TIME
+		tag		:= m[]																				; found an FC tag
+		oStr	:= HasTag(,tag)																		; get orig str for tag
+		Mask_R(&oStr, 'STR')																		; restore any masked strings within FC orig str
+		lineStr	:= StrReplace(lineStr, tag, oStr)													; replace tag with orig str, so it is exposed for processing
+		V1toV2_Functions(scriptString, lineStr, &lineFuncV2, &gotFunc:=False)						; process the ONE AND ONLY FC that is exposed in string
+		if (gotFunc) {																				; if a v2 change was made...
+			lineStr := lineFuncV2																	; update lineStr with that v2 change
+			Mask_T(&lineStr, 'STR'), Mask_T(&lineStr, 'HFC', gPtn_FuncCall)							; hide the FC that was just changed (next pass can break it)
 		}
 	}
-	Mask_R(&lineStr, 'FC'), Mask_R(&lineStr, 'HFC')									; restore any remaining FC tags, and all hidden-FC tags
+	Mask_R(&lineStr, 'FC'), Mask_R(&lineStr, 'HFC')													; restore any remaining FC tags, and all hidden-FC tags
 
 	return		; lineStr by reference
 }
 ;################################################################################
-				 v2_AHKCommands(&lineStr, &lineOpen, &EOLComment, &fCmdConverted)	; SETS VALUE OF fCmdConverted
-;################################################################################
-{
-; 2025-06-12 AMB, Moved to dedicated routine (and redesigned) for cleaner convert loop
-; 2025-06-22 AMB, UPDATED to support global masking of continuation sections,
-;	and comments for all lines
 ; Purpose: parses line looking for v1 COMMANDS that need to be converted to v2 format
 ;	performs recursion as required for chained commands/params
 ;	also supports continuation sections
+; 2025-06-12 AMB, Moved to dedicated routine (and redesigned) for cleaner convert loop
+; 2025-06-22 AMB, UPDATED to support global masking of continuation sections,
+;	and comments for all lines
 ; TODO - MOVE THIS AND RELATED FUNCTIONS TO 1Commands.ahk ??
-
+v2_AHKCommands(&lineStr, &lineOpen, &EOLComment, &fCmdConverted)									; SETS VALUE OF fCmdConverted
+{
 	global gO_Index, gIndent, gOScriptStr, gEOLComment_Cont
 
 	; 2025-06-22 AMB, ADDED support for global masking of continuation sections
 	; if lineStr is a continuation section masked tag...
-	; extract original code, see if line1 has a targetted command... if not, exit
-	fHaveCS	:= false															; flag used later
-	if (tag := hasTag(lineStr, 'MLCSECTM2')) {									; is lineStr a continuation tag?
+	; extract original code, see if line1 has a targeted command... if not, exit
+	fHaveCS	:= false																				; flag used later
+	if (tag := hasTag(lineStr, 'MLCSECTM2')) {														; is lineStr a continuation tag?
 		; 2025-08-23 AMB, ADDED - to preserve proper leading indent/WS
 		indentWS := ''
 		if (RegExMatch(lineStr, '^(\h+)', &mLWS)) {
-			indentWS := mLWS[1]													; get leading whitespace/indentation
+			indentWS := mLWS[1]																		; get leading whitespace/indentation
 		}
-		oCode := hasTag(lineStr, tag)											; get orig line + continuation section (does not include indent)
-		Mask_R(&oCode, 'C&S', false)											; extract comments/strings that are masked
-		if (RegExMatch(oCode, '(?s)^([^\v]+)(.+)$', &m)) {						; will not include indentation
-			tLine1 := m[1], contBlk := m[2]										; separate temp_line1, from continuation block
-			if (!obj := V1LineToProcess.getCmdObject(tLine1)) {					; determine whether line1 has v1 command to be converted
-				return false													; no command to process - exit
+		oCode := hasTag(lineStr, tag)																; get orig line + continuation section (does not include indent)
+		Mask_R(&oCode, 'C&S', false)																; extract comments/strings that are masked
+		if (RegExMatch(oCode, '(?s)^([^\v]+)(.+)$', &m)) {											; will not include indentation
+			tLine1 := m[1], contBlk := m[2]															; separate temp_line1, from continuation block
+			if (!obj := V1LineToProcess.getCmdObject(tLine1)) {										; determine whether line1 has v1 command to be converted
+				return false																		; no command to process - exit
 			}
 			; line1 has legit command
-			lineStr := indentWS . tLine1										; OK to change lineStr now - make it the first (cmd) line, and apply indent
-			fHaveCS := true														; flag to use alternate routine to fill params arrays
+			lineStr := indentWS . tLine1															; OK to change lineStr now - make it the first (cmd) line, and apply indent
+			fHaveCS := true																			; flag to use alternate routine to fill params arrays
 			; deal with any comment on line 1
-			lineStr	:= separateComment(lineStr, &EOLComment)					; separate comment (first occurence) from line1
-			gEOLComment_Cont.Push(EOLComment)									; TODO - can lead to errors, investigate if it continues
+			lineStr	:= separateComment(lineStr, &EOLComment)										; separate comment (first occurrence) from line1
+			gEOLComment_Cont.Push(EOLComment)														; TODO - can lead to errors, investigate if it continues
 		}
 	}
 
@@ -542,34 +503,34 @@
 	loop
 	{
 		; get command/param object if line has legit command that must be converted
-		if (!obj := V1LineToProcess.getCmdObject(lineStr)) {									; determine whether line has v1 command to be converted
+		if (!obj := V1LineToProcess.getCmdObject(lineStr)) {										; determine whether line has v1 command to be converted
 			return false
 		}
 
 		; line has legit command to process, and will be converted...
 		; Object members are not currently used within this function...
 		;	but may be utilized in a later update of the converter
-		cmd					:= obj.cmd															; v1 command found on line (and identified as target)
-		cLParams			:= obj.lineOrigParams												; v1 cmd LINE parameters	[initial STRING list] (list may grow)
-		cLParamsArr			:= obj.lineOrigParamsArr											; v1 cmd LINE params array	[intiial ARRAY  list] (list may grow)
-		cLParamsArr.Extra	:= {}	; TODO - purpose??											; To attach helpful info (????) that can be read by custom functions
-		cDParamsArr			:= obj.defProfile.v1DefParamsArr									; v1 cmd DEFINITION params array (default param list for v1 command)
-		cmdV2Format			:= obj.defProfile.cmdV2Format										; v2 cmd formatting (or name of custom conversion func)
+		cmd					:= obj.cmd																; v1 command found on line (and identified as target)
+		cLParams			:= obj.lineOrigParams													; v1 cmd LINE parameters	[initial STRING list] (list may grow)
+		cLParamsArr			:= obj.lineOrigParamsArr												; v1 cmd LINE params array	[initial ARRAY  list] (list may grow)
+		cLParamsArr.Extra	:= {}	; TODO - purpose??												; To attach helpful info (????) that can be read by custom functions
+		cDParamsArr			:= obj.defProfile.v1DefParamsArr										; v1 cmd DEFINITION params array (default param list for v1 command)
+		cmdV2Format			:= obj.defProfile.cmdV2Format											; v2 cmd formatting (or name of custom conversion func)
 
 		; Some params may have continuation sections...
 		; 	these 'extended' params should be last param on cur line.
 		; Find this cont section (if it exists) and...
 		; 	update cLParams, cLParamsArr, EOLComment
 
-		; get continuaton section (if present)
+		; get continuation section (if present)
 		; 2025-06-22 AMB, UPDATED to support global masking of continuation sections
-		if (fHaveCS) {																			; if we already have the continuation section (see entry above)
-			if (contBlk) {																		; if we have not visited getParamContSect2() yet
-				if (paramContSect := getParamContSect(contBlk, &cLParams						; use alternate routine to fill params string and array
+		if (fHaveCS) {																				; if we already have the continuation section (see entry above)
+			if (contBlk) {																			; if we have not visited getParamContSect2() yet
+				if (paramContSect := getParamContSect(contBlk, &cLParams							; use alternate routine to fill params string and array
 											, &cLParamsArr, &EOLComment)) {
-;					MsgBox "[" paramContSect "]", "CONT" ; debug								; debug
+;					MsgBox "[" paramContSect "]", "CONT" ; debug									; debug
 				}
-				contBlk := ''																	; make sure we only enter getParamContSect2() once
+				contBlk := ''																		; make sure we only enter getParamContSect2() once
 			}
 		}
 
@@ -584,84 +545,82 @@
 		;
 		; if there are MORE line params than expected, this will investigate and handle it
 		; 	sets recursion as needed to handle "extra params"
-		fRecursionReq	:= false																; flag no recursion required... yet!
-		extraParams		:= handleExtraParams(cmd, &cLParamsArr, &cDParamsArr, &fRecursionReq)	; extracts params that exceed maximum allowed params, sets fRecursionReq
+		fRecursionReq	:= false																	; flag no recursion required... yet!
+		extraParams		:= handleExtraParams(cmd, &cLParamsArr, &cDParamsArr, &fRecursionReq)		; extracts params that exceed max allowed params, sets fRecursionReq
 
 		; if there are LESS line params than expected, fill with empty strings (see Issue #5)
-		maxParamCount	:= cDParamsArr.Length													; maximum number of parameters allowed for current command
-		if ((paramCountDiff := maxParamCount - cLParamsArr.Length) > 0) {						; if not enough params found for current command...
+		maxParamCount	:= cDParamsArr.Length														; maximum number of parameters allowed for current command
+		if ((paramCountDiff := maxParamCount - cLParamsArr.Length) > 0) {							; if not enough params found for current command...
 			Loop paramCountDiff {
-				cLParamsArr.Push('')															; fills in empty/missing params so all (max) params have a value
+				cLParamsArr.Push('')																; fills in empty/missing params so all (max) params have a value
 			}
 		}
 
-		; perform actual conversion of the line (current) cammand and params
-		fCmdConverted	:= executeConversion(&lineStr, &cLParamsArr, cDParamsArr, cmdV2Format)	; convert and update lineStr (for current command/params)
+		; perform actual conversion of the line (current) command and params
+		fCmdConverted	:= executeConversion(&lineStr, &cLParamsArr, cDParamsArr, cmdV2Format)		; convert and update lineStr (for current command/params)
 
 		; shift focus within lineStr to concentrate on chained commands/params
 		; this focus shifting can occur multiple times for a single line
 		if (fRecursionReq) {
-			lineOpen	.= lineStr '`r`n'														; holds converted portion of line, as we step thru orig lineStr recursively
-			gIndent		.= gSingleIndent														; this indent is dynamic (changes)
-			lineStr		:= gIndent . extraParams												; new part of line to focus on (has not been checked/converted yet)
+			lineOpen	.= lineStr '`r`n'															; holds conv portion of line, as steps thru orig lineStr recursively
+			gIndent		.= gSingleIndent															; this indent is dynamic (changes)
+			lineStr		:= gIndent . extraParams													; new part of line to focus on (has not been checked/converted yet)
 			; return to top of loop for another pass with new data
 		}
 
 	}	Until(!fRecursionReq)
-	return																						; all func parameters by reference
+	return																							; all func parameters by reference
 }
 ;################################################################################
-				  getParamContSect(contBlk, &cLParams, &cLParamsArr, &EOLComment)
-;################################################################################
-{
-; 2025-06-22 AMB, UPDATED to support global masking of continuation sections
-; gets continuaton section (parentheses-block) from known source (contBlk)
+; Gets continuation section (parentheses-block) from known source (contBlk)
 ; updates param list string and array
+; 2025-06-22 AMB, UPDATED to support global masking of continuation sections
 ; TODO - the code is currently a hybrid between the old brute force method...
 ;	... and already having the CS data in hand (contBlk).
 ;	Will redesign to remove brute-force after verifying that CS masking works well
-
+getParamContSect(contBlk, &cLParams, &cLParamsArr, &EOLComment)
+{
 	global gO_Index, gOScriptStr
 
-	lastLineParam	:= cLParamsArr[cLParamsArr.length]							; most recent line param, prior to arriving here
-	fullContSectStr	:= lastLineParam '`r`n'										; starts with command from previous line (line1 usually)
+	lastLineParam	:= cLParamsArr[cLParamsArr.length]												; most recent line param, prior to arriving here
+	fullContSectStr	:= lastLineParam '`r`n'															; starts with command from previous line (line1 usually)
 
-	lines := StrSplit(contBlk, '`n', '`r')										; grab lines from cont blk
-	curContLine := '', looped := false											; ini
+	lines := StrSplit(contBlk, '`n', '`r')															; grab lines from cont blk
+	curContLine := '', looped := false																; ini
 	for idx, line in lines
 	{
 		; TODO - might need to adjust this jump/continue in future?
 		if (idx=1)
-			continue															; skip first element
-		looped		:= true														; flag for gEOLComment_Cont[] below loop
-		curContLine	:= line														; [working var]
-		curContLine	:= separateComment(curContLine, &EOLComment)				; separate comment (first occurence) from line
-		gEOLComment_Cont.Push(EOLComment)										; save comment for CURRENT LINE to be restored later
+			continue																				; skip first element
+		looped		:= true																			; flag for gEOLComment_Cont[] below loop
+		curContLine	:= line																			; [working var]
+		curContLine	:= separateComment(curContLine, &EOLComment)									; separate comment (first occurrence) from line
+		gEOLComment_Cont.Push(EOLComment)															; save comment for CURRENT LINE to be restored later
 
-		FirstChar	:= SubStr(Trim(curContLine),1,1)							; capture "(" or ")" if on current line
-		if (FirstChar == ')')													; if current line appears to be end of cont section
+		FirstChar	:= SubStr(Trim(curContLine),1,1)												; capture "(" or ")" if on current line
+		if (FirstChar == ')')																		; if current line appears to be end of cont section
 		{
-			cLParams .= '`r`n' curContLine										; append current continuation line to LINE params
+			cLParams .= '`r`n' curContLine															; append current continuation line to LINE params
 ;			fullContSectStr .= curContLine '`r`n'
 
 			; when a cont section is not the last param...
 			;	look for trailing params that follow the
 			;	closing parenthesis of cont section...
 			; 	This can also continue the search for...
-			;	addtional params and cont sections
-			trailingParams := V1ParamSplit(curContLine)							; get any additional params that follow closing parenthesis
+			;	additional params and cont sections
+			trailingParams := V1ParamSplit(curContLine)												; get any additional params that follow closing parenthesis
 
-			lastIdx := cLParamsArr.Length										; [last array element idx]
-			cLParamsArr[lastIdx] := fullContSectStr . trailingParams[1]			; REPLACE the last element with accumulaed contSect lines and first param from current line
-			Loop trailingParams.Length - 1 {									; then, add the rest of trailing params from current line
+			lastIdx := cLParamsArr.Length															; [last array element idx]
+			cLParamsArr[lastIdx] := fullContSectStr . trailingParams[1]								; REPLACE last elem with accumulated contSect lines & first param of cur line
+			Loop trailingParams.Length - 1 {														; then, add the rest of trailing params from current line
 				cLParamsArr.Push(trailingParams[A_index + 1])
 			}
-			break																; continuation section has concluded - EXIT
+			break																					; continuation section has concluded - EXIT
 		}
-		cLParams .= '`r`n' curContLine											; add the final continuation line to LINE params
-		fullContSectStr .= curContLine '`r`n'									; add the final continuation to output string
+		cLParams .= '`r`n' curContLine																; add the final continuation line to LINE params
+		fullContSectStr .= curContLine '`r`n'														; add the final continuation to output string
 	}
-	fullContSectStr .= curContLine												; this final concat is just for output purposes (for debugging)
+	fullContSectStr .= curContLine																	; this final concat is just for output purposes (for debugging)
 
 	; gEOLComment_Cont is provided by Banaanae
 	if (looped)	; don't do this unless we entered loop above
@@ -673,15 +632,13 @@
 			gEOLComment_Cont.Pop()
 		}
 	}
-	return fullContSectStr														; output full continuation block
+	return fullContSectStr																			; output full continuation block
 }
 ;################################################################################
-			  executeConversion(&lineStr, &cLParamsArr, cDParamsArr, cmdV2Format)
-;################################################################################
-{
-; 2025-06-12 AMB, Moved from v2_AHKCommands() to dedicated routine
 ; Purpose: performs conversion of line v1 commands/params to v2 format
-
+; 2025-06-12 AMB, Moved from v2_AHKCommands() to dedicated routine
+executeConversion(&lineStr, &cLParamsArr, cDParamsArr, cmdV2Format)
+{
 	; 2025-08-23 AMB, ADDED - separate leading indent/WS from command
 	indentWS := ''
 	if (RegExMatch(lineStr, '(?s)^(\h+)(.+)$', &mLWS)) {
@@ -690,8 +647,8 @@
 
 	; perform special formatting of line params as outlined by command definition
 	maxParamCount := cDParamsArr.Length
-	Loop maxParamCount {																		; for each line param...
-		cLParamsArr[A_Index] := FormatParam(cDParamsArr[A_Index], cLParamsArr[A_Index])			; ... handle any special formatting of line param
+	Loop maxParamCount {																			; for each line param...
+		cLParamsArr[A_Index] := FormatParam(cDParamsArr[A_Index], cLParamsArr[A_Index])				; ... handle any special formatting of line param
 	}
 
 	; if using a special custom function for conversion
@@ -699,11 +656,11 @@
 	if (SubStr(cmdV2Format, 1, 1) = '*')
 	{
 		/*
-		1. get custom function name from gmAhkCmdsToConvertV2 (thru cmdV2Format var)			; see 1Commands.ahk for gmAhkCmdsToConvertV2 map
+		1. get custom function name from gmAhkCmdsToConvertV2 (thru cmdV2Format var)				; see 1Commands.ahk for gmAhkCmdsToConvertV2 map
 		2. create an on-the-fly function call (funcObj) from that name
 		3. call that custom function (passing array to func)...
 			to get a string value for 'lineStr :=' below
-		FuncObj(cLParamsArr) is a custom func call that returns a string value					; 25-12-24 - see AhkLangConv.ahk for actual funcs
+		FuncObj(cLParamsArr) is a custom func call that returns a string value						; 25-12-24 - see AhkLangConv.ahk for actual funcs
 		The FuncObj(FuncName) varies depending on...
 			which line-cmd is being processed/converted
 		FuncObj name usually begins with underscore and...
@@ -713,46 +670,44 @@
 		*/
 		FuncName := SubStr(cmdV2Format, 2)				; #1
 		if ((FuncObj := %FuncName%) is Func) {			; #2
-			; To see the name of the function that will be called...
-			;	use the following to display it
+			; To see the name of the func that will be called...
+			;	... use the following to display it
 			;	msgbox("FuncName=" FuncName)
-			lineStr := FuncObj(cLParamsArr)				; #3 returns string val					; convert using custom function defined in cmdV2Format
+			lineStr := FuncObj(cLParamsArr)				; #3 returns string val						; convert using custom function defined in cmdV2Format
 		}
 	}
 	else	; or convert using the formatting of cmdV2Format directly
 	{
-		lineStr := format(cmdV2Format, cLParamsArr*)											; convert using cmdV2Format directly
-		lineStr := RegExReplace(lineStr, '[\h,]*(\))?$', '$1')									; remove any left-over trailing commas
+		lineStr := format(cmdV2Format, cLParamsArr*)												; convert using cmdV2Format directly
+		lineStr := RegExReplace(lineStr, '[\h,]*(\))?$', '$1')										; remove any left-over trailing commas
 	}
-	lineStr := indentWS . lineStr																; 2025-08-23 - reapply leading indent/WS
+	lineStr := indentWS . lineStr																	; 2025-08-23 - reapply leading indent/WS
 
-	return true		; sets fCmdConverted which is needed by other functions						; also returns all func params by reference
+	return true		; sets fCmdConverted which is needed by other functions							; also returns all func params by reference
 }
 ;################################################################################
-			   handleExtraParams(cmd, &cLParamsArr, &cDParamsArr, &fRecursionReq)
-;################################################################################
-{
-; 2025-06-12 AMB, Moved from v2_AHKCommands() to dedicated routine
-; detects whether EXTRA line params are found for current command
+; Detects whether EXTRA line params are found for current command
 ; These 'extras' are usually chained commands
 ; will set recursion to true as needed to handle "extra" params (chained-commands)
-
-	extraParams		:= ''																		; will be altered and returned to caller
-	maxParamCount	:= cDParamsArr.Length														; max params required (by default) for cmd
+; 2025-06-12 AMB, Moved from v2_AHKCommands() to dedicated routine
+handleExtraParams(cmd, &cLParamsArr, &cDParamsArr, &fRecursionReq)
+{
+	extraParams		:= ''																			; will be altered and returned to caller
+	maxParamCount	:= cDParamsArr.Length															; max params required (by default) for cmd
 
 	; Are there MORE line params than expected? If not... exit
-	if ((paramCountDiff	:= cLParamsArr.Length - maxParamCount) <= 0) {							; if line param count does not exceed max param count...
-		return extraParams	; empty string														; ... exit
+	if ((paramCountDiff	:= cLParamsArr.Length - maxParamCount) <= 0) {								; if line param count does not exceed max param count...
+		return extraParams	; empty string															; ... exit
 	}
 
-	; There are MORE line params than expected for the current cmd								(when compared to the max param count for the v1 command)
+	; There are MORE line params than expected for the current cmd									(when compared to the max param count for the v1 command)
 
 	; First, grab the extra params, FROM cLParamsArr
 	; these extra params 'may/will' be handled during next loop pass (recursion)
-	Loop paramCountDiff {																		; for each 'extra param'...
-		extraParams .= ',' . cLParamsArr[maxParamCount + A_Index]								; ... add to a comma separated param string
+	Loop paramCountDiff {																			; for each 'extra param'...
+		extraParams .= ',' . cLParamsArr[maxParamCount + A_Index]									; ... add to a comma separated param string
 	}
-	extraParams := LTrim(extraParams, ',')														; remove leading comma
+	extraParams := LTrim(extraParams, ',')															; remove leading comma
 
 	; WHY are there more params than expected? See reasons below...
 
@@ -765,20 +720,20 @@
 	; Check to see if recursion is required to handle these extra 'params'...
 	; Handling (recursion) is only required when...
 	; 	these 'extra params' turn out to be one of the reasons stated above
-	fRecursionReq := false																		; ini recursion flag to 'not required'
+	fRecursionReq := false																			; ini recursion flag to 'not required'
 	nV1LegacySameLineCmds	:= 'If((?:Not)?(?:Equal|InString)'
 							. '|(?:Greater|Less)(?:OrEqual)?|MsgBox)'
-	if (RegExMatch(cmd, 'i)^(?:' nV1LegacySameLineCmds ')$')) {									; if cmd is a 'same-Line-Action' type...
-		if (RegExMatch(extraParams, '^\h*(\w+)([\h,]|$)', &mExP1)) {							; get first 'extra param'...
+	if (RegExMatch(cmd, 'i)^(?:' nV1LegacySameLineCmds ')$')) {										; if cmd is a 'same-Line-Action' type...
+		if (RegExMatch(extraParams, '^\h*(\w+)([\h,]|$)', &mExP1)) {								; get first 'extra param'...
 			exParam1 := mExP1[1]
-			if (exParam1 ~= 'i)^(break|continue|return|throw)$') {								; is first extra param an AHK keyword...?
-				fRecursionReq := true															; ... recursion will be required
+			if (exParam1 ~= 'i)^(break|continue|return|throw)$') {									; is first extra param an AHK keyword...?
+				fRecursionReq := true																; ... recursion will be required
 			}
-			else {																				; look to see whether 'extra param' is a chained cmd...
-				fRecursionReq := FindCmdDefs(exParam1)											; recursion will be required IF it is a chained command
+			else {																					; look to see whether 'extra param' is a chained cmd...
+				fRecursionReq := FindCmdDefs(exParam1)												; recursion will be required IF it is a chained command
 			}
 			if (fRecursionReq) {
-				extraParams := LTrim(extraParams)	; RE-ADDED 2025-06-22						; trim next param if it's actually a keyword or command
+				extraParams := LTrim(extraParams)	; RE-ADDED 2025-06-22							; trim next param if it's actually a keyword or command
 			}
 		}
 	}
@@ -800,26 +755,26 @@
 	; add that 'single value' to the 'max default' element position
 	; any additional elements after that (even if filled) will be ignored...
 	;	... during current loop iteration
-	if ((maxParamCount != 0) && (!fRecursionReq)) {												; if recursion is disabled... (not set to true above)
-		cLParamsArr[maxParamCount] .= ',' extraParams											; add 'full string value' of 'extraParms' to cLParamsArr (to 'max' element)
+	if ((maxParamCount != 0) && (!fRecursionReq)) {													; if recursion is disabled... (not set to true above)
+		cLParamsArr[maxParamCount] .= ',' extraParams												; add 'full str val' of 'extraParms' to cLParamsArr (to 'max' element)
 	}
 
 	return extraParams
 }
 ;################################################################################
-Class V1LineToProcess
-{
+; For detection of v1 line commands/params that require conversion
+; called from v2_AHKCommands()
 ; 2025-06-12 AMB, ADDED
 ; 2026-04-07 AMB, UPDATED to fix #461
-; for detection v1 line commands/params that require conversion
-; called from v2_AHKCommands()
+Class V1LineToProcess
+{
 
 	lineStr				:= ''
 	cmd					:= ''
 	lineOrigParams		:= ''
 	lineOrigParamsArr	:= []
 	defProfile			:= object
-
+	;############################################################################
 	__new(lineStr, cmd, params, defProfile)
 	{
 		this.lineStr			:= lineStr
@@ -828,63 +783,60 @@ Class V1LineToProcess
 		this.lineOrigParamsArr	:= V1ParamSplit(this.lineOrigParams)
 		this.defProfile			:= defProfile
 	}
-
-	; TODO - ADD MEMBERS AS NEEDED
-
-	; Public
-	static getCmdObject(lineStr)
+	;############################################################################
+	Static getCmdObject(lineStr)
 	{
 		; 2025-06-12 AMB, Moved from v2_AHKCommands to dedicated routine
 		; Determines whether LineStr has cmd that needs to be converted to v2
 		; if yes... returns an object of this class for line command, false otherwise
 
-		if (!obj := V1LineToProcess._evaluateLine(lineStr))									; if not a legit command...
-			return false																	; ... return negatory!
-		return V1LineToProcess(lineStr, obj.cmd, obj.lineParams, obj.defProfile)			; is legit command... return object
+		if (!obj := V1LineToProcess._evaluateLine(lineStr))											; if not a legit command...
+			return false																			; ... return no
+		return V1LineToProcess(lineStr, obj.cmd, obj.lineParams, obj.defProfile)					; is legit command... return object
 	}
-
-	static _evaluateLine(lineStr)
+	;############################################################################
+	Static _evaluateLine(lineStr)
 	{
 		; 2025-06-12 AMB, Moved from v2_AHKCommands to dedicated routine
 		; Determines whether LineStr has cmd that needs to be converted to v2
-		; if yes... returns an object... with cmd, initial params, and definition profile for line cmd
-		; if not... return false
+		; if yes, returns an obj, with cmd, ini params, and def profile for line cmd
+		; if not, return false
 
 		cmd := lineParams := ''
-		lineCmdDelimPos1 := RegExMatch(lineStr, '\w(\h*[,\h])', &mlineCmd)					; locate first comma/ws on current line
+		lineCmdDelimPos1 := RegExMatch(lineStr, '\w(\h*[,\h])', &mlineCmd)							; locate first comma/ws on current line
 
-		if (lineCmdDelimPos1 > 0) {															; if comma/ws found...
-			cmd := Trim(SubStr(lineStr, 1, lineCmdDelimPos1))								; ... grab POSSIBLE command (chars up to first comma/ws)
-			cLParams := SubStr(lineStr, lineCmdDelimPos1 + StrLen(mlineCmd[1])+1)			; ... and POSSIBLE params list (rest of line)
+		if (lineCmdDelimPos1 > 0) {																	; if comma/ws found...
+			cmd := Trim(SubStr(lineStr, 1, lineCmdDelimPos1))										; ... grab POSSIBLE command (chars up to first comma/ws)
+			cLParams := SubStr(lineStr, lineCmdDelimPos1 + StrLen(mlineCmd[1])+1)					; ... and POSSIBLE params list (rest of line)
 		}
 		else {
-			cmd := Trim(lineStr)															; no comma/ws found, cmd becomes full line
-			cLParams := ''																	; no params
+			cmd := Trim(lineStr)																	; no comma/ws found, cmd becomes full line
+			cLParams := ''																			; no params
 		}
 		; check to see whether data collected above is...
 		;	a legit/target command/params that need to be processed? If not... exit
-		nSend	:= '(?i)SEND(INPUT|RAW)?'													; needle to detect SEND cmds [also see sharedCode.ahk -> v1v2_FixLegAssignments()]
-		if  (	!(cmd~='i)^#?[a-z]+$')														; if cmd string found is not a potential command... OR
-			||	(cLParams ~= '^[^"](?<!\{)=(?!\})' && !(cmd ~= nSend))						; if line param is actually an assignment...		OR
-			||	(!defProfile := CommandDefProfile.GetProfile(cmd)))							; if line cmd is NOT found in definition list...
-			return false																	; ... exit
-		return {cmd:cmd,lineParams:cLParams,defProfile:defProfile}							; legit! - return extracted details and def profile
+		nSend	:= '(?i)SEND(INPUT|RAW)?'															; detects SEND cmds [see sharedCode.ahk -> v1v2_FixLegAssignments()]
+		if  (	!(cmd~='i)^#?[a-z]+$')																; if cmd string found is not a potential command... OR
+			||	(cLParams ~= '^[^"](?<!\{)=(?!\})' && !(cmd ~= nSend))								; if line param is actually an assignment...		OR
+			||	(!defProfile := CommandDefProfile.GetProfile(cmd)))									; if line cmd is NOT found in definition list...
+			return false																			; ... exit
+		return {cmd:cmd,lineParams:cLParams,defProfile:defProfile}									; legit! - return extracted details and def profile
 	}
 }
 ;################################################################################
-Class CommandDefProfile
-{
-; 2025-06-12 AMB, ADDED
-; creates a command definition profile that includes...
+; Creates a command definition profile that includes...
 ;	v1 command param definitions and v2 conversion details for that command
 ; used with V1LineToProcess class and v2_AHKCommands()
-
+; 2025-06-12 AMB, ADDED
+Class CommandDefProfile
+{
 	cmd				:= ''
 	cmdV1Format		:= ''
 	cmdV2Format		:= ''
 	v1DefParams		:= ''
 	v1DefParamsArr	:= []
-
+	MaxParamCount	=> this.v1DefParamArr.Length
+	;############################################################################
 	__new(cmd, cmdV1Format, cmdV2Format, v1DefParams)
 	{
 		this.cmd		 	:= cmd
@@ -895,38 +847,31 @@ Class CommandDefProfile
 		Loop Parse, v1DefParams, ','
 			this.v1DefParamsArr.Push(A_LoopField)
 	}
-
-	; TODO - ADD MEMBERS AS NEEDED
-
-	; Public - max number of parameters allowed for command
-	MaxParamCount => this.v1DefParamArr.Length
-
-	; Public
-	static GetProfile(cmd)
+	;############################################################################
+	Static GetProfile(cmd)
 	{
 		if (!profile := CommandDefProfile._matchLineCmdToDefList(cmd))
 			return false
 		return profile
 	}
-
-	; Private
-	static _matchLineCmdToDefList(cmd)
+	;############################################################################
+	Static _matchLineCmdToDefList(cmd)
 	{
 		; 2025-06-12 AMB, Moved from v2_AHKCommands to dedicated routine
 		; Determines whether cmd is a target for v2 conversion
 		; if yes, returns a CommandDefProfile object for cmd, false otherwise
 
-		if (!FindCmdDefs(cmd, &cmdV1Format, &cmdV2Format))									; is cmd a targetted command for v2 conversion?
-			return false																	; ... not a targeted command
+		if (!FindCmdDefs(cmd, &cmdV1Format, &cmdV2Format))											; is cmd a targeted command for v2 conversion?
+			return false																			; ... not a targeted command
 
-		; is a targetted command - get definition details
+		; is a targeted command - get definition details
 		v1DefParams		:= ''
-		v1DefDelimPos	:= RegExMatch(cmdV1Format, '[,\h]|$')								; get pos of first comma in DEFINITION list, for line command
-		v1DefCmd		:= Trim(SubStr(cmdV1Format, 1, v1DefDelimPos - 1))					; get DEFINITION cmd from gmAhkCmdsToConvertV2 DEFINITION map
-		if (v1DefCmd != cmd)																; if line cmd doesn't match def cmd from gmAhkCmdsToConvertV2 map...
-			return false																	; ... exit
+		v1DefDelimPos	:= RegExMatch(cmdV1Format, '[,\h]|$')										; get pos of first comma in DEF list, for line command
+		v1DefCmd		:= Trim(SubStr(cmdV1Format, 1, v1DefDelimPos - 1))							; get DEF cmd from gmAhkCmdsToConvertV2 DEF map
+		if (v1DefCmd != cmd)																		; if line cmd doesn't match def cmd from gmAhkCmdsToConvertV2 map...
+			return false																			; ... exit
 
-		v1DefParams := RTrim(SubStr(cmdV1Format, v1DefDelimPos + 1))						; get V1 DEFINITION params from gmAhkCmdsToConvertV2 map, for DEFINITION cmd
-		return CommandDefProfile(cmd, cmdV1Format, cmdV2Format, v1DefParams)				; return a command profile object to caller
+		v1DefParams := RTrim(SubStr(cmdV1Format, v1DefDelimPos + 1))								; get V1 DEF params from gmAhkCmdsToConvertV2 map, for DEF cmd
+		return CommandDefProfile(cmd, cmdV1Format, cmdV2Format, v1DefParams)						; return a command profile object to caller
 	}
 }

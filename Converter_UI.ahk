@@ -14,7 +14,7 @@
 	2026-04-06 AMB, UPDATED:
 					to provide faster validation for gui name. Validation now uses a reserved-word list
 					also added faster audio response when variable name is invalid
-
+	2026-06-08 AMB, UPDATED: Refactor
 */
 
 #Include Convert\Validation.ahk																		; 2026-04-06 has gV2ReservedWords list
@@ -132,16 +132,16 @@ class clsUserUI {																					; Gui handling
 		this.oGui.Show('w' wGui ' h' hGui ' NA')													; Show UI
 	}
 	;############################################################################
-	evClose(*) {			; also receives hidden 'this' obj										; event handler for gui close
+	evClose(*) {								; also receives hidden 'this' obj					; event handler for gui close
 		(this.autoSave && this._saveSettings())														; save settings if auto-save enabled
 		ExitApp
 	}
 	;############################################################################
-	evGen(ctrl:='', *) {	; also receives hidden 'this' obj										; event handler for controls on General tab
+	evGen(ctrl:='', *) {						; also receives hidden 'this' obj					; event handler for controls on General tab
 		(this.autoSave && this._saveSettings())														; save settings if auto-save enabled
 	}
 	;############################################################################
-	evGui(ctrl:='', *) {	; also receives hidden 'this' obj										; event handler for controls on Gui tab
+	evGui(ctrl:='', *) {						; also receives hidden 'this' obj					; event handler for controls on Gui tab
 		saveGuiMode := this.GuiMode, newGuiMode := saveGuiMode										; track guiMode changes
 		switch ctrl.name, 0 {
 			case 'Orig':	newGuiMode := 0															; track guiMode changes
@@ -149,38 +149,38 @@ class clsUserUI {																					; Gui handling
 			case 'Dyn':		newGuiMode := 2															; track guiMode changes
 			case 'Auto':	newGuiMode := 3															; track guiMode changes
 		}
-		if (newGuiMode != saveGuiMode) {															; if guiMode wass changed...
+		if (newGuiMode != saveGuiMode) {															; if guiMode was changed...
 			this.GuiMode := newGuiMode																; ... record that change
 			this._updateGuiModeNames(this.GuiMode)													; ... update edit boxes on Gui tab
 		}
 		(this.autoSave && this._saveSettings())														; save settings if auto-save enabled
 	}
 	;############################################################################
-	evHK(ctrl:='', *) {		; also receives hidden 'this' obj										; event handler for controls on HK tab
+	evHK(ctrl:='', *) {							; also receives hidden 'this' obj					; event handler for controls on HK tab
 		(this.autoSave && this._saveSettings())														; save settings if auto-save enabled
 	}
 	;############################################################################
-	evNmChg(ctrl:='', *) {	; also receives hidden 'this' obj										; event handler for name changes on Gui tab
+	evNmChg(ctrl:='', *) {						; also receives hidden 'this' obj					; event handler for name changes on Gui tab
 		this._updateVarName(ctrl)																	; verify proper format and update example
 	}
 	;############################################################################
-	evRun(ctrl:='', *) {	; also receives hidden 'this' obj										; event handler for handle Run buttons
+	evRun(ctrl:='', *) {						; also receives hidden 'this' obj					; event handler for handle Run buttons
 		this._toolTip()																				; ensure tooltip is hidden
 		switch ctrl.name {
-			case 'CVS':		Run(this._getFilePath('v2Converter'))									; run V2Converter for script conversions
-			case 'QCC':		Run(this._getFilePath('QuickConvertorV2', '"QCC"'))						; run QuickConverter in normal convert mode
+			case 'CVS':		Run(this._getRunPath('v2Converter'))									; run V2Converter for script conversions
+			case 'QCC':		Run(this._getRunPath('QuickConvertorV2', '"QCC"'))						; run QuickConverter in normal convert mode
 			case 'QCT':																				; 	  QuickConverter in unit-test mode
-				mode := (GetKeyState("shift")) ? '"QCTF"' : '"QCT"'									; set whether failed tests are included or not
-				Run(this._getFilePath('QuickConvertorV2', mode))									; run QuickConverter in unit-test mode
+				mode :=		(GetKeyState("shift")) ? '"QCTF"' : '"QCT"'								; set whether failed tests are included or not
+				Run(this._getRunPath('QuickConvertorV2', mode))										; run QuickConverter in unit-test mode
 		}
 	}
 	;############################################################################
-	evSave(ctrl:='', *) {	; also receives hidden 'this' obj										; event handler for controls on Save tab
+	evSave(ctrl:='', *) {						; also receives hidden 'this' obj					; event handler for controls on Save tab
 		this.autoSave := this.chkSave.value															; keep track of auto-save setting
 		this._saveSettings()																		; save settings to disk
 	}
 	;############################################################################
-	evTab(ctrl:='', *) {	; also receives hidden 'this' obj										; event handler for Tab clicks
+	evTab(ctrl:='', *) {						; also receives hidden 'this' obj					; event handler for Tab clicks
 		switch Trim(ctrl.Text), 0 {
 			case 'gui':		this._updateExample()													; update example string when Gui tab is clicked
 		}
@@ -191,6 +191,20 @@ class clsUserUI {																					; Gui handling
 			case 0,1:	return {gName:'myGui', cPfx:'ogc'}											; for orig or simple guiMode
 			default:	return {gName:'',	   cPfx:''	 }											; should not be used, but just in case
 		}
+	}
+	;############################################################################
+	_getRunPath(name, args:='') {																	; gets path of convert file based on compiled and if it exists
+		if (A_IsCompiled && FileExist(name '.exe'))													; not really a point of checking for exe if not compiled
+			return name '.exe ' args
+		else if (FileExist(name '.ahk'))
+			return name '.ahk ' args
+		else {
+			msg := 'Could not find ' name
+			MsgBox(A_IsCompiled																		; conditional error, easier to debug
+				? msg '.exe.`nEnsure it was downloaded and placed in the proper path.'
+				: msg '.ahk.`nWas it deleted?', 'Error running file converter', 'Icon!')
+		}
+		return ''																					; returning empty string means no error in Run()
 	}
 	;############################################################################
 	_iniUI() {																						; reads settings from disk, initializes UI
@@ -239,6 +253,16 @@ class clsUserUI {																					; Gui handling
 		}
 	}
 	;############################################################################
+	_toolTip(msg:='') {																				; central method for showing/clearing tooltip
+		if (msg && !this.fTTActive) {																; if msg should be shown, and not already active...
+			ToolTip(msg), SetTimer(() => ToolTip(), -3000)											; ... show tooltip, set it to auto-clear
+			this.fTTActive := true																	; ... set  tooltip status flag as active
+		} else if (!msg && this.fTTActive) {														; if tt msg should be cleared, and tooltip is active...
+			ToolTip(), MouseGetPos(,,, &hCtrl, 2)													; ... clear the tooltip (manual call), get ctrl under mouse
+			(hCtrl != this.QCT.hwnd) && (this.fTTActive := false)									; set tt flag to false only after mouse has moved away from button
+		}
+	}
+	;############################################################################
 	_updateExample() {																				; updates example string on Gui tab
 		ex := '', invalid := false																	; ini
 		if (this.GuiMode <= 1) {																	; if orig or simple mode...
@@ -273,10 +297,10 @@ class clsUserUI {																					; Gui handling
 				cp := cPfx,  IniWrite(cp, iniFile, Section, 'StdCtrlPfx')							; ...	set ctrl pfx to default and save to file
 			this.edtGuiName.value	:= gn, this._updateVarName(this.edtGuiName,0)					; ... set gui name text and example (do not beep)
 			this.edtCtrlPfx.value	:= cp, this._updateVarName(this.edtCtrlPfx,0)					; ... set ctrl pfx text and example (do not beep)
-			this.chkInclude.visible	:= false														; ... hide copyIncl chkbx
+			this.chkInclude.visible	:= false														; ... hide copyIncl chkbox
 		}
 		else {	; 2,3																				; if dynamic or Auto mode...
-			this.chkInclude.visible	:= true															; ... show copyIncl chkbx
+			this.chkInclude.visible	:= true															; ... show copyIncl chkbox
 			this._updateExample()																	; ... update example text
 		}
 	}
@@ -292,16 +316,16 @@ class clsUserUI {																					; Gui handling
 		(audio && !isValid) && Soundbeep(350,25)													; play sound if invalid
 	}
 	;############################################################################
-	_validateCtrlPfx(name) {																		; determines whether ctrl prefix is valid
 	; 2026-03-18 AMB, allows empty string and unicode
+	_validateCtrlPfx(name) {																		; determines whether ctrl prefix is valid
 		return clsVarValidation.Validate(Trim(name),1,1)
 	}
 	;############################################################################
-	_validateGuiName(name) {																		; determines whether guiname is valid
 	; 2026-03-18 AMB, UPDATED to allow unicode and dis-allow AHK reserved words
 	; 2026-04-06 AMB, UPDATED
-		static prevName := -1, prevResult := -1														; prevents unnecessary validation processsing
-		name := Trim(name)																			; trim name of whitspace
+	_validateGuiName(name) {																		; determines whether guiname is valid
+		static prevName := -1, prevResult := -1														; prevents unnecessary validation processing
+		name := Trim(name)																			; trim name of whitespace
 		if (prevResult >= 0 && name = prevName)														; if name has not changed since last visit...
 			return prevResult																		; ... return the previous result
 		prevName	:= name																			; save name for comparison, next visit
@@ -315,27 +339,5 @@ class clsUserUI {																					; Gui handling
 			this._toolTip("Shift-Click to include failing tests")									; ... show brief tooltip
 		else																						; if mouse NOT over QCT button...
 			this._toolTip()																			; ... clear tooltip
-	}
-	;############################################################################
-	_toolTip(msg:='') {																				; central method for showing/clearing tooltip
-		if (msg && !this.fTTActive) {																; if msg should be shown, and not already active...
-			ToolTip(msg), SetTimer(() => ToolTip(), -3000)											; ... show tooltip, set it to auto-clear
-			this.fTTActive := true																	; ... set  tooltip status flag as active
-		} else if (!msg && this.fTTActive) {														; if tt msg should be cleared, and toolip is active...
-			ToolTip(), MouseGetPos(,,, &hCtrl, 2)													; ... clear the tooltip (manual call), get ctrl under mouse
-			(hCtrl != this.QCT.hwnd) && (this.fTTActive := false)									; set tt flag to false only after mouse has moved away from button
-		}
-	}
-	;############################################################################
-	_getFilePath(name, args := '') {																			; gets path of convert file based on compiled and if it exists
-		if (A_IsCompiled && FileExist(name '.exe'))													; not really a point of checking for exe if not compiled
-			return name '.exe ' args
-		else if (FileExist(name '.ahk'))
-			return name '.ahk ' args
-		else
-			MsgBox(A_IsCompiled																		; conditional error, easier to debug
-				? "Could not find " name ".exe, did you download from releases and put in the same path?"
-				: "Could not find " name ".ahk, is it deleted?", "Error running file converter", "Icon!")
-		return ''																					; returning empty string means no error in Run()
 	}
 }

@@ -2,28 +2,33 @@
 Despite its name, this "Converter" functions more like an Assistant for migrating scripts from AHKv1 to [AHK v2](https://autohotkey.com/v2/) syntax. It's designed to automate the most tedious parts of the conversion process, but its scope is limited. While this tool may occasionally produce fully functional AHKv2 code, users should expect to make manual edits afterwards. Why not just use AI for the conversion? See [Tool vs AI](#tool-vs-ai).
 
 Recommended process for conversion:
-1. [Run](#usage-1-converter-user-interface) this tool on your code, which should cover 80%+ of the conversion process
-2.  Follow [Post Conversion](#post-conversion) guidelines. You may chose to engage AI as part of the debug process for final 20%. 
+1. See [Usage 1](#usage-1-converter-user-interface) to open the Converter UI.
+2. Set the Gui Conversion mode [Dynamic is recommended].
+3. Press one of the three conversion buttons on the UI.
+4. The tool should cover about 80%+ of the conversion process automatically.
+5. Follow [Post Conversion](#post-conversion) guidelines. 
 
 [Contributions](#Contributing) to the project are also encouraged 
 
 # Usage
 ## Usage 1 (Converter User Interface)
 1. [Download](https://github.com/mmikeww/AHK-v2-script-converter/archive/master.zip) the full repo. Then run the included `Converter_UI.ahk` script with AHK v2
-2. Conversion Buttons:
-   * $\color{cyan}\text{Convert V1 Script File:}$ Runs v2converter to select/convert a script file. See Usage 2:3 below for more details.
-   * $\color{cyan}\text{Convert V1 Code Fragment:}$ Runs QuickConvertorV2 for v1 code paste. See Usage 3:3 below. Paste v1 code fragment in left pane, convert using orange arrow button [bottom/center]. 
-   * $\color{cyan}\text{Run QC Unit Tests:}$ Runs QuickConvertorV2 in Unit-Test Mode [for project contributors] - See Usage 3:7 below. Shift-Click this button to show failed unit-tests (also).
-3. Conversion Settings:
-   * $\color{cyan}\text{TAB1:}$ Save all settings from other tabs [Manual/Auto]. Auto-save is recommended.
-   * $\color{cyan}\text{GUI:}$ Provides several modes for Gui/GuiControl conversion. Also allows user to define the default GuiName and Control Prefix for v2 variable names [for Orig/Simple modes].
-   * $\color{cyan}\text{HK:}$ Will eventually provide hotkey filtering to improve conversion performance.
-   * $\color{cyan}\text{GENERAL:}$ Provides general conversion settings.
-4. Gui Conversion Modes:
-   * $\color{cyan}\text{ORIG:}$ Provides Gui conversion using orig method. Being replaced by updated modes below.
-   * $\color{cyan}\text{SIMPLE:}$ Updated version of Orig mode. Provides similar [but improved] result. Recommended for converting simple [non-dynamic] v1 Gui syntax.
-   * $\color{cyan}\text{DYNAMIC:}$ Provides the best Gui conversion results, with limited support for dynamic attributes [within loops, func params, spanning multiple scopes, ClassNN names, etc]. The drawback? The v2 syntax is much different than Simple/Orig modes, and it requires an #include file [before and AFTER conversion].
-   * $\color{cyan}\text{AUTO:}$ Analyzes the v1 source code and selects the 'best mode' automatically [Simple or Dynamic].
+2. Conversion Settings:
+   * $\color{magenta}\text{TAB1:}$ Save all settings from other tabs [Manual/Auto]. Auto-save is recommended.
+   * $\color{magenta}\text{GUI:}$ Provides several modes for Gui/GuiControl conversion. Also allows user to define the default GuiName and Control Prefix for v2 variable names [for Orig/Simple modes].
+   * $\color{magenta}\text{HK:}$ Will eventually provide hotkey filtering to improve conversion performance.
+   * $\color{magenta}\text{GENERAL:}$ Provides general conversion settings.
+3. Set Gui Conversion Mode: [IMPORTANT]
+   * $\color{magenta}\text{ORIG:}$ Provides Gui conversion using orig method. Being replaced by updated modes below.
+   * $\color{magenta}\text{SIMPLE:}$ Updated version of Orig mode. Provides similar [but improved] result. Recommended for converting simple [non-dynamic] v1 Gui syntax.
+   * $\color{magenta}\text{DYNAMIC:}$ [RECOMMENDED] Provides the best Gui conversion results, with limited support for dynamic attributes [within loops, func params, spanning multiple scopes, ClassNN names, etc]. The drawback? The v2 syntax is much different than Simple/Orig modes, and it requires an #include file [before and AFTER conversion].
+   * $\color{magenta}\text{AUTO:}$ Analyzes the v1 source code and selects the 'best mode' automatically [Simple or Dynamic].
+4. Conversion Buttons:
+   * $\color{magenta}\text{Convert V1 Script File:}$ Runs v2converter to select/convert a script file. See Usage 2:3 below for more details.
+   * $\color{magenta}\text{Convert V1 Code Fragment:}$ Runs QuickConvertorV2 for v1 code paste. See Usage 3:3 below. Paste v1 code fragment in left pane, convert using orange arrow button [bottom/center]. 
+   * $\color{magenta}\text{Run QC Unit Tests:}$ Runs QuickConvertorV2 in Unit-Test Mode [for project contributors] - See Usage 3:7 below. Shift-Click this button to show failed unit-tests (also).
+
+
 
 ![screenshot](https://github.com/mmikeww/AHK-v2-script-converter/blob/master/images/Converter_UI.png)
 
@@ -62,7 +67,7 @@ Please understand that this tool is limited and may not produce fully functional
 2. Comments may be added to the output \[prefixed with `; V1toV2: `\], which provide info to assist with debugging.
 3. [This](https://github.com/mmikeww/AHK-v2-script-converter/discussions/325) page provides a list of common conversion issues and potential fixes.
 4. [Issues](https://github.com/mmikeww/AHK-v2-script-converter/issues) reported by others may provide potential fixes.
-5. If your issue is not found in step 4, feel free to [create a new one](https://github.com/mmikeww/AHK-v2-script-converter/issues/new/choose)
+5. If your issue is not found in the last step, feel free to [create a new one](https://github.com/mmikeww/AHK-v2-script-converter/issues/new/choose)
 6. Finally, ask for help! On the [discussions page](https://github.com/mmikeww/AHK-v2-script-converter/discussions/categories/q-a-conversion-help) or at [AHK forums](https://www.autohotkey.com/boards/viewforum.php?f=82)
 
 ## Note
@@ -70,11 +75,11 @@ You may still have the AutoHotkey V1 binary associated with *.ahk files, the con
 
 # Known Limitations
 Better support for the following may be included in future updates of the tool.
-   * $\color{cyan}\text{Variable Name Conflicts:}$ These are very common and will require manual edits by the user.
-   * $\color{cyan}\text{Ternary If Expressions:}$ These lines may require manual edits by the user. 
-   * $\color{cyan}\text{Nested labels:}$ Some labels and their references may require manual conversion to/for functions.
-   * $\color{cyan}\text{Trailing Commas:}$ Sometimes [trailing commas](https://autohotkey.com/docs/commands/_EscapeChar.htm) can cause conversion issues.
-   * $\color{cyan}\text{Gui/GuiControl:}$ Recent improvements have been made, but may still require manual edits. IMPORTANT - READ the [Gui Conversion Modes](#usage-1-converter-user-interface) section above for best results.
+   * $\color{magenta}\text{Variable Name Conflicts:}$ These are very common and will require manual edits by the user.
+   * $\color{magenta}\text{Ternary If Expressions:}$ These lines may require manual edits by the user. 
+   * $\color{magenta}\text{Nested labels:}$ Some labels and their references may require manual conversion to/for functions.
+   * $\color{magenta}\text{Trailing Commas:}$ Sometimes [trailing commas](https://autohotkey.com/docs/commands/_EscapeChar.htm) can cause conversion issues.
+   * $\color{magenta}\text{Gui/GuiControl:}$ Recent improvements have been made, but may still require manual edits. IMPORTANT - READ the [Gui Conversion Modes](#usage-1-converter-user-interface) section above for best results.
    
 # Contributing
 There is a lot of work to do and many commands and functions that still need to be changed. There are also many edge cases when trying to parse script code and convert it. Of course, whenever making changes to the code, you should be constantly running the unit tests to confirm that things are still working.  First run `QuickConvertorV2.ahk` with `Settings -> Testmode` on, make sure no tests fail. Then run the `tests\Tests.ahk` file and pray for green.

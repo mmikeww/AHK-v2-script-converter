@@ -3,7 +3,7 @@ Despite its name, this "Converter" functions more like an Assistant for migratin
 
 Recommended process for conversion:
 1. [Run](##Usage-1) this tool on your code, which should cover 80%+ of the conversion process.
-2.  Follow [Post Conversion](#post-conversion) guidelines. You may chose to engage AI as part of the debugging process for the final 20%. 
+2.  Follow [Post Conversion](#post-conversion) guidelines. You may chose to engage AI as part of the debug process for final 20%. 
 
 [Contributions](#Contributing) to the project are also encouraged 
 

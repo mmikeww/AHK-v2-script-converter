@@ -2,7 +2,7 @@
 Despite its name, this "Converter" functions more like an Assistant for migrating scripts from AHKv1 to [AHK v2](https://autohotkey.com/v2/) syntax. It's designed to automate the most tedious parts of the conversion process, but its scope is limited. While this tool may occasionally produce fully functional AHKv2 code, users should expect to make manual edits afterwards. Why not just use AI for the conversion? See [Tool vs AI](#tool-vs-ai).
 
 Recommended process for conversion:
-1. [Run](##Usage-1) this tool on your code, which should cover 80%+ of the conversion process.
+1. [Run](#usage-1-converter-user-interface) this tool on your code, which should cover 80%+ of the conversion process
 2.  Follow [Post Conversion](#post-conversion) guidelines. You may chose to engage AI as part of the debug process for final 20%. 
 
 [Contributions](#Contributing) to the project are also encouraged 
@@ -45,7 +45,7 @@ Recommended process for conversion:
 7. When working on ConvertFuncs.ahk, please set TestMode on in the Gui Menu Settings, in this mode, all the confirmed tests will be checked if the result stays the same. In this mode you can also save tests easily.
 ![screenshot](https://github.com/mmikeww/AHK-v2-script-converter/blob/master/images/Quick%20Convertor%20V2.png)
 
-# This Tool vs AI
+# Tool vs AI
 This tool:
 - Fast, consistent output. The tool been been pre-tested for common things that it supports.
 - "Inspection comments" are added for things it does not support. It will not "invent" invalid code on the fly.
@@ -74,7 +74,7 @@ Better support for the following may be included in future updates of the tool.
    * $\color{cyan}\text{Ternary If Expressions:}$ These lines may require manual edits by the user. 
    * $\color{cyan}\text{Nested labels:}$ Some labels and their references may require manual conversion to/for functions.
    * $\color{cyan}\text{Trailing Commas:}$ Sometimes [trailing commas](https://autohotkey.com/docs/commands/_EscapeChar.htm) can cause conversion issues.
-   * $\color{cyan}\text{Gui/GuiControl:}$ Recent improvements have been made, but may still require manual edits. IMPORTANT - READ the [Gui Conversion Modes](##Usage-1) section above for best results.
+   * $\color{cyan}\text{Gui/GuiControl:}$ Recent improvements have been made, but may still require manual edits. IMPORTANT - READ the [Gui Conversion Modes](#usage-1-converter-user-interface) section above for best results.
    
 # Contributing
 There is a lot of work to do and many commands and functions that still need to be changed. There are also many edge cases when trying to parse script code and convert it. Of course, whenever making changes to the code, you should be constantly running the unit tests to confirm that things are still working.  First run `QuickConvertorV2.ahk` with `Settings -> Testmode` on, make sure no tests fail. Then run the `tests\Tests.ahk` file and pray for green.

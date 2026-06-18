@@ -51,19 +51,20 @@ Recommended process for conversion:
 
 # Tool vs AI
 This tool:
-- Fast, consistent output. The tool been been pre-tested for common things that it supports.
+- Fast, consistent output. This tool has been pre-tested for common things that it supports.
 - "Inspection comments" are added for things it does not support. It will not "invent" invalid code on the fly.
  
 AI:
--  AI can provide invalid code (hallucinations), remove code, change logic flow, or get lost with lengthy scripts.
-- There may also be token limits that prevents lengthy code from being accepted by AI.
-- The back-and-forth with AI can be time-consuming, and new hallucinations are possible with each revision.
+- AI may not be able to accept lengthy scripts due to token limits.
+- Semantic and Context drift can occur with lengthy scripts.
+- AI may provide invalid code (hallucinations), remove code, or change logic flow.
+- Revision exchanges with AI can be time-consuming and may lead to compounded hallucinations.
 
 # Post conversion
 Please understand that this tool is limited and may not produce fully functional AHKv2 code. Manual edits to the output should be expected. Use the tips below in your debugging process.
 1. See [Known Limitations](#known-limitations). User-edit may be required for these and other situations.
 1. The [AHK Documentation](https://www.autohotkey.com/docs/v2/v2-changes.htm) should be utilized when converting code from AKHv1 to AHKv2.
-2. Comments may be added to the output \[prefixed with `; V1toV2: `\], which provide info to assist with debugging.
+2. Line comments added to the v2 output \[prefixed with `; V1toV2: `\], provide assistance for debugging.
 3. [This](https://github.com/mmikeww/AHK-v2-script-converter/discussions/325) page provides a list of common conversion issues and potential fixes.
 4. [Issues](https://github.com/mmikeww/AHK-v2-script-converter/issues) reported by others may provide potential fixes.
 5. If your issue is not found in the last step, feel free to [create a new one](https://github.com/mmikeww/AHK-v2-script-converter/issues/new/choose)

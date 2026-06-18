@@ -6,7 +6,7 @@ Recommended process for conversion:
 2. Set the Gui Conversion mode [Dynamic is recommended].
 3. Press one of the three conversion buttons on the UI.
 4. The tool should cover about 80%+ of the conversion process automatically.
-5. Follow [Post Conversion](#post-conversion) guidelines. 
+5. Follow [Post Conversion](#post-conversion) guidelines for the remaining 20% (as necessary). 
 
 [Contributions](#Contributing) to the project are also encouraged 
 
@@ -14,14 +14,14 @@ Recommended process for conversion:
 ## Usage 1 (Converter User Interface)
 1. [Download](https://github.com/mmikeww/AHK-v2-script-converter/archive/master.zip) the full repo. Then run the included `Converter_UI.ahk` script with AHK v2
 2. Conversion Settings:
-   * $\color{magenta}\text{TAB1:}$ Save all settings from other tabs [Manual/Auto]. Auto-save is recommended.
+   * $\color{magenta}\text{TAB1:}$ <span>[&#9881;]</span> Save all settings from other tabs [Manual/Auto]. Auto-save is recommended.
    * $\color{magenta}\text{GUI:}$ Provides several modes for Gui/GuiControl conversion. Also allows user to define the default GuiName and Control Prefix for v2 variable names [for Orig/Simple modes].
    * $\color{magenta}\text{HK:}$ Will eventually provide hotkey filtering to improve conversion performance.
    * $\color{magenta}\text{GENERAL:}$ Provides general conversion settings.
 3. Set Gui Conversion Mode: [IMPORTANT]
    * $\color{magenta}\text{ORIG:}$ Provides Gui conversion using orig method. Being replaced by updated modes below.
    * $\color{magenta}\text{SIMPLE:}$ Updated version of Orig mode. Provides similar [but improved] result. Recommended for converting simple [non-dynamic] v1 Gui syntax.
-   * $\color{magenta}\text{DYNAMIC:}$ [RECOMMENDED] Provides the best Gui conversion results, with limited support for dynamic attributes [within loops, func params, spanning multiple scopes, ClassNN names, etc]. The drawback? The v2 syntax is much different than Simple/Orig modes, and it requires an #include file [before and AFTER conversion].
+   * $\color{magenta}\text{DYNAMIC:}$ [RECOMMENDED] Provides the best Gui conversion results, with limited support for dynamic attributes [within loops, func params, multiple scopes, ClassNN names, etc]. The catch? The v2 syntax is much different than other modes, and it requires an #include file [before/AFTER conversion].
    * $\color{magenta}\text{AUTO:}$ Analyzes the v1 source code and selects the 'best mode' automatically [Simple or Dynamic].
 4. Conversion Buttons:
    * $\color{magenta}\text{Convert V1 Script File:}$ Runs v2converter to select/convert a script file. See Usage 2:3 below for more details.
@@ -34,7 +34,7 @@ Recommended process for conversion:
 
 ## Usage 2 (Convert V1 Script File)
 1. [Download](https://github.com/mmikeww/AHK-v2-script-converter/archive/master.zip) the full repo.
-2. Run `Converter_UI.ahk`, then choose 'Convert v1 Script file' button. Or run the included `v2converter.ahk` directly.
+2. Run `Converter_UI.ahk`, then choose 'Convert v1 Script file' button. Or run `v2converter.ahk` directly.
 3. Choose your input `scriptfile.ahk` written for AHK v1. The converted script will be named `scriptfile_newV2.ahk` in the same directory. Use `v2converter.ahk -h` in cmd to use the CLI.
    You can modify parts of how the script behave from editing variables inside the script
 4. Look over the Visual Diff to manually inspect the changes
@@ -42,7 +42,7 @@ Recommended process for conversion:
 
 ## Usage 3 (Convert V1 Code Fragment, and Unit Testing)
 1. [Download](https://github.com/mmikeww/AHK-v2-script-converter/archive/master.zip) the full repo.
-2. Run `Converter_UI.ahk`, then choose 'Convert v1 Code' button. Or run the included `QuickConvertorV2.ahk` directly.
+2. Run `Converter_UI.ahk`, then choose 'Convert v1 Code' button. Or run `QuickConvertorV2.ahk` directly.
 3. Select a string in another program and press XButton1 to convert it, or paste it in the first Edit and press the convert button (orange arrow).
 4. When the cursor is on a function in the edit field, press F1 to search the function in the documentation.
 5. You can run and close the V1 and V2 code with the play buttons.
@@ -68,7 +68,7 @@ Please understand that this tool is limited and may not produce fully functional
 3. [This](https://github.com/mmikeww/AHK-v2-script-converter/discussions/325) page provides a list of common conversion issues and potential fixes.
 4. [Issues](https://github.com/mmikeww/AHK-v2-script-converter/issues) reported by others may provide potential fixes.
 5. If your issue is not found in the last step, feel free to [create a new one](https://github.com/mmikeww/AHK-v2-script-converter/issues/new/choose)
-6. Finally, ask for help! On the [discussions page](https://github.com/mmikeww/AHK-v2-script-converter/discussions/categories/q-a-conversion-help) or at [AHK forums](https://www.autohotkey.com/boards/viewforum.php?f=82)
+6. Finally, ask for help! On the [discussions page](https://github.com/mmikeww/AHK-v2-script-converter/discussions/categories/q-a-conversion-help), at [AHK forums](https://www.autohotkey.com/boards/viewforum.php?f=82), or using your favorite AI tool.
 
 ## Note
 You may still have the AutoHotkey V1 binary associated with *.ahk files, the converter is written in V2 so please either [update AutoHotkey](https://www.autohotkey.com/download/) or open the repository in command prompt and run the following command: `"AutoHotKey Exe\AutoHotkeyV2.exe" QuickConvertorV2.ahk`
@@ -82,23 +82,32 @@ Better support for the following may be included in future updates of the tool.
    * $\color{magenta}\text{Gui/GuiControl:}$ Recent improvements have been made, but may still require manual edits. IMPORTANT - READ the [Gui Conversion Modes](#usage-1-converter-user-interface) section above for best results.
    
 # Contributing
-There is a lot of work to do and many commands and functions that still need to be changed. There are also many edge cases when trying to parse script code and convert it. Of course, whenever making changes to the code, you should be constantly running the unit tests to confirm that things are still working.  First run `QuickConvertorV2.ahk` with `Settings -> Testmode` on, make sure no tests fail. Then run the `tests\Tests.ahk` file and pray for green.
+This project is written/maintained by volunteers who donate their time/talents. If you would like to help improve this tool, there are several ways you can get involved:
 
-Here are a few ways you can help:
+### 1. Test and Report Bugs
 
-- Use it to convert your v1 scripts  
-  When you find errors or mistakes in the conversion, [open an issue here on github](https://github.com/mmikeww/AHK-v2-script-converter/issues)
-- Write tests  
-  You don't even need to write implementation code. Simply write some tests. There are existing commands that the original converter supported that have not been tested with my changes, such as `StringTrimRight`. Follow the existing format in the `tests\Tests.ahk` file.
-- Fix/add existing failing tests  
-  In the folder [Failed conversions](https://github.com/mmikeww/AHK-v2-script-converter/tree/master/tests/Failed%20conversions) we put the tests that are currenly failing as a ah1 file. The correct conversion is the ah2 file.
-- Work on any existing [issues](https://github.com/mmikeww/AHK-v2-script-converter/issues)
-- Refactor the code  
-  The code isn't in very good condition. And you can lean on the unit testing suite as you try to make it better.
-- Add support for other changes. You can find the definitive list here: [v2-changes](https://autohotkey.com/v2/v2-changes.htm)  
-  This would include adding support for new commands or other syntax changes. Follow the example in [this commit](https://github.com/mmikeww/AHK-v2-script-converter/commit/2c53a37550aca7ecc2c890677d4e13ea72e7c682).
+* $\color{magenta}\text{Convert and Run:}$ Run your AutoHotkey v1 scripts through the tool, then execute the v2 output.
+* $\color{magenta}\text{Debug:}$ If you encounter errors, attempt to debug them using the [Post Conversion Guidelines](#post-conversion).
+* $\color{magenta}\text{Report:}$ If you still need help with a resolution, please submit the Issue [here](https://github.com/mmikeww/AHK-v2-script-converter/issues).
 
-And of course, create a Pull Request with your changed code
+### 2. Submit Code Fixes & Enhancements
+
+You can write code to address bugs, [issues](https://github.com/mmikeww/AHK-v2-script-converter/issues), [failed conversions](https://github.com/mmikeww/AHK-v2-script-converter/tree/master/tests/Test_Folder/Failed%20conversions), [known limitations](#known-limitations), or [v1-to-v2 changes](https://www.autohotkey.com/docs/v2/v2-changes.htm) that are not yet covered.
+
+When submitting code, please ensure you:
+
+* $\color{magenta}\text{Write/Include a Unit Test:}$ Provide at least one new unit test that demonstrates your fix or feature (see details below).
+* $\color{magenta}\text{Check Quality Control:}$ Click the **Run QC Unit Tests** button in the Converter UI. Ensure all tests pass (green checkmark) to verify your changes haven't broken existing tests.
+* $\color{magenta}\text{Submit a Pull Request:}$ Once all tests pass, submit your code and new unit tests via a [GitHub Pull Request](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests).
+
+### 3. Write Unit Tests
+
+Help expand test coverage by writing standalone unit tests.
+
+* $\color{magenta}\text{Structure:}$ Each test requires a v1 source file and its expected v2 converted output.
+* $\color{magenta}\text{Naming:}$ Use the `.ah1` extension for the v1 source file, and `.ah2` for the expected v2 output. Keep the code inside these files concise - just enough to demonstrate a successful conversion.
+* $\color{magenta}\text{Location:}$ You can find existing examples for reference in the [Tests\Test_Folder](https://github.com/mmikeww/AHK-v2-script-converter/tree/master/tests/Test_Folder) directory of the project.
+
 
 # Credits/History
 - Frankie who created the [original v2 converter](https://www.autohotkey.com/board/topic/65333-v2-script-converter/)
@@ -106,7 +115,8 @@ And of course, create a Pull Request with your changed code
 - [Mergely](https://github.com/wickedest/Mergely) for the javascript diff library
 - Aurelain's [Exo](https://autohotkey.com/boards/viewtopic.php?t=5714) for the interface to run the javascript in an AHK gui
 - Mmikeww took Frankie's original converter \[linked above\], and updated it for the latest AHKv2 alpha build. He also added essential unit tests \[using the [Yunit framework](https://github.com/Uberi/Yunit)\] to encourage contributions from others.
-- AHK_User (=dmtr99) Updated the code to be able to convert to the V2-Beta syntax and is currently working on it
-- Banaanae - recent contributor, maintainer
-- Andymbody - recent contributor
-- I'm sure many others
+- [dmtr99](https://github.com/dmtr99) Updated the code to be able to convert to the V2-Beta syntax
+- [Banaanae](https://github.com/Banaanae) Recent contributor, maintainer
+- [andymbody](https://github.com/andymbody) Recent contributor
+- Others
+

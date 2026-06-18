@@ -36,7 +36,6 @@ Recommended process for conversion:
 1. [Download](https://github.com/mmikeww/AHK-v2-script-converter/archive/master.zip) the full repo.
 2. Run `Converter_UI.ahk`, then choose 'Convert v1 Script file' button. Or run `v2converter.ahk` directly.
 3. Choose your input `scriptfile.ahk` written for AHK v1. The converted script will be named `scriptfile_newV2.ahk` in the same directory. Use `v2converter.ahk -h` in cmd to use the CLI.
-   You can modify parts of how the script behave from editing variables inside the script
 4. Look over the Visual Diff to manually inspect the changes
 ![screenshot](https://github.com/mmikeww/AHK-v2-script-converter/blob/master/images/screenshot.jpg)
 
@@ -84,23 +83,23 @@ Better support for the following may be included in future updates of the tool.
 # Contributing
 This project is written/maintained by volunteers who donate their time/talents. If you would like to help improve this tool, there are several ways you can get involved:
 
-### 1. Test and Report Bugs
+#### 1. Test and Report Bugs
 
 * $\color{magenta}\text{Convert and Run:}$ Run your AutoHotkey v1 scripts through the tool, then execute the v2 output.
 * $\color{magenta}\text{Debug:}$ If you encounter errors, attempt to debug them using the [Post Conversion Guidelines](#post-conversion).
 * $\color{magenta}\text{Report:}$ If you still need help with a resolution, please submit the Issue [here](https://github.com/mmikeww/AHK-v2-script-converter/issues).
 
-### 2. Submit Code Fixes & Enhancements
+#### 2. Submit Code Fixes & Enhancements
 
-You can write code to address bugs, [issues](https://github.com/mmikeww/AHK-v2-script-converter/issues), [failed conversions](https://github.com/mmikeww/AHK-v2-script-converter/tree/master/tests/Test_Folder/Failed%20conversions), [known limitations](#known-limitations), or [v1-to-v2 changes](https://www.autohotkey.com/docs/v2/v2-changes.htm) that are not yet covered.
+Write code to address bugs, [issues](https://github.com/mmikeww/AHK-v2-script-converter/issues), [failed conversions](https://github.com/mmikeww/AHK-v2-script-converter/tree/master/tests/Test_Folder/Failed%20conversions), [known limitations](#known-limitations), or [v1->v2 changes](https://www.autohotkey.com/docs/v2/v2-changes.htm) not yet covered.
 
 When submitting code, please ensure you:
 
-* $\color{magenta}\text{Write/Include a Unit Test:}$ Provide at least one new unit test that demonstrates your fix or feature (see details below).
+* $\color{magenta}\text{Include a Unit Test:}$ Provide at least one unit test that demonstrates your fix/feature (see details below).
 * $\color{magenta}\text{Check Quality Control:}$ Click the **Run QC Unit Tests** button in the Converter UI. Ensure all tests pass (green checkmark) to verify your changes haven't broken existing tests.
 * $\color{magenta}\text{Submit a Pull Request:}$ Once all tests pass, submit your code and new unit tests via a [GitHub Pull Request](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests).
 
-### 3. Write Unit Tests
+#### 3. Write Unit Tests
 
 Help expand test coverage by writing standalone unit tests.
 
@@ -110,13 +109,12 @@ Help expand test coverage by writing standalone unit tests.
 
 
 # Credits/History
-- Frankie who created the [original v2 converter](https://www.autohotkey.com/board/topic/65333-v2-script-converter/)
-- Uberi for his [updates to the original](https://www.autohotkey.com/board/topic/65333-v2-script-converter/?p=419671)
-- [Mergely](https://github.com/wickedest/Mergely) for the javascript diff library
-- Aurelain's [Exo](https://autohotkey.com/boards/viewtopic.php?t=5714) for the interface to run the javascript in an AHK gui
-- Mmikeww took Frankie's original converter \[linked above\], and updated it for the latest AHKv2 alpha build. He also added essential unit tests \[using the [Yunit framework](https://github.com/Uberi/Yunit)\] to encourage contributions from others.
-- [dmtr99](https://github.com/dmtr99) Updated the code to be able to convert to the V2-Beta syntax
-- [Banaanae](https://github.com/Banaanae) Recent contributor, maintainer
-- [andymbody](https://github.com/andymbody) Recent contributor
+- Frankie - Created the [original v2 converter](https://www.autohotkey.com/board/topic/65333-v2-script-converter/)
+- Uberi - For [updates to the original](https://www.autohotkey.com/board/topic/65333-v2-script-converter/?p=419671)
+- [Mergely](https://github.com/wickedest/Mergely) Project - For the javascript diff library
+- Aurelain's [Exo](https://autohotkey.com/boards/viewtopic.php?t=5714) - For the interface to run the javascript in an AHK gui
+- Mmikeww - Support for AHKv2-alpha, and [Yunit framework](https://github.com/Uberi/Yunit) unit-tests to encourage participation from others.
+- Dmtr99 - Support for AHKv2-beta, and many other fixes/enhancements.
+- Banaanae - Contributor/Maintainer providing many fixes/enhancements.
+- Andymbody - Recent contributor
 - Others
-

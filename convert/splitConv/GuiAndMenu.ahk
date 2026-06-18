@@ -402,6 +402,7 @@ _getListP4(OptCtrl, OptList, &TxtList, &LineResult, &LineSuffix)
 ; 2026-03-14 AMB, UPDATED - changed 'ogc' to gCtrlPfx
 ; 2026-04-23 AMB, UPDATED - to fix #480
 ; 2026-05-01 AMB, UPDATED - to fix #482
+; 2026-06-18 AMB, UPDATED - to prevent colon in := from being mistaken for label:
 ; TODO
 ;	ADD SUPPORT FOR V1 EXPRESSION STRINGS, for SubCommand and ControlID
 ;	ADD SUPPORT FOR TERNANY IFS, for SubCommand and ControlID
@@ -413,7 +414,7 @@ GuiControlConv(p) {
 	if (hasTernary(gV1Line))																					; if orig v1 line has ternary expression...
 		return LTrim(gV1Line) . ' `; V1toV2: Ternary not yet supported (coming soon)'							; ... do not process (for now)
 	p1			:= _splitParam(p[1]), SubCommand := p1.subCmd, GuiName := p1.guiName							; get guiName and subCmd from P1
-	ControlID	:= Trim(RegExReplace(p[2], ':')) ; remove colon from labels										; get ctrlID from P2
+	ControlID	:= Trim(RTrim(p[2],' :')) ; remove trailing colon from labels									; get ctrlID from P2
 	Value		:= Trim(p[3])																					; get value  from P3
 	Out			:= ''																							; ini output
 
@@ -568,6 +569,7 @@ GuiControlConv(p) {
 ; 2026-01-01 AMB, UPDATED - changed global gEarlyLine to gV1Line, Type to CtrlType
 ; 2026-03-11 AMB, UPDATED - to support simple/dynamic handling
 ; 2026-03-14 AMB, UPDATED - changed 'ogc' to gCtrlPfx
+; 2026-06-18 AMB, UPDATED - to prevent colon in := from being mistaken for label:
 GuiControlGetConv(p) {
 
 	; GuiControlGet, OutputVar , SubCommand, ControlID, Value
@@ -578,7 +580,7 @@ GuiControlGetConv(p) {
 		return LTrim(gV1Line) . ' `; V1toV2: Ternary not yet supported (coming soon)'							; ... do not process (for now)
 	OutputVar	:= Trim(p[1])																					; ... get output var from P1
 	p2			:= _splitParam(p[2]), SubCommand := p2.subCmd, GuiName := p2.guiName							; ... get guiName and subCmd from P2
-	ControlID	:= Trim(RegExReplace(p[3], ':')) ; remove colon from labels										; ... get ctrlID from P3
+	ControlID	:= Trim(RTrim(p[3],' :')) ; remove trailing colon from labels									; ... get ctrlID from P3
 	ControlID	:= (ControlID) ? ControlID : OutputVar															; ... if P3 is empty, use P1 instead
 	Value		:= Trim(p[4])																					; ... get value  from P3
 	Out			:= ''																							; ini output
@@ -625,14 +627,15 @@ GuiControlGetConv(p) {
 ; 2026-02-22 AMB, ADDED
 ; 2026-03-11 AMB, UPDATED func and param names
 ; 2026-03-14 AMB, UPDATED, fixed issue with % added to guiName by mistake, in some cases
+; 2026-06-18 AMB, UPDATED, to ensure := is not mistaken for separation : for guiname
 _splitParam(prm) {
 
 	; prep/split param 1
 	prm := Trim(prm), perc := '', gn := ''																		; ini
 	if (RegExMatch(prm,'^(%\h+)?(.+)',&m))																		; if param begins with %
 		perc := m[1], prm := m[2]																				; ... separate % from rest of str
-	if (InStr(prm,':'))																							; if param has guiname AND subcmd...
-		ss:=StrSplit(prm,':'), gn:=Trim(ss[1]), prm:=Trim(ss[2])												; ... split guiName from subcmd
+	if (RegExMatch(prm, '^([^:]+)(?<!:):(?!=|:)(.*)', &mGN))													; if param has guiname AND subcmd...
+		gn:=Trim(mGN[1]), prm:=Trim(mGN[2])																		; ... split guiName from subcmd
 	; format guiName
 	gn .= (gn~='^"\w+$') ? '"' : ''																				; add  trailing DQ to guiName,	 as needed
 	gn := (gn~='^[\w\h.]+"\h*') ? RTrim(gn,' "') : gn															; trim trailing DQ from guiName, as needed

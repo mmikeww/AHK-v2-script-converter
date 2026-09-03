@@ -188,7 +188,12 @@ class clsGuiLine
 				}
 				errorMsg := 'GUI - Param 1 was NOT anticipated`n[' p1 ']`n'					; ... 	P1 is OTHER
 			}
-			MsgBox(A_ThisFunc "`n`n" errorMsg LTrim(gV1Line))								; ... debug popup
+			if (IsSet(gHeadless) && gHeadless) {												; 2026-09-03 - headless: collect, no popup
+				global gHeadlessMsgs
+				gHeadlessMsgs .= A_ThisFunc "`n`n" errorMsg LTrim(gV1Line) "`n---`n"
+			} else {
+				MsgBox(A_ThisFunc "`n`n" errorMsg LTrim(gV1Line))							; ... debug popup
+			}
 		}
 		this._namenum := namenum															; CAN be empty string
 		return			 namenum															; return namenum to caller
@@ -1779,7 +1784,12 @@ dynIncludeExist(srcPath:='',showMsg:=true,terminate:=true)
 		msg .= '`n`nPlease ensure ' FName ' is placed in the proper path, '
 		msg .= 'or choose a mode that does not use Dynamic Gui Handling.'
 		msg .= (terminate) ? '`n`nThe converter will now terminate.' : ''
-		MsgBox(msg,'V1toV2 Converter - Missing #Include file')								; ... show msg
+		if (IsSet(gHeadless) && gHeadless) {												; 2026-09-03 - headless: collect, no popup
+			global gHeadlessMsgs
+			gHeadlessMsgs .= msg "`n---`n"
+		} else {
+			MsgBox(msg,'V1toV2 Converter - Missing #Include file')							; ... show msg
+		}
 	}
 	(terminate) && ExitApp																	; terminate if requested
 	return false																			; otherwise, return 'file missing' flag

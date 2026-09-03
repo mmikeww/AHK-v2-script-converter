@@ -52,28 +52,47 @@ class CSect
 	; will return converted code if convert param is true
 	; will return simple T or F flag, otherwise
 	; 2025-06-12 AMB, ADDED
-	Static HasContSect(srcStr, convert := true)
-	{
-		; ADD SUPPORT FOR MORE SECTION DESIGNS, AS NEEDED
+		Static HasContSect(srcStr, convert := true)
+		{
+			; ADD SUPPORT FOR MORE SECTION DESIGNS, AS NEEDED
 
-		if (!(srcStr ~= '(?im)' . buildPtn_MLBlock().ParBlk)) {								; if does not have a parentheses block...
-			return false																	; ... return no
-		}
-		if (!convert) {																		; if no conversion requested
-			return true																		; ... simply flag as continuation block
-		}
-		; conversion requested
+			if (!(srcStr ~= '(?im)' . buildPtn_MLBlock().ParBlk)) {								; if does not have a parentheses block...
+				return false																	; ... return no
+			}
+			if (!convert) {																		; if no conversion requested
+				return true																		; ... simply flag as continuation block
+			}
+			; conversion requested
 
-		; if srcStr is a full section, including the...
-		;	... head (cmd line), neck, body (block), and optional trailer...
-		if (RegExMatch(srcStr, CSect.MLLineCont, &mML)) {									; if is [head + body + optional trailer]...
-			return CSect.FilterAndConvert(srcStr)											; ... return converted code
-		}
+			; 2026-09-03: support "leading text + (block)" (v1 commands whose last
+			; text param ends in `n then a continuation section - e.g. MsgBox/InputBox).
+			; Fold the leading text into the block's first line so the whole thing
+			; converts to one v2 string argument.
+			if (RegExMatch(srcStr, 'is)^(?<lead>[^\v(]+)\R\h*(?<blk>\(.*\)\s*$)', &mLd)
+			&& Trim(mLd.lead) != '') {
+				leadTxt := Trim(mLd.lead, " `t")
+				blkCode := conv_ContParBlk(mLd.blk)
+				if (blkCode && SubStr(blkCode, 1, 1) = "(") {
+					; insert leading text as the first quoted line inside the block,
+					; then unwrap the outer ( ) so callers wrapping in their own
+					; parens (e.g. MsgBox(...)) do not double up.
+					blkCode := RegExReplace(blkCode, '(?s)(\(\s*\R?\s*)', '$1"' . leadTxt . '"`n', , 1)
+					blkCode := RegExReplace(blkCode, '(?s)^\(\s*\R?\s*', '')
+					blkCode := RegExReplace(blkCode, '(?s)\s*\)\s*$', '')
+					return blkCode
+				}
+			}
 
-		; default behavior (for now)
-		; looks like srcStr is just the block
-		return conv_ContParBlk(srcStr)														; otherwise... return converted block
-	}
+			; if srcStr is a full section, including the...
+			;	... head (cmd line), neck, body (block), and optional trailer...
+			if (RegExMatch(srcStr, CSect.MLLineCont, &mML)) {									; if is [head + body + optional trailer]...
+				return CSect.FilterAndConvert(srcStr)											; ... return converted code
+			}
+
+			; default behavior (for now)
+			; looks like srcStr is just the block
+			return conv_ContParBlk(srcStr)														; otherwise... return converted block
+		}
 	;############################################################################
 	; Determines whether code is a continuation section...
 	;	if so... routes code to appropriate conversion routine

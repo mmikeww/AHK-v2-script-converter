@@ -28,12 +28,15 @@ class Prog
 	}
 	;############################################################################
 	Static Hide() {
+		if (gHeadless)																				; 2026-09-03 - headless: nothing to hide
+			return
 		this.pGui.Hide()																			; Hide gui
 	}
 	;############################################################################
 	Static UPath(curPath) {																			; update gui with current path details
 		static cPath := ''																			; keep track of current file path
-		if (this.QCHide																				; if using QuickConverter, but not in batch test mode...
+		if (gHeadless																				; 2026-09-03 - headless: no gui
+		||  this.QCHide																				; if using QuickConverter, but not in batch test mode...
 		||  curPath = cPath)																		; OR if filePath has not changed since last visit...
 			return																					; ... do NOT show/update gui
 		cPath := curPath																			; filePath has changed - save current path
@@ -45,6 +48,10 @@ class Prog
 	;############################################################################
 	Static ULog(curProg?, curOp?, curFunc?, curLineNum?, curLineTxt?) {								; update gui with current conversion details
 		;return																						; force NO UPDATE (debugging)
+		if (gHeadless) {																			; 2026-09-03 - headless: keep pct, skip gui
+			(IsSet(curProg)) && this.curProg := curProg
+			return
+		}
 		if (this.QCHide)																			; if using QuickConverter, but not in batch test mode
 			return																					; ... do NOT show/update gui
 		this.showGui()																				; create/show gui as needed
@@ -64,6 +71,8 @@ class Prog
 	}
 	;############################################################################
 	Static showGui() {																				; create/show gui gui as needed
+		if (gHeadless)																				; 2026-09-03 - headless mode: no progress gui at all
+			return
 		if (!(this.pGui is clsProgGui))																; if gui has not been created yet...
 			this.pGui := clsProgGui()																; ... create it
 		this.pGui.Show()																			; Show gui (only when hidden)

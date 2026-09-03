@@ -1,12 +1,13 @@
 #Requires AutoHotKey v2.0
-#Include Yunit\Yunit.ahk
-#Include Yunit\Window.ahk
-#Include ..\ConvertFuncs.ahk
-#Include ExecScript.ahk
+global gHeadless := true
+#Include <v2DynGui>
+#Include tests\Yunit\Yunit.ahk
+#Include tests\Yunit\Stdout.ahk
+#Include ConvertFuncs.ahk
+#Include tests\ExecScript.ahk
 
-Yunit.Use(YunitWindow).Test(ConvertTests, ToExpTests, ToStringExprTests
+Yunit.Use(YunitStdOut).Test(ConvertTests, ToExpTests, ToStringExprTests
                           , RemoveSurroundingQuotesTests, RemoveSurroundingPercentsTests, ExecScriptTests, BoxTests, FlowTests, GuiTests, MenuTests, WinTests)
-
 
 class ConvertTests
 {

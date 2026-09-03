@@ -577,7 +577,11 @@ _InputBox(oPar) {
 	Timeout		:= oPar.Has(10) ? trim(oPar[10]) : ""
 	Default		:= (oPar.Has(11) && oPar[11] != "") ? ToExp(trim(oPar[11])) : ""
 
-	Parameters	:= ToExp(Prompt)
+	if (csStr := CSect.HasContSect(Prompt)) {											; 2026-09-03: continuation-section prompt (same pattern as MsgBox)
+		Parameters := csStr
+	} else {
+		Parameters	:= ToExp(Prompt)
+	}
 	Title		:= ToExp(Title)
 	if (Hide	= "hide") {
 		Options .= "Password"

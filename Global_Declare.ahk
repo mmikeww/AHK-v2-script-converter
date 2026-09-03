@@ -9,6 +9,8 @@ global	  gmAhkKeywdsToRename,	gmAhkLoopRegKeywds
 		, gAhkCmdsToRemoveV1,	gAhkCmdsToRemoveV2
 		, gmAhkCmdsToConvertV1, gmAhkCmdsToConvertV2
 		, gmAhkFuncsToConvert,	gmAhkMethsToConvert, gmAhkArrMethsToConvert
+global	gHeadless			:= (IsSet(gHeadless)) ? gHeadless : false				; 2026-09-03 - true = suppress ALL Gui/MsgBox (for CLI/batch use); preserves caller pre-set value
+global	gHeadlessMsgs		:= ''										; 2026-09-03 - headless: collected would-be MsgBox texts
 global	gINIFile			:= 'Converter.ini'												; 2026-01-26 - AMB, ADDED to support user interactive settings
 global	gDynDefGuiNm		:= (IsSet(gDynDefGuiNm))										; 2026-03-11 if not already set...
 							?  gDynDefGuiNm : 'nnGui'										; ... set as needed

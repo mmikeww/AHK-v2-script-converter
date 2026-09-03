@@ -1119,7 +1119,11 @@ class clsMask
 			; make sure lockup (endless loop) does not occur (again)
 			if (this.maskCountT >= this.maxMasks) {
 				msg := 'Fatal Error!`nMax masks used: [' this.maxMasks ']'
-				MsgBox()
+				if (IsSet(gHeadless) && gHeadless) {											; 2026-09-03 - headless: print, no popup
+					FileAppend(msg "`r`n", "*")
+				} else {
+					MsgBox(msg)
+				}
 				ExitApp
 			}
 			; generate random 6 bit hex value (string)
@@ -1146,7 +1150,15 @@ class clsMask
 		; search for targ-pattern, replace matches with tags, save original substr
 		uniqStr	:= ''
 		mMsg	:= ''																			; DEBUG
-		while (pos := RegExMatch(code, pattern, &m, pos??1))
+		pos := 1																				; init search position
+		try {
+			pos := RegExMatch(code, pattern, &m, pos)
+		} catch as exc {																		; 2026-09-03 PCRE tolerance: degrade instead of abort
+			if (IsSet(gHeadless) && gHeadless)
+				FileAppend("; V1toV2-PCRE-SKIP " exc.Message "`r`n", "*")
+			pos := 0
+		}
+		while (pos)
 		{
 			; record match details
 			mCode		:= m[], mLen := m.Len
@@ -1167,6 +1179,13 @@ class clsMask
 			; Replace original code with a unique tag
 			code	:= RegExReplace(code, escRegexChars(mCode), mTag,,1,pos)					; supports position
 			pos		+= StrLen(mTag)																; set position for next search
+			try {
+				pos := RegExMatch(code, pattern, &m, pos)
+			} catch as exc {																	; 2026-09-03 PCRE tolerance
+				if (IsSet(gHeadless) && gHeadless)
+					FileAppend("; V1toV2-PCRE-SKIP " exc.Message "`r`n", "*")
+				pos := 0
+			}
 		}
 	}
 
@@ -1200,10 +1219,12 @@ class clsMask
 					continue																	; skip to next search
 				}
 			}
-			; restore orig substr for current tag
-			oCode	:= clsMask.GetOrig[mTag]													; get orig substr (for current tag) from tag list
-			code	:= StrReplace(code, mTag, oCode)											; replace current (unique) tag with orig substr
-			pos		+= StrLen(oCode)															; prep for next search
+		; restore orig substr for current tag
+		oCode	:= clsMask.GetOrig[mTag]													; get orig substr (for current tag) from tag list
+		; manual replace at pos (2026-09-03: unbounded StrReplace could loop forever
+		; when oCode contains nested same-type tags; StrReplace StartingPos needs ByRef here)
+		code := SubStr(code, 1, pos - 1) . oCode . SubStr(code, pos + StrLen(mTag))
+		pos		+= StrLen(oCode)															; prep for next search
 		}
 	}
 	;############################################################################

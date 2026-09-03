@@ -888,10 +888,18 @@ addOnMessageCBArgs(&code) {
 				; 2025-10-12 AMB, better support for existing params and binding
 				paramsToAdd := 'wParam, lParam, msg, hwnd'														; default params required by OnMessage (will add as needed)
 				if (!obj.bindStr) {																				; if OnMesssage call DOES NOT include Binding...
-					checkParams := Trim(params)																	; ... check exiting params (they are substitutes)
-					While(checkParams) {																		; remove params-to-add, if they have exiting substitutes
-						checkParams := Trim(RegExReplace(checkParams, '^[^,\s]+[,\h]*'))						; [to track when all params have been processed]
-						paramsToAdd := Trim(RegExReplace(paramsToAdd, '^[^,\s]+[,\h]*'))						; remove any params-to-add when they have existing substitute
+					; 2026-09-03 LOCAL: v1 callbacks sometimes use a variadic param to
+					; receive ALL OnMessage args (e.g. 'WM_NOTIFY(Param*)', body indexes
+					; Param.2/lParam). v2 variadic funcs behave the same, so leave the
+					; signature untouched instead of appending named params.
+					if (params ~= '(?i)(?:^|,)\h*(?:Param|params|p)\h*\*') {
+						paramsToAdd := ''																			; variadic already receives everything
+					} else {
+						checkParams := Trim(params)																; ... check exiting params (they are substitutes)
+						While(checkParams) {																	; remove params-to-add, if they have exiting substitutes
+							checkParams := Trim(RegExReplace(checkParams, '^[^,\s]+[,\h]*'))					; [to track when all params have been processed]
+							paramsToAdd := Trim(RegExReplace(paramsToAdd, '^[^,\s]+[,\h]*'))					; remove any params-to-add when they have existing substitute
+						}
 					}
 				}
 				else {																							; OnMessage call HAS binding, so...
@@ -990,6 +998,21 @@ MenuConv(p) {
 		, "$5", &RegExCount5)																					; =% func_arg5(nested_arg5a, nested_arg5b)
 
 	menuNameLine := Trim(menuNameLine)
+
+	; 2026-09-03, LOCAL: dynamic menu-name ('% ident%' / '% expr%' / concatenated parts).
+	; v2 cannot declare a Menu from an arbitrary expression. A bare '% ident%' (a plain
+	; variable holding the menu-name) IS expressible; anything else (concat name-parts,
+	; array/index/expr) is NOT - comment the v1 line out (like the UseErrorLevel branch
+	; above) instead of emitting invalid v2 like '% menuRoot%M_Index%[1] := Menu()'.
+	If (SubStr(menuNameLine, 1, 1) = "%") {
+		menuNameLine := Trim(menuNameLine, " `t")
+		If (RegExMatch(menuNameLine, '^%(\w+)%$', &mDynName))
+			menuNameLine := mDynName[1]
+		Else If (RegExMatch(menuNameLine, '^%(\w+)$', &mDynName2))
+			menuNameLine := mDynName2[1]											; tolerate Mask'd missing trailing %
+		Else
+			Return "; V1toV2: dynamic menu-name not convertible (manual edit required): " LTrim(gV1Line)
+	}
 
 	If (Var2 = "UseErrorLevel")
 		return Format("; V1toV2: Removed {2} from Menu {1}", menuNameLine, Var2)

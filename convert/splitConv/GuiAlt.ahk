@@ -305,7 +305,12 @@ class clsGuiLine
 					this._lineOut	:= 'global gV2CurLV := ' varName						; ... assemble final output
 				} else {																	; if using simple naming method
 					msg := " `; V1toV2: [" ctrlID "] not found. Manual edit required."		; ... msg to user...
-					this._lineOut := LTrim(gV1Line) . msg									; ... post original v1 line with msg to user
+					; 2026-09-03 LOCAL: previously emitted the raw v1 line (invalid v2).
+					; Dynamic 'Gui,ListView,%hwnd%' switching cannot be expressed in v2;
+					; downstream LV_* calls are converted to bound control objects, so the
+					; switch line itself is dead - comment it out (like the identified case
+					; above) so the output stays parseable.
+					this._lineOut := '`;' LTrim(gV1Line) . msg								; ... comment out with msg to user
 				}
 
 			;####################################################################

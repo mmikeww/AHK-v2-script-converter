@@ -373,6 +373,12 @@ FinalizeConvert(&code)
       HKReturn(&code)                                                                   ; add return before each HK
    Prog.ULog(,pp 'Removing redundant exit commands...'          )                       ; update UI - current operation
       FixRedundantExits(&code)                                                          ; remove redundant/unnecessary exit commands
+   Prog.ULog(,pp 'Fix one-line empty Catch blocks...'           )                       ; update UI - current operation
+      FixEmptyCatch(&code)                                                              ; }catch{} -> }catch{`r`n} (illegal in v2)
+   Prog.ULog(,pp 'Fix orphan Try+comment lines...'              )                       ; update UI - current operation
+      FixOrphanTryComment(&code)                                                         ; try ;comment -> try { ;comment } (illegal in v2)
+   Prog.ULog(,pp 'Fix $ variable names...'                      )                       ; update UI - current operation
+      FixDollarVars(&code)                                                               ; $var -> Dollar_var (illegal in v2)
    Prog.ULog(90,pp 'Restore Comments/Strings...'                )                       ; update UI - current operation - 90% complete
       Mask_R(&code, 'C&S')                                                              ; ensure all comments/strings are restored (just in case)
 
@@ -770,4 +776,62 @@ RemoveComObjMissing(ScriptString) {
       final     .= finalLine "`r`n"
    }
    return RegExReplace(final, '\r\n$')
+}
+;################################################################################
+; v2 requires an empty Catch block's braces on separate lines:
+;     v1  }catch{}            (legal in v1, SYNTAX ERROR in v2)
+;     v2  }catch{
+;         }
+; 2026-09-03 LOCAL, ADDED - RunAny product showed one-line empty catch blocks
+;   surviving conversion (lines ~1026/1063/1767/4852/5540/5580/8406).
+; Only rewrites EMPTY blocks ({}); a catch with a body is left untouched.
+FixEmptyCatch(&code)
+{
+   nEC := '(?im)^(?<ind>\h*)}'
+       .  '(?<csp>\h*)catch'                                                       ; }catch
+       .  '(?<par>(?:\h+(?:Error\h+as\h+)?\w+)?)'                                  ; optional (Error as) e
+       .  '(?<sp2>\h*)\{\h*\}'                                                     ; empty block on same line
+       .  '(?<trail>[^\r\n]*)$'                                                    ; optional trailing comment
+   pos := 1
+   while (pos := RegExMatch(code, nEC, &m, pos)) {
+      repl := m.ind . '}catch' . m.par . m.sp2 . '{'                               ; }catch...{
+            . '`r`n' . m.ind . '}' . m.trail                                       ; (comment on closing brace line)
+      code := SubStr(code, 1, pos - 1) . repl . SubStr(code, pos + StrLen(m[]))
+      pos += StrLen(repl)
+   }
+}
+;################################################################################
+; v2 requires a Try statement to have a body. When conversion comments out the
+; single statement that was the try's body (e.g. dynamic 'Menu,%expr%' switching),
+; the line 'try ; V1toV2: ...' is left with no body - expand it to a block:
+;     try ; comment
+; becomes
+;     try {
+;     ; comment
+;     }
+; 2026-09-03 LOCAL, ADDED
+FixOrphanTryComment(&code)
+{
+   nOrph := '(?im)^(?<ind>\h*)try(?<sp>\h+)(?<cm>;[^\r\n]*)$'                              ; try + whole-line comment, no body
+   pos := 1
+   while (pos := RegExMatch(code, nOrph, &m, pos)) {
+      ; 'try {' then the comment on its own line, then '}' - the comment must NOT sit
+      ; inline after '{' (it would swallow the closing brace on the same line).
+      repl := m.ind . 'try {' . m.sp . m.cm . '`r`n' . m.ind . '}'
+      code := SubStr(code, 1, pos - 1) . repl . SubStr(code, pos + StrLen(m[]))
+      pos += StrLen(repl)
+   }
+}
+;################################################################################
+; v1 allows '$' as the first char of a variable name ('$Exp', '$FolderPath', ...),
+; v2 does not. Rename '$name' to 'Dollar_name' everywhere EXCEPT inside strings /
+; comments (where '$' is literal, e.g. Everything's '\$RECYCLE.BIN').
+; 2026-09-03 LOCAL, ADDED
+FixDollarVars(&code)
+{
+   sess := clsMask.NewSession()
+   Mask_T(&code, 'C&S', , sess)                                                                ; protect strings & comments
+   nDol := '(?<![\w\\])\$([A-Za-z_][A-Za-z0-9_]*)'                                             ; $name in code
+   code := RegExReplace(code, nDol, 'Dollar_$1')
+   Mask_R(&code, 'C&S', , sess)                                                                ; restore strings & comments
 }

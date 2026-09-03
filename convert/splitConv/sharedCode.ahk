@@ -172,6 +172,14 @@ isHex(val)
 ; TODO - needs to be updated to cover all situations
 fixAssignments(&lineStr)
 {
+	; 2026-09-03 LOCAL: v1 allows '@' as a variable name (commonly a DllCall type
+	; abbreviation, e.g. 'static _:="uint",@:="Ptr"'), v2 does not. References to it are
+	; inlined to their literal type string by _DllCall(), so a declaration assigning '@'
+	; must be commented out rather than emitted as invalid v2.
+	if (lineStr ~= '(?i)^\h*(?:global|local|static)\h+[^;]*@\h*:=') {
+		lineStr := '; V1toV2: removed invalid v2 var declaration (@): ' LTrim(lineStr)
+		return
+	}
 	; Does order matter here? ... I don't think so
 	; only one needs to be performed for current line...
 	;	(as far as I can tell in testing, anyway)
@@ -465,6 +473,18 @@ v1v2_FixLSG_Assignments(&lineStr)
 	if (RegExMatch(tempStr, nLSG, &mLSG)) {													; separate declaration from assignments
 		declare		:= mLSG[1], outStr := declare											; declaration portion, [outStr will become output]
 		assignList	:= mLSG[2]																; var assignment list (can be multi-line)
+		; 2026-09-03 LOCAL: v1 allows '@' as a variable name (commonly a DllCall type
+		; abbreviation, e.g. 'static _:="uint",@:="Ptr"'), v2 does not. References are
+		; inlined to their literal type string by _DllCall(), so drop the declaration.
+		keepList := []
+		for idx, assign in StrSplit(assignList, ',') {										; for each assignment in list...
+			if (assign ~= '(?i)(?:^|,)\h*@\h*:=')											; ... if assigning to @ var...
+				continue																	; ... skip it (references already inlined)
+			keepList.Push(assign)															; ... keep this assignment
+		}
+		assignList := ""
+		for idx, assign in keepList															; reassemble remaining assignments
+			assignList .= (idx = 1 ? "" : ",") . assign
 		for idx, assign in StrSplit(assignList, ',') {										; for each assignment in list...
 			if (RegExMatch(assign, '^' nLegAssign '$', &mLA)) {								; included in case of var = (with no value)
 				var := mLA[1], ws := mLA[2], val := mLA[3]									; separate assignment parts
@@ -522,8 +542,13 @@ v1v2_FixTernaryBlanks(&lineStr)
 ; 2025-07-03 AMB, Changed func name
 v1v2_NoKywdCommas(&lineStr)
 {
-	nFlow	:= 'i)^(\h*)(else|for|if|loop|return|switch|while)(?:\h*,\h*|\h+)(.*)$'
+	; 2026-09-03 LOCAL: added 'throw' - v1 'throw,' command form is invalid in v2 (throw is a
+	; control statement, no comma after the keyword).
+	nFlow	:= 'i)^(\h*)(else|for|if|loop|return|switch|throw|while)(?:\h*,\h*|\h+)(.*)$'
 	lineStr	:= RegExReplace(lineStr, nFlow, '$1$2 $3')
+	; 2026-09-03 LOCAL: v1 'Until % expr' - the '% ' forces an expression in v1, but v2
+	; Until already takes an expression, so the forced-expr marker must be dropped.
+	lineStr	:= RegExReplace(lineStr, 'i)\b(Until)\h*%\h+', '$1 ')
 	return		; lineStr by reference
 }
 ;################################################################################

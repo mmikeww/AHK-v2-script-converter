@@ -66,19 +66,38 @@ class CSect
 
 			; 2026-09-03: support "leading text + (block)" (v1 commands whose last
 			; text param ends in `n then a continuation section - e.g. MsgBox/InputBox).
-			; Fold the leading text into the block's first line so the whole thing
-			; converts to one v2 string argument.
+			; Fold the leading text and the block into one v2 STRING ARGUMENT. v2 cannot
+			; hold a raw multi-line string literal, so each physical line becomes its own
+			; quoted "..." segment and the segments are joined by adjacent-string concat
+			; (newline between segments). %var% tokens become unquoted concat operands.
 			if (RegExMatch(srcStr, 'is)^(?<lead>[^\v(]+)\R\h*(?<blk>\(.*\)\s*$)', &mLd)
 			&& Trim(mLd.lead) != '') {
 				leadTxt := Trim(mLd.lead, " `t")
-				blkCode := conv_ContParBlk(mLd.blk)
-				if (blkCode && SubStr(blkCode, 1, 1) = "(") {
-					; insert leading text as the first quoted line inside the block,
-					; then unwrap the outer ( ) so callers wrapping in their own
-					; parens (e.g. MsgBox(...)) do not double up.
-					blkCode := RegExReplace(blkCode, '(?s)(\(\s*\R?\s*)', '$1"' . leadTxt . '"`n', , 1)
-					blkCode := RegExReplace(blkCode, '(?s)^\(\s*\R?\s*', '')
-					blkCode := RegExReplace(blkCode, '(?s)\s*\)\s*$', '')
+				if (RegExMatch(mLd.blk, '(?s)^\(\h*\R(.*?)\)\s*$', &mG)) {
+					allTxt := leadTxt . "`n" . mG[1]											; merge lead + block guts
+					; normalize line endings, drop trailing blank line
+					allTxt := StrReplace(allTxt, "`r`n", "`n")
+					allTxt := RegExReplace(allTxt, '\n\s*$', '')
+					segs := []
+					For each, ln in StrSplit(allTxt, "`n") {
+						; split each line into quoted text and %var% concat operands
+						work := ln
+						nVar := '%([^%\r\n]+)%'
+						out := ""
+						scanPos := 1
+						While (RegExMatch(work, nVar, &mVar, scanPos)) {
+							out .= Chr(34) . SubStr(work, scanPos, mVar.Pos - scanPos) . Chr(34) . " . " . mVar[1] . " . "
+							scanPos := mVar.Pos + mVar.Len
+						}
+						out .= Chr(34) . SubStr(work, scanPos) . Chr(34)
+						out := RegExReplace(out, '^"" \. | \. ""$', '')
+						segs.Push(out)
+					}
+					; join segments with adjacent-string concat across newlines
+					blkCode := ''
+					For each, seg in segs
+						blkCode .= seg . "`r`n"
+					blkCode := RTrim(blkCode, "`r`n")
 					return blkCode
 				}
 			}

@@ -147,6 +147,21 @@ _DllCall(p) {
 	global gfLockGlbVars, gEOLComment_Func
 	loop p.Length {
 		nPType := "i)^U?(Str|AStr|WStr|Int64|Int|Short|Char|Float|Double|Ptr)P?\*?$"
+		; 2026-09-03 LOCAL: v1 type-abbreviation variables used in place of a type string
+		; (e.g. 'static _:="uint",@:="Ptr"' then DllCall(...,_,2,...,@,0)). v2 does not allow
+		; '@' as a variable name, and the static abbreviations are not declared in v2.
+		; Inline the two known abbrev tokens to their literal type strings. Compare a
+		; whitespace/quote-free form so '_', '"_"', '_ "*"', '_*' etc. all resolve.
+		abbrevKey := RegExReplace(p[A_Index], '[\s"]')
+		if (abbrevKey = '_') {
+			p[A_Index] := '"UInt"'
+		} else if (abbrevKey = '_*') {
+			p[A_Index] := '"UInt*"'
+		} else if (abbrevKey = '@') {
+			p[A_Index] := '"Ptr"'
+		} else if (abbrevKey = '@*') {
+			p[A_Index] := '"Ptr*"'
+		}
 		if (p[A_Index] ~= nPType) {
 			; Correction of old v1 DllCalls who forget to quote the types
 			p[A_Index] := '"' p[A_Index] '"'
@@ -559,6 +574,24 @@ _Input(p) {
 			, p*)
 	Out		:= RegExReplace(Out, "[\h\,]*\)", ")")
 	Return	Out
+}
+;################################################################################
+; V1: IfMsgBox, ButtonName      (often written 'IfMsgBox Yes, {' - trailing '{'
+;      is the block brace, not part of the button name)
+; V2: if (msgResult = "Yes")  - preserving any trailing '{' block opener
+; 2026-09-03 LOCAL, ADDED - fixes button name absorbing ', {' / '{'
+_IfMsgBox(p) {
+	btnName := Trim(p[1])
+	trailBrc := ''
+	; ButtonNameT2E already wrapped the raw text in quotes, e.g. '"Yes, {"' -
+	; unwrap first, then split off any trailing '{' block opener.
+	if (RegExMatch(btnName, '^"(.*)"$', &mQ))
+		btnName := mQ[1]
+	if (RegExMatch(btnName, '(?i)^(.+?)\s*,?\s*(\{.*)$', &mB)) {							; separate trailing { block opener
+		btnName := Trim(mB[1]), trailBrc := mB[2]
+	}
+	btnName := Trim(btnName, ' `t')
+	return 'if (msgResult = "' StrReplace(btnName, '"', '``"') '")' trailBrc
 }
 ;################################################################################
 ; V1: InputBox, OutputVar [, Title, Prompt, HIDE, Width, Height, X, Y, Locale, Timeout, Default]

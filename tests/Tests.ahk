@@ -5381,8 +5381,126 @@ InputBox, webSiteInput, 下载网站图标, 请修改下面的默认地址并下
       expected := "
          (Join`r`n
 IB := InputBox("请修改下面的默认地址并下载图标``n"
-"请打开【修改菜单】按钮,,,,,,,,http://" website "/favicon.ico", "下载网站图标"), webSiteInput := IB.Value
+"请打开【修改菜单】按钮,,,,,,,,http://" . website . "/favicon.ico", "下载网站图标"), webSiteInput := IB.Value
       )"
+
+      converted := Convert(input_script)
+      Yunit.assert(converted = expected, "converted script != expected script")
+   }
+
+   EmptyCatchBlock()
+   {
+      ; 2026-09-03 regression: v1 '}catch{}' one-line empty catch is legal in v1 but a
+      ; SYNTAX ERROR in v2 - must expand to '}catch{`r`n}' (braces on separate lines).
+      input_script := "
+         (Join`r`n
+x:=1
+try{
+	FileRead, a, f.txt
+}catch{}
+y:=2
+         )"
+
+      expected := "
+         (Join`r`n
+x:=1
+try{
+	a := FileRead("f.txt")
+}catch{
+}
+y:=2
+         )"
+
+      converted := Convert(input_script)
+      Yunit.assert(converted = expected, "converted script != expected script")
+   }
+
+   DynMenuName_PlainVar()
+   {
+      ; 2026-09-03 regression: 'Menu, %mn%, ...' where %mn% is a plain variable name
+      ; v2 can express this - the variable holds the menu name.
+      input_script := "
+         (Join`r`n
+mn := ""Sub""
+Menu, %mn%, Add, % ""x"", Web_Run
+         )"
+
+      expected := "
+         (Join`r`n
+mn := ""Sub""
+mn := Menu()
+mn.Add(""x"", Web_Run)
+         )"
+
+      converted := Convert(input_script)
+      Yunit.assert(converted = expected, "converted script != expected script")
+   }
+
+   DynMenuName_ConcatExpr()
+   {
+      ; 2026-09-03 regression: 'Menu, % menuDefaultRoot%M_Index%[1], ...' (concat name-parts)
+      ; v2 cannot declare a Menu from such an expression - the v1 line must be commented
+      ; out with a marker (NOT emitted as invalid v2 like '% menuDefaultRoot%M_Index%[1] := Menu()'
+      ; and NOT left as a live v1 'Menu,' command which v2 cannot parse).
+      input_script := "
+         (Join`r`n
+M_Index:=1
+Menu, % menuDefaultRoot%M_Index%[1], Add, %mcItem%, Menu_Run
+         )"
+
+      expected := "
+         (Join`r`n
+M_Index:=1
+; V1toV2: dynamic menu-name not convertible (manual edit required): Menu, % menuDefaultRoot%M_Index%[1], Add, %mcItem%, Menu_Run
+         )"
+
+      converted := Convert(input_script)
+      Yunit.assert(converted = expected, "converted script != expected script")
+   }
+
+   DollarVarNames()
+   {
+      ; 2026-09-03 regression: v1 allows '$' prefixed variable names, v2 does not -
+      ; '$name' must become 'Dollar_name' (but NOT inside strings/comments).
+      input_script := "
+         (Join`r`n
+$Exp := ComObject(""Shell.Application"")
+For $Exp in ComObject(""Shell.Application"").Windows {
+	folder := $Exp.Document.Folder.Self.Path
+}
+; $Exp inside a comment stays untouched
+         )"
+
+      expected := "
+         (Join`r`n
+Dollar_Exp := ComValue(""Shell.Application"")
+For Dollar_Exp in ComValue(""Shell.Application"").Windows {
+	folder := Dollar_Exp.Document.Folder.Self.Path
+}
+; $Exp inside a comment stays untouched
+         )"
+
+      converted := Convert(input_script)
+      Yunit.assert(converted = expected, "converted script != expected script")
+   }
+
+   UntilForcedExpr()
+   {
+      ; 2026-09-03 regression: v1 'Until % expr' - the '% ' forced-expr marker must be
+      ; dropped in v2 (Until already takes an expression).
+      input_script := "
+         (Join`r`n
+Loop {
+	publicMenuMaxNum--
+} Until % publicMenuMaxNum<1
+         )"
+
+      expected := "
+         (Join`r`n
+Loop{
+	publicMenuMaxNum--
+} Until publicMenuMaxNum<1
+         )"
 
       converted := Convert(input_script)
       Yunit.assert(converted = expected, "converted script != expected script")

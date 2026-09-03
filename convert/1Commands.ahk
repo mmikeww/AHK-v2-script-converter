@@ -338,7 +338,7 @@ gmAhkCmdsToConvertV2 := OrderedMap(
   , "Hotkey,Var1,Var2,Var3" ,              ; 2025-10-12 AMB - changed var2 to "as is" to fix #328 ,
       "*_Hotkey"
   , "IfMsgBox,ButtonNameT2E" ,
-      "if (msgResult = {1})"
+      "*_IfMsgBox"
   , "ImageSearch,OutputVarXV2VRM,OutputVarYV2VRM,X1CBE2E,Y1CBE2E,X2CBE2E,Y2CBE2E,ImageFileT2E" ,
       "ErrorLevel := !ImageSearch({1}, {2}, {3}, {4}, {5}, {6}, {7})"
   , "IniDelete,FilenameT2E,SectionT2E,KeyT2E" ,

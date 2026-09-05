@@ -444,6 +444,19 @@ _Gosub(p) {
 	return 'Gosub ' .  v1LabelName	; no changes here
 }
 ;################################################################################
+; 2026-09-06 LOCAL (breakage #28): v1 IsLabel(name) -> 'name resolves at runtime'
+; (labels became functions). IsLabel() only sees true LABELS (functions are a
+; separate namespace) and Func('name') ALWAYS throws on the fork, so existence
+; must be tested via the %('expression')% dereference, which returns UNSET for
+; a missing name (never throws when wrapped in IsSet).
+; Emit 'IsSet(%(name-expr)%)' - the natural if-condition shape of v1's
+; 'if IsLabel(name)'. The argument is already a v2 expression at this point
+; ('"fun_" . index_temp'), so it is injected verbatim into the dereference.
+_IsLabel(p) {
+	out := 'IsSet(%(' Trim(p[1]) ')%)'
+	return out
+}
+;################################################################################
 ; 2026-09-05 LOCAL: build a v2 string expression from a v1 dynamic label text
 ; ('fun_%index_temp%' -> '"fun_" . index_temp') for V1toV2_CallLabel.
 _GosubLabelToExpr(str) {

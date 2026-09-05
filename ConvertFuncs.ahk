@@ -1118,8 +1118,12 @@ AddV1toV2Helpers(code)
    }
    if (gfUseV1toV2CallLabel) {
       helpers .= nCallLbl "(name) {                                               " sc " V1toV2: v1 dynamic Gosub - labels became functions, call when found`r`n"
-      helpers .= "    fn := Func(name)`r`n"
-      helpers .= "    if (fn)`r`n"
+      ; fork: Func(name) always throws and IsLabel() does not see converted
+      ; functions - the %(name)% dereference is the only way to resolve a
+      ; function object from a dynamic name; a missing name stays UNSET (the
+      ; Try only protects the assignment expression from a non-string name).
+      helpers .= "    Try fn := %(name)%`r`n"
+      helpers .= "    if IsSet(fn) && fn is Func`r`n"
       helpers .= "        fn.Call()`r`n"
       helpers .= "}`r`n"
    }

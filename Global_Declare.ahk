@@ -108,6 +108,15 @@ setGlobals() {																				; for globals that are reset with each new con
 							: gLVNameDefault
 	gTVNameDefault			:= 'TV'
 	gSBNameDefault			:= 'SB'
+	; 2026-09-06 - shim-emission flags are set during line conversion (_Gosub,
+	; FixPtrAddrArgs, FixMapLiterals...) and consumed by AddV1toV2Helpers at the
+	; END of the same conversion. They must reset per conversion like every
+	; other global here - otherwise a flag set by one Convert() call leaks into
+	; the next (unit tests convert many snippets in one process).
+	gfUseV1toV2AddrOf		:= false
+	gfUseV1toV2MapHelpers	:= false
+	gfUseV1toV2CallLabel	:= false
+	gV1toV2ShimSuffix		:= ''
 	gaFileOpenVars			:= []															; 2025-10-12 - collection of FileOpen object names
 	gaZipTagIDs				:= []															; 2025-11-30 - TagID list for line compression (Zip,Unzip)
 

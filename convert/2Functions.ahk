@@ -29,14 +29,14 @@ gmAhkFuncsToConvert := OrderedMap(
       "*_DllCall"
   , "Exception(Message, What, Extra)" ,
       "Error({1}, {2}, {3})"
-  , "Func(FunctionNameQ2T)" ,
+  , "Func(FunctionName)" ,
       "{1}"
   , "Hotstring(String,Replacement,OnOffToggle)" ,
       "*_Hotstring"
   , "InStr(Haystack,Needle,CaseSensitive,StartingPos,Occurrence)" ,
       "*_InStr"
   , "IsLabel(Label)" ,
-      "Func({1})"
+      "*_IsLabel"
   , "LoadPicture(Filename,Options,ImageTypeV2VR)" ,
       "LoadPicture({1},{2},{3})"
   , "LV_Add(Options, Field*)" ,

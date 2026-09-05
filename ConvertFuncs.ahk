@@ -886,6 +886,12 @@ FixEmptyFirstParam(&code)
    static reqFirst := ["FileAppend"]                       ; v2 builtins: required first param + v1 empty-first-arg form
    for each, fn in reqFirst
       code := RegExReplace(code, 'i)(\b' fn '\(\h*),', '$1"",')
+   ; 2026-09-05 LOCAL (breakage #5): v1 Control* commands with an omitted control
+   ; name ('ControlFocus,,ahk_id %hwnd%') emit 'ControlFocus(, x)' - the v2
+   ; Control* builtins take the control as their FIRST parameter, where a comma
+   ; hole is a runtime 'Missing a required parameter' error. Emit an explicit
+   ; empty control "".
+   code := RegExReplace(code, 'i)(\bControl\w+\(\h*),', '$1"",')
 }
 
 ; 2026-09-05 LOCAL (breakage #3/#18): multi-line DllCalls bypass the per-line
@@ -899,10 +905,11 @@ FixEmptyFirstParam(&code)
 FixPtrAddrArgs(&code)
 {
    global gfUseV1toV2AddrOf, gmVarSetCapacityMap
+   nAddrOf := V1toV2ShimName('V1toV2_AddrOf')
    pos := 1
    while (pos := RegExMatch(code, 'i)("?\b(?:u?)ptr"?\h*,\h*)&(\w+)', &m, pos)) {
       if (!gmVarSetCapacityMap.Has(m[2])) {
-         repl := m[1] 'V1toV2_AddrOf(' m[2] ')'          ; m[1] already includes ', '
+         repl := m[1] nAddrOf '(' m[2] ')'          ; m[1] already includes ', '
          code := SubStr(code, 1, pos-1) repl SubStr(code, pos + m.Len)
          gfUseV1toV2AddrOf := true
          pos += StrLen(repl)
@@ -930,6 +937,7 @@ FixPtrAddrArgs(&code)
 FixMapLiterals(&code)
 {
    global gfUseV1toV2MapHelpers
+   nMapGet := V1toV2ShimName('V1toV2_MapGet'), nMapRm := V1toV2ShimName('V1toV2_MapRemove')
    mapVars := Map()
    pos := 1
    while (pos := RegExMatch(code, 'i)(\b\w+)\h*:=\h*(?:\{\}|\bObject\(\))', &m, pos)) {
@@ -939,15 +947,29 @@ FixMapLiterals(&code)
    for v, _ in mapVars {
       code := RegExReplace(code, 'i)(\b' v '\h*:=\h*)(?:\{\}|\bObject\(\))', '$1Map()')
       if (RegExMatch(code, 'i)\b' v '\.Remove\(')) {
-         code := RegExReplace(code, 'i)\b' v '\.Remove\(', 'V1toV2_MapRemove(' v ', ')
+         code := RegExReplace(code, 'i)\b' v '\.Remove\(', nMapRm '(' v ', ')
          gfUseV1toV2MapHelpers := true
       }
       nRead := 'i)\b' v '\[([^\][]+)\](?!\h*(?::=|\.=|\+=|-=|\*=|/=|=))'
       if (RegExMatch(code, nRead)) {
-         code := RegExReplace(code, nRead, 'V1toV2_MapGet(' v ', $1)')
+         code := RegExReplace(code, nRead, nMapGet '(' v ', $1)')
          gfUseV1toV2MapHelpers := true
       }
    }
+}
+
+; 2026-09-05 LOCAL: per-file unique shim name. Converted outputs #Include each
+; other (plugin files include RunAny_ObjReg), so a helper defined in two files
+; of one include chain is a LOAD error ('function declaration conflicts with an
+; existing Func', huiZz_Text). Suffix the shim name with the source file name.
+V1toV2ShimName(base)
+{
+   global gV1toV2ShimSuffix
+   if (gV1toV2ShimSuffix = '') {
+      SplitPath(gFilePath,,,, &nameNoExt)
+      gV1toV2ShimSuffix := RegExReplace(nameNoExt, '\W', '_')
+   }
+   return base '_' gV1toV2ShimSuffix
 }
 
 ; 2026-09-05 LOCAL: prepend the runtime shims flagged during conversion. v2
@@ -955,28 +977,36 @@ FixMapLiterals(&code)
 ; helpers are appended to the end of the script.
 AddV1toV2Helpers(code)
 {
-   global gfUseV1toV2AddrOf, gfUseV1toV2MapHelpers
+   global gfUseV1toV2AddrOf, gfUseV1toV2MapHelpers, gfUseV1toV2CallLabel
    ; NB: a raw 'space+;' sequence cannot appear in THIS source's strings (fork
    ; comment rule - see FixSemiInStrings), so output comments are built with
    ; Chr(59) concatenation.
    sc := Chr(59)
+   nAddrOf := V1toV2ShimName('V1toV2_AddrOf'), nMapGet := V1toV2ShimName('V1toV2_MapGet'), nMapRm := V1toV2ShimName('V1toV2_MapRemove'), nCallLbl := V1toV2ShimName('V1toV2_CallLabel')
    helpers := ''
    if (gfUseV1toV2AddrOf) {
-      helpers .= "V1toV2_AddrOf(v) {                                                    " sc " V1toV2: v1 ampersand-address semantics (string->StrPtr, object->ObjPtr, Buffer->itself)`r`n"
+      helpers .= nAddrOf "(v) {                                                    " sc " V1toV2: v1 ampersand-address semantics (string->StrPtr, object->ObjPtr, Buffer->itself)`r`n"
       helpers .= "    If Type(v) = `"Buffer`"`r`n"
       helpers .= "        Return v`r`n"
       helpers .= "    Return IsObject(v) ? ObjPtr(v) : StrPtr(v)`r`n"
       helpers .= "}`r`n"
    }
    if (gfUseV1toV2MapHelpers) {
-      helpers .= "V1toV2_MapGet(m, k) {                                                  " sc " V1toV2: v1 obj[key] read - missing key yields empty, not a throw`r`n"
+      helpers .= nMapGet "(m, k) {                                                  " sc " V1toV2: v1 obj[key] read - missing key yields empty, not a throw`r`n"
       helpers .= "    Return m.Has(k) ? m[k] : `"`"`r`n"
       helpers .= "}`r`n"
-      helpers .= "V1toV2_MapRemove(m, k) {                                               " sc " V1toV2: v1 obj.Remove(key) - returns removed value or empty`r`n"
+      helpers .= nMapRm "(m, k) {                                               " sc " V1toV2: v1 obj.Remove(key) - returns removed value or empty`r`n"
       helpers .= "    if !m.Has(k)`r`n"
       helpers .= "        Return `"`"`r`n"
       helpers .= "    v := m[k], m.Delete(k)`r`n"
       helpers .= "    Return v`r`n"
+      helpers .= "}`r`n"
+   }
+   if (gfUseV1toV2CallLabel) {
+      helpers .= nCallLbl "(name) {                                               " sc " V1toV2: v1 dynamic Gosub - labels became functions, call when found`r`n"
+      helpers .= "    fn := Func(name)`r`n"
+      helpers .= "    if (fn)`r`n"
+      helpers .= "        fn.Call()`r`n"
       helpers .= "}`r`n"
    }
    return (helpers = '') ? code : code '`r`n' helpers

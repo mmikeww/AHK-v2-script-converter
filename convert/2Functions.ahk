@@ -35,6 +35,8 @@ gmAhkFuncsToConvert := OrderedMap(
       "*_Hotstring"
   , "InStr(Haystack,Needle,CaseSensitive,StartingPos,Occurrence)" ,
       "*_InStr"
+  , "IsLabel(Label)" ,
+      "Func({1})"
   , "LoadPicture(Filename,Options,ImageTypeV2VR)" ,
       "LoadPicture({1},{2},{3})"
   , "LV_Add(Options, Field*)" ,

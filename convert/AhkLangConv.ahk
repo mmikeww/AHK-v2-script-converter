@@ -118,6 +118,16 @@ _ControlGetFocus(p) {
 ;################################################################################
 _CoordMode(p) {
 	p[2]	:= StrReplace(P[2], "Relative", "Window")
+	; 2026-09-05 LOCAL fix (breakage #21): v1 command form 'CoordMode Menu Window'
+	; has NO comma - the first space separates TargetType from RelativeTo, so the
+	; two parameters arrive merged into p[1] ('"Menu Window"'). Emitting that
+	; merged form is a load error ('Parameter #1 of CoordMode is invalid'); v2
+	; needs CoordMode("Menu", "Window").
+	if (p[2] = "" && RegExMatch(p[1], '^"(\w+)\h+(\w+)"$', &mCM)
+	 && RegExMatch(mCM[1], 'i)^(?:ToolTip|Pixel|Mouse|Caret|Menu)$')
+	 && RegExMatch(mCM[2], 'i)^(?:Screen|Relative|Window|Client)$')) {
+		p[1] := '"' mCM[1] '"', p[2] := '"' mCM[2] '"'
+	}
 	Out		:= Format("CoordMode({1}, {2})", p*)
 	Return	RegExReplace(Out, "[\s\,]*\)$", ")")
 }
@@ -177,7 +187,7 @@ _DllCall(p) {
 		 && (p[A_Index-1] ~= 'i)^"?u?ptr"?$')										; ptr/uptr type - no * or P output suffix
 		 && RegExMatch(p[A_Index], '^&(\w+)$', &mAddr)
 		 && !gmVarSetCapacityMap.Has(mAddr[1])) {
-			p[A_Index] := 'V1toV2_AddrOf(' mAddr[1] ')'
+			p[A_Index] := V1toV2ShimName('V1toV2_AddrOf') '(' mAddr[1] ')'
 			gfUseV1toV2AddrOf := true
 		}
 		NeedleRegEx := "(\*\s*0\s*\+\s*)(&)(\w*)"											; *0+&var split into 3 groups (*0+), (&), and (var)
@@ -412,11 +422,18 @@ _GetKeyState(p) {
 ; 2025-11-01 AMB, UPDATED - key case-sensitivity for gmList_GosubToFunc
 ; TODO - try to add support for %label%
 _Gosub(p) {
+	global gfUseV1toV2CallLabel
 	; check for Gosub %label% - not yet supported
 	p[1] := RegExReplace(p[1], '%\h*([^%]+?)\h*$', '%$1%')
 	If (InStr(p[1], '%')) {
-		EOLComment	:= ' `; V1toV2: Gosub (Manual edit required)'
-		return 'Gosub ' . Trim(p[1]) . EOLComment
+		; 2026-09-05 LOCAL fix (breakage #24): v2 has no Gosub statement and the
+		; fork removed IsLabel(), so a dynamic Gosub emitted verbatim is a LOAD
+		; error. Labels are converted to functions, so resolve the name at
+		; runtime through V1toV2_CallLabel (Func(name).Call() when found) -
+		; the same pattern the golden hand-fix used for SearchBar.
+		EOLComment	:= ' `; V1toV2: dynamic Gosub -> label-function call'
+		gfUseV1toV2CallLabel := true
+		return V1toV2ShimName('V1toV2_CallLabel') '(' _GosubLabelToExpr(Trim(p[1], ' `t')) ')' EOLComment
 	}
 	; should have legit label, but the labelname may change after calling Update_LBL_HK_HS()
 	; ... so, just record the Gosub call for now, with no changes to script
@@ -425,6 +442,18 @@ _Gosub(p) {
 	v1LabelName := Trim(p[1])
 	gmList_GosubToFunc[v1LabelName] := true
 	return 'Gosub ' .  v1LabelName	; no changes here
+}
+;################################################################################
+; 2026-09-05 LOCAL: build a v2 string expression from a v1 dynamic label text
+; ('fun_%index_temp%' -> '"fun_" . index_temp') for V1toV2_CallLabel.
+_GosubLabelToExpr(str) {
+	out := '', scanPos := 1
+	while (RegExMatch(str, '%([^%\r\n]+)%', &mVar, scanPos)) {
+		out .= '"' SubStr(str, scanPos, mVar.Pos - scanPos) '" . ' mVar[1] . ' . '
+		scanPos := mVar.Pos + mVar.Len
+	}
+	out .= '"' SubStr(str, scanPos) '"'
+	return RegExReplace(out, '^"" \. | \. ""$', '')
 }
 ;;################################################################################
 ;; SEE PreProcessLines()	in ConvertFuncs.ahk
@@ -1066,7 +1095,7 @@ _NumPutAddrShim(s) {
 	global gmVarSetCapacityMap, gfUseV1toV2AddrOf
 	if (RegExMatch(Trim(s), '^&(\w+)$', &m) && !gmVarSetCapacityMap.Has(m[1])) {
 		gfUseV1toV2AddrOf := true
-		return 'V1toV2_AddrOf(' m[1] ')'
+		return V1toV2ShimName('V1toV2_AddrOf') '(' m[1] ')'
 	}
 	return s
 }

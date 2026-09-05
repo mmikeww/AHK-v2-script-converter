@@ -422,18 +422,18 @@ _GetKeyState(p) {
 ; 2025-11-01 AMB, UPDATED - key case-sensitivity for gmList_GosubToFunc
 ; TODO - try to add support for %label%
 _Gosub(p) {
-	global gfUseV1toV2CallLabel
 	; check for Gosub %label% - not yet supported
 	p[1] := RegExReplace(p[1], '%\h*([^%]+?)\h*$', '%$1%')
 	If (InStr(p[1], '%')) {
-		; 2026-09-05 LOCAL fix (breakage #24): v2 has no Gosub statement and the
-		; fork removed IsLabel(), so a dynamic Gosub emitted verbatim is a LOAD
-		; error. Labels are converted to functions, so resolve the name at
-		; runtime through V1toV2_CallLabel (Func(name).Call() when found) -
-		; the same pattern the golden hand-fix used for SearchBar.
+		; 2026-09-06 LOCAL (breakage #24/#28, REWRITE): v2 has no Gosub
+		; statement and labels were converted to functions, so a dynamic Gosub
+		; becomes a direct call through the v2 double-deref call syntax
+		; '%(<name-expr>)%()' - official v2-changes.htm: "Function calls now
+		; permit virtually any sub-expression for specifying which function to
+		; call". A missing label throws at runtime exactly as v1's Gosub did -
+		; no silent-tolerance shim needed (that would have CHANGED v1 semantics).
 		EOLComment	:= ' `; V1toV2: dynamic Gosub -> label-function call'
-		gfUseV1toV2CallLabel := true
-		return V1toV2ShimName('V1toV2_CallLabel') '(' _GosubLabelToExpr(Trim(p[1], ' `t')) ')' EOLComment
+		return '%(' _GosubLabelToExpr(Trim(p[1], ' `t')) ')%()' EOLComment
 	}
 	; should have legit label, but the labelname may change after calling Update_LBL_HK_HS()
 	; ... so, just record the Gosub call for now, with no changes to script
@@ -457,8 +457,8 @@ _IsLabel(p) {
 	return out
 }
 ;################################################################################
-; 2026-09-05 LOCAL: build a v2 string expression from a v1 dynamic label text
-; ('fun_%index_temp%' -> '"fun_" . index_temp') for V1toV2_CallLabel.
+; 2026-09-05 LOCAL: build a v2 name expression from a v1 dynamic label text
+; ('fun_%index_temp%' -> '"fun_" . index_temp') for the %(expr)%() direct call.
 _GosubLabelToExpr(str) {
 	out := '', scanPos := 1
 	while (RegExMatch(str, '%([^%\r\n]+)%', &mVar, scanPos)) {

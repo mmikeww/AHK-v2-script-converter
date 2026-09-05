@@ -12,8 +12,6 @@ global	  gmAhkKeywdsToRename,	gmAhkLoopRegKeywds
 global	gHeadless			:= (IsSet(gHeadless)) ? gHeadless : false				; 2026-09-03 - true = suppress ALL Gui/MsgBox (for CLI/batch use); preserves caller pre-set value
 global	gHeadlessMsgs		:= ''										; 2026-09-03 - headless: collected would-be MsgBox texts
 global	gfUseV1toV2AddrOf	:= false										; 2026-09-05 - emit V1toV2_AddrOf shim (breakage #3: v1 '&var' in ptr args)
-global	gfUseV1toV2MapHelpers := false										; 2026-09-05 - emit V1toV2_MapGet/MapRemove shims (breakage #25)
-global	gfUseV1toV2CallLabel := false										; 2026-09-05 - emit V1toV2_CallLabel shim (breakage #24: dynamic Gosub)
 global	gV1toV2ShimSuffix	:= ''											; 2026-09-05 - per-file shim name suffix (converted outputs are #Include'd together)
 global	gINIFile			:= 'Converter.ini'												; 2026-01-26 - AMB, ADDED to support user interactive settings
 global	gDynDefGuiNm		:= (IsSet(gDynDefGuiNm))										; 2026-03-11 if not already set...
@@ -108,14 +106,12 @@ setGlobals() {																				; for globals that are reset with each new con
 							: gLVNameDefault
 	gTVNameDefault			:= 'TV'
 	gSBNameDefault			:= 'SB'
-	; 2026-09-06 - shim-emission flags are set during line conversion (_Gosub,
-	; FixPtrAddrArgs, FixMapLiterals...) and consumed by AddV1toV2Helpers at the
-	; END of the same conversion. They must reset per conversion like every
-	; other global here - otherwise a flag set by one Convert() call leaks into
-	; the next (unit tests convert many snippets in one process).
+	; 2026-09-06 - shim-emission flags are set during line conversion
+	; (FixPtrAddrArgs...) and consumed by AddV1toV2Helpers at the END of the
+	; same conversion. They must reset per conversion like every other global
+	; here - otherwise a flag set by one Convert() call leaks into the next
+	; (unit tests convert many snippets in one process).
 	gfUseV1toV2AddrOf		:= false
-	gfUseV1toV2MapHelpers	:= false
-	gfUseV1toV2CallLabel	:= false
 	gV1toV2ShimSuffix		:= ''
 	gaFileOpenVars			:= []															; 2025-10-12 - collection of FileOpen object names
 	gaZipTagIDs				:= []															; 2025-11-30 - TagID list for line compression (Zip,Unzip)

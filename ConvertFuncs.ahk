@@ -942,19 +942,24 @@ FixPtrAddrArgs(&code)
    }
 }
 
-; 2026-09-05 LOCAL (breakage #25): a v1 container initialized as an EMPTY object
-; literal ('x := {}') or 'x := Object()' is an associative array. The fork's
-; plain objects have no __Item for dynamic/quoted keys and no .Remove(), so
-; make it a Map and shim the two v1 semantics the converter cannot inline:
-;   'x.Remove(k)'        -> V1toV2_MapRemove(x, k)   (returns removed value or "")
-;   'x[k]' reads         -> V1toV2_MapGet(x, k)      (missing key -> "", not a throw)
+; 2026-09-05 LOCAL (breakage #25), 2026-09-06 REWRITE: a v1 container
+; initialized as an EMPTY object literal ('x := {}') or 'x := Object()' is an
+; associative array. Plain v2 objects have no __Item for dynamic/quoted keys
+; (official Objects.htm - __Item is opt-in), so make it a Map and express the
+; two v1 tolerances with native v2:
+;   'x.Remove(k)'    -> (x.Has(k) ? x.Delete(k) : "")   (missing key -> "")
+;   'x[k]' reads     -> x.Get(k, "")                    (Map.Get default param)
 ; Writes 'x[k] := v' stay as-is (Map item-set). Only vars assigned an empty
-; literal are shimmed - keys of Object(args)/Map(args) constructors usually
+; literal are converted - keys of Object(args)/Map(args) constructors usually
 ; exist, so reads there are left alone.
 FixMapLiterals(&code)
 {
-   global gfUseV1toV2MapHelpers
-   nMapGet := V1toV2ShimName('V1toV2_MapGet'), nMapRm := V1toV2ShimName('V1toV2_MapRemove')
+   ; v1 associative arrays ('x := {}' / 'x := Object()' with dynamic/non-ASCII
+   ; keys) become v2 Map()s (plain Object has no __Item - official v2 semantics,
+   ; Objects.htm). Reads that must not throw on a missing key become
+   ; Map.Get(k, "") (official Map.htm: Get's 2nd param is the default); removes
+   ; that must tolerate a missing key become an inline Has guard. Both are plain
+   ; v2 - no runtime shims needed.
    mapVars := Map()
    pos := 1
    while (pos := RegExMatch(code, 'i)(\b\w+)\h*:=\h*(?:\{\}|\bObject\(\))', &m, pos)) {
@@ -963,15 +968,14 @@ FixMapLiterals(&code)
    }
    for v, _ in mapVars {
       code := RegExReplace(code, 'i)(\b' v '\h*:=\h*)(?:\{\}|\bObject\(\))', '$1Map()')
-      if (RegExMatch(code, 'i)\b' v '\.Remove\(')) {
-         code := RegExReplace(code, 'i)\b' v '\.Remove\(', nMapRm '(' v ', ')
-         gfUseV1toV2MapHelpers := true
-      }
-      nRead := 'i)\b' v '\[([^\][]+)\](?!\h*(?::=|\.=|\+=|-=|\*=|/=|=))'
-      if (RegExMatch(code, nRead)) {
-         code := RegExReplace(code, nRead, nMapGet '(' v ', $1)')
-         gfUseV1toV2MapHelpers := true
-      }
+      ; v1 obj.Remove(key) -> "" for a missing key; v2 Map.Delete throws
+      ; UnsetItemError (Map.htm). Rewrite x.Remove(k) in place to a guarded
+      ; delete - one anchored pass, no placeholder steps.
+      code := RegExReplace(code, 'i)(\b' v ')\.Remove\(([^)\r\n]+)\)'
+         , '(' v '.Has($2) ? ' v '.Delete($2) : "")')
+      ; reads: x[k] (not an assignment LHS) -> x.Get(k, "")
+      code := RegExReplace(code, 'i)(\b' v ')\[([^\][]+)\](?!\h*(?::=|\.=|\+=|-=|\*=|/=|=))'
+         , v '.Get($2, "")')
    }
 }
 
@@ -1091,40 +1095,18 @@ FixReservedVarNames(&code)
 ; helpers are appended to the end of the script.
 AddV1toV2Helpers(code)
 {
-   global gfUseV1toV2AddrOf, gfUseV1toV2MapHelpers, gfUseV1toV2CallLabel
+   global gfUseV1toV2AddrOf
    ; NB: a raw 'space+;' sequence cannot appear in THIS source's strings (fork
    ; comment rule - see FixSemiInStrings), so output comments are built with
    ; Chr(59) concatenation.
    sc := Chr(59)
-   nAddrOf := V1toV2ShimName('V1toV2_AddrOf'), nMapGet := V1toV2ShimName('V1toV2_MapGet'), nMapRm := V1toV2ShimName('V1toV2_MapRemove'), nCallLbl := V1toV2ShimName('V1toV2_CallLabel')
+   nAddrOf := V1toV2ShimName('V1toV2_AddrOf')
    helpers := ''
    if (gfUseV1toV2AddrOf) {
       helpers .= nAddrOf "(v) {                                                    " sc " V1toV2: v1 ampersand-address semantics (string->StrPtr, object->ObjPtr, Buffer->itself)`r`n"
       helpers .= "    If Type(v) = `"Buffer`"`r`n"
       helpers .= "        Return v`r`n"
       helpers .= "    Return IsObject(v) ? ObjPtr(v) : StrPtr(v)`r`n"
-      helpers .= "}`r`n"
-   }
-   if (gfUseV1toV2MapHelpers) {
-      helpers .= nMapGet "(m, k) {                                                  " sc " V1toV2: v1 obj[key] read - missing key yields empty, not a throw`r`n"
-      helpers .= "    Return m.Has(k) ? m[k] : `"`"`r`n"
-      helpers .= "}`r`n"
-      helpers .= nMapRm "(m, k) {                                               " sc " V1toV2: v1 obj.Remove(key) - returns removed value or empty`r`n"
-      helpers .= "    if !m.Has(k)`r`n"
-      helpers .= "        Return `"`"`r`n"
-      helpers .= "    v := m[k], m.Delete(k)`r`n"
-      helpers .= "    Return v`r`n"
-      helpers .= "}`r`n"
-   }
-   if (gfUseV1toV2CallLabel) {
-      helpers .= nCallLbl "(name) {                                               " sc " V1toV2: v1 dynamic Gosub - labels became functions, call when found`r`n"
-      ; fork: Func(name) always throws and IsLabel() does not see converted
-      ; functions - the %(name)% dereference is the only way to resolve a
-      ; function object from a dynamic name; a missing name stays UNSET (the
-      ; Try only protects the assignment expression from a non-string name).
-      helpers .= "    Try fn := %(name)%`r`n"
-      helpers .= "    if IsSet(fn) && fn is Func`r`n"
-      helpers .= "        fn.Call()`r`n"
       helpers .= "}`r`n"
    }
    return (helpers = '') ? code : code '`r`n' helpers

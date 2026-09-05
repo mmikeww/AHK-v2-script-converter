@@ -5167,35 +5167,36 @@ fs := "选择文本" .  A_Now
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
-   CallLabelShimDeref()
+   DynamicGosubDirectCall()
    {
-      ; 2026-09-06 regression (breakage #28): the V1toV2_CallLabel helper
-      ; resolved the dynamic name with Func(name), which ALWAYS throws on the
-      ; fork (too many parameters) - even for an existing function. It must use
-      ; the %(name)% dereference and only call when a Func object came back.
+      ; 2026-09-06 regression (breakage #24/#28): a dynamic Gosub
+      ; ('Gosub, fun_%index%') targets a label that became a function. v2 has no
+      ; Gosub and Func(name) always throws, so the call must go through the
+      ; official v2 double-deref call syntax '%(name-expr)%()' (v2-changes.htm:
+      ; "Function calls now permit virtually any sub-expression for specifying
+      ; which function to call"). No runtime helper is emitted.
       input_script := "
          (Join`r`n
 Gosub, fun_%index%
          )"
       converted := Convert(input_script)
-      ; the helper itself must use the dereference, never Func()
-      Yunit.assert(InStr(converted, "fn := Func(") = 0
-                  , "CallLabel shim must not use Func() (fork: always throws): " converted)
-      Yunit.assert(InStr(converted, "fn := %(name)%") > 0
-                  , "CallLabel shim must resolve via %(name)% dereference: " converted)
-      Yunit.assert(InStr(converted, "IsSet(fn)") > 0
-                  , "CallLabel shim must guard with IsSet(fn): " converted)
+      Yunit.assert(InStr(converted, '%("fun_" . index)%()') > 0
+                  , "dynamic Gosub did not become a %(expr)%() direct call: " converted)
+      Yunit.assert(InStr(converted, "V1toV2_CallLabel") = 0
+                  , "dynamic Gosub must not emit a CallLabel shim: " converted)
+      Yunit.assert(InStr(converted, "Func(") = 0
+                  , "must not emit Func() (always throws): " converted)
    }
 
    IsLabelDerefGuard()
    {
       ; 2026-09-06 regression (breakage #28): v1 'IsLabel(name)' guards a label
-      ; that the label-to-function pass has turned into a FUNCTION. On the fork
-      ; IsLabel() only sees true labels (functions are a separate namespace) and
-      ; Func(name) ALWAYS throws, so the old Func({1}) emission crashed at the
-      ; first dynamic dispatch. Existence must be tested via the %(expr)%
-      ; dereference inside IsSet - it returns UNSET for a missing name and never
-      ; throws when wrapped in IsSet, which keeps the v1 if/else semantics.
+      ; that the label-to-function pass has turned into a FUNCTION. IsLabel()
+      ; only sees true labels (functions are a separate namespace) and Func(name)
+      ; ALWAYS throws, so the old Func({1}) emission crashed at the first dynamic
+      ; dispatch. Existence must be tested via the %(expr)% dereference inside
+      ; IsSet - it returns UNSET for a missing name and never throws when wrapped
+      ; in IsSet, which keeps the v1 if/else semantics.
       input_script := "
          (Join`r`n
 if IsLabel("fun_" index_temp)
@@ -5207,9 +5208,9 @@ Else
       Yunit.assert(InStr(converted, 'if IsSet(%("fun_" index_temp)%)') > 0
                   , "IsLabel did not become an IsSet(%()%) deref guard: " converted)
       Yunit.assert(InStr(converted, "Func(") = 0
-                  , "IsLabel must not emit Func() (fork: always throws): " converted)
-      Yunit.assert(InStr(converted, 'V1toV2_CallLabel_') > 0
-                  , "dynamic Gosub under IsLabel did not become a CallLabel call: " converted)
+                  , "IsLabel must not emit Func() (always throws): " converted)
+      Yunit.assert(InStr(converted, '%("fun_" . index_temp)%()') > 0
+                  , "dynamic Gosub under IsLabel did not become a %(expr)%() call: " converted)
       Yunit.assert(InStr(converted, 'MsgBox("missing")') > 0
                   , "the IsLabel else branch was lost: " converted)
    }

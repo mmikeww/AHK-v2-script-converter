@@ -347,6 +347,12 @@ FinalizeConvert(&code)
       code := FixByRefParams(code)                                                      ; Replace ByRef with & in func declarations and calls - see related fixFuncParams()
    Prog.ULog(,  pp 'Fix Increment/Decrement...'                 )                       ; update UI - current operation
       code := FixIncDec(code)                                                           ; 2025-10-10 AMB, ADDED to cover issue #350
+   Prog.ULog(,  pp 'Fix string + concat...'                     )                       ; 2026-09-05 LOCAL (breakage #11)
+      FixStrPlusConcat(&code)                                                           ; "text"+var -> "text" . var (v2 forbids + after a literal string)
+   Prog.ULog(,  pp 'Fix empty ternary condition...'             )                       ; 2026-09-05 LOCAL (breakage #7)
+      FixEmptyTernaryCond(&code)                                                        ; '() ? a : b' -> '(false) ? a : b'
+   Prog.ULog(,  pp 'Fix empty first param...'                   )                       ; 2026-09-05 LOCAL (breakage #7)
+      FixEmptyFirstParam(&code)                                                         ; 'F(, x)' -> 'F("", x)' (comma hole is a v2 load error)
    Prog.ULog(,  pp 'Remove ComObjMissing...'                    )                       ; update UI - current operation
       code := RemoveComObjMissing(code)                                                 ; Removes ComObjMissing() and variables
    Prog.ULog(,  pp 'Add CB Args for Gui...'                     )                       ; update UI - current operation
@@ -836,6 +842,42 @@ FixDollarVars(&code)
    nDol := '(?<![\w\\])\$([A-Za-z_][A-Za-z0-9_]*)'                                             ; $name in code
    code := RegExReplace(code, nDol, 'Dollar_$1')
    Mask_R(&code, 'C&S', , sess)                                                                ; restore strings & comments
+}
+
+; 2026-09-05 LOCAL (breakage #11): v1 allowed "text"+var (numeric add with a
+; literal string left operand never happened in practice - v2 FORBIDS it at
+; parse time: 'Unexpected operator following literal string'). Rewrite a
+; quoted-string followed by '+' into string concatenation ('.'). Must run on
+; C&S-masked code so only real QS tags (not comments) are rewritten, and after
+; FixIncDec so '++' cases are already resolved. "+=" and "++" are left alone.
+FixStrPlusConcat(&code)
+{
+   nQS  := '\Q' gTagPfx 'QS_' '\E\w+' '\Q' gTagTrl '\E'                                        ; quoted-string mask tag
+   code := RegExReplace(code, '(' nQS ')\h*\+(?![+=])', '$1 . ')
+}
+
+; 2026-09-05 LOCAL (breakage #7): v1 sources may contain '() ? a : b' - an empty
+; ternary condition that is invalid v1 as well (author error) but must not
+; survive as a v2 parse error. Mechanically default the empty condition to
+; 'false' (v1 falsy) and keep the else-branch. (No inline note: the fork's
+; comment rule forbids a literal ' ;' sequence inside this source's strings.)
+FixEmptyTernaryCond(&code)
+{
+   code := RegExReplace(code, '\(\)\h*\?', '(false) ?')
+}
+
+; 2026-09-05 LOCAL (breakage #7): v1 commands with an empty mandatory first
+; param (e.g. 'FileAppend, , file') emitted 'F(, x)' - for v2 functions whose
+; FIRST PARAM IS REQUIRED that comma hole is a LOAD error ('Missing a required
+; parameter', empirically: FileAppend(, "x") fails). Emit an explicit "".
+; A comma hole for an OPTIONAL first param is valid v2 (DirSelect(, 3),
+; MsgBox(, "t", "m"), FormatTime(, "time") all load) and is left untouched -
+; hence the lookup table instead of a blanket rewrite.
+FixEmptyFirstParam(&code)
+{
+   static reqFirst := ["FileAppend"]                       ; v2 builtins: required first param + v1 empty-first-arg form
+   for each, fn in reqFirst
+      code := RegExReplace(code, 'i)(\b' fn '\(\h*),', '$1"",')
 }
 
 ; 2026-09-05 LOCAL (fork rule, breakage #4 follow-up): the fork's comment

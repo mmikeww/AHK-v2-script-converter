@@ -5559,6 +5559,41 @@ y:=2
       Yunit.assert(converted = expected, "converted script != expected script")
    }
 
+   CatchEmptyNoVar()
+   {
+      ; 2026-09-06 regression (arch2-round-3 #13 follow-up): v1 '} catch {}'
+      ; (spaces + empty body) emitted 'Catch Error as {}' - a v2 SYNTAX ERROR
+      ; (official Catch.htm: 'Catch' needs no ErrorClass/OutputVar). A catch
+      ; whose body brace block arrived in the param must keep its braces
+      ; balanced: empty body '{}' -> 'Catch {}' (later split by FixEmptyCatch),
+      ; while '} catch {' + statements on following lines keeps its opening
+      ; brace and body.
+      input_script := "
+         (Join`r`n
+f() {
+	try {
+		x := 1
+	} catch {}
+	return x
+}
+g() {
+	try {
+		x := 1
+	} catch {
+		x := 2
+	}
+	return x
+}
+         )"
+      converted := Convert(input_script)
+      Yunit.assert(InStr(converted, "Catch Error as {}") = 0
+                  , "'catch {}' must not emit 'Catch Error as {}' (v2 syntax error): " converted)
+      Yunit.assert(InStr(converted, "}catch {`r`n	}`r`n	return x") > 0
+                  , "empty 'catch {}' must become a split empty block: " converted)
+      Yunit.assert(InStr(converted, "} Catch {`r`n		x := 2`r`n	}`r`n	return x") > 0
+                  , "'catch {' with a body must keep its body statements: " converted)
+   }
+
    DynMenuName_PlainVar()
    {
       ; 2026-09-03 regression: 'Menu, %mn%, ...' where %mn% is a plain variable name

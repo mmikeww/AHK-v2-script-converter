@@ -14,14 +14,27 @@
 
 ;################################################################################
 _Catch(p) {
-	if (Trim(p[1], '{ `t') = '') {
-		if (InStr(p[1], '{'))
-			return 'Catch {'
+	; 2026-09-06 LOCAL (arch2-round-3 #13 follow-up): v1 '} catch {}' - an empty
+	; catch with NO exception variable whose body is the empty brace block - was
+	; emitting 'Catch Error as {}' (v2 Syntax error; official Catch.htm allows
+	; bare 'Catch' with no ErrorClass/OutputVar). Distinguish the two brace
+	; arrivals in p[1]: '{}' is the COMPLETE empty body (emit it back balanced);
+	; '{' is only the opening brace of a body whose statements follow on later
+	; lines (emit 'Catch {' and let the body/close follow naturally).
+	p1 := Trim(p[1], ' `t')
+	if (p1 = '') {
 		return 'Catch'
-	} if (!InStr(p[1], "Error as")) {
-		return "Catch Error as " p[1]
 	}
-	return "Catch " p[1]
+	if (p1 = '{}' || p1 = '{ }') {
+		return 'Catch {}'
+	}
+	if (p1 = '{') {
+		return 'Catch {'
+	}
+	if (!InStr(p1, "Error as")) {
+		return "Catch Error as " p1
+	}
+	return "Catch " p1
 }
 ;################################################################################
 ; V1: Control, SubCommand, Value, Control, WinTitle, WinText, ExcludeTitle, ExcludeText

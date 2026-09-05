@@ -175,21 +175,28 @@ ToExp(text, valToStr:=false, forceDot:=false)
 	; text has a var - parse to separate string from var
 	; might be cleaner using masking/regex, but this works									; TODO - might update at some point
 	sep		:= (forceDot) ? ' . ' : ' '														; separator - fat-dot for forced str, space otherwise
-	outStr	:= '', prevChar := '', deRef := false
+	outStr	:= '', prevChar := '', deRef := false, escLast := false
 	Loop Parse, text {
 		char := A_LoopField																	; [working var for current char]
-		if (prevChar = '``')																; if current char is escaped...
+		if (prevChar = '``') {																; if current char is escaped...
 			outStr	.= char																	; ... include as is
-		else if (char = '%') {																; if leading or trailing % (for var)
+			escLast	:= true																	; 2026-09-05 LOCAL - remember the char was ESCAPED (see closing quote logic)
+		} else
+			escLast	:= false
+		if (prevChar != '``' && char = '%') {												; if leading or trailing % (for var)
 			if ((deRef := !deRef) && (A_Index != 1))										; if on left side of var (but not first char)...
 				outStr .= '"' . sep															; ... close string and add concat before var
 			else if (!deRef) && (A_Index != StrLen(text))									; if on right side of var, but not last char...
 				outStr .= sep . '"'															; ... add concat to right of var and begin new str
-		} else																				; [char for string portion]
+		} else if (prevChar != '``' && char != '%') {										; [char for string portion]
 			outStr .= (((A_Index=1) ? '"' : '') . char)										; add cur char to str, add lead quote to front as needed
+		}
 		prevChar   := char																	; watch for escape char
 	}
-	if (char != '%')																		; if last char was not a closing % for var
+	if (char != '%' || escLast)																; if last char was not a closing % for var...
+																							; 2026-09-05 LOCAL (breakage #4 family): an ESCAPED '%' at
+																							; line end ('`%') is a literal percent INSIDE the string, not
+																							; a closing deref boundary - the string must still be closed
 		outStr .= '"'																		; ... close string with quote
 
 	outStr := (gV2Conv) ? outStr : '% ' outStr												; add leading % for v1.1 conversions

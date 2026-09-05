@@ -13,12 +13,15 @@ if (A_Args.Length < 2) {
     ExitApp 2
 }
 src := A_Args[1], dst := A_Args[2]
+src := StrReplace(src, '/', '\'), dst := StrReplace(dst, '/', '\')      ; SplitPath parses backslash paths only
 if !FileExist(src) {
     FileAppend("source not found: " src "`n", "*")
     ExitApp 3
 }
+global gFilePath := src                                                  ; shim-name suffix derives from the source file name
 text := FileRead(src)
 out := Convert(text)
+out := NormalizeIncludes(out, src, dst)
 f := FileOpen(dst, "w", "utf-8")
 f.Write(out)
 f.Close()
@@ -32,3 +35,55 @@ if (gHeadlessMsgs != "") {
     FileAppend("NOTICE " RegExReplace(gHeadlessMsgs, "\n---`r?\n.*", "") "`nfull msgs: " msgFile "`n", "*")
 }
 ExitApp 0
+
+;################################################################################
+; 2026-09-05 LOCAL (breakage #9/#10): the conversion core is layout-agnostic,
+; but #Include targets that resolve relative to the SOURCE location
+; (%A_ScriptDir%\.., %A_AhkPath%\..\ tricks, <lib> angle form) break once the
+; output is relocated/flattened. Normalize each include against known places:
+;   <Name>            -> %A_ScriptDir%\Lib\Name.ahk   when <srcDir>\Lib\Name.ahk exists
+;   src-resolvable    -> %A_ScriptDir%\<basename>     (file exists relative to srcDir;
+;                        the caller is responsible for having converted that file)
+;   unresolved        -> %A_ScriptDir%\<basename>     (basename exists next to OUT;
+;                        covers %A_AhkPath%\..\ tricks of installed layouts)
+; '*i' optional-include flags are preserved (re-emitted outside the quotes -
+; the converter wrongly quotes the flag together with the path).
+; Convert the include TARGET first (convert order matters for dependents).
+NormalizeIncludes(code, srcPath, dstPath) {
+    srcPath := StrReplace(srcPath, '/', '\'), dstPath := StrReplace(dstPath, '/', '\')
+    SplitPath(srcPath,, &srcDir)
+    SplitPath(dstPath,, &outDir)
+    outLines := ''
+    for each, line in StrSplit(code, '`n', '`r')
+    {
+        if (RegExMatch(line, 'i)^(\h*#Include(?:Again)?\h+)(.*)$', &m)) {
+            spec := Trim(m[2])
+            flag := ''
+            if (RegExMatch(spec, 'i)^\*i\h*(.*)$', &mi)) {
+                flag := '*i '
+                spec := Trim(mi[1])
+            }
+            spec := StrReplace(spec, '"')
+            target := ''
+            if (SubStr(spec, 1, 1) = '<' && SubStr(spec, -1) = '>') {
+                libName := SubStr(spec, 2, StrLen(spec) - 2)
+                if FileExist(srcDir '\Lib\' libName '.ahk')
+                    target := '%A_ScriptDir%\Lib\' libName '.ahk'
+            } else {
+                resolved := StrReplace(spec, '%A_ScriptDir%', srcDir)
+                if (!InStr(resolved, '%') && FileExist(resolved)) {
+                    SplitPath(resolved, &baseName)
+                    target := '%A_ScriptDir%\' baseName
+                } else {
+                    SplitPath(spec, &baseName2)
+                    if (baseName2 != '' && FileExist(outDir '\' baseName2))
+                        target := '%A_ScriptDir%\' baseName2
+                }
+            }
+            if (target != '')
+                line := '#Include ' flag '"' target '"'
+        }
+        outLines .= line '`r`n'
+    }
+    return RegExReplace(outLines, '\r\n$',,, 1)
+}

@@ -210,14 +210,16 @@ v2_fixElseError(&lineStr, &lineOpen, &lineClose)
 ; TODO - look over, see if improvements can be made
 V2_AssocArr2Map(&lineStr, scriptStr)
 {
-	if (!RegExMatch(lineStr, 'i)^(\h*)((global|local|static)\h+)?([a-z_0-9]+)(\h*:=\h*)(\{[^;]*)$', &m))
+	if (!RegExMatch(lineStr, 'i)^(\h*)((global|local|static)\h+)?([a-z_0-9]+)(\h*:=\h*)(\{[^;]*)$', &m)) {
 		return	; lineStr by reference - make no changes
+	}
 
 	; Only convert to a map if FOR IN statement is found within script, that refers to it
-	if (!RegExMatch(scriptStr, 'im)FOR\h[\h,a-z_0-9]*\hin\h' m[4] '[^.]'))
+	if (!RegExMatch(scriptStr, 'im)FOR\h[\h,a-z_0-9]*\hin\h' m[4] '[^.]')) {
 		return	; lineStr by reference - make no changes
+	}
 
-	if (RegExMatch(lineStr, 'i)(^.*?)\{\h*([^\h:]+?)\h*:\h*([^\,}]*)\h*(.*)', &m)) {
+	if (RegExMatch(lineStr, 'is)(^.*?)\{\h*([^\h:]+?)\h*:\h*([^\,}]*)\h*(.*)', &m)) {
 		lineStrBegin	:= m[1]
 		Key				:= m[2]
 		Key				:= (InStr(Key, '"')) ? Key : ToExp(Key)
@@ -225,7 +227,12 @@ V2_AssocArr2Map(&lineStr, scriptStr)
 		lineStr1		:= lineStrBegin 'map(' Key ', ' Value
 		lineStrRest		:= m[4]
 		loop {
-			if (RegExMatch(lineStrRest, 'i)^\h*,\h*([^\h:]+?|"[^:"]"+?)\h*:\h*([^\},]*)\h*(.*)$', &m)) {
+			; 2026-09-05 LOCAL (arch2 3rd-round #5): continuation lines of a
+			; MULTI-LINE object literal start with '\r\n\t,' - the old needle
+			; only allowed \h before the comma, so every continuation line was
+			; dropped and 'map(...' came out truncated ('reserved word "if"').
+			; \R* now bridges the physical lines.
+			if (RegExMatch(lineStrRest, 'is)^\R*\h*,\h*([^\h:]+?|"[^:"]"+?)\h*:\h*([^\},]*)\h*(.*)$', &m)) {
 				Key			:= m[1]
 				Key			:= (InStr(Key, '"')) ? Key : ToExp(Key)
 				Value		:= m[2]
@@ -233,7 +240,7 @@ V2_AssocArr2Map(&lineStr, scriptStr)
 				lineStrRest	:= m[3]
 			}
 			else {
-				if (RegExMatch(lineStrRest, 'i)^\h*(\})(\h*.*)$', &m)) {
+				if (RegExMatch(lineStrRest, 'is)^\R*\h*(\})(\h*.*)$', &m)) {
 					lineStrRest := ')' M[2]
 				}
 				break
@@ -327,6 +334,7 @@ v2_FixACaret(&lineStr)
 v2_fixObjKeyNames(&lineStr)
 {
 	Mask_T(&lineStr, 'STR')	; must be here to avoid errors with next regex							; don't match false positives (found within strings)
+	; 2026-09-05 LOCAL DEBUG
 	if (!(lineStr ~= gPtn_KVO))	{																	; make sure line has VALID {key:val} object
 		Mask_R(&lineStr, 'STR')																		; cleanup before early exit
 		return	; unchanged lineStr by reference
@@ -335,20 +343,37 @@ v2_fixObjKeyNames(&lineStr)
 	While (pos		:= RegexMatch(lineStr, gPtn_KVO, &mObj, pos)) {									; for each {key:val} object found on current line...
 		kvObj		:= mObj[]																		; [working var]
 		kvPairsList	:= RegExReplace(kvObj, '\{([^}]+)\}', '$1')										; ... strip outer {} from object, now just key:val list sep by commas
+		needMap		:= false																		; 2026-09-05 LOCAL (breakage #6): becomes true when any key is
+																									; not a valid v2 property name (Chinese/unquoted keys) - such
+																									; literals become Map(key, val, ...) with quoted key arguments
 		newObj		:= '{'																			; [will be the new object string]
+		pairs		:=[]
 		for idx, kvPair in StrSplit(kvPairsList, ',') {												; for each key:val pair in list...
 			if (RegExMatch(kvPair, '(?s)^(?<key>[^:]+):(?<val>.+)$', &mKV)) {						; if seems to be properly formatted key:val...
 				; TODO - FOR ANY KEYNAME CHANGES in next line...
 				; ... ADD SUPPORT FOR UPDATING KEYNAME REFERENCES WITHIN CODE
 				val := mKV.val																		; [working var]
 				if((key	:= validKeyName(mKV.key)) = '') {											; make sure key name is valid
-					key	:= mKV.key '_INVALID_KEYNAME'												; TODO - TEMP SOLUTION FOR NOW
+					needMap	:= true
+					key	:= mKV.key																	; keep the ORIGINAL key as a Map() argument - a quoted
+																									; string tag restores as a valid string key; a bare
+																									; non-ASCII key (Chinese etc.) gets quoted below
+					if (!HasTag(key, 'QS') && RegExMatch(key, '[^\x00-\x7F]'))
+						key := '"' Trim(key) '"'													; bare non-ASCII key -> quoted Map key
 				}
+				pairs.Push(key . ', ' . val)
 				kvPair := key ':' val																; reassemble key:val pair with updated key
 			}
 			newObj .= kvPair . ','																	; add updated key:val pair to new object list
 		}
-		newObj	:= RTrim(newObj, ',') . '}'															; remove any trailing comma, and close the object with '}'
+		if (needMap) {
+			newObj := 'Map('																		; invalid keys -> Map constructor (fork plain objects
+			for idx, pr in pairs																	; have no __Item for non-property-name keys)
+				newObj .= pr . ', '
+			newObj := RTrim(newObj, ' ,') . ')'
+		} else {
+			newObj	:= RTrim(newObj, ',') . '}'															; remove any trailing comma, and close the object with '}'
+		}
 		lineStr	:= RegExReplace(lineStr, escRegexChars(kvObj), newObj,, 1, pos)						; update output - replacing old object string with new one
 		pos		+= StrLen(newObj)																	; prep for next loop iteration
 	}
@@ -419,10 +444,13 @@ v2_formatClassProperties(&lineStr)
 ;################################################################################
 ; Purpose: Convert... func.("string") -> func.Call("string")
 ; 2025-06-12 AMB, Moved to dedicated routine for cleaner convert loop
-; TODO - update for more accurate targeting
+; 2026-09-05 LOCAL UPDATED (breakage #17): needle extended to ')(' and '](' so
+;   chained __Call forms like 'JS.("tk").(str)' become 'JS.Call("tk").Call(str)'
+;   (v2 has no '.(' syntax at all - previously the trailing '.(str)' survived
+;   and produced a load error)
 v2_FuncDotStr(&lineStr)
 {
-	nFC := '(\w+)\.\('																				; orig needle - TODO - this should be updated
+	nFC := '(\w+|\)|\])\.\('																			; orig needle - TODO - this should be updated
 	If (!(lineStr ~= nFC))																			; if not a valid target...
 		return	; no change to lineStr																; ... exit
 

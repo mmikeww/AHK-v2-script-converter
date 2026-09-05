@@ -411,7 +411,11 @@ GuiControlConv(p) {
 	global gGuiNameDefault, gGuiActiveFont
 
 	; common to orig, simple, and dynamic handling
-	if (hasTernary(gV1Line))																					; if orig v1 line has ternary expression...
+	; 2026-09-05 LOCAL (breakage #15): only STRUCTURAL params (gui/subCmd/control)
+	; block the conversion. A ternary inside the VALUE param is a legal v2
+	; expression once converted ('GuiControl, Move, Ctrl, % a>b ? c : d' ->
+	; 'ogcCtrl.Move(a>b ? c : d)'), so the whole line must not be skipped.
+	if (hasTernary(p[1]) || hasTernary(p[2]))																; if ternary in gui/subCmd/controlID...
 		return LTrim(gV1Line) . ' `; V1toV2: Ternary not yet supported (coming soon)'							; ... do not process (for now)
 	p1			:= _splitParam(p[1]), SubCommand := p1.subCmd, GuiName := p1.guiName							; get guiName and subCmd from P1
 	ControlID	:= Trim(RTrim(p[2],' :')) ; remove trailing colon from labels									; get ctrlID from P2
@@ -440,6 +444,22 @@ GuiControlConv(p) {
 		; Not perfect, as this should be dependent on the type of control
 
 		if (ctrlType = "ListBox" || ctrlType = "DropDownList" || ctrlType = "ComboBox" || ctrlType = "tab") {
+			; 2026-09-05 LOCAL (arch2 3rd-round #4): a FORCED-EXPRESSION value
+			; ('% StrListJoin("|",List)') must be passed through as the v2
+			; expression - the v1 pipe-separated-LIST arrayization below would
+			; mangle its quotes ('[StrListJoin(", "`",List)]'). v1 list controls
+			; accept an expression as the item list the same way.
+			if (SubStr(Value, 1, 2) = "% ") {
+				return ControlObject ".Add(" ToExp(Value) ")"
+			}
+			; 2026-09-05 LOCAL: forced-expression values lose their '% ' prefix
+			; before reaching here - catch the remaining call-expression form
+			; (a function call, with or without quote literals inside) and pass
+			; it straight through. The pipe-LIST arrayization below only applies
+			; to literal pipe-separated text, never to an expression.
+			if (RegExMatch(Value, '^\s*[A-Za-z_]\w*\s*\(.*\)\s*$')) {
+				return ControlObject ".Add(" Value ")"
+			}
 			PreSelected := ""
 			if (SubStr(Value, 1, 1) = "|") {
 				Value := SubStr(Value, 2)

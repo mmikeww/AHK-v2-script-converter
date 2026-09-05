@@ -121,6 +121,8 @@ Before_LineConverts(&code)
       global gAllClassNames    := getClassNames(code)                                   ; comma-delim stringList of all class names (2025-10-08)
    Prog.ULog(4, pp 'Get V1 Label names...'                          )                   ; update UI - 4% complete
       global gAllV1LabelNames  := getV1LabelNames(code)                                 ; comma-delim stringList of all orig v1 label names
+   Prog.ULog(5, pp 'Get V1 Variable names...'                        )                  ; 2026-09-05 LOCAL (breakage #12)
+      global gAllVarNames      := collectVarNames(code)                                 ; 2026-09-05 - identifiers used as variables (label-turned-function cannot collide)
    Prog.ULog(6, pp 'Get V2 Label names...'                          )                   ; update UI - 6% complete
       global gmAllV2LablNames  := getV2LabelNames(gAllV1LabelNames)                     ; map of v1 label names converted to V2 label/funcNames
    Prog.ULog(7, pp 'Get MenuBar name...'                            )                   ; update UI - 7% complete
@@ -355,6 +357,12 @@ FinalizeConvert(&code)
       FixEmptyFirstParam(&code)                                                         ; 'F(, x)' -> 'F("", x)' (comma hole is a v2 load error)
    Prog.ULog(,  pp 'Fix map literals...'                        )                       ; 2026-09-05 LOCAL (breakage #25)
       FixMapLiterals(&code)                                                             ; '{} / Object() -> Map() + read/remove shims (fork: no __Item)
+   Prog.ULog(,  pp 'Fix chained assignment...'                  )                       ; 2026-09-05 LOCAL (breakage #17)
+      FixChainedAssign(&code)                                                           ; 'a := f() := b' -> 'a := b' (assignment-chain to a call)
+   Prog.ULog(,  pp 'Fix func/var name conflicts...'             )                       ; 2026-09-05 LOCAL (breakage #12)
+      FixFuncVarConflict(&code)                                                         ; func name == variable name -> rename the func
+   Prog.ULog(,  pp 'Fix reserved var names...'                   )                       ; 2026-09-05 LOCAL (breakage #13)
+      FixReservedVarNames(&code)                                                        ; v2 builtin class used as variable -> suffix _v
    Prog.ULog(,  pp 'Remove ComObjMissing...'                    )                       ; update UI - current operation
       code := RemoveComObjMissing(code)                                                 ; Removes ComObjMissing() and variables
    Prog.ULog(,  pp 'Add CB Args for Gui...'                     )                       ; update UI - current operation
@@ -391,6 +399,10 @@ FinalizeConvert(&code)
       Mask_R(&code, 'C&S')                                                              ; ensure all comments/strings are restored (just in case)
    Prog.ULog(,  pp 'Fix semicolons in strings...'                )                      ; 2026-09-05 LOCAL
       FixSemiInStrings(&code)                                                           ; fork: raw ' ;' inside strings starts a comment (see func)
+   Prog.ULog(,  pp 'Fix HotIf in functions...'                   )                      ; 2026-09-05 LOCAL (breakage #16)
+      FixHotIfInFunc(&code)                                                             ; '#HotIf' packaged into a GblCode func -> lift to top level
+   Prog.ULog(,  pp 'Fix leading-digit vars...'                   )                      ; 2026-09-05 LOCAL (breakage #14)
+      FixLeadingDigitVars(&code)                                                        ; '32770Hwnd' -> 'Hwnd32770' (v2 rejects digit-leading names)
    Prog.ULog(,  pp 'Fix ptr addr args...'                       )                       ; 2026-09-05 LOCAL (breakage #3/#18)
       FixPtrAddrArgs(&code)                                                             ; multiline-DllCall '&var' ptr args + missing output '&'
                                                                                          ; NB: must run on RESTORED text - the C&S mask hides the
@@ -890,8 +902,13 @@ FixEmptyFirstParam(&code)
    ; name ('ControlFocus,,ahk_id %hwnd%') emit 'ControlFocus(, x)' - the v2
    ; Control* builtins take the control as their FIRST parameter, where a comma
    ; hole is a runtime 'Missing a required parameter' error. Emit an explicit
-   ; empty control "".
+   ; empty control "". ControlGetPos/ControlMove take the control as their
+   ; SECOND param (after the output vars), so cover that form too.
    code := RegExReplace(code, 'i)(\bControl\w+\(\h*),', '$1"",')
+   ; ControlGetPos/ControlMove: v1 places the control AFTER the four output
+   ; vars - the comma hole just before the WinTitle ('..., &H, , "title"')
+   ; is the same missing required parameter. Patch any empty fifth argument.
+   code := RegExReplace(code, 'i)(\bControl(?:GetPos|Move)\([^,]+,\h*[^,]+,\h*[^,]+,\h*[^,]+),\h*,(?=\h*)', '$1, ""')
 }
 
 ; 2026-09-05 LOCAL (breakage #3/#18): multi-line DllCalls bypass the per-line
@@ -970,6 +987,103 @@ V1toV2ShimName(base)
       gV1toV2ShimSuffix := RegExReplace(nameNoExt, '\W', '_')
    }
    return base '_' gV1toV2ShimSuffix
+}
+
+; 2026-09-05 LOCAL (breakage #17): v1 allowed chained assignment where the
+; MIDDLE operand is a function call on an object with __Set semantics
+; ('_ := JS.(GetJScript()) := JS.("delete ...")'). v2 rejects ':=' chains
+; outright ('Invalid assignment'). The middle call's assignment effect is a
+; v1 __Set side channel the converter cannot reproduce, so the mechanical
+; equivalent keeps the OUTER assignment with the RIGHT operand and notes the
+; dropped middle call. Only fires when the middle operand is a function call;
+; 'a := b := c' (both plain vars) is left untouched.
+FixChainedAssign(&code)
+{
+	sc := Chr(59)																		; ';' - raw ' ;' is illegal in this source's strings (fork rule)
+	code := RegExReplace(code, 'm)(\b\w+\h*:=\h*)([A-Za-z_]\w*\s*\([^;\r\n]*?\)\h*)(:=\h*)(.+)$'
+		, '$1$4 ' sc ' V1toV2: chained assignment to a function call dropped (v1 __Set semantics)')
+}
+
+; 2026-09-05 LOCAL (breakage #16): a top-level v1 '#If <expr>' context section
+; gets packaged into a converter-made 'V1toV2_GblCode_xxx()' function when the
+; label-to-function pass treats it as stray global code. Directives are not
+; statements - '#HotIf' inside a function body is 'Invalid usage' at load.
+; Lift the directive line back out to top level (in front of the function);
+; the emptied function stays behind harmlessly.
+FixHotIfInFunc(&code)
+{
+	pos := 1
+	while (pos := RegExMatch(code, 'm)(^\h*V1toV2_GblCode_\d+\(\)[^\r\n]*\r?\n)(?:global\r?\n)?\h*(#HotIf[^\r\n]*)\r?\n', &m, pos)) {
+		code := SubStr(code, 1, pos-1) . m[2] . '`r`n' . m[1] . SubStr(code, pos + m.Len)
+		pos += StrLen(m[1]) + StrLen(m[2]) + 2
+	}
+}
+
+; 2026-09-05 LOCAL (breakage #14): v2 rejects identifiers beginning with a
+; digit ('This variable name starts with a number'). v1 allowed them. Rename
+; '<digits><name>' to '<name><digits>' (mirror of the golden hand-fix
+; '32770Hwnd' -> 'Hwnd32770') EVERYWHERE - declaration, use, and member
+; access on the renamed object ('Complete32770HwndsObj[32770Hwnd]'). Runs on
+; the restored script so literals/comments are untouched.
+FixLeadingDigitVars(&code)
+{
+	names := Map_I()
+	pos := 1
+	while (pos := RegExMatch(code, 'm)(^|\W)(\d+)([A-Za-z_][A-Za-z0-9_]*)(?=\W|$)', &m, pos)) {
+		oldnm := m[2] . m[3]
+		; 2026-09-05 LOCAL guards: (a) '0x<hex>' literals look like a digit-led
+		; identifier but must stay untouched (EnvUpdate test regression),
+		; (b) tokens right after a quote are inside a string literal.
+		if (oldnm ~= '^0[xX][0-9A-Fa-f]*$' || m[1] = '"') {
+			pos += m.Len
+			continue
+		}
+		newnm := m[3] . m[2]
+		if (!names.Has(oldnm)) {
+			names[oldnm] := true
+			code := RegExReplace(code, '\Q' oldnm '\E', newnm)
+			pos += StrLen(newnm) + 1
+		} else
+			pos += m.Len
+	}
+}
+
+; 2026-09-05 LOCAL (breakage #12): a v1 FUNCTION whose name collides with a
+; variable ('saveFrequency(FrequencyINI,...)' vs the global 'SaveFrequency'
+; ini value) is a v2 load error ('This Func cannot be used as an output
+; variable'). Rename the FUNCTION (definition + call sites - the call form
+; always has '(') to '<name>_Check'; bare variable references (no paren)
+; keep their name. Runs on C&S-masked code so strings/comments are safe.
+FixFuncVarConflict(&code)
+{
+	global gAllVarNames, gmList_LblsToFunc
+	pos := 1
+	while (pos := RegExMatch(code, 'm)^\h*([A-Za-z_]\w*)\h*\([^)\r\n]*\)\h*\{', &m, pos)) {
+		fn := m[1]
+		if (gAllVarNames.Has(fn) && !gmList_LblsToFunc.Has(fn)) {
+			code := RegExReplace(code, 'i)\b' fn '\s*\(', fn '_Check(')
+			pos := 1
+			continue
+		}
+		pos += m.Len
+	}
+}
+
+; 2026-09-05 LOCAL (breakage #13): v2 builtin CLASS names that v1 code may
+; freely use as variables ('Array := StrSplit(...)' -> load error 'This Class
+; cannot be used as an output variable'). Rename the variable (assignment LHS
+; plus bare references) to '<name>_v'; builtin CALLS 'Array(...)' keep their
+; name. Runs on C&S-masked code so strings/comments are untouched.
+FixReservedVarNames(&code)
+{
+	static cls := '|Array|Buffer|File|Func|BoundFunc|Object|Map|OrderedMap|Menu|MenuBar|Gui|InputHook|Hotkey|Hotstring|ComValue|RegExMatchInfo|Error|TypeError|ValueError|ZeroDivisionError|MemberError|PropertyError|TargetError|OSError|TimeoutError|UnsetError|UnsetItemError|UnsetPropError|MaxParamsError|MethodError|MinParamsError|TooManyActualParamsError|TooFewActualParamsError|TypeMismatchError|InvalidThisError|UnexpectedElementError|InternalError|CustomError|Enumerator|Trace'
+	for each, nm in StrSplit(cls, '|') {
+		if (nm = '')
+			continue
+		if (!RegExMatch(code, 'mi)(^|\W)' nm '\h*:=', &m))					; only when used as an assignment LHS
+			continue
+		code := RegExReplace(code, 'i)(?<!\w)' nm '\b(?!\s*\()', nm '_v')		; bare references only - CALLS 'Name(...)' keep their name
+	}
 }
 
 ; 2026-09-05 LOCAL: prepend the runtime shims flagged during conversion. v2

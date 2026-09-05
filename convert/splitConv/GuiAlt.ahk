@@ -5,7 +5,12 @@ global gV1GuiLine := unset
 ; 2026-03-29 AMB, UPDATED to allow tracking of v1 orig gui line contents
 GuiAlt(p)
 {
-	if (hasTernary(gV1Line))																; if line has ternary expression
+	; 2026-09-05 LOCAL (breakage #15 family): a ternary in the GUI/VALUE params is
+	; a legal v2 expression once inlined ('Gui, X:Add, Edit, vV, % a ? b : c' ->
+	; 'X.Add("Edit", "vV", a ? b : c)'). Only a ternary in a STRUCTURAL param
+	; (the Gui name/sub-command, or the control TYPE) still defeats the
+	; converter. RunAny runany_full 7526 (Gui Add ternary) regression.
+	if (hasTernary(p[1]) || hasTernary(p[2]))												; if ternary in gui/subCmd or ctrlType...
 		return LTrim(gV1Line) ' `; V1toV2: Ternary not yet supported (coming soon)'			; ... SKIP it for now
 	global gV1GuiLine																		; provides access to details about current v1 script gui line
 	gV1GuiLine	:= clsGuiLine(p)															; perform pre-processing of current gui line
@@ -1225,6 +1230,15 @@ class clsGuiCtrl
 			this._v2CtrlMsg := ' `; V1toV2: Ensure ' p2 ' has correct choose value'			; ... msg will be added to output later
 			return
 		}
+		; 2026-09-05 LOCAL (arch2 3rd-round #4): a FORCED-EXPRESSION list
+		; ('% StrListJoin("|",List)' / '% ArrayToList(...)') is a single pipe-less
+		; expression. The pipe-splitting below would mangle its string literals
+		; ('[StrListJoin(", "`",List)]'). Pass the expression straight through -
+		; v1 list controls accept an expression as the item list.
+		if (SubStr(Trim(p4), 1, 2) = "% " || RegExMatch(Trim(p4), '^\s*[A-Za-z_]\w*\s*\(.*\)\s*$')) {
+			this._p4Str := ToExp(Trim(p4))
+			return
+		}
 		; v2 uses ChooseN for selection
 		if (InStr(p3, 'Choose'))															; if p3 already includes "choose"... (RARE)
 			p4 := RegexReplace(p4, '\|+', '|')												; ... replace all pipe groups (TODO - this breaks empty choices?)
@@ -1559,7 +1573,11 @@ class clsExtract
 	; TODO - DOES NOT support quoted strings as part of expression chain
 	Static ExtXYWH(srcStr)
 	{
-		nLeft := '(?i)(?<=\h|")', nVarChain := '"\h+((\h+|\w+|[-.+*/\\,)(\[\]])+)'
+		; 2026-09-05 LOCAL (breakage #15): the chain class now includes comparison
+		; and ternary characters ('?', ':', '>', '<', '=', '!', '&', '|', '~') -
+		; 'GuiControl, Move, Ctrl, % "h" a*b*((c>d ? e : f)-1)' was previously
+		; truncated at the ' > ' and emitted a broken v2 Move() call.
+		nLeft := '(?i)(?<=\h|")', nVarChain := '"\h+((\h+|\w+|[-.+*/\\,)(\[\]?:><=!&|~])+)'
 		X := Y := W := H := '', V := srcStr
 		if (pos := RegExMatch(V,nLeft 'X' nVarChain, &mV))
 			X := mV[1], V := RegExReplace(V, escRegexChars(X),,,1,pos)

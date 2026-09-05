@@ -113,6 +113,13 @@ class CSect
 	; that gets an LF join from its predecessor (2 when seg 1 is lead text, else 1).
 	Static SegExprFromText(allTxt, firstIsLead := false)
 	{
+		; 2026-09-05 LOCAL: the source text may arrive with C&S-masked string
+		; tags (lines containing quote literals get their strings masked before
+		; the command conversion). Restore them FIRST so the per-line '"' ->
+		; `" escaping below actually sees the quote characters - otherwise the
+		; restored literal quotes end up unescaped inside the emitted v2 string
+		; (runany_full EverythingCheck template: 'ev.SetSearch("RunAny")').
+		Mask_R(&allTxt, 'C&S', false)
 		; normalize line endings, drop trailing blank line
 		allTxt := StrReplace(allTxt, "`r`n", "`n")
 		allTxt := RegExReplace(allTxt, '\n\s*$', '')
@@ -120,7 +127,9 @@ class CSect
 		For each, ln in StrSplit(allTxt, "`n") {
 			; split each line into quoted text and %var% concat operands
 			work := StrReplace(ln, '"', '``"')													; v2 string content: escape raw DQ (v1 CS treats them literally)
-			nVar := '%([^%\r\n]+)%'
+			nVar := '(?<!``)%([^%\r\n]+)%'														; 2026-09-05 LOCAL: '`%' is an ESCAPED literal percent in v1 -
+																								; '`%val%' in a generated-script template must stay literal text
+																								; (runany_full EverythingCheck template), not become a deref
 			out := ""
 			scanPos := 1
 			While (RegExMatch(work, nVar, &mVar, scanPos)) {
@@ -347,6 +356,7 @@ addContsToLine(&curLine, &EOLComment)
 		;	if so, add each cont line to the working var, which will then...
 		;	... be added to curLine (and returned)
 		; cont can start with any of [ comma, dot, ?, :, &&, ||, AND, OR ]
+		; 2026-09-05 LOCAL DEBUG - log the next-line candidates we consider
 		if (nextLine ~= '(?i)^(?:[,.?]|:(?!:)|\|\||&&|AND|OR)')								; valid continuation chars
 		{
 			; 2025-05-24 Banaanae, ADDED for fix #296

@@ -1089,11 +1089,55 @@ getV1LabelNames(code)
 ;	... now uses v1 labelNamelist created with getV1LabelNames(), as source
 getV2LabelNames(v1LabelNameList)
 {
+	; 2026-09-05 LOCAL (breakage #12): v2 forbids a function and a global
+	; variable from sharing a name. v1 tolerated a label and a variable with
+	; the same identifier (e.g. SearchBar's 'Auto_Reload_MTime' is BOTH the
+	; millisecond ini value AND the reload label). When the label-turned-
+	; function name collides with a known variable, rename the FUNCTION to
+	; '<name>_Check' (mirror of the golden hand-fix naming); every reference
+	; goes through getV2Name() so the rename propagates everywhere.
+	global gAllVarNames
 	labelMap := Map_I(), corrections := ''
 	for idx, v1Name in StrSplit(v1LabelNameList,',') {										; for each v1 label name...
-		labelMap[v1Name] := validV2LabelName(v1Name ':',0)									; ... ensure a valid v2 label/funcName
+		newName	:= validV2LabelName(v1Name ':',0)											; ... ensure a valid v2 label/funcName
+		if (gAllVarNames.Has(newName) && !labelMap.Has(v1Name)) {
+			base := newName . '_Check'
+			cnt  := 1
+			while (gAllVarNames.Has(base) || labelMap.Has(base)) {
+				cnt++, base := newName . '_Check_' cnt
+			}
+			newName	:= base
+		}
+		labelMap[v1Name] := newName
 	}
 	return labelMap
+}
+;################################################################################
+; 2026-09-05 LOCAL (breakage #12): collect identifiers used as variables.
+; A label-turned-function may not share a name with a global variable in v2,
+; so the label pass needs to know every variable name in the script. Heuristic
+; but conservative: assignment LHS (:= and legacy =), global/local/static
+; declarations, and v1 command output params (first comma arg of IniRead,
+; RegRead, FileGetTime, ...).
+collectVarNames(code)
+{
+	vars := Map_I()
+	for idx, line in StrSplit(code, '`n', '`r') {
+		if (RegExMatch(line, 'i)^\s*(?:global|local|static)\h+(.+)$', &mDec)) {
+			for each, nm in StrSplit(mDec[1], ',') {
+				nm := Trim(RegExReplace(nm, '\s*:?=.*$'))
+				if (RegExMatch(nm, '^\w+$'))
+					vars[nm] := true
+			}
+		} else if (RegExMatch(line, 'i)^\s*(\w+)\h*(?::?=)\h*(?!.*:=)', &mA)) {
+			; assignment LHS - but skip 'label:' and 'func()' declarations
+			if (!RegExMatch(line, 'i)^\s*(\w+)\h*:\s*$') && !RegExMatch(line, 'i)^\s*(\w+)\h*\('))
+				vars[mA[1]] := true
+		} else if (RegExMatch(line, 'i)^\s*(?:IniRead|RegRead|FileGetTime|FileGetSize|FileGetVersion|FileGetAttrib|FormatTime|WinGetTitle|WinGetClass)\h*,\h*(\w+)', &mO)) {
+			vars[mO[1]] := true
+		}
+	}
+	return vars
 }
 ;################################################################################
 ; Moves labels to their own line...

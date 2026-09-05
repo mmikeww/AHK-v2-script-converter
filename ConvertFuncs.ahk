@@ -381,6 +381,8 @@ FinalizeConvert(&code)
       FixDollarVars(&code)                                                               ; $var -> Dollar_var (illegal in v2)
    Prog.ULog(90,pp 'Restore Comments/Strings...'                )                       ; update UI - current operation - 90% complete
       Mask_R(&code, 'C&S')                                                              ; ensure all comments/strings are restored (just in case)
+   Prog.ULog(,  pp 'Fix semicolons in strings...'                )                      ; 2026-09-05 LOCAL
+      FixSemiInStrings(&code)                                                           ; fork: raw ' ;' inside strings starts a comment (see func)
 
    return                                                                               ; code by reference
 }
@@ -834,4 +836,50 @@ FixDollarVars(&code)
    nDol := '(?<![\w\\])\$([A-Za-z_][A-Za-z0-9_]*)'                                             ; $name in code
    code := RegExReplace(code, nDol, 'Dollar_$1')
    Mask_R(&code, 'C&S', , sess)                                                                ; restore strings & comments
+}
+
+; 2026-09-05 LOCAL (fork rule, breakage #4 follow-up): the fork's comment
+; preprocessing is NOT string-aware - a raw space or tab immediately before ';'
+; starts a comment EVEN INSIDE a quoted string, truncating it
+; (x := "a ; b"  ->  Missing """ at runtime/load). Escape the whitespace with
+; `s / `t so the ';' is not preceded by raw whitespace; runtime content is
+; unchanged because the escapes decode to the same whitespace character.
+; Line-wise char scan: state machine over " and ' strings with ` escapes.
+; Strings never span lines outside continuation sections, and CS content is
+; literal by definition (no comment stripping there), so per-line reset is safe.
+FixSemiInStrings(&code)
+{
+   out := ''
+   for each, line in StrSplit(code, '`n', '`r')
+   {
+      newLine := '', inStr := '', esc := false, prev := ''
+      loop parse line
+      {
+         ch := A_LoopField
+         if (esc) {
+            esc := false, newLine .= ch, prev := ch
+            continue
+         }
+         if (inStr && ch = '``') {
+            esc := true, newLine .= ch, prev := ch
+            continue
+         }
+         if (inStr && ch = inStr) {
+            inStr := '', newLine .= ch, prev := ch
+            continue
+         }
+         if (!inStr && (ch = '"' || ch = "'")) {
+            inStr := ch, newLine .= ch, prev := ch
+            continue
+         }
+         if (inStr && ch = ';' && (prev = ' ' || prev = A_Tab)) {
+            newLine := SubStr(newLine, 1, StrLen(newLine)-1) . ((prev = ' ') ? '``s' : '``t') . ch
+            prev := ch
+            continue
+         }
+         newLine .= ch, prev := ch
+      }
+      out .= newLine '`r`n'
+   }
+   code := RegExReplace(out, '\r\n$',,,1)
 }

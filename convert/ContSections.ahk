@@ -71,7 +71,9 @@ class CSect
 			; quoted "..." segment and the segments are joined by adjacent-string concat
 			; (newline between segments). %var% tokens become unquoted concat operands.
 			if (RegExMatch(srcStr, 'is)^(?<lead>[^\v(]+)\R\h*(?<blk>\(.*\)\s*$)', &mLd)
-			&& Trim(mLd.lead) != '') {
+			&& Trim(mLd.lead) != ''
+			&& !RegExMatch(Trim(mLd.lead), '[,%]$')) {										; 2026-09-05 LOCAL: a lead ending in , or % is a
+																								; command line (e.g. 'FileAppend,'), not text to quote
 				leadTxt := Trim(mLd.lead, " `t")
 				if (RegExMatch(mLd.blk, '(?s)^\(\h*\R(.*?)\)\s*$', &mG)) {
 					allTxt := leadTxt . "`n" . mG[1]											; merge lead + block guts

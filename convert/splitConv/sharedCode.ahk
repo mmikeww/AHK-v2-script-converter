@@ -771,7 +771,20 @@ FixByRefParams(code) {
 			else if (brMapObj[A_Index]														; if current param is BYREF...
 			 && !IsNumber(cParam)															; ... 2025-11-28 ADDED - and not a number...
 			 && !InStr(cParam, 'THIS.')) {													; ... 2025-11-28 ADDED - and not this.X...  (just in case)
-				cParam := '&' . RegExReplace(cParam,'i)^ByRef ')							; ...	update current param by adding &, remove ByRef
+				; 2026-09-05 LOCAL fix (breakage #1): v1 silently passes literals/expressions
+				; by value to ByRef params, but v2 requires a VarRef. Adding '&' to anything
+				; that is not a plain variable emitted illegal v2 (e.g. f(&"literal") ->
+				; "&" requires a variable). Plain identifiers keep the direct &var form
+				; (covers ByRef-prefixed declaration params too); anything else (string
+				; literals, concat exprs, already-& args are left untouched) becomes a
+				; temp-VarRef assignment, matching the obj.prop branch above.
+				cleanParam := RegExReplace(cParam, 'i)^ByRef\s+')							; declaration params arrive as 'ByRef name'
+				if (SubStr(LTrim(cleanParam), 1, 1) = '&')									; arg already a VarRef - keep as-is
+					cParam := cleanParam
+				else if (RegExMatch(cleanParam, '^(?i)[_a-z]\w*$'))							; plain variable (or decl param) - direct VarRef
+					cParam := '&' cleanParam
+				else																		; literal/expression - temp-VarRef preserves v1 by-value semantics
+					cParam := '&v2Param' A_Index ':=' cleanParam
 			}
 			cParam		:= pLWS . cParam . pTWS												; update  current param with lead/trail WS
 			;params		:= RegExReplace(params,escRegexChars(oParam),cParam,,1,pos2)		; replace current param with updated one

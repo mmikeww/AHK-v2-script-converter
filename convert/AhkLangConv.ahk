@@ -929,11 +929,27 @@ _NumGet(p) {
 	if (p[2] = "" && p[3] = "") {
 		p[2] := '"UPtr"'
 	}
-	if (p[3] = "" && InStr(p[2],"A_PtrSize")) {
+	; 2026-09-05 LOCAL fix (breakage #2 family): v1 2-param mode 'NumGet(Var, x)' -
+	; x is Type only if it is a quoted numeric-type token, otherwise it is an OFFSET
+	; expression (v1 docs: 'If only two parameters are present, the second can be
+	; either Offset or Type'). The old InStr(p[2],"A_PtrSize") hack only caught one
+	; offset form and left generic offsets as a v2 2-param Type (runtime error).
+	if (p[3] = "" && !_IsNumTypeToken(p[2])) {
 		p[3] := '"UPtr"'
 	}
 	Out		:= "NumGet(" P[1] ", " p[2] ", " p[3] ")"
 	Return	RegExReplace(Out, "[\s\,]*\)$", ")")
+}
+;################################################################################
+; 2026-09-05 LOCAL: shared helper - is s a quoted v1 numeric-type token?
+; (v1 types: U/Int64/Int/Short/UShort/Char/UChar/Double/Float/Ptr, optional *)
+; Used by _NumPut/_NumGet to disambiguate v1 'Type in Offset position' 3-param mode
+; from real Offset expressions (e.g. A_PtrSize, 2*A_PtrSize, A_Index-1).
+_IsNumTypeToken(s) {
+	s := Trim(s)
+	if (SubStr(s, 1, 1) != "`"" || SubStr(s, -1) != "`"")
+		return false
+	return RegExMatch(SubStr(s, 2, StrLen(s) - 2), "i)^[su]?(Int64|Int|Short|UShort|Char|UChar|Double|Float|Ptr)\*?$") > 0
 }
 ;################################################################################
 ; V1: NumPut(Number,VarOrAddress,Offset,Type)
@@ -962,12 +978,12 @@ _NumPut(p) {
 			if (P[3] = "") {
 				OffSet := ""
 				Type := "`"UPtr`""
-			} else if (IsInteger(p[3])) {
-				OffSet := p[3]
-				Type := "`"UPtr`""
-			} else {
+			} else if (_IsNumTypeToken(p[3])) {
 				OffSet := ""
 				Type := p[3]
+			} else {
+				OffSet := p[3]
+				Type := "`"UPtr`""
 			}
 		} else {
 			OffSet := p[3]
@@ -998,12 +1014,18 @@ _NumPut(p) {
 		if (P[3] = "") {
 			OffSet := ""
 			Type := "`"UPtr`""
-		} else if (IsInteger(p[3])) {
-			OffSet := p[3]
-			Type := "`"UPtr`""
-		} else {
+		} else if (_IsNumTypeToken(p[3])) {
+			; 2026-09-05 LOCAL fix (breakage #2): v1 3-param mode - third param is
+			; Type only when it is a quoted numeric-type token (v1 docs: 'If only
+			; three parameters are present, the third parameter can be either
+			; Offset or Type'). Offset EXPRESSIONS (A_PtrSize, 2*A_PtrSize, ...)
+			; were previously misfiled as Type, rotating the arg order and emitting
+			; invalid v2 (NumPut(A_PtrSize, SizeInBytes, CopyDataStruct)).
 			OffSet := ""
 			Type := p[3]
+		} else {
+			OffSet := p[3]
+			Type := "`"UPtr`""
 		}
 		} else {
 		OffSet := p[3]

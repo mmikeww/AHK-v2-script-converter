@@ -353,6 +353,8 @@ FinalizeConvert(&code)
       FixEmptyTernaryCond(&code)                                                        ; '() ? a : b' -> '(false) ? a : b'
    Prog.ULog(,  pp 'Fix empty first param...'                   )                       ; 2026-09-05 LOCAL (breakage #7)
       FixEmptyFirstParam(&code)                                                         ; 'F(, x)' -> 'F("", x)' (comma hole is a v2 load error)
+   Prog.ULog(,  pp 'Fix map literals...'                        )                       ; 2026-09-05 LOCAL (breakage #25)
+      FixMapLiterals(&code)                                                             ; '{} / Object() -> Map() + read/remove shims (fork: no __Item)
    Prog.ULog(,  pp 'Remove ComObjMissing...'                    )                       ; update UI - current operation
       code := RemoveComObjMissing(code)                                                 ; Removes ComObjMissing() and variables
    Prog.ULog(,  pp 'Add CB Args for Gui...'                     )                       ; update UI - current operation
@@ -389,6 +391,12 @@ FinalizeConvert(&code)
       Mask_R(&code, 'C&S')                                                              ; ensure all comments/strings are restored (just in case)
    Prog.ULog(,  pp 'Fix semicolons in strings...'                )                      ; 2026-09-05 LOCAL
       FixSemiInStrings(&code)                                                           ; fork: raw ' ;' inside strings starts a comment (see func)
+   Prog.ULog(,  pp 'Fix ptr addr args...'                       )                       ; 2026-09-05 LOCAL (breakage #3/#18)
+      FixPtrAddrArgs(&code)                                                             ; multiline-DllCall '&var' ptr args + missing output '&'
+                                                                                         ; NB: must run on RESTORED text - the C&S mask hides the
+                                                                                         ; quoted type strings ('"ptr"') this sweep matches.
+   Prog.ULog(,  pp 'Add V1toV2 helpers...'                       )                      ; 2026-09-05 LOCAL
+      code := AddV1toV2Helpers(code)                                                    ; prepend shim funcs flagged during conversion
 
    return                                                                               ; code by reference
 }
@@ -878,6 +886,100 @@ FixEmptyFirstParam(&code)
    static reqFirst := ["FileAppend"]                       ; v2 builtins: required first param + v1 empty-first-arg form
    for each, fn in reqFirst
       code := RegExReplace(code, 'i)(\b' fn '\(\h*),', '$1"",')
+}
+
+; 2026-09-05 LOCAL (breakage #3/#18): multi-line DllCalls bypass the per-line
+; _DllCall converter (they are masked as multi-line paren blocks), so their
+; '&var' value args and bare '*'-type output vars are emitted verbatim. Sweep
+; the whole C&S-masked script for the two argument shapes:
+;   "ptr"/"uptr", &var   -> V1toV2_AddrOf(var)   (v1 '&' address semantics;
+;          VarSetCapacity-converted vars are already handled by FixVarSetCapacity)
+;   "type*",  var        -> "type*", &var        (output param needs a VarRef;
+;          empirically the fork accepts a VarRef to a not-yet-assigned variable)
+FixPtrAddrArgs(&code)
+{
+   global gfUseV1toV2AddrOf, gmVarSetCapacityMap
+   pos := 1
+   while (pos := RegExMatch(code, 'i)("?\b(?:u?)ptr"?\h*,\h*)&(\w+)', &m, pos)) {
+      if (!gmVarSetCapacityMap.Has(m[2])) {
+         repl := m[1] 'V1toV2_AddrOf(' m[2] ')'          ; m[1] already includes ', '
+         code := SubStr(code, 1, pos-1) repl SubStr(code, pos + m.Len)
+         gfUseV1toV2AddrOf := true
+         pos += StrLen(repl)
+      } else {
+         pos += m.Len
+      }
+   }
+   pos := 1
+   while (pos := RegExMatch(code, 'i)("\w+\*")(\h*,\h*)(?=[a-z_])(\w+)(?<!&)(?!\h*(?::=|\.=|\+=))', &m, pos)) {
+      repl := m[1] m[2] '&' m[3]
+      code := SubStr(code, 1, pos-1) repl SubStr(code, pos + m.Len)
+      pos += StrLen(repl)
+   }
+}
+
+; 2026-09-05 LOCAL (breakage #25): a v1 container initialized as an EMPTY object
+; literal ('x := {}') or 'x := Object()' is an associative array. The fork's
+; plain objects have no __Item for dynamic/quoted keys and no .Remove(), so
+; make it a Map and shim the two v1 semantics the converter cannot inline:
+;   'x.Remove(k)'        -> V1toV2_MapRemove(x, k)   (returns removed value or "")
+;   'x[k]' reads         -> V1toV2_MapGet(x, k)      (missing key -> "", not a throw)
+; Writes 'x[k] := v' stay as-is (Map item-set). Only vars assigned an empty
+; literal are shimmed - keys of Object(args)/Map(args) constructors usually
+; exist, so reads there are left alone.
+FixMapLiterals(&code)
+{
+   global gfUseV1toV2MapHelpers
+   mapVars := Map()
+   pos := 1
+   while (pos := RegExMatch(code, 'i)(\b\w+)\h*:=\h*(?:\{\}|\bObject\(\))', &m, pos)) {
+      mapVars[m[1]] := true
+      pos += m.Len
+   }
+   for v, _ in mapVars {
+      code := RegExReplace(code, 'i)(\b' v '\h*:=\h*)(?:\{\}|\bObject\(\))', '$1Map()')
+      if (RegExMatch(code, 'i)\b' v '\.Remove\(')) {
+         code := RegExReplace(code, 'i)\b' v '\.Remove\(', 'V1toV2_MapRemove(' v ', ')
+         gfUseV1toV2MapHelpers := true
+      }
+      nRead := 'i)\b' v '\[([^\][]+)\](?!\h*(?::=|\.=|\+=|-=|\*=|/=|=))'
+      if (RegExMatch(code, nRead)) {
+         code := RegExReplace(code, nRead, 'V1toV2_MapGet(' v ', $1)')
+         gfUseV1toV2MapHelpers := true
+      }
+   }
+}
+
+; 2026-09-05 LOCAL: prepend the runtime shims flagged during conversion. v2
+; function definitions are global at load time regardless of position, so the
+; helpers are appended to the end of the script.
+AddV1toV2Helpers(code)
+{
+   global gfUseV1toV2AddrOf, gfUseV1toV2MapHelpers
+   ; NB: a raw 'space+;' sequence cannot appear in THIS source's strings (fork
+   ; comment rule - see FixSemiInStrings), so output comments are built with
+   ; Chr(59) concatenation.
+   sc := Chr(59)
+   helpers := ''
+   if (gfUseV1toV2AddrOf) {
+      helpers .= "V1toV2_AddrOf(v) {                                                    " sc " V1toV2: v1 ampersand-address semantics (string->StrPtr, object->ObjPtr, Buffer->itself)`r`n"
+      helpers .= "    If Type(v) = `"Buffer`"`r`n"
+      helpers .= "        Return v`r`n"
+      helpers .= "    Return IsObject(v) ? ObjPtr(v) : StrPtr(v)`r`n"
+      helpers .= "}`r`n"
+   }
+   if (gfUseV1toV2MapHelpers) {
+      helpers .= "V1toV2_MapGet(m, k) {                                                  " sc " V1toV2: v1 obj[key] read - missing key yields empty, not a throw`r`n"
+      helpers .= "    Return m.Has(k) ? m[k] : `"`"`r`n"
+      helpers .= "}`r`n"
+      helpers .= "V1toV2_MapRemove(m, k) {                                               " sc " V1toV2: v1 obj.Remove(key) - returns removed value or empty`r`n"
+      helpers .= "    if !m.Has(k)`r`n"
+      helpers .= "        Return `"`"`r`n"
+      helpers .= "    v := m[k], m.Delete(k)`r`n"
+      helpers .= "    Return v`r`n"
+      helpers .= "}`r`n"
+   }
+   return (helpers = '') ? code : code '`r`n' helpers
 }
 
 ; 2026-09-05 LOCAL (fork rule, breakage #4 follow-up): the fork's comment

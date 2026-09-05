@@ -11,6 +11,8 @@ global	  gmAhkKeywdsToRename,	gmAhkLoopRegKeywds
 		, gmAhkFuncsToConvert,	gmAhkMethsToConvert, gmAhkArrMethsToConvert
 global	gHeadless			:= (IsSet(gHeadless)) ? gHeadless : false				; 2026-09-03 - true = suppress ALL Gui/MsgBox (for CLI/batch use); preserves caller pre-set value
 global	gHeadlessMsgs		:= ''										; 2026-09-03 - headless: collected would-be MsgBox texts
+global	gfUseV1toV2AddrOf	:= false										; 2026-09-05 - emit V1toV2_AddrOf shim (breakage #3: v1 '&var' in ptr args)
+global	gfUseV1toV2MapHelpers := false										; 2026-09-05 - emit V1toV2_MapGet/MapRemove shims (breakage #25)
 global	gINIFile			:= 'Converter.ini'												; 2026-01-26 - AMB, ADDED to support user interactive settings
 global	gDynDefGuiNm		:= (IsSet(gDynDefGuiNm))										; 2026-03-11 if not already set...
 							?  gDynDefGuiNm : 'nnGui'										; ... set as needed

@@ -690,18 +690,29 @@ FixVarSetCapacity(ScriptString) {
 	retScript := ""
 	loop parse ScriptString, "`n", "`r" {
 		Line := A_LoopField
-		StrReplace(Line, "&",,, &ReplacementCount)
-		Loop (ReplacementCount) {
-			if (RegExMatch(Line, "(?<!VarSetStrCapacity\()(?<=\W)&(\w+)", &match))
-				&& !RegExMatch(Line, "^\s*;") {
-				for vName, vType in gmVarSetCapacityMap {
-					if (vName = match[1]) {
-						if (vType = "B")
-							Line := StrReplace(Line, "&" match[1], match[1] ".Ptr")
-						else if (vType = "V")
-							Line := StrReplace(Line, "&" match[1], "StrPtr(" match[1] ")")
-					}
+		if (RegExMatch(Line, "i)^\h*;"))										; skip comment lines
+			continue
+		; 2026-09-05 LOCAL fix: advance past each '&var' examined. The old
+		; ReplacementCount loop re-matched the FIRST '&' of the line every
+		; iteration, so on lines holding several '&var' args (e.g. multi-line
+		; DllCall continuations like ',"ptr",&Object,"ptr",&_clsid') only the
+		; first was ever considered and later known-buffer vars were never
+		; rewritten (breakage #3 residue in RunAny_ObjReg).
+		pos := 1
+		while (pos := RegExMatch(Line, "(?<!VarSetStrCapacity\()(?<=\W)&(\w+)", &match, pos)) {
+			mStart := pos
+			repl := ""
+			for vName, vType in gmVarSetCapacityMap {
+				if (vName = match[1]) {
+					repl := (vType = "B") ? match[1] ".Ptr" : "StrPtr(" match[1] ")"
+					break
 				}
+			}
+			if (repl != "") {
+				Line := StrReplace(Line, "&" match[1], repl,,, 1)
+				pos := mStart + StrLen(repl)
+			} else {
+				pos := mStart + StrLen(match[])									; unknown var - skip past this '&'
 			}
 		}
 		retScript .= Line "`r`n"

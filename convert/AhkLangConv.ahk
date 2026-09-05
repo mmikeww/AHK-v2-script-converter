@@ -144,7 +144,7 @@ _Drive(p) {
 ; 2026-04-06 AMB, UPDATED - to fix #370
 _DllCall(p) {
 	ParBuffer := ""
-	global gfLockGlbVars, gEOLComment_Func
+	global gfLockGlbVars, gEOLComment_Func, gmVarSetCapacityMap, gfUseV1toV2AddrOf
 	loop p.Length {
 		nPType := "i)^U?(Str|AStr|WStr|Int64|Int|Short|Char|Float|Double|Ptr)P?\*?$"
 		; 2026-09-03 LOCAL: v1 type-abbreviation variables used in place of a type string
@@ -165,6 +165,20 @@ _DllCall(p) {
 		if (p[A_Index] ~= nPType) {
 			; Correction of old v1 DllCalls who forget to quote the types
 			p[A_Index] := '"' p[A_Index] '"'
+		}
+		; 2026-09-05 LOCAL (breakage #3): v1 '&var' in an address-VALUE position
+		; ("ptr"/"uptr" type, no * output suffix) means 'address of var contents'.
+		; v2 has no single equivalent: strings need StrPtr(var), objects need
+		; ObjPtr(var), Buffers pass as themselves. Vars converted from
+		; VarSetCapacity are left for FixVarSetCapacity (Buffer.Ptr / StrPtr);
+		; everything else uses the V1toV2_AddrOf shim, which mirrors v1 '&' at
+		; runtime (e.g. ObjReg RegisterActiveObject's "ptr", &Object).
+		if ((A_Index > 2) && (mod(A_Index, 2) = 1)									; value position of type/value arg pairs
+		 && (p[A_Index-1] ~= 'i)^"?u?ptr"?$')										; ptr/uptr type - no * or P output suffix
+		 && RegExMatch(p[A_Index], '^&(\w+)$', &mAddr)
+		 && !gmVarSetCapacityMap.Has(mAddr[1])) {
+			p[A_Index] := 'V1toV2_AddrOf(' mAddr[1] ')'
+			gfUseV1toV2AddrOf := true
 		}
 		NeedleRegEx := "(\*\s*0\s*\+\s*)(&)(\w*)"											; *0+&var split into 3 groups (*0+), (&), and (var)
 		if (RegExMatch(p[A_Index], NeedleRegEx)) {											; even if it's behind a *0 var assignment preceding it
@@ -956,6 +970,7 @@ _IsNumTypeToken(s) {
 ; V2: NumPut Type, Number, Type2, Number2, ... Target, Offset
 _NumPut(p) {
 	; This should work to unwind the NumPut labyrinth
+	global gmVarSetCapacityMap, gfUseV1toV2AddrOf
 	p[1] := StrReplace(StrReplace(p[1], "`r"), "`n")
 	p[2] := StrReplace(StrReplace(p[2], "`r"), "`n")
 	p[3] := StrReplace(StrReplace(p[3], "`r"), "`n")
@@ -965,6 +980,12 @@ _NumPut(p) {
 	for i, param in p {
 		p[i] := RegExReplace(param, "i)VarSetCapacity\(.+?\)", "($0).Size")
 	}
+	; 2026-09-05 LOCAL (breakage #2/#20): v1 'NumPut(&str, buf, off)' stores the
+	; ADDRESS of str's contents (lpData field of COPYDATASTRUCT). v2 '&str' is a
+	; VarRef (runtime error). Route through V1toV2_AddrOf (string -> StrPtr,
+	; object -> ObjPtr, Buffer -> itself); VarSetCapacity-converted vars are left
+	; for FixVarSetCapacity.
+	p[1] := _NumPutAddrShim(p[1])
 	if (InStr(p[2], "Numput(")) {
 		ParBuffer := ""
 		loop {
@@ -972,7 +993,7 @@ _NumPut(p) {
 		p[2] := Trim(p[2])
 		p[3] := Trim(p[3])
 		p[4] := Trim(p[4])
-		Number := p[1]
+		Number := _NumPutAddrShim(p[1])
 		VarOrAddress := p[2]
 		if (p[4] = "") {
 			if (P[3] = "") {
@@ -1008,7 +1029,7 @@ _NumPut(p) {
 		p[2] := Trim(p[2])
 		p[3] := Trim(p[3])
 		p[4] := Trim(p[4])
-		Number := p[1]
+		Number := _NumPutAddrShim(p[1])
 		VarOrAddress := p[2]
 		if (p[4] = "") {
 		if (P[3] = "") {
@@ -1035,6 +1056,19 @@ _NumPut(p) {
 	}
 	Out		:= RegExReplace(Out, "[\s\,]*\)$", ")")
 	Return	Out
+}
+;################################################################################
+; 2026-09-05 LOCAL: rewrite a pure '&var' NumPut value arg (the number being
+; stored is an ADDRESS, e.g. COPYDATASTRUCT's lpData) to the V1toV2_AddrOf
+; runtime shim. Vars converted from VarSetCapacity are left untouched so
+; FixVarSetCapacity can apply its Buffer.Ptr / StrPtr forms.
+_NumPutAddrShim(s) {
+	global gmVarSetCapacityMap, gfUseV1toV2AddrOf
+	if (RegExMatch(Trim(s), '^&(\w+)$', &m) && !gmVarSetCapacityMap.Has(m[1])) {
+		gfUseV1toV2AddrOf := true
+		return 'V1toV2_AddrOf(' m[1] ')'
+	}
+	return s
 }
 ;################################################################################
 _Object(p) {

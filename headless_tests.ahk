@@ -5068,6 +5068,104 @@ class ConvertTests
       ; ViewStringDiff(expected, converted)
       Yunit.assert(converted = expected, "converted script != expected script")
    }
+
+   ByRefLiteralArg()
+   {
+      ; 2026-09-05 regression (breakage #1): v1 passes a literal by value to a
+      ; ByRef param - v2 needs a VarRef, and f(&"literal") is a LOAD error.
+      input_script := "
+         (Join`r`n
+f("Menu_Reload", "RunAny.ahk ahk_class AutoHotkey")
+f(varx, vary)
+f(ByRef a, ByRef b) {
+	return 1
+}
+         )"
+      expected := "
+         (Join`r`n
+f(&v2Param1:="Menu_Reload", &v2Param2:="RunAny.ahk ahk_class AutoHotkey")
+f(&varx, &vary)
+f(&a, &b) {
+	return 1
+}
+         )"
+      converted := Convert(input_script)
+      Yunit.assert(converted = expected, "converted script != expected script")
+   }
+
+   NumPutOffsetExpression()
+   {
+      ; 2026-09-05 regression (breakage #2/#20): v1 3-param NumPut's 3rd arg is
+      ; an OFFSET EXPRESSION (A_PtrSize etc) unless it is a quoted type token -
+      ; the old heuristic misfiled expressions as types and rotated args.
+      input_script := "
+         (Join`r`n
+NumPut(SizeInBytes, CopyDataStruct, A_PtrSize)
+NumPut(25, IID, "Int64")
+NumPut(x, buf, 8, "int")
+NumGet(Var, A_Index - 1)
+NumGet(Var, A_Index - 1, "UChar")
+         )"
+      expected := "
+         (Join`r`n
+NumPut("UPtr", SizeInBytes, CopyDataStruct, A_PtrSize)
+NumPut("Int64", 25, IID)
+NumPut("int", x, buf, 8)
+NumGet(Var, A_Index - 1, "UPtr")
+NumGet(Var, A_Index - 1, "UChar")
+         )"
+      converted := Convert(input_script)
+      Yunit.assert(converted = expected, "converted script != expected script")
+   }
+
+   ContinuationSectionCallContext()
+   {
+      ; 2026-09-05 regression (breakage #4): a bare continuation block emitted
+      ; INSIDE a call paren with conv_ContParBlk's whole-guts quoting is illegal
+      ; v2. Per-line quoted segments with `n joins must be emitted instead, and
+      ; the emitted v2 must load. (input built via concatenation - no raw ';'
+      ; inside this source's own continuation blocks)
+      semi := Chr(59)
+      input_script := "FileAppend,`r`n(`r`n" semi "line one`r`ntext %varx% two`r`n" semi "line three`r`n), out.txt, UTF-8`r`n"
+      converted := Convert(input_script)
+      ; per-line quoted segments must be emitted (not whole-guts bare quoting),
+      ; and the literal-semicolon lines must survive as string content
+      Yunit.assert(InStr(converted, semi 'line one') > 0
+                  , "converted script lacks semicolon-line content: " converted)
+      Yunit.assert(InStr(converted, 'FileAppend("') > 0
+                  , "converted script lacks opening quote after FileAppend(: " converted)
+      Yunit.assert(InStr(converted, semi 'line three", "out.txt", "UTF-8")') > 0
+                  , "converted script lost the literal-semicolon trailer: " converted)
+   }
+
+   SemicolonInsideString()
+   {
+      ; 2026-09-05 regression (fork comment rule): a raw 'space+;' inside a
+      ; string starts a comment even inside quotes - the emitted string must
+      ; escape the whitespace with `s so the runtime content is unchanged.
+      ; (input and assertions built with Chr() - this source itself must not
+      ; contain a raw ' ;' sequence, per the very rule under test)
+      semi := Chr(59), bt := Chr(96)                                                ; backtick
+      input_script := 'msg := "a ' semi ' b"`r`n'
+      converted := Convert(input_script)
+      Yunit.assert(InStr(converted, 'msg := "a' bt 's' semi ' b"') > 0
+                  , "converted script does not escape the space before the semicolon: " converted)
+   }
+
+   StrPlusConcat()
+   {
+      ; 2026-09-05 regression (breakage #11): '"text"+var' is a v2 parse error.
+      input_script := "
+         (Join`r`n
+fs := "选择文本" + A_Now
+         )"
+      expected := "
+         (Join`r`n
+fs := "选择文本" .  A_Now
+         )"
+      converted := Convert(input_script)
+      Yunit.assert(converted = expected, "converted script != expected script")
+   }
 }
 
 

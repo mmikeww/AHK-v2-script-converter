@@ -75,30 +75,7 @@ class CSect
 				leadTxt := Trim(mLd.lead, " `t")
 				if (RegExMatch(mLd.blk, '(?s)^\(\h*\R(.*?)\)\s*$', &mG)) {
 					allTxt := leadTxt . "`n" . mG[1]											; merge lead + block guts
-					; normalize line endings, drop trailing blank line
-					allTxt := StrReplace(allTxt, "`r`n", "`n")
-					allTxt := RegExReplace(allTxt, '\n\s*$', '')
-					segs := []
-					For each, ln in StrSplit(allTxt, "`n") {
-						; split each line into quoted text and %var% concat operands
-						work := ln
-						nVar := '%([^%\r\n]+)%'
-						out := ""
-						scanPos := 1
-						While (RegExMatch(work, nVar, &mVar, scanPos)) {
-							out .= Chr(34) . SubStr(work, scanPos, mVar.Pos - scanPos) . Chr(34) . " . " . mVar[1] . " . "
-							scanPos := mVar.Pos + mVar.Len
-						}
-						out .= Chr(34) . SubStr(work, scanPos) . Chr(34)
-						out := RegExReplace(out, '^"" \. | \. ""$', '')
-						segs.Push(out)
-					}
-					; join segments with adjacent-string concat across newlines
-					blkCode := ''
-					For each, seg in segs
-						blkCode .= seg . "`r`n"
-					blkCode := RTrim(blkCode, "`r`n")
-					return blkCode
+					return CSect.SegExprFromText(allTxt, true)									; line1=lead: no added LF (v1 joins head to block raw); block lines LF-joined
 				}
 			}
 
@@ -110,8 +87,60 @@ class CSect
 
 			; default behavior (for now)
 			; looks like srcStr is just the block
+			; 2026-09-05 LOCAL fix (breakage #4): a bare block destined for a v2
+			; function-call argument (command text param / MsgBox+InputBox sites).
+			; conv_ContParBlk emits a bare paren block with whole-guts quoting, which
+			; is only valid after ':=' - inside a call paren it emits illegal v2
+			; (SearchBar FileAppend:856 'Illegal character in expression'). Emit
+			; per-line quoted segments instead (valid in any expression context).
+			; NOTE: the block may arrive glued to the head line with its original
+			; \r\n prefix, so tolerate leading vertical whitespace.
+			if (RegExMatch(srcStr, '(?s)^\s*\(\h*\R(.*?)\)\s*$', &mBlk))
+				return CSect.SegExprFromText(mBlk[1], false)
 			return conv_ContParBlk(srcStr)														; otherwise... return converted block
 		}
+	;############################################################################
+	; 2026-09-05 LOCAL: convert v1 continuation-section text (optionally merged with
+	; the leading text of the head line) into a v2 single-line-per-segment string
+	; expression: each physical line becomes its own quoted "..." segment; %var%
+	; tokens become unquoted concat operands; embedded '"' become `" escapes.
+	; v1 Join semantics: block lines are LF-joined (v1 docs: 'If this option is not
+	; used, each line except the last will be followed by a linefeed character'),
+	; while the head-line text is joined to the block WITHOUT a delimiter (the head
+	; text normally ends in an explicit `n). joinFromLine>0 = first segment index
+	; that gets an LF join from its predecessor (2 when seg 1 is lead text, else 1).
+	Static SegExprFromText(allTxt, firstIsLead := false)
+	{
+		; normalize line endings, drop trailing blank line
+		allTxt := StrReplace(allTxt, "`r`n", "`n")
+		allTxt := RegExReplace(allTxt, '\n\s*$', '')
+		segs := []
+		For each, ln in StrSplit(allTxt, "`n") {
+			; split each line into quoted text and %var% concat operands
+			work := StrReplace(ln, '"', '``"')													; v2 string content: escape raw DQ (v1 CS treats them literally)
+			nVar := '%([^%\r\n]+)%'
+			out := ""
+			scanPos := 1
+			While (RegExMatch(work, nVar, &mVar, scanPos)) {
+				out .= Chr(34) . SubStr(work, scanPos, mVar.Pos - scanPos) . Chr(34) . " . " . mVar[1] . " . "
+				scanPos := mVar.Pos + mVar.Len
+			}
+			out .= Chr(34) . SubStr(work, scanPos) . Chr(34)
+			out := RegExReplace(out, '^"" \. | \. ""$', '')
+			segs.Push(out)
+		}
+		; join segments: adjacent-string concat across newlines; v1 Join=`n between
+		; block lines (expressed as an explicit "`n" concat operand)
+		joinStart	:= firstIsLead ? 3 : 2														; seg index that joins from previous with LF
+		nlJoin		:= ' . "' . '``n' . '" .'													; emits:  . "`n" .   (backtick-n as ESCAPE, not a real newline)
+		blkCode		:= ''
+		For i, seg in segs {
+			if (i > 1)
+				blkCode .= (i >= joinStart ? nlJoin : ' .') . "`r`n"
+			blkCode .= seg
+		}
+		return blkCode
+	}
 	;############################################################################
 	; Determines whether code is a continuation section...
 	;	if so... routes code to appropriate conversion routine

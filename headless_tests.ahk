@@ -5327,12 +5327,9 @@ With continuation section.
 
       expected := "
          (Join`r`n
-MsgBox`(
-`(
-"This is the 1-parameter method. Commas (,) do not need to be escaped.
-With continuation section."
-`)`)
-)"
+MsgBox("This is the 1-parameter method. Commas (,) do not need to be escaped." . "``n" .
+"With continuation section.")
+      )"
 
       ; if (this.test_exec = true) {
       ; result_input    := ExecScript_v1(input_script)
@@ -5360,7 +5357,7 @@ MsgBox, 16, AutoHotKey版本过低！, 由于你的AHK版本没有高于1.1.31�
 
       expected := "
          (Join`r`n
-MsgBox("由于你的AHK版本没有高于1.1.31，会影响RunAny功能的使用!``n"
+MsgBox("由于你的AHK版本没有高于1.1.31，会影响RunAny功能的使用!``n" .
 "1. 不支持StrSplit()函数的MaxParts``n2. 不支持动态Hotstring创建``n3. 不支持Switch Case的语法", "AutoHotKey版本过低！", 16)
       )"
 
@@ -5381,7 +5378,7 @@ InputBox, webSiteInput, 下载网站图标, 请修改下面的默认地址并下
 
       expected := "
          (Join`r`n
-IB := InputBox("请修改下面的默认地址并下载图标``n"
+IB := InputBox("请修改下面的默认地址并下载图标``n" .
 "请打开【修改菜单】按钮,,,,,,,,http://" . website . "/favicon.ico", "下载网站图标"), webSiteInput := IB.Value
       )"
 

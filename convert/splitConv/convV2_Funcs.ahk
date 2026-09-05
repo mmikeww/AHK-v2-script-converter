@@ -586,7 +586,7 @@ getParamContSect(contBlk, &cLParams, &cLParamsArr, &EOLComment)
 	fullContSectStr	:= lastLineParam '`r`n'															; starts with command from previous line (line1 usually)
 
 	lines := StrSplit(contBlk, '`n', '`r')															; grab lines from cont blk
-	curContLine := '', looped := false																; ini
+	curContLine := '', looped := false, inBlk := false												; ini
 	for idx, line in lines
 	{
 		; TODO - might need to adjust this jump/continue in future?
@@ -594,10 +594,25 @@ getParamContSect(contBlk, &cLParams, &cLParamsArr, &EOLComment)
 			continue																				; skip first element
 		looped		:= true																			; flag for gEOLComment_Cont[] below loop
 		curContLine	:= line																			; [working var]
-		curContLine	:= separateComment(curContLine, &EOLComment)									; separate comment (first occurrence) from line
-		gEOLComment_Cont.Push(EOLComment)															; save comment for CURRENT LINE to be restored later
 
-		FirstChar	:= SubStr(Trim(curContLine),1,1)												; capture "(" or ")" if on current line
+		FirstChar	:= SubStr(Trim(line),1,1)														; capture "(" or ")" if on current line
+		; 2026-09-05 LOCAL fix (breakage #4 family): v1 treats ';' inside a
+		; continuation section's INTERIOR as literal text (v1 docs: without the
+		; 'Comments' option, interior semicolons 'are seen as literal text'). Only
+		; the '(' top line and ')' bottom line may carry real comments. Stripping
+		; interior comments destroyed v1 string content (SearchBar template).
+		; Interior lines keep their text and push an empty comment to keep the
+		; positional gEOLComment_Cont bookkeeping aligned.
+		if (!inBlk || FirstChar == ')')
+		{
+			curContLine	:= separateComment(curContLine, &EOLComment)							; separate comment (first occurrence) from line
+			gEOLComment_Cont.Push(EOLComment)														; save comment for CURRENT LINE to be restored later
+		}
+		else
+			gEOLComment_Cont.Push('')																; interior literal line - keep comment-slot alignment
+
+		if (FirstChar == '(')
+			inBlk := true
 		if (FirstChar == ')')																		; if current line appears to be end of cont section
 		{
 			cLParams .= '`r`n' curContLine															; append current continuation line to LINE params

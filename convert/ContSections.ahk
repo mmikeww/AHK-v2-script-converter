@@ -70,7 +70,13 @@ class CSect
 			; hold a raw multi-line string literal, so each physical line becomes its own
 			; quoted "..." segment and the segments are joined by adjacent-string concat
 			; (newline between segments). %var% tokens become unquoted concat operands.
-			if (RegExMatch(srcStr, 'is)^(?<lead>[^\v(]+)\R\h*(?<blk>\(.*\)\s*$)', &mLd)
+			; 2026-09-06 LOCAL (arch2 #6/#7 follow-up): the lead class excluded '('
+			; so a '(' inside the lead TEXT itself (e.g. 'Everything-帮助(H)-搜索语法')
+			; truncated the match and the section fell through unconverted. Let the
+			; lead contain balanced '(' ... ')' pairs (possessive inner class, no
+			; backtracking blowup) and keep the block opener anchored to a line
+			; start via '\R\h*\('.
+			if (RegExMatch(srcStr, 'is)^(?<lead>(?:[^\v(]+|\([^)\v]*+\))*+)\R\h*(?<blk>\(.*\)\s*$)', &mLd)
 			&& Trim(mLd.lead) != ''
 			&& !RegExMatch(Trim(mLd.lead), '[,%]$')) {										; 2026-09-05 LOCAL: a lead ending in , or % is a
 																								; command line (e.g. 'FileAppend,'), not text to quote

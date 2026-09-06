@@ -5594,6 +5594,32 @@ g() {
                   , "'catch {' with a body must keep its body statements: " converted)
    }
 
+   MsgBoxContinuationText()
+   {
+      ; 2026-09-06 regression (arch2 #6/#7 follow-up): a command-style MsgBox
+      ; whose Text param ends in a backtick-n and is followed by a paren
+      ; continuation block was emitted as a bare multi-line expression.
+      ; The lead text may itself contain parentheses (e.g. 帮助(H)) which used
+      ; to truncate the continuation detection. Must fold lead + block into
+      ; quoted per-line segments joined by dot concat.
+      ; (input built by concatenation - a literal '(' line inside this source's
+      ; own continuation block would be misread as a nested block)
+      bt := Chr(96)                                                                    ; backtick
+      input_script := "MsgBox,64,Everything搜索参数语法,请打开Everything参照" bt "nEverything-帮助(H)-搜索语法" bt "n" bt "n`r`n"
+                  . "`t(`r`n"
+                  . "修改以下文本框参数后，请务必复制参数到Everthing搜索`r`n"
+                  . "检验是否有搜索到RunAny菜单中的程序，避免出现错误`r`n"
+                  . "`t)`r`n"
+                  . "return`r`n"
+      converted := Convert(input_script)
+      Yunit.assert(InStr(converted, 'MsgBox("请打开Everything参照' bt 'nEverything-帮助(H)-搜索语法' bt 'n' bt 'n" .') > 0
+                  , "MsgBox continuation lead was not folded into a quoted string: " converted)
+      Yunit.assert(InStr(converted, '检验是否有搜索到RunAny菜单中的程序，避免出现错误", "Everything搜索参数语法", 64)') > 0
+                  , "MsgBox continuation block tail was lost or malformed: " converted)
+      Yunit.assert(InStr(converted, "Illegal character") = 0
+                  , "converted output still contains a bare continuation: " converted)
+   }
+
    DynMenuName_PlainVar()
    {
       ; 2026-09-03 regression: 'Menu, %mn%, ...' where %mn% is a plain variable name

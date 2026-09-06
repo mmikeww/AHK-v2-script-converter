@@ -962,7 +962,14 @@ _MsgBox_V2(p) {
 			text	:= ''
 			loop p.Extra.OrigArr.Length - 2
 				text.= ',' p.Extra.OrigArr[A_Index + 2]
-			text	:= ToExp(SubStr(text, 2))
+			text	:= SubStr(text, 2)
+			; 2026-09-06 LOCAL (arch2 #6/#7 follow-up): a 3-param MsgBox
+			; ('MsgBox, Options, Title, Text') whose Text ends in `n and is
+			; followed by a '(' continuation block arrived here as raw
+			; 'Text`n`n' + block and was ToExp'd into an illegal bare multi-line
+			; expression. The 4-param branch above already routes p[3] through
+			; CSect.HasContSect - do the same for the folded Text here.
+			text	:= (csStr := CSect.HasContSect(text)) ? csStr : ToExp(text)
 		}
 		; format output
 		Out := format('MsgBox({1}, {2}, {3})', text, (title = '""' ? '' : title), ToExp(options))

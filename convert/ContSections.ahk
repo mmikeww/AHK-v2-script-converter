@@ -75,7 +75,10 @@ class CSect
 			; truncated the match and the section fell through unconverted. Let the
 			; lead contain balanced '(' ... ')' pairs (possessive inner class, no
 			; backtracking blowup) and keep the block opener anchored to a line
-			; start via '\R\h*\('.
+			; start via '\R\h*\('. Known limit: nested/unbalanced '(' inside the
+			; lead text would still truncate - a structural 'line-start paren is
+			; the block opener' scan would be needed for that, and command text
+			; params with nested parens are rare in practice.
 			if (RegExMatch(srcStr, 'is)^(?<lead>(?:[^\v(]+|\([^)\v]*+\))*+)\R\h*(?<blk>\(.*\)\s*$)', &mLd)
 			&& Trim(mLd.lead) != ''
 			&& !RegExMatch(Trim(mLd.lead), '[,%]$')) {										; 2026-09-05 LOCAL: a lead ending in , or % is a

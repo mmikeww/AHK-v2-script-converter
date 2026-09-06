@@ -952,11 +952,9 @@ _MsgBox_V2(p) {
 	&& (p.Extra.OrigArr.Length > 1)) {
 		options	:= p[1]
 		title	:= ToExp(p[2])
-		; if param 4 is empty, OR is a number, OR has a var (%) - it is a real
-		; Timeout. If it is plain TEXT it is a v1 Method-1 comma continuation of
-		; the Text param ('MsgBox, Opt, Title, text' + newline + ', more text' -
-		; v1 Scripts.htm: a line starting with a comma is merged with the one
-		; above). Fold it back into the Text.
+		; param 4: empty / numeric / percent-var -> real Timeout. Plain TEXT in
+		; param 4 means a v1 Method-1 comma continuation of the Text param
+		; landed here (see below) - fold it back into the Text.
 		if (p.Length = 4 && (IsEmpty(p[4])
 		||	IsNumber(p[4])
 		||	RegExMatch(p[4], '\h*%', &mVar))) {
@@ -964,9 +962,14 @@ _MsgBox_V2(p) {
 			options	.= (IsEmpty(p[4])) ? '' : ' " T" ' ToExp(p[4])							; add timeout as needed
 		} else if (p.Length = 4 && !IsEmpty(p[4])) {
 			; 2026-09-06 LOCAL (arch2 #7 follow-up): param 4 holds text folded in
-			; from a comma continuation line - join it back to the Text param the
-			; way v1 merged the lines (comma preserved), then run the normal
-			; continuation/text handling.
+			; from a comma continuation line ('MsgBox, 48, 提示：, text' + newline
+			; + ', more text'). By v1 Scripts.htm the comma line merges with the
+			; one above, so 'more text' lands in the Timeout slot - but v1 MsgBox
+			; Timeout is seconds (numeric, MsgBox.htm), so the original v1 was
+			; already broken; the author meant it as Text. Intent fix (matches
+			; arch2's hand-merge): join it back to the Text param, comma
+			; preserved. Deliberately MsgBox-specific - other commands' 4th
+			; params are genuinely positional, not text continuations.
 			joined := Trim(p[3], " `t`r`n") . ', ' . p[4]
 			text := (csStr := CSect.HasContSect(joined)) ? csStr : ToExp(joined)
 		} else {

@@ -839,12 +839,12 @@ FixIncDec(ScriptString) {
 	;nInc2	:= '(?i)(.*?)' nVar '(\h+)' nInc '((?2))(.*)', repl2 := '$1$5$4$3. $2$6'		; example 2 - reorder, not same output as v1
 	nInc2	:= '(?i)' nVar '(\h+)'	nIncDec '([a-z])',	repl2 := '$1$3$2. $4'				; example 2 - remove space, add concat, same output as v1
 	; 2026-09-06 LOCAL (arch2 #8 follow-up): PREFIX ++/-- followed by more
-	; expression content ('"&" ++ctrlgMenuItemNum A_Space folder'). v2-changes:
-	; 'word ++' is no longer an expression; a standalone prefix ++/-- must be
-	; wrapped in parentheses when more tokens follow (the ++ would otherwise
-	; parse as part of the implicit concat). v1 emitted the bare form.
-	nInc3	:= '(?i)(?<![+\w.])(\+\+|--)([a-z]\w*)'										; prefix ++/-- on a var
-	nInc3b	:= '(?i)(\+\+|--)([a-z]\w*)(?=\h+[a-z])'										; ... with more concat content after
+	; implicit-concat content ('"&" ++ctrlgMenuItemNum A_Space folder',
+	; '++n " items"'). v2-changes: a standalone prefix ++/-- must be wrapped in
+	; parentheses when more tokens follow (otherwise the ++ parses as part of
+	; the implicit concat). Runs after C&S masking (FixIncDec is called from
+	; FinalizeConvert), so a following quoted string appears as a DQ tag.
+	nInc3	:= '(?i)(\+\+|--)([a-z]\w*)(?=\h+(?:[A-Za-z]|#TAG★(?:QS|DQ|SQ)\w+))'			; prefix ++/-- + more concat content after
 	repl3	:= '($1$2)'
 	retStr	:= ''																			; will be output
 	for idx, line in StrSplit(ScriptString, '`n', '`r') {									; for each line in script...
@@ -854,8 +854,8 @@ FixIncDec(ScriptString) {
 			pos   += StrLen(repl2)															; prep for next search on same line
 		}
 		pos		  := 1
-		While(pos := RegexMatch(line,nInc3b, &m, pos)) {									; prefix ++/-- with more content after
-			line  := RegExReplace(line, nInc3b, repl3,,1,pos)								; wrap in parens
+		While(pos := RegexMatch(line,nInc3, &m, pos)) {										; prefix ++/-- with more content after
+			line  := RegExReplace(line, nInc3, repl3,,1,pos)								; wrap in parens
 			pos   += StrLen(repl3)															; prep for next search on same line
 		}
 		pos		  := 1

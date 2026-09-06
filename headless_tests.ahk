@@ -5620,6 +5620,24 @@ g() {
                   , "converted output still contains a bare continuation: " converted)
    }
 
+   MsgBoxCommaContinuation()
+   {
+      ; 2026-09-06 regression (arch2 #7 follow-up): v1 Method-1 comma
+      ; continuation ('MsgBox, Opt, Title, text' + newline + ', more text') -
+      ; a line starting with a comma is merged with the one above (v1
+      ; Scripts.htm). The merged comma-line text landed in the Timeout slot and
+      ; was emitted as an unclosed multi-line string. Text param 4 must be
+      ; folded back into the Text param (comma preserved) when it is plain
+      ; text, not a numeric/variable Timeout.
+      bt := Chr(96)                                                                    ; backtick
+      input_script := "MsgBox, 48, 提示：, 搜索Everything - 全磁盘搜索模式 - 请修改搜索参数编辑框`r`n"
+                  . "`t, 指定搜索后缀" bt "n" bt "n空格间隔后写入 file:*.exe`r`n"
+                  . "return`r`n"
+      converted := Convert(input_script)
+      Yunit.assert(InStr(converted, 'MsgBox("搜索Everything - 全磁盘搜索模式 - 请修改搜索参数编辑框, 指定搜索后缀' bt 'n' bt 'n空格间隔后写入 file:*.exe", "提示：", 48)') > 0
+                  , "comma-continuation text was not folded back into the Text param: " converted)
+   }
+
    DynMenuName_PlainVar()
    {
       ; 2026-09-03 regression: 'Menu, %mn%, ...' where %mn% is a plain variable name

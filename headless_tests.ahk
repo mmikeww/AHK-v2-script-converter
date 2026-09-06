@@ -5638,6 +5638,23 @@ g() {
                   , "comma-continuation text was not folded back into the Text param: " converted)
    }
 
+   PrefixIncDecParens()
+   {
+      ; 2026-09-06 regression (arch2 #8 follow-up): v1 '"&" ++ctrlgMenuItemNum
+      ; A_Space folder' - a PREFIX ++/-- followed by more implicit-concat
+      ; content. v2-changes: 'word ++' is no longer an expression; a standalone
+      ; prefix ++/-- must be wrapped in parentheses when more tokens follow
+      ; (otherwise '++var A_Space' parses as an invalid concat). Emit
+      ; '"&" (++ctrlgMenuItemNum) A_Space folder'.
+      input_script := "
+         (Join`r`n
+ctrlgMenuName.Insert(ctrlgMenuItem.Count() + 1 ""&"", ""&"" ++ctrlgMenuItemNum A_Space folder, Choice)
+         )"
+      converted := Convert(input_script)
+      Yunit.assert(InStr(converted, '(++ctrlgMenuItemNum) A_Space folder') > 0
+                  , "prefix ++/-- followed by concat content was not parenthesized: " converted)
+   }
+
    DynMenuName_PlainVar()
    {
       ; 2026-09-03 regression: 'Menu, %mn%, ...' where %mn% is a plain variable name

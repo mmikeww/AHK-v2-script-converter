@@ -838,12 +838,25 @@ FixIncDec(ScriptString) {
 	nInc1	:= '(?i)' nVar '\h+'	nIncDec '(?!\w)',	repl1 := '$1$2'						; example 1 - remove ws between var and ++/--
 	;nInc2	:= '(?i)(.*?)' nVar '(\h+)' nInc '((?2))(.*)', repl2 := '$1$5$4$3. $2$6'		; example 2 - reorder, not same output as v1
 	nInc2	:= '(?i)' nVar '(\h+)'	nIncDec '([a-z])',	repl2 := '$1$3$2. $4'				; example 2 - remove space, add concat, same output as v1
+	; 2026-09-06 LOCAL (arch2 #8 follow-up): PREFIX ++/-- followed by more
+	; expression content ('"&" ++ctrlgMenuItemNum A_Space folder'). v2-changes:
+	; 'word ++' is no longer an expression; a standalone prefix ++/-- must be
+	; wrapped in parentheses when more tokens follow (the ++ would otherwise
+	; parse as part of the implicit concat). v1 emitted the bare form.
+	nInc3	:= '(?i)(?<![+\w.])(\+\+|--)([a-z]\w*)'										; prefix ++/-- on a var
+	nInc3b	:= '(?i)(\+\+|--)([a-z]\w*)(?=\h+[a-z])'										; ... with more concat content after
+	repl3	:= '($1$2)'
 	retStr	:= ''																			; will be output
 	for idx, line in StrSplit(ScriptString, '`n', '`r') {									; for each line in script...
 		pos		  := 1
 		While(pos := RegexMatch(line,nInc2, &m, pos)) {										; look for each occurrence of example 2 on cur line
 			line  := RegExReplace(line, nInc2, repl2,,1,pos)								; handle example 2 of issue #350
 			pos   += StrLen(repl2)															; prep for next search on same line
+		}
+		pos		  := 1
+		While(pos := RegexMatch(line,nInc3b, &m, pos)) {									; prefix ++/-- with more content after
+			line  := RegExReplace(line, nInc3b, repl3,,1,pos)								; wrap in parens
+			pos   += StrLen(repl3)															; prep for next search on same line
 		}
 		pos		  := 1
 		While(pos := RegexMatch(line,nInc1, &m, pos)) {										; look for each occurrence of example 1 on cur line
